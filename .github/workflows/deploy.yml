@@ -11,6 +11,11 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
 
+    env:
+      RUST_BACKTRACE: 1
+      RPC_PROVIDER: "https://starknode.thearkproject.dev/mainnet"
+      DYNAMO_TABLE_NAME: "arkproject_nft_collections"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
