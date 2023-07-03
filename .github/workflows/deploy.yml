@@ -11,11 +11,6 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
 
-    env:
-      RUST_BACKTRACE: 1
-      RPC_PROVIDER: "https://starknode.thearkproject.dev/mainnet"
-      DYNAMO_TABLE_NAME: "arkproject_nft_collections"
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -48,6 +43,9 @@ jobs:
           username: "ec2-user"
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            # Commands to restart the application
+            export RPC_PROVIDER="https://starknode.thearkproject.dev/mainnet"
+            export RUST_BACKTRACE=1
+            export ARK_COLLECTIONS_TABLE_NAME="arkproject_nft_collections"
+            export ARK_BLOCKS_TABLE_NAME="ark_blocks"
             sudo systemctl stop ark-indexer
             sudo systemctl start ark-indexer
