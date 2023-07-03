@@ -180,6 +180,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-indexer"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "clap 4.3.8",
+ "dotenv",
+ "hex",
+ "mini-redis",
+ "prisma-client-rust",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "starknet",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
 name = "ark-serialize"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3044,25 +3063,6 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
-]
-
-[[package]]
-name = "nft-indexer"
-version = "0.1.0"
-dependencies = [
- "aws-config",
- "aws-sdk-dynamodb",
- "clap 4.3.8",
- "dotenv",
- "hex",
- "mini-redis",
- "prisma-client-rust",
- "reqwest",
- "serde",
- "serde_json",
- "starknet",
- "structopt",
- "tokio",
 ]
 
 [[package]]
