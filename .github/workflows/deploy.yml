@@ -33,7 +33,7 @@ jobs:
           host: "ec2-34-204-44-150.compute-1.amazonaws.com"
           username: "ec2-user"
           key: ${{ secrets.AWS_SSH_KEY }}
-          source: target/release/ark-indexer/*
+          source: target/release/*
           target: "/home/ec2-user/apps/ark-indexer"
 
       - name: Execute commands
