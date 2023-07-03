@@ -1,4 +1,4 @@
-mod block_processor;
+mod arkindexer;
 mod constants;
 mod dynamo;
 mod starknet;
@@ -6,7 +6,7 @@ mod utils;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 
-use block_processor::get_blocks;
+use arkindexer::block_processor::get_blocks;
 use reqwest::Client;
 
 #[tokio::main]
@@ -16,6 +16,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = Client::new();
+
     let result = get_blocks(&reqwest_client, &dynamo_client).await;
+    
     result
 }

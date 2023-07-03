@@ -1,3 +1,4 @@
+use crate::arkindexer::block_fetch_status::{get_block_status, mark_block_status};
 use crate::constants::BLACKLIST;
 use crate::dynamo::create::{add_collection_item, Item};
 use crate::starknet::client::{fetch_block, get_latest_block};
@@ -21,12 +22,13 @@ async fn identify_contract_types_from_transfers(
 ) {
     // Get dynamo table to work with
     dotenv().ok();
-    let table = env::var("DYNAMO_TABLE_NAME").expect("DYNAMO_TABLE must be set");
+    let table = env::var("ARK_COLLECTION_TABLE_NAME").expect("DYNAMO_TABLE must be set");
 
     // Init start time
     let start_time = Instant::now();
 
     for event in events {
+        println!("Event: {:?}", event);
         // Filter contract with most transactions from identification
         if let Some(from_address) = event.get("from_address").and_then(|addr| addr.as_str()) {
             if BLACKLIST.contains(&from_address) {
@@ -60,7 +62,8 @@ async fn identify_contract_types_from_transfers(
             // call to get collection informations
             let name = get_contract_property(&client, &event, "name", [].to_vec(), true).await;
             // TODO in case we don't have supply optimize by counting the total number of minted tokens
-            let supply = get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
+            let supply =
+                get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
             let symbol = get_contract_property(&client, &event, "symbol", [].to_vec(), true).await;
 
             let item = Item {
@@ -112,15 +115,21 @@ pub async fn get_blocks(
     dynamo_client: &DynamoClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Set starting block
-    let mut current_block_number: u64 = 90000;
+    let mut current_block_number: u64 = 1;
     // Loop Through Blocks and wait for new blocks
     loop {
         let latest_block_number = get_latest_block(&reqwest_client).await?;
+        let is_block_fetched = get_block_status(&dynamo_client, current_block_number).await?;
         println!("Latest block: {}", latest_block_number);
         println!("Current block: {}", current_block_number);
-        if current_block_number <= latest_block_number {
+        if is_block_fetched {
+            println!("Current block {} is fetched:", current_block_number);
+            current_block_number += 1;
+        } else if current_block_number <= latest_block_number && !is_block_fetched {
+            mark_block_status(&dynamo_client, current_block_number, false).await?;
             let block = fetch_block(&reqwest_client, current_block_number).await;
             get_transfer_events(&reqwest_client, block.unwrap(), &dynamo_client).await;
+            mark_block_status(&dynamo_client, current_block_number, true).await?;
             current_block_number += 1;
         } else {
             sleep(Duration::from_secs(10)).await;
