@@ -5,7 +5,7 @@ use std::env;
 
 pub async fn get_block_status(dynamo_client: &Client, block_number: u64) -> Result<bool, Error> {
     dotenv().ok();
-    let table = env::var("ARK_BLOCKS_TABLE_NAME").expect("DYNAMO_TABLE must be set");
+    let table = env::var("ARK_BLOCKS_TABLE_NAME").expect("ARK_BLOCKS_TABLE_NAME must be set");
     let block_number_av = AttributeValue::S(block_number.to_string());
     let request = dynamo_client
         .get_item()
@@ -32,7 +32,7 @@ pub async fn mark_block_status(
     status: bool,
 ) -> Result<(), Error> {
     dotenv().ok();
-    let table = env::var("ARK_BLOCKS_TABLE_NAME").expect("DYNAMO_TABLE must be set");
+    let table = env::var("ARK_BLOCKS_TABLE_NAME").expect("ARK_BLOCKS_TABLE_NAME must be set");
     let block_number_av = AttributeValue::S(block_number.to_string());
     let is_fetched_av = AttributeValue::Bool(status);
     let request = dynamo_client
