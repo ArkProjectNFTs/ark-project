@@ -22,7 +22,7 @@ async fn identify_contract_types_from_transfers(
 ) {
     // Get dynamo table to work with
     dotenv().ok();
-    let table = env::var("ARK_COLLECTION_TABLE_NAME").expect("DYNAMO_TABLE must be set");
+    let table = env::var("ARK_COLLECTIONS_TABLE_NAME").expect("DYNAMO_TABLE must be set");
 
     // Init start time
     let start_time = Instant::now();
