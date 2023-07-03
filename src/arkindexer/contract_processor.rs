@@ -1,7 +1,7 @@
+use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
 use crate::dynamo::create::{add_collection_item, Item};
 use crate::starknet::utils::get_contract_property;
-use crate::arkindexer::contract_fetch_status::is_contract_address_fetched_and_type_unknown;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use dotenv::dotenv;
 use reqwest::Client;
@@ -25,7 +25,6 @@ pub async fn identify_contract_types_from_transfers(
     let start_time = Instant::now();
 
     for event in events {
-        println!("Event: {:?}", event);
         // Filter contract with most transactions from identification
         if let Some(from_address) = event.get("from_address").and_then(|addr| addr.as_str()) {
             if BLACKLIST.contains(&from_address) {
@@ -35,13 +34,20 @@ pub async fn identify_contract_types_from_transfers(
 
         // Get contract address
         let from_address = event.get("from_address").unwrap().as_str().unwrap();
+        // check if contract present and is a NFT then send event to the kinesis stream
 
-        let is_fetched_and_type_unknown =
-            is_contract_address_fetched_and_type_unknown(&dynamo_client, from_address)
-                .await
-                .unwrap_or(false);
-        if is_fetched_and_type_unknown {
-            continue; // If it does, skip this iteration of the loop
+        // Check if contract present and type
+        let contract_status = get_contract_status(&dynamo_client, from_address)
+            .await
+            .unwrap_or(None);
+        if let Some(contract_type) = contract_status {
+            if contract_type == "unknown" {
+                continue; // If it's unknown, skip this iteration of the loop
+            } else if contract_type == "erc721" || contract_type == "erc1155" {
+                // Send Kinesis event here
+                println!("Sending Kinesis event here contract known");
+                continue; // After sending event, skip this iteration of the loop
+            }
         }
 
         // Get token_uri
@@ -62,14 +68,21 @@ pub async fn identify_contract_types_from_transfers(
         }
 
         let (name, supply, symbol) = if contract_type != "unknown" {
+            // check is a NFT then send event to the kinesis stream also here when identifying a new contract
+            println!("Sending Kinesis event here new contract");
             let name = get_contract_property(&client, &event, "name", [].to_vec(), true).await;
-            let supply = get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
+            let supply =
+                get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
             let symbol = get_contract_property(&client, &event, "symbol", [].to_vec(), true).await;
             (name, supply.to_string(), symbol.to_string())
         } else {
             println!("Contract type is unknown, skipping fetch assigning default values");
             // Assign some default values if the contract type is unknown
-            ("Unknown name".to_string(), "0".to_string(), "Unknown symbol".to_string())
+            (
+                "Unknown name".to_string(),
+                "0".to_string(),
+                "Unknown symbol".to_string(),
+            )
         };
 
         let item = Item {
