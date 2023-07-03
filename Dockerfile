@@ -8,15 +8,6 @@ WORKDIR /app
 
 COPY . .
 
-# RUN export RPC_PROVIDER=RPC_PROVIDER
-# RUN export RUST_BACKTRACE=RUST_BACKTRACE
-# RUN export ARK_COLLECTIONS_TABLE_NAME="arkproject_nft_collections"
-# RUN export ARK_BLOCKS_TABLE_NAME="ark_blocks"
-# RUN export AWS_DEFAULT_REGION=AWS_DEFAULT_REGION
-# RUN export RUST_BACKTRACE=RUST_BACKTRACE
+RUN cargo build
 
-# RUN cargo build
-
-# CMD ["cargo", "run"]
-
-CMD []
+CMD ["cargo", "run"]
