@@ -42,4 +42,7 @@ jobs:
           host: "ec2-34-204-44-150.compute-1.amazonaws.com"
           username: "ec2-user"
           key: ${{ secrets.AWS_SSH_KEY }}
-          script: echo 'test'
+          script: |
+            # Commands to restart the application
+            sudo systemctl stop ark-indexer
+            sudo systemctl start ark-indexer
