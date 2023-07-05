@@ -1,11 +1,9 @@
 use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
 use crate::dynamo::create::{add_collection_item, Item};
+use crate::kinesis::send::send_to_kinesis;
 use crate::starknet::utils::get_contract_property;
 use aws_sdk_dynamodb::Client as DynamoClient;
-use aws_sdk_kinesis::error::SdkError;
-use aws_sdk_kinesis::operation::put_record::PutRecordError;
-use aws_sdk_kinesis::primitives::Blob;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
 use reqwest::Client;
@@ -13,36 +11,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::time::Instant;
-
-async fn add_record(
-    client: &KinesisClient,
-    stream: &str,
-    key: &str,
-    data: &str,
-) -> Result<(), SdkError<PutRecordError>> {
-    let blob = Blob::new(data);
-
-    let request = client
-        .put_record()
-        .data(blob)
-        .partition_key(key)
-        .stream_name(stream);
-
-    let result = request.send().await;
-    match result {
-        Ok(_) => {
-            println!("Put data into stream.");
-            Ok(())
-        }
-        Err(err) => {
-            // Log the error
-            eprintln!("Error while adding record to Kinesis stream: {:?}", err);
-
-            // Optionally, you can propagate the error further up the call stack
-            Err(err)
-        }
-    }
-}
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
 pub async fn identify_contract_types_from_transfers(
@@ -55,6 +23,7 @@ pub async fn identify_contract_types_from_transfers(
     dotenv().ok();
     let table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
+    let kinesis_stream = env::var("KINESIS_STREAM_NAME").expect("KINESIS_STREAM_NAME must be set");
 
     // Init start time
     let start_time = Instant::now();
@@ -83,9 +52,14 @@ pub async fn identify_contract_types_from_transfers(
                 continue; // If it's unknown, skip this iteration of the loop
             } else if contract_type == "erc721" || contract_type == "erc1155" {
                 // Send Kinesis event here
-                add_record(&kinesis_client, "ark_transfert_events", "transfert", &json_event)
-                    .await
-                    .unwrap();
+                send_to_kinesis(
+                    &kinesis_client,
+                    kinesis_stream.as_str(),
+                    "transfert",
+                    &json_event,
+                )
+                .await
+                .unwrap();
                 continue; // After sending event, skip this iteration of the loop
             }
         }
@@ -109,9 +83,14 @@ pub async fn identify_contract_types_from_transfers(
 
         let (name, supply, symbol) = if contract_type != "unknown" {
             // check is a NFT then send event to the kinesis stream also here when identifying a new contract
-            add_record(&kinesis_client, "ark_transfert_events", "transfert", "data")
-                .await
-                .unwrap();
+            send_to_kinesis(
+                &kinesis_client,
+                kinesis_stream.as_str(),
+                "transfert",
+                "data",
+            )
+            .await
+            .unwrap();
             let name = get_contract_property(&client, &event, "name", [].to_vec(), true).await;
             let supply =
                 get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
@@ -149,8 +128,5 @@ pub async fn identify_contract_types_from_transfers(
         }
     }
     let duration = start_time.elapsed();
-    println!(
-        "Time elapsed in contracts block is: {:?}",
-        duration
-    );
+    println!("Time elapsed in contracts block is: {:?}", duration);
 }
