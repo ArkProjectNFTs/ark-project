@@ -4,6 +4,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
+use std::time::Instant;
 
 pub async fn fetch_block(
     client: &Client,
@@ -28,8 +29,12 @@ pub async fn fetch_block(
         }
     });
 
+    let start_time = Instant::now();
     let resp = client.post(rpc_provider).json(&payload).send().await?;
+    let elapsed_time = start_time.elapsed();
     let block: HashMap<String, Value> = resp.json().await?;
+
+    println!("RPC response time: {:?}", elapsed_time);
 
     Ok(block)
 }
