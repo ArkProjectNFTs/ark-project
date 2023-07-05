@@ -34,7 +34,7 @@ pub async fn fetch_block(
     let elapsed_time = start_time.elapsed();
     let block: HashMap<String, Value> = resp.json().await?;
 
-    println!("RPC response time: {:?}", elapsed_time);
+    println!("RPC starknet_getEvents response time: {:?}", elapsed_time);
 
     Ok(block)
 }
@@ -63,12 +63,14 @@ pub async fn call_contract(
         }
     });
 
+    let start_time = Instant::now();
     let response = client
         .post("https://starknet-mainnet.infura.io/v3/ccedf270a2a14a418fe9303865844cb7")
         .json(&payload)
         .send()
         .await?;
-
+    let elapsed_time = start_time.elapsed();
+    println!("RPC starknet_call response time: {:?}", elapsed_time);
     let result: Value = response.json().await?;
 
     Ok(result.get("result").cloned().unwrap_or(Value::Null))
@@ -81,11 +83,15 @@ pub async fn get_latest_block(client: &Client) -> Result<u64, Box<dyn Error>> {
         "method": "starknet_blockNumber",
         "params": {}
     });
+
+    let start_time = Instant::now();
     let response = client
         .post("https://starknet-mainnet.infura.io/v3/ccedf270a2a14a418fe9303865844cb7")
         .json(&payload)
         .send()
         .await?;
+    let elapsed_time = start_time.elapsed();
+    println!("RPC starknet_blockNumber response time: {:?}", elapsed_time);
 
     let result: Value = response.json().await?;
     let block_number = result
