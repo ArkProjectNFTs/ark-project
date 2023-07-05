@@ -41,6 +41,8 @@ pub async fn call_contract(
     selector: &str,
     calldata: Vec<&str>,
 ) -> Result<Value, Box<dyn Error>> {
+    dotenv().ok();
+    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload = json!({
         "jsonrpc": "2.0",
         "id": 1,
@@ -59,7 +61,7 @@ pub async fn call_contract(
     });
 
     let response = client
-        .post("https://starknet-mainnet.infura.io/v3/ccedf270a2a14a418fe9303865844cb7")
+        .post(rpc_provider)
         .json(&payload)
         .send()
         .await?;
@@ -70,6 +72,8 @@ pub async fn call_contract(
 }
 
 pub async fn get_latest_block(client: &Client) -> Result<u64, Box<dyn Error>> {
+    dotenv().ok();
+    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload: Value = json!({
         "jsonrpc": "2.0",
         "id": 1,
@@ -77,7 +81,7 @@ pub async fn get_latest_block(client: &Client) -> Result<u64, Box<dyn Error>> {
         "params": {}
     });
     let response = client
-        .post("https://starknet-mainnet.infura.io/v3/ccedf270a2a14a418fe9303865844cb7")
+        .post(rpc_provider)
         .json(&payload)
         .send()
         .await?;
