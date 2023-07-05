@@ -14,7 +14,10 @@ pub async fn get_blocks(
     dynamo_client: &DynamoClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-    let starting_block = env::var("START_BLOCK").expect("ARK_COLLECTIONS_TABLE_NAME must be set").parse::<u64>().unwrap();
+    let starting_block = env::var("START_BLOCK")
+        .expect("START_BLOCK must be set")
+        .parse::<u64>()
+        .unwrap();
     // Set starting block
     let mut current_block_number: u64 = starting_block;
     // Loop Through Blocks and wait for new blocks
