@@ -29,102 +29,96 @@ pub async fn identify_contract_types_from_transfers(
     let start_time = Instant::now();
 
     for event in events {
-        // Check if the "from_address" field is present and is not in the blacklist
+        // println!("Processing event: {:?}", event);
+        // Filter contract with most transactions from identification
         if let Some(from_address) = event.get("from_address").and_then(|addr| addr.as_str()) {
             if BLACKLIST.contains(&from_address) {
-                println!("Skipping blacklisted address: {:?}", from_address);
                 continue;
             }
-            let json_event = match serde_json::to_string(&event) {
-                Ok(je) => je,
-                Err(e) => {
-                    println!("Error converting event to JSON: {:?}", e);
-                    continue;
-                }
-            };
+        }
 
-            println!("Processing event: {:?}", json_event);
+        let json_event = serde_json::to_string(&event).unwrap();
+        println!("Processing event: {:?}", json_event);
+        // Get contract address
+        let from_address = event.get("from_address").unwrap().as_str().unwrap();
+        // check if contract present and is a NFT then send event to the kinesis stream
 
-            // Check contract status
-            match get_contract_status(&dynamo_client, from_address).await {
-                Ok(Some(contract_type))
-                    if contract_type == "erc721" || contract_type == "erc1155" =>
-                {
-                    let partition_key = format!("transfer-{}", from_address);
-                    if let Err(e) = send_to_kinesis(
-                        &kinesis_client,
-                        &kinesis_stream,
-                        &partition_key,
-                        &json_event,
-                    )
-                    .await
-                    {
-                        eprintln!("Error while sending to Kinesis: {:?}", e);
-                    }
-                }
-                Ok(Some("unknown")) | Err(_) | Ok(None) => {
-                    println!("Skipping unknown contract at address: {:?}", from_address);
-                    continue;
-                }
-                _ => {}
-            }
-
-            let token_uri_result =
-                get_contract_property(&client, &event, "tokenURI", ["1", "0"].to_vec(), false)
-                    .await;
-            let uri_result =
-                get_contract_property(&client, &event, "uri", [].to_vec(), false).await;
-
-            let contract_type = if token_uri_result != "null" {
-                "erc721".to_string()
-            } else if uri_result != "null" {
-                "erc1155".to_string()
-            } else {
-                println!("Contract type is unknown, skipping fetch assigning default values");
-                "unknown".to_string()
-            };
-
-            let (name, supply, symbol) = if contract_type != "unknown" {
-                // Check if it's a NFT, then send the event to the kinesis stream
-                if let Err(e) =
-                    send_to_kinesis(&kinesis_client, &kinesis_stream, "transfer", "data").await
-                {
-                    eprintln!("Error while sending to Kinesis: {:?}", e);
-                }
-                let name = get_contract_property(&client, &event, "name", [].to_vec(), true).await;
-                let supply =
-                    get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
-                let symbol =
-                    get_contract_property(&client, &event, "symbol", [].to_vec(), true).await;
-                (name, supply.to_string(), symbol.to_string())
-            } else {
-                // Assign default values for unknown contract types
-                (
-                    "Unknown name".to_string(),
-                    "0".to_string(),
-                    "Unknown symbol".to_string(),
+        // Check if contract present and type
+        let contract_status = get_contract_status(&dynamo_client, from_address)
+            .await
+            .unwrap_or(None);
+        if let Some(contract_type) = contract_status {
+            if contract_type == "unknown" {
+                continue; // If it's unknown, skip this iteration of the loop
+            } else if contract_type == "erc721" || contract_type == "erc1155" {
+                // Send Kinesis event here
+                send_to_kinesis(
+                    &kinesis_client,
+                    kinesis_stream.as_str(),
+                    "transfer",
+                    &json_event,
                 )
-            };
+                .await
+                .unwrap();
+                continue; // After sending event, skip this iteration of the loop
+            }
+        }
 
-            let item = Item {
-                name,
-                total_supply: supply,
-                symbol,
-                address: from_address.to_string(),
-                contract_deployer: "0x1234...".to_string(),
-                deployed_block_number: "1234567".to_string(),
-                contract_type: contract_type.clone(),
-            };
-            match add_collection_item(&dynamo_client, item, &table).await {
-                Ok(collection) => {
-                    println!(
-                        "Collection successfully added: {:?} {}, type: {}",
-                        collection, from_address, contract_type
-                    );
-                }
-                Err(e) => {
-                    eprintln!("Error while adding collection: {:?}", e);
-                }
+        // Get token_uri
+        let token_uri_result =
+            get_contract_property(&client, &event, "tokenURI", ["1", "0"].to_vec(), false).await;
+
+        // Get uri
+        let uri_result = get_contract_property(&client, &event, "uri", [].to_vec(), false).await;
+
+        // Init contract type
+        let mut contract_type = "unknown".to_string();
+
+        // Determine the contract type
+        if token_uri_result != "null" {
+            contract_type = "erc721".to_string();
+        } else if uri_result != "null" {
+            contract_type = "erc1155".to_string();
+        }
+
+        let (name, supply, symbol) = if contract_type != "unknown" {
+            // check is a NFT then send event to the kinesis stream also here when identifying a new contract
+            send_to_kinesis(&kinesis_client, kinesis_stream.as_str(), "transfer", "data")
+                .await
+                .unwrap();
+            let name = get_contract_property(&client, &event, "name", [].to_vec(), true).await;
+            let supply =
+                get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
+            let symbol = get_contract_property(&client, &event, "symbol", [].to_vec(), true).await;
+            (name, supply.to_string(), symbol.to_string())
+        } else {
+            println!("Contract type is unknown, skipping fetch assigning default values");
+            // Assign some default values if the contract type is unknown
+            (
+                "Unknown name".to_string(),
+                "0".to_string(),
+                "Unknown symbol".to_string(),
+            )
+        };
+
+        let item = Item {
+            name,
+            total_supply: supply.to_string(),
+            symbol: symbol.to_string(),
+            address: from_address.to_string(),
+            contract_deployer: "0x1234...".to_string(),
+            deployed_block_number: "1234567".to_string(),
+            contract_type: contract_type.clone(), // Assign the determined contract type here
+        };
+        match add_collection_item(&dynamo_client, item, &table).await {
+            Ok(collection) => {
+                println!(
+                    "Collection successfully added: {:?} {}, type: {}",
+                    collection, from_address, contract_type
+                );
+            }
+            Err(e) => {
+                eprintln!("Error while adding collection: {:?}", e);
             }
         }
     }
