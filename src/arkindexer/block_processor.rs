@@ -1,6 +1,7 @@
 use crate::arkindexer::block_status::{get_block_status, mark_block_status};
 use crate::arkindexer::event_processor::get_transfer_events;
 use crate::starknet::client::{fetch_block, get_latest_block};
+use aws_sdk_kinesis::Client as KinesisClient;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use dotenv::dotenv;
 use reqwest::Client;
@@ -12,6 +13,7 @@ use tokio::time::sleep;
 pub async fn get_blocks(
     reqwest_client: &Client,
     dynamo_client: &DynamoClient,
+    kinesis_client: &KinesisClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     let starting_block = env::var("START_BLOCK")
@@ -26,13 +28,13 @@ pub async fn get_blocks(
         let is_block_fetched = get_block_status(&dynamo_client, current_block_number).await?;
         println!("Latest block: {}", latest_block_number);
         println!("Current block: {}", current_block_number);
-        if is_block_fetched {
+        if current_block_number <= latest_block_number && is_block_fetched {
             println!("Current block {} is fetched:", current_block_number);
             current_block_number += 1;
         } else if current_block_number <= latest_block_number && !is_block_fetched {
             mark_block_status(&dynamo_client, current_block_number, false).await?;
             let block = fetch_block(&reqwest_client, current_block_number).await;
-            get_transfer_events(&reqwest_client, block.unwrap(), &dynamo_client).await;
+            get_transfer_events(&reqwest_client, block.unwrap(), &dynamo_client, &kinesis_client).await;
             mark_block_status(&dynamo_client, current_block_number, true).await?;
             current_block_number += 1;
         } else {
