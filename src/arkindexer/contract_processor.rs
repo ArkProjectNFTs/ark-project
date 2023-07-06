@@ -51,11 +51,13 @@ pub async fn identify_contract_types_from_transfers(
             if contract_type == "unknown" {
                 continue; // If it's unknown, skip this iteration of the loop
             } else if contract_type == "erc721" || contract_type == "erc1155" {
+                let partition_key = format!("transfer-{}", from_address);
+
                 // Send Kinesis event here
                 send_to_kinesis(
                     &kinesis_client,
                     kinesis_stream.as_str(),
-                    "transfer",
+                    &partition_key,
                     &json_event,
                 )
                 .await
