@@ -28,11 +28,16 @@ pub async fn identify_contract_types_from_transfers(
     // Init start time
     let start_time = Instant::now();
 
+    let mut filtered_count = 0;
+    let mut current_block_erc721_count = 0;
+    let mut current_block_erc1155_count = 0;
+
     for event in events {
         // println!("Processing event: {:?}", event);
         // Filter contract with most transactions from identification
         if let Some(from_address) = event.get("from_address").and_then(|addr| addr.as_str()) {
             if BLACKLIST.contains(&from_address) {
+                filtered_count += 1;
                 continue;
             }
         }
@@ -47,22 +52,39 @@ pub async fn identify_contract_types_from_transfers(
         let contract_status = get_contract_status(&dynamo_client, from_address)
             .await
             .unwrap_or(None);
-        if let Some(contract_type) = contract_status {
-            if contract_type == "unknown" {
-                continue; // If it's unknown, skip this iteration of the loop
-            } else if contract_type == "erc721" || contract_type == "erc1155" {
-                let partition_key = format!("transfer-{}", from_address);
 
-                // Send Kinesis event here
-                send_to_kinesis(
-                    &kinesis_client,
-                    kinesis_stream.as_str(),
-                    &partition_key,
-                    &json_event,
-                )
-                .await
-                .unwrap();
-                continue; // After sending event, skip this iteration of the loop
+        if let Some(contract_type) = contract_status {
+            match contract_type.as_str() {
+                "unknown" => continue, // If it's unknown, skip this iteration of the loop
+                "erc721" => {
+                    current_block_erc721_count += 1;
+                    let partition_key = format!("transfer-{}", from_address);
+                    // Send Kinesis event here
+                    send_to_kinesis(
+                        &kinesis_client,
+                        kinesis_stream.as_str(),
+                        &partition_key,
+                        &json_event,
+                    )
+                    .await
+                    .unwrap();
+                    continue; // After sending event, skip this iteration of the loop
+                }
+                "erc1155" => {
+                    current_block_erc1155_count += 1;
+                    let partition_key = format!("transfer-{}", from_address);
+                    // Send Kinesis event here
+                    send_to_kinesis(
+                        &kinesis_client,
+                        kinesis_stream.as_str(),
+                        &partition_key,
+                        &json_event,
+                    )
+                    .await
+                    .unwrap();
+                    continue; // After sending event, skip this iteration of the loop
+                }
+                _ => {}
             }
         }
 
@@ -124,6 +146,14 @@ pub async fn identify_contract_types_from_transfers(
             }
         }
     }
+
+    println!("Blacklist filtered events: {}", filtered_count);
+    println!("Current block ERC721 count: {}", current_block_erc721_count);
+    println!(
+        "Current block ERC1155 count: {}",
+        current_block_erc1155_count
+    );
+
     let duration = start_time.elapsed();
     println!("Time elapsed in contracts block is: {:?}", duration);
 }
