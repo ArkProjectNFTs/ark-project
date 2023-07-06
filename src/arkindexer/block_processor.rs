@@ -1,8 +1,8 @@
 use crate::arkindexer::block_status::{get_block_status, mark_block_status};
 use crate::arkindexer::event_processor::get_transfer_events;
 use crate::starknet::client::{fetch_block, get_latest_block};
-use aws_sdk_kinesis::Client as KinesisClient;
 use aws_sdk_dynamodb::Client as DynamoClient;
+use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
 use reqwest::Client;
 use std::env;
@@ -26,17 +26,29 @@ pub async fn get_blocks(
     loop {
         let latest_block_number = get_latest_block(&reqwest_client).await?;
         let is_block_fetched = get_block_status(&dynamo_client, current_block_number).await?;
+
         println!("Latest block: {}", latest_block_number);
         println!("Current block: {}", current_block_number);
-        if current_block_number <= latest_block_number && is_block_fetched {
-            println!("Current block {} is fetched:", current_block_number);
-            current_block_number += 1;
-        } else if current_block_number <= latest_block_number && !is_block_fetched {
-            mark_block_status(&dynamo_client, current_block_number, false).await?;
-            let block = fetch_block(&reqwest_client, current_block_number).await;
-            get_transfer_events(&reqwest_client, block.unwrap(), &dynamo_client, &kinesis_client).await;
-            mark_block_status(&dynamo_client, current_block_number, true).await?;
-            current_block_number += 1;
+        let progress = (current_block_number as f64 / latest_block_number as f64) * 100.0;
+        println!("Indexing progress: {:.2}%", progress);
+
+        if current_block_number <= latest_block_number {
+            if is_block_fetched {
+                println!("Current block {} is fetched:", current_block_number);
+                current_block_number += 1;
+            } else {
+                mark_block_status(&dynamo_client, current_block_number, false).await?;
+                let block = fetch_block(&reqwest_client, current_block_number).await;
+                get_transfer_events(
+                    &reqwest_client,
+                    block.unwrap(),
+                    &dynamo_client,
+                    &kinesis_client,
+                )
+                .await;
+                mark_block_status(&dynamo_client, current_block_number, true).await?;
+                current_block_number += 1;
+            }
         } else {
             sleep(Duration::from_secs(10)).await;
         }
