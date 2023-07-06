@@ -31,10 +31,14 @@ pub async fn fetch_block(
 
     let start_time = Instant::now();
     let resp = client.post(rpc_provider).json(&payload).send().await?;
-    let elapsed_time = start_time.elapsed();
     let block: HashMap<String, Value> = resp.json().await?;
 
-    println!("RPC starknet_getEvents response time: {:?}", elapsed_time);
+    let elapsed_time = start_time.elapsed();
+    let elapsed_time_ms = elapsed_time.as_millis();
+    println!(
+        "RPC starknet_getEvents response time: {} ms",
+        elapsed_time_ms
+    );
 
     Ok(block)
 }
@@ -66,14 +70,14 @@ pub async fn call_contract(
     });
 
     let start_time = Instant::now();
-    let response = client
-        .post(rpc_provider)
-        .json(&payload)
-        .send()
-        .await?;
+    let response = client.post(rpc_provider).json(&payload).send().await?;
     let elapsed_time = start_time.elapsed();
-    println!("RPC starknet_call response time: {:?}", elapsed_time);
     let result: Value = response.json().await?;
+    let elapsed_time_ms = elapsed_time.as_millis();
+    println!(
+        "RPC starknet_getEvents response time: {} ms",
+        elapsed_time_ms
+    );
 
     Ok(result.get("result").cloned().unwrap_or(Value::Null))
 }
@@ -89,15 +93,16 @@ pub async fn get_latest_block(client: &Client) -> Result<u64, Box<dyn Error>> {
     });
 
     let start_time = Instant::now();
-    let response = client
-        .post(rpc_provider)
-        .json(&payload)
-        .send()
-        .await?;
-    let elapsed_time = start_time.elapsed();
-    println!("RPC starknet_blockNumber response time: {:?}", elapsed_time);
-
+    let response = client.post(rpc_provider).json(&payload).send().await?;
     let result: Value = response.json().await?;
+
+    let elapsed_time = start_time.elapsed();
+    let elapsed_time_ms = elapsed_time.as_millis();
+    println!(
+        "RPC starknet_getEvents response time: {} ms",
+        elapsed_time_ms
+    );
+
     let block_number = result
         .get("result")
         .and_then(Value::as_u64)

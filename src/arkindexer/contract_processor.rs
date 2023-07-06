@@ -55,7 +55,7 @@ pub async fn identify_contract_types_from_transfers(
                 send_to_kinesis(
                     &kinesis_client,
                     kinesis_stream.as_str(),
-                    "transfert",
+                    "transfer",
                     &json_event,
                 )
                 .await
@@ -83,14 +83,9 @@ pub async fn identify_contract_types_from_transfers(
 
         let (name, supply, symbol) = if contract_type != "unknown" {
             // check is a NFT then send event to the kinesis stream also here when identifying a new contract
-            send_to_kinesis(
-                &kinesis_client,
-                kinesis_stream.as_str(),
-                "transfert",
-                "data",
-            )
-            .await
-            .unwrap();
+            send_to_kinesis(&kinesis_client, kinesis_stream.as_str(), "transfer", "data")
+                .await
+                .unwrap();
             let name = get_contract_property(&client, &event, "name", [].to_vec(), true).await;
             let supply =
                 get_contract_property(&client, &event, "totalSupply", [].to_vec(), true).await;
