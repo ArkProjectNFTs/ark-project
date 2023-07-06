@@ -24,8 +24,8 @@ pub async fn get_blocks(
     let mut current_block_number: u64 = starting_block;
     // Loop Through Blocks and wait for new blocks
     loop {
+        let execution_time = Instant::now();
         let latest_block_number = get_latest_block(&reqwest_client).await?;
-        let is_block_fetched = get_block_status(&dynamo_client, current_block_number).await?;
 
         println!(
             "Latest block: {}, Current block: {}, Indexing progress: {:.2}%",
@@ -35,12 +35,12 @@ pub async fn get_blocks(
         );
 
         if current_block_number <= latest_block_number {
+            let is_block_fetched = get_block_status(&dynamo_client, current_block_number).await?;
+
             if is_block_fetched {
                 println!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
             } else {
-                let execution_time = Instant::now();
-
                 mark_block_status(&dynamo_client, current_block_number, false).await?;
                 let block = fetch_block(&reqwest_client, current_block_number).await;
                 get_transfer_events(
