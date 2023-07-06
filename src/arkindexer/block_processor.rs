@@ -27,10 +27,12 @@ pub async fn get_blocks(
         let latest_block_number = get_latest_block(&reqwest_client).await?;
         let is_block_fetched = get_block_status(&dynamo_client, current_block_number).await?;
 
-        println!("Latest block: {}", latest_block_number);
-        println!("Current block: {}", current_block_number);
-        let progress = (current_block_number as f64 / latest_block_number as f64) * 100.0;
-        println!("Indexing progress: {:.2}%", progress);
+        println!(
+            "Latest block: {}, Current block: {}, Indexing progress: {:.2}%",
+            latest_block_number,
+            current_block_number,
+            (current_block_number as f64 / latest_block_number as f64) * 100.0
+        );
 
         if current_block_number <= latest_block_number {
             if is_block_fetched {
