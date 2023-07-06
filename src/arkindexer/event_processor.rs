@@ -16,9 +16,10 @@ pub async fn get_transfer_events(
     kinesis_client: &KinesisClient,
 ) -> () {
     let event_hash = get_selector_from_name("Transfer");
-
     let events = extract_events(&block);
+    println!("All detected events: {}", events.len());
     let transfer_events = filter_transfer_events(events, &event_hash);
-
-    identify_contract_types_from_transfers(client, transfer_events, dynamo_client, kinesis_client).await;
+    println!("Transfer events: {}", transfer_events.len());
+    identify_contract_types_from_transfers(client, transfer_events, dynamo_client, kinesis_client)
+        .await;
 }
