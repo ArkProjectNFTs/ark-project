@@ -36,7 +36,7 @@ pub async fn get_blocks(
 
         if current_block_number <= latest_block_number {
             if is_block_fetched {
-                println!("Current block {} is already fetched:", current_block_number);
+                println!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
             } else {
                 let execution_time = Instant::now();
