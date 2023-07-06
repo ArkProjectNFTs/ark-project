@@ -27,10 +27,7 @@ pub async fn identify_contract_types_from_transfers(
 
     // Init start time
     let start_time = Instant::now();
-
     let mut filtered_count = 0;
-    let mut current_block_erc721_count = 0;
-    let mut current_block_erc1155_count = 0;
 
     for event in events {
         // println!("Processing event: {:?}", event);
@@ -56,23 +53,13 @@ pub async fn identify_contract_types_from_transfers(
         if let Some(contract_type) = contract_status {
             match contract_type.as_str() {
                 "unknown" => continue, // If it's unknown, skip this iteration of the loop
-                "erc721" => {
-                    current_block_erc721_count += 1;
+                "erc721" | "erc1155" => {
                     let partition_key = format!("transfer-{}", from_address);
-                    // Send Kinesis event here
-                    send_to_kinesis(
-                        &kinesis_client,
-                        kinesis_stream.as_str(),
-                        &partition_key,
-                        &json_event,
-                    )
-                    .await
-                    .unwrap();
-                    continue; // After sending event, skip this iteration of the loop
-                }
-                "erc1155" => {
-                    current_block_erc1155_count += 1;
-                    let partition_key = format!("transfer-{}", from_address);
+                    println!(
+                        "Sending event to Kinesis: {} - {}",
+                        partition_key, json_event
+                    );
+
                     // Send Kinesis event here
                     send_to_kinesis(
                         &kinesis_client,
@@ -148,12 +135,6 @@ pub async fn identify_contract_types_from_transfers(
     }
 
     println!("Blacklist filtered events: {}", filtered_count);
-    println!("Current block ERC721 count: {}", current_block_erc721_count);
-    println!(
-        "Current block ERC1155 count: {}",
-        current_block_erc1155_count
-    );
-
     let duration = start_time.elapsed();
     println!("Time elapsed in contracts block is: {:?}", duration);
 }
