@@ -36,21 +36,8 @@ pub fn get_selector_from_name(name: &str) -> String {
     selector
 }
 
-pub fn hex_array_to_string(value: Value) -> Result<String, Box<dyn Error>> {
-    let array: Vec<String> = if let Value::Array(array) = value {
-        array
-            .into_iter()
-            .map(|v| v.as_str().unwrap().to_string())
-            .collect()
-    } else {
-        return Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Expected a JSON array",
-        )));
-    };
-
+pub fn hex_array_to_string(array: &Vec<String>) -> Result<String, Box<dyn Error>> {
     let mut result = String::new();
-
     for hex_str in array {
         let hex_str_without_prefix = hex_str.strip_prefix("0x").unwrap_or(&hex_str);
 

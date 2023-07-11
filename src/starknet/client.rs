@@ -71,8 +71,11 @@ pub async fn call_contract(
 
     let start_time = Instant::now();
     let response = client.post(rpc_provider).json(&payload).send().await?;
-    let elapsed_time = start_time.elapsed();
     let result: Value = response.json().await?;
+
+    println!("result: {:?}", result);
+
+    let elapsed_time = start_time.elapsed();
     let elapsed_time_ms = elapsed_time.as_millis();
     println!(
         "RPC starknet_getEvents response time: {} ms",
