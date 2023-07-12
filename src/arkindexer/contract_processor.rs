@@ -36,18 +36,28 @@ pub async fn get_contract_type_and_token_uri(
     client: &Client,
     event: HashMap<String, Value>,
 ) -> (String, String) {
-    let token_uri = get_contract_property_string(&client, &event, "tokenURI", vec!["1", "0"]).await;
+    let token_uri_cairo_0 =
+        get_contract_property_string(&client, &event, "tokenURI", vec!["1", "0"]).await;
+    let token_uri =
+        get_contract_property_string(&client, &event, "token_uri", vec!["1", "0"]).await;
+
     let uri_result = get_contract_property_string(&client, &event, "uri", vec![]).await;
 
-    let contract_type = if token_uri != "null" {
+    let contract_type = if token_uri_cairo_0 != "undefined" || token_uri != "undefined" {
         ERC721.to_string()
-    } else if uri_result != "null" {
+    } else if uri_result != "undefined" {
         ERC1155.to_string()
     } else {
         UNKNOWN.to_string()
     };
 
-    (contract_type, token_uri)
+    let token_uri_result = if token_uri_cairo_0 != "undefined" {
+        token_uri_cairo_0
+    } else {
+        token_uri
+    };
+
+    (contract_type, token_uri_result)
 }
 
 pub async fn get_contract_attributes(
@@ -96,7 +106,7 @@ pub async fn identify_contract_types_from_transfers(
     let mut filtered_count = 0;
 
     for event in events {
-        println!("Event: {:?}", event);
+        // println!("Event: {:?}", event);
 
         // Filter contract with most transactions from identification
         if let Some(from_address) = event.get("from_address").and_then(|addr| addr.as_str()) {
@@ -108,9 +118,10 @@ pub async fn identify_contract_types_from_transfers(
 
         // Get contract address
 
-        let from_address = event.get("from_address").unwrap().as_str().unwrap();
+        let contract_address = event.get("from_address").unwrap().as_str().unwrap();
         let transaction_hash = event.get("transaction_hash").unwrap().as_str().unwrap();
         let block_hash = event.get("block_hash").unwrap().as_str().unwrap();
+        let block_number = event.get("block_number").unwrap().as_u64().unwrap();
 
         // let to_address = event.get("to_address").unwrap().as_str().unwrap();
 
@@ -119,20 +130,22 @@ pub async fn identify_contract_types_from_transfers(
         let (contract_type, token_uri) =
             get_contract_type_and_token_uri(&client, event.clone()).await;
 
-        println!(
-            "Contract address: {} - Contract type: {} - Token URI: {}",
-            from_address, contract_type, token_uri
-        );
-
         let contract_attributes =
             get_contract_attributes(&client, event.clone(), contract_type.clone())
                 .await
                 .unwrap();
 
         if contract_type == "erc721" || contract_type == "erc1155" {
+            println!();
+            println!(
+                "Contract address: {} - Contract type: {} - Token URI: {} - Block number: {}",
+                contract_address, contract_type, token_uri, block_number
+            );
+            println!();
+
             // Extracting "data" from event
             if let Some(data) = event.get("data") {
-                println!("Data: {:?}", data);
+                // println!("Data: {:?}", data);
 
                 if let Some(data_array) = data.as_array() {
                     let data_strings: Vec<String> = data_array
@@ -160,14 +173,16 @@ pub async fn identify_contract_types_from_transfers(
 
                     if from_address == "0x0" {
                         let mint_object = serde_json::json!({
+                            "event_type": "mint",
                             "transaction_hash": transaction_hash,
                             "block_hash": block_hash,
                             "from_address": from_address,
                             "to_address": to_address,
                             "contract_type": contract_attributes.contract_type,
-                            "collection_address": from_address,
+                            "collection_address": contract_address,
                             "token_id": token_id_big_uint.to_str_radix(10),
-                            "token_uri": token_uri
+                            "token_uri": token_uri,
+                            "block_number": block_number.to_string(),
                         });
 
                         println!("Mint detected: {:?}", mint_object);
@@ -176,7 +191,7 @@ pub async fn identify_contract_types_from_transfers(
                         send_to_kinesis(
                             &kinesis_client,
                             kinesis_stream.as_str(),
-                            "mint",
+                            &format!("mint-{}", block_number),
                             &json_event,
                         )
                         .await
@@ -190,17 +205,14 @@ pub async fn identify_contract_types_from_transfers(
             name: contract_attributes.name.clone(),
             total_supply: contract_attributes.supply.clone(),
             symbol: contract_attributes.symbol.clone(),
-            address: from_address.to_string(),
+            address: contract_address.to_string(),
             contract_deployer: "".to_string(),
             deployed_block_number: "".to_string(),
             contract_type: contract_type.clone(),
         };
         match add_collection_item(&dynamo_client, item, &table).await {
-            Ok(collection) => {
-                println!(
-                    "Collection successfully added: {:?} {}, type: {}",
-                    collection, from_address, contract_type
-                );
+            Ok(success) => {
+                println!("Collection successfully added: {:?}", success);
             }
             Err(e) => {
                 eprintln!("Error while adding collection: {:?}", e);

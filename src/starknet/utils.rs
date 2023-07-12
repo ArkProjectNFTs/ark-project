@@ -1,10 +1,11 @@
-use crate::starknet::client::call_contract;
-use crate::utils::hex_array_to_string;
+use crate::{starknet::client::call_contract, utils::decode_long_string};
 use hex;
 use reqwest::Client;
 use serde_json::Value;
-use starknet::core::types::FieldElement;
-use starknet::core::utils::get_selector_from_name;
+use starknet::core::{
+    types::FieldElement,
+    utils::{get_selector_from_name, parse_cairo_short_string},
+};
 use std::collections::HashMap;
 
 fn _get_selector_as_string(selector: &String) -> String {
@@ -14,10 +15,33 @@ fn _get_selector_as_string(selector: &String) -> String {
     hex_selector
 }
 
-pub fn decode_long_string(string_array: &Vec<String>) -> String {
+pub fn decode_string_array(string_array: &Vec<String>) -> String {
     println!("decode_long_string: {:?}", string_array);
-    let long_string = hex_array_to_string(string_array).unwrap();
-    long_string
+
+    let array_size = string_array.len();
+    println!("array_size: {:?}", array_size);
+
+    if string_array.len() == 1 {
+        let felt: FieldElement = FieldElement::from_hex_be(string_array[0].as_str()).unwrap();
+        let short_string = parse_cairo_short_string(&felt).unwrap();
+
+        println!("short_string: {:?}", short_string);
+
+        short_string
+    } else if (string_array.len() == 3) {
+        // Decode short string with 2 felts
+
+        let felt1: FieldElement = FieldElement::from_hex_be(string_array[1].as_str()).unwrap();
+        let short_string1 = parse_cairo_short_string(&felt1).unwrap();
+
+        let felt2: FieldElement = FieldElement::from_hex_be(string_array[2].as_str()).unwrap();
+        let short_string2 = parse_cairo_short_string(&felt2).unwrap();
+
+        short_string1 + &short_string2
+    } else {
+        let long_string = decode_long_string(string_array).unwrap();
+        long_string
+    }
 }
 
 pub async fn get_contract_property_string(
@@ -27,6 +51,9 @@ pub async fn get_contract_property_string(
     calldata: Vec<&str>,
 ) -> String {
     let selector_string = selector_name.to_string();
+
+    println!("selector_string: {:?}", selector_string);
+
     let selector = _get_selector_as_string(&selector_string);
     match call_contract(
         &client,
@@ -41,7 +68,7 @@ pub async fn get_contract_property_string(
             Value::String(string) => string.to_string(),
             Value::Null => "undefined".to_string(),
             Value::Array(array) => {
-                println!("array: {:?} {:?}", array, event.get("from_address"));
+                println!("array: {:?}", array);
 
                 let string_array: Vec<String> = array
                     .clone()
@@ -49,9 +76,7 @@ pub async fn get_contract_property_string(
                     .map(|v| v.as_str().unwrap().to_string())
                     .collect();
 
-                println!("string_array: {:?}", string_array);
-
-                decode_long_string(&string_array)
+                decode_string_array(&string_array)
             }
             _ => "undefined".to_string(),
         },
