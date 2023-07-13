@@ -10,7 +10,7 @@ pub async fn get_block_status(dynamo_client: &Client, block_number: u64) -> Resu
     let request = dynamo_client
         .get_item()
         .table_name(table)
-        .key("blockNumber", block_number_av);
+        .key("block_number", block_number_av);
 
     let result = request.send().await?;
     if let Some(item) = result.item {
@@ -38,8 +38,8 @@ pub async fn mark_block_status(
     let request = dynamo_client
         .put_item()
         .table_name(table)
-        .item("blockNumber", block_number_av)
-        .item("isFetched", is_fetched_av);
+        .item("block_number", block_number_av)
+        .item("is_fetched", is_fetched_av);
 
     request.send().await?;
     Ok(())
