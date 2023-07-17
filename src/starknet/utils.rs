@@ -18,58 +18,21 @@ fn convert_felt_array_to_string(value1: &str, value2: &str) -> String {
 
     short_string1 + &short_string2
 }
-pub fn decode_string_array(string_array: &Vec<String>, log: bool) -> String {
-    if log {
-        info!("Initial String Array: {:?}", string_array);
-    }
 
-    let array_size = string_array.len();
-
-    if log {
-        info!("Array size: {:?}", array_size);
-    }
-
+pub fn decode_string_array(string_array: &Vec<String>) -> String {
     match string_array.len() {
-        0 => {
-            if log {
-                info!("String array is empty!");
-            }
-
-            "".to_string()
-        }
+        0 => "".to_string(),
         1 => {
             let felt: FieldElement = FieldElement::from_hex_be(&string_array[0]).unwrap();
-            let short_string = parse_cairo_short_string(&felt).unwrap();
-
-            if log {
-                info!("Decoded string: {:?}", short_string);
-            }
-
-            short_string
+            parse_cairo_short_string(&felt).unwrap()
         }
         2 => {
             let value1 = &string_array[0];
             let value2 = &string_array[1];
-
             info!("Values: {:?} - {:?}", value1, value2);
-
-            let decoded_string = convert_felt_array_to_string(value1, value2);
-
-            if log {
-                info!("Decoded string: {:?}", decoded_string);
-            }
-
-            decoded_string
+            convert_felt_array_to_string(value1, value2)
         }
-        3 => {
-            let decoded_string = convert_felt_array_to_string(&string_array[1], &string_array[0]);
-
-            if log {
-                info!("Decoded string: {:?}", decoded_string);
-            }
-
-            decoded_string
-        }
+        3 => convert_felt_array_to_string(&string_array[1], &string_array[0]),
         _ => {
             if let Some((_, new_string_array)) = string_array.split_first() {
                 let new_string_array: Vec<String> = new_string_array.to_vec();
@@ -87,7 +50,6 @@ pub async fn get_contract_property_string(
     contract_address: &str,
     selector_name: &str,
     calldata: Vec<&str>,
-    log: bool,
     block_number: u64,
 ) -> String {
     info!("Getting contract property: {:?}", selector_name);
@@ -113,7 +75,7 @@ pub async fn get_contract_property_string(
                     .map(|v| v.as_str().unwrap().to_string())
                     .collect();
 
-                decode_string_array(&string_array, log)
+                decode_string_array(&string_array)
             }
             _ => "undefined".to_string(),
         },

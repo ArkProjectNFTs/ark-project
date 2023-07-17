@@ -11,6 +11,7 @@ use aws_sdk_kinesis::Client as KinesisClient;
 use log::LevelFilter;
 use reqwest::Client;
 use simple_logger::SimpleLogger;
+mod events;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
