@@ -14,7 +14,7 @@ pub async fn get_transfer_events(
     block: HashMap<String, Value>,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
-) -> () {
+) {
     let event_hash = get_selector_from_name("Transfer");
     let events = extract_events(&block);
     println!("All detected events: {}", events.len());

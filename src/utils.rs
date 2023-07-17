@@ -39,7 +39,7 @@ pub fn get_selector_from_name(name: &str) -> String {
 pub fn decode_long_string(array: &Vec<String>) -> Result<String, Box<dyn Error>> {
     let mut result = String::new();
     for hex_str in array {
-        let hex_str_without_prefix = hex_str.strip_prefix("0x").unwrap_or(&hex_str);
+        let hex_str_without_prefix = hex_str.strip_prefix("0x").unwrap_or(hex_str);
 
         // Prepend a zero if the length is odd
         let hex_str_fixed_length = if hex_str_without_prefix.len() % 2 != 0 {

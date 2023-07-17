@@ -8,13 +8,10 @@ pub async fn check_address_exists(
     address: &str,
 ) -> Result<bool, Error> {
     // get the item
-    let response = client
-        .get_item()
-        .table_name(table_name)
-        .key(
-            "Address".to_string(),
-            AttributeValue::S(address.to_string()),
-        );
+    let response = client.get_item().table_name(table_name).key(
+        "Address".to_string(),
+        AttributeValue::S(address.to_string()),
+    );
     let resp = response.send().await?;
     let item = resp.item.unwrap();
     println!("{:?}", item);

@@ -1,19 +1,17 @@
 use crate::{starknet::client::call_contract, utils::decode_long_string};
-use hex;
 use log::info;
 use reqwest::Client;
 use serde_json::Value;
-use starknet::core::{
-    types::FieldElement,
-    utils::{get_selector_from_name, parse_cairo_short_string},
-};
-use std::collections::HashMap;
+use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 
 fn convert_felt_array_to_string(value1: &str, value2: &str) -> String {
     // Decode short string with 2 felts
 
     let felt1: FieldElement = FieldElement::from_hex_be(value1).unwrap();
+    info!("Felt1: {:?}", felt1);
+
     let short_string1 = parse_cairo_short_string(&felt1).unwrap();
+    info!("Short string1: {:?}", short_string1);
 
     let felt2: FieldElement = FieldElement::from_hex_be(value2).unwrap();
     let short_string2 = parse_cairo_short_string(&felt2).unwrap();
@@ -32,6 +30,13 @@ pub fn decode_string_array(string_array: &Vec<String>, log: bool) -> String {
     }
 
     match string_array.len() {
+        0 => {
+            if log {
+                info!("String array is empty!");
+            }
+
+            "".to_string()
+        }
         1 => {
             let felt: FieldElement = FieldElement::from_hex_be(&string_array[0]).unwrap();
             let short_string = parse_cairo_short_string(&felt).unwrap();
@@ -42,11 +47,22 @@ pub fn decode_string_array(string_array: &Vec<String>, log: bool) -> String {
 
             short_string
         }
-        2 | 3 => {
-            let decoded_string = convert_felt_array_to_string(
-                &string_array[1],
-                &string_array[2 % string_array.len()],
-            );
+        2 => {
+            let value1 = &string_array[0];
+            let value2 = &string_array[1];
+
+            info!("Values: {:?} - {:?}", value1, value2);
+
+            let decoded_string = convert_felt_array_to_string(value1, value2);
+
+            if log {
+                info!("Decoded string: {:?}", decoded_string);
+            }
+
+            decoded_string
+        }
+        3 => {
+            let decoded_string = convert_felt_array_to_string(&string_array[1], &string_array[0]);
 
             if log {
                 info!("Decoded string: {:?}", decoded_string);
@@ -74,8 +90,10 @@ pub async fn get_contract_property_string(
     log: bool,
     block_number: u64,
 ) -> String {
+    info!("Getting contract property: {:?}", selector_name);
+
     match call_contract(
-        &client,
+        client,
         contract_address,
         selector_name,
         calldata,
@@ -87,6 +105,8 @@ pub async fn get_contract_property_string(
             Value::String(string) => string.to_string(),
             Value::Null => "undefined".to_string(),
             Value::Array(array) => {
+                info!("Array: {:?}", array);
+
                 let string_array: Vec<String> = array
                     .clone()
                     .into_iter()

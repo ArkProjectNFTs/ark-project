@@ -25,6 +25,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let kinesis_client = KinesisClient::new(&config);
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = Client::new();
-    let result = get_blocks(&reqwest_client, &dynamo_client, &kinesis_client).await;
-    result
+    get_blocks(&reqwest_client, &dynamo_client, &kinesis_client).await
 }

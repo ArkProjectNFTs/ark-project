@@ -1,6 +1,5 @@
-use core::panic;
 use dotenv::dotenv;
-use log::{info, trace};
+use log::info;
 use reqwest::Client;
 use serde_json::{json, Value};
 use starknet::core::utils::get_selector_from_name;
@@ -46,11 +45,40 @@ pub async fn fetch_block(
     Ok(block)
 }
 
-fn get_selector_as_string(selector: &String) -> String {
-    let selector_field = get_selector_from_name(&selector).unwrap();
+fn get_selector_as_string(selector: &str) -> String {
+    let selector_field = get_selector_from_name(selector).unwrap();
     let bytes = selector_field.to_bytes_be();
-    let hex_selector = hex::encode(bytes);
-    hex_selector
+    hex::encode(bytes)
+}
+
+pub async fn get_block_with_txs(
+    client: &Client,
+    block_number: u64,
+) -> Result<Value, Box<dyn Error>> {
+    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
+    let payload = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "method": "starknet_getBlockWithTxs",
+        "params":  {
+            "block_id": {
+                "block_number": block_number
+            }
+        }
+    });
+
+    let start_time = Instant::now();
+    let response = client.post(rpc_provider).json(&payload).send().await?;
+    let result: Value = response.json().await?;
+
+    let elapsed_time = start_time.elapsed();
+    let elapsed_time_ms = elapsed_time.as_millis();
+    info!(
+        "RPC starknet_getEvents response time: {} ms",
+        elapsed_time_ms
+    );
+
+    Ok(result.get("result").cloned().unwrap_or(Value::Null))
 }
 
 pub async fn call_contract(
@@ -62,7 +90,6 @@ pub async fn call_contract(
 ) -> Result<Value, Box<dyn Error>> {
     dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-
     let selector_string = selector_name.to_string();
     let selector = get_selector_as_string(&selector_string);
 

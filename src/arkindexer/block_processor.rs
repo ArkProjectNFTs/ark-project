@@ -25,7 +25,7 @@ pub async fn get_blocks(
     // Loop Through Blocks and wait for new blocks
     loop {
         let execution_time = Instant::now();
-        let latest_block_number = get_latest_block(&reqwest_client).await?;
+        let latest_block_number = get_latest_block(reqwest_client).await?;
 
         println!(
             "Latest block: {}, Current block: {}, Indexing progress: {:.2}%",
@@ -35,22 +35,22 @@ pub async fn get_blocks(
         );
 
         if current_block_number <= latest_block_number {
-            let is_block_fetched = get_block_status(&dynamo_client, current_block_number).await?;
+            let is_block_fetched = get_block_status(dynamo_client, current_block_number).await?;
 
             if is_block_fetched {
                 println!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
             } else {
-                mark_block_status(&dynamo_client, current_block_number, false).await?;
-                let block = fetch_block(&reqwest_client, current_block_number).await;
+                mark_block_status(dynamo_client, current_block_number, false).await?;
+                let block = fetch_block(reqwest_client, current_block_number).await;
                 get_transfer_events(
-                    &reqwest_client,
+                    reqwest_client,
                     block.unwrap(),
-                    &dynamo_client,
-                    &kinesis_client,
+                    dynamo_client,
+                    kinesis_client,
                 )
                 .await;
-                mark_block_status(&dynamo_client, current_block_number, true).await?;
+                mark_block_status(dynamo_client, current_block_number, true).await?;
                 let execution_time_elapsed_time = execution_time.elapsed();
                 let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
                 println!(

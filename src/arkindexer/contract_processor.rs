@@ -1,6 +1,7 @@
 use crate::constants::BLACKLIST;
 use crate::dynamo::create::{register_collection_item, register_indexed_contract, CollectionItem};
 use crate::kinesis::send::send_to_kinesis;
+use crate::starknet::client::get_block_with_txs;
 use crate::starknet::utils::get_contract_property_string;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
@@ -38,8 +39,13 @@ pub async fn get_contract_type(
     contract_address: &str,
     block_number: u64,
 ) -> String {
+    info!(
+        "get_contract_type: {:?} - {:?}",
+        contract_address, block_number
+    );
+
     let token_uri_cairo_0 = get_contract_property_string(
-        &client,
+        client,
         contract_address,
         "tokenURI",
         vec!["1", "0"],
@@ -48,7 +54,7 @@ pub async fn get_contract_type(
     )
     .await;
     let token_uri = get_contract_property_string(
-        &client,
+        client,
         contract_address,
         "token_uri",
         vec!["1", "0"],
@@ -56,23 +62,17 @@ pub async fn get_contract_type(
         block_number,
     )
     .await;
-    let uri_result = get_contract_property_string(
-        &client,
-        contract_address,
-        "uri",
-        vec![],
-        false,
-        block_number,
-    )
-    .await;
+    let uri_result =
+        get_contract_property_string(client, contract_address, "uri", vec![], false, block_number)
+            .await;
 
     info!(
         "Token 1 ({:?}) => tokenURI: {:?} / token_uri: {:?}",
         contract_address, token_uri_cairo_0, token_uri
     );
 
-    if (token_uri_cairo_0 != "undefined" && token_uri_cairo_0 != "")
-        || (token_uri != "undefined" && token_uri != "")
+    if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
+        || (token_uri != "undefined" && !token_uri.is_empty())
     {
         ERC721.to_string()
     } else if uri_result != "undefined" {
@@ -92,7 +92,7 @@ async fn get_token_id(
     info!("get_token_id: [{:?}, {:?}]", token_id_low, token_id_high);
 
     let token_uri_cairo0 = get_contract_property_string(
-        &client,
+        client,
         contract_address,
         "tokenURI",
         vec![token_id_low, token_id_high],
@@ -103,12 +103,12 @@ async fn get_token_id(
 
     info!("token_uri_cairo0: {:?}", token_uri_cairo0);
 
-    if token_uri_cairo0 != "undefined" && token_uri_cairo0 != "" {
+    if token_uri_cairo0 != "undefined" && !token_uri_cairo0.is_empty() {
         return token_uri_cairo0;
     }
 
     let token_uri = get_contract_property_string(
-        &client,
+        client,
         contract_address,
         "token_uri",
         vec![token_id_low, token_id_high],
@@ -119,7 +119,7 @@ async fn get_token_id(
 
     info!("token_uri: {:?}", token_uri);
 
-    if token_uri != "undefined" && token_uri != "" {
+    if token_uri != "undefined" && !token_uri.is_empty() {
         return token_uri;
     }
 
@@ -132,9 +132,14 @@ pub async fn get_contract_attributes(
     contract_address: &str,
     block_number: u64,
 ) -> Result<ContractAttributes, Box<dyn Error>> {
-    let (name, supply, symbol) = if contract_type != "unknown" {
+    info!(
+        "get_contract_attributes: {:?} - {:?}",
+        contract_type, contract_address
+    );
+
+    let (name, _supply, symbol) = if contract_type != "unknown" {
         let name = get_contract_property_string(
-            &client,
+            client,
             contract_address,
             "name",
             [].to_vec(),
@@ -142,17 +147,19 @@ pub async fn get_contract_attributes(
             block_number,
         )
         .await;
-        let supply = get_contract_property_string(
-            &client,
-            contract_address,
-            "totalSupply",
-            [].to_vec(),
-            false,
-            block_number,
-        )
-        .await;
+
+        // let supply = get_contract_property_string(
+        //     &client,
+        //     contract_address,
+        //     "totalSupply",
+        //     [].to_vec(),
+        //     true,
+        //     block_number,
+        // )
+        // .await;
+
         let symbol = get_contract_property_string(
-            &client,
+            client,
             contract_address,
             "symbol",
             [].to_vec(),
@@ -160,7 +167,7 @@ pub async fn get_contract_attributes(
             block_number,
         )
         .await;
-        (name, supply.to_string(), symbol.to_string())
+        (name, 0.to_string(), symbol)
     } else {
         println!("Contract type is unknown, skipping fetch assigning default values");
         // Assign some default values if the contract type is unknown
@@ -172,10 +179,10 @@ pub async fn get_contract_attributes(
     };
 
     Ok(ContractAttributes {
-        name: name,
-        symbol: symbol,
-        supply: supply,
-        contract_type: contract_type,
+        name,
+        symbol,
+        supply: 0.to_string(),
+        contract_type,
     })
 }
 
@@ -218,12 +225,12 @@ pub async fn identify_contract_types_from_transfers(
 
         // check if contract present and is a NFT then send event to the kinesis stream
 
-        let contract_type = get_contract_type(&client, contract_address, block_number).await;
+        let contract_type = get_contract_type(client, contract_address, block_number).await;
 
         let contract_attributes = get_contract_attributes(
-            &client,
+            client,
             contract_type.clone(),
-            contract_address.clone(),
+            contract_address,
             block_number,
         )
         .await
@@ -232,6 +239,11 @@ pub async fn identify_contract_types_from_transfers(
         let is_nft = contract_type == "erc721" || contract_type == "erc1155";
 
         if is_nft {
+            // Get block info
+            let block = get_block_with_txs(client, block_number).await.unwrap();
+            let timestamp = block.get("timestamp").unwrap().as_u64().unwrap();
+
+            print!("timestamp: {:?}", timestamp);
             // Extracting "data" from event
             if let Some(data) = event.get("data") {
                 if let Some(data_array) = data.as_array() {
@@ -243,6 +255,8 @@ pub async fn identify_contract_types_from_transfers(
 
                     let from_address = data_strings[0].as_str();
                     let to_address = data_strings[1].as_str();
+                    let token_id_low = &data_strings[2].as_str();
+                    let token_id_high = &data_strings[3].as_str();
 
                     let low = u128::from_str_radix(&left_pad_hex_32(data_strings[2].clone()), 16)
                         .unwrap();
@@ -260,10 +274,10 @@ pub async fn identify_contract_types_from_transfers(
                     let token_id = token_id_big_uint.to_str_radix(10);
 
                     let token_uri = get_token_id(
-                        &client,
-                        &data_strings[2].as_str(),
-                        &data_strings[3].as_str(),
-                        contract_address.clone(),
+                        client,
+                        token_id_low,
+                        token_id_high,
+                        contract_address,
                         block_number,
                     )
                     .await;
@@ -286,7 +300,8 @@ pub async fn identify_contract_types_from_transfers(
                             "token_uri": token_uri,
                             "block_number": block_number,
                             "token_name": contract_attributes.name.to_string(),
-                            "token_symbol": contract_attributes.symbol.to_string()
+                            "token_symbol": contract_attributes.symbol.to_string(),
+                            "timestamp": timestamp.to_string()
                         });
 
                         info!("Mint detected: {:?}", mint_object);
@@ -299,7 +314,7 @@ pub async fn identify_contract_types_from_transfers(
                         );
 
                         send_to_kinesis(
-                            &kinesis_client,
+                            kinesis_client,
                             kinesis_stream.as_str(),
                             transaction_hash,
                             &json_event,
@@ -319,7 +334,7 @@ pub async fn identify_contract_types_from_transfers(
                 deployed_block_number: "".to_string(),
                 contract_type: contract_type.clone(),
             };
-            match register_collection_item(&dynamo_client, collection_item, &table).await {
+            match register_collection_item(dynamo_client, collection_item, &table).await {
                 Ok(success) => {
                     info!(
                         "[Success] New collection item added successfully.\n\
@@ -339,8 +354,7 @@ pub async fn identify_contract_types_from_transfers(
             }
         }
 
-        match register_indexed_contract(&dynamo_client, contract_address.to_string(), is_nft).await
-        {
+        match register_indexed_contract(dynamo_client, contract_address.to_string(), is_nft).await {
             Ok(_) => {}
             Err(e) => {
                 eprintln!(
