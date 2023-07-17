@@ -1,7 +1,7 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 
-pub struct Item {
+pub struct CollectionItem {
     pub name: String,
     pub total_supply: String,
     pub symbol: String,
@@ -22,25 +22,52 @@ pub struct ItemOut {
     pub contract_type: Option<AttributeValue>,
 }
 
-pub async fn add_collection_item(client: &Client, item: Item, table: &String) -> Result<(), Error> {
-    let name_av = AttributeValue::S(item.name);
-    let total_supply_av = AttributeValue::S(item.total_supply);
-    let symbol_av = AttributeValue::S(item.symbol);
-    let address_av = AttributeValue::S(item.address);
-    let contract_deployer_av = AttributeValue::S(item.contract_deployer);
-    let deployed_block_number_av = AttributeValue::S(item.deployed_block_number);
-    let contract_type_av = AttributeValue::S(item.contract_type);
+fn attribute_string(value: String) -> AttributeValue {
+    AttributeValue::S(value)
+}
 
+fn attribute_bool(value: bool) -> AttributeValue {
+    AttributeValue::Bool(value)
+}
+
+pub async fn register_indexed_contract(
+    client: &Client,
+    contract_address: String,
+    is_nft: bool,
+) -> Result<(), Error> {
+    let request = client
+        .put_item()
+        .table_name("ark_mainnet_indexed_contracts")
+        .item("address", attribute_string(contract_address))
+        .item("is_indexed", attribute_bool(true))
+        .item("is_nft", attribute_bool(is_nft));
+
+    request.send().await?;
+
+    Ok(())
+}
+
+pub async fn register_collection_item(
+    client: &Client,
+    item: CollectionItem,
+    table: &String,
+) -> Result<(), Error> {
     let request = client
         .put_item()
         .table_name(table)
-        .item("name", name_av)
-        .item("total_supply", total_supply_av)
-        .item("symbol", symbol_av)
-        .item("address", address_av)
-        .item("contract_deployer", contract_deployer_av)
-        .item("deployed_block_number", deployed_block_number_av)
-        .item("type", contract_type_av);
+        .item("name", attribute_string(item.name))
+        .item("total_supply", attribute_string(item.total_supply))
+        .item("symbol", attribute_string(item.symbol))
+        .item("address", attribute_string(item.address))
+        .item(
+            "contract_deployer",
+            attribute_string(item.contract_deployer),
+        )
+        .item(
+            "deployed_block_number",
+            attribute_string(item.deployed_block_number),
+        )
+        .item("type", attribute_string(item.contract_type));
 
     request.send().await?;
 
