@@ -153,7 +153,6 @@ dependencies = [
  "aws-sdk-kinesis",
  "aws-types",
  "clap 4.3.8",
- "crypto-bigint",
  "dotenv",
  "hex",
  "log",
