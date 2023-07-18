@@ -1,9 +1,10 @@
 use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
+use crate::dynamo;
 use crate::dynamo::create::{add_collection_item, CollectionItem};
 use crate::events::transfer_processor::process_transfers;
-use crate::starknet::utils::get_contract_property_string;
 use crate::kinesis::send::send_to_kinesis;
+use crate::starknet::utils::get_contract_property_string;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
@@ -16,12 +17,11 @@ use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
 pub async fn identify_contract_types_from_transfers(
-    client: &Client,
+    client: &reqwest::Client,
     events: Vec<HashMap<String, Value>>,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
 ) {
-    
     // TODO: move to env file
     dotenv().ok();
     let is_dev = match env::var("IS_DEV") {

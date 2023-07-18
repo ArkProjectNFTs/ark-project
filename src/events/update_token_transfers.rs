@@ -2,9 +2,9 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use dotenv::dotenv;
 use log::info;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json;
+use std::collections::HashMap;
 use std::env;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,7 +23,7 @@ struct Transfer {
 }
 
 pub async fn update_token_transfers(
-    dynamo_client: &Client,
+    dynamo_client: &aws_sdk_dynamodb::Client,
     contract_address: &str,
     token_id: &str,
     from_address: &str,
@@ -94,7 +94,7 @@ pub async fn update_token_transfers(
 // Function to convert a Transfer into a Map<AttributeValue>
 fn convert_transfer_to_map(transfer: &Transfer) -> AttributeValue {
     let mut map: HashMap<String, AttributeValue> = HashMap::new();
-    
+
     map.insert("from".into(), AttributeValue::S(transfer.from.clone()));
     map.insert("to".into(), AttributeValue::S(transfer.to.clone()));
     map.insert(

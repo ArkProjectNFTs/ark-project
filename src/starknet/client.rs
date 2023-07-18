@@ -52,7 +52,7 @@ fn get_selector_as_string(selector: &str) -> String {
 }
 
 pub async fn get_block_with_txs(
-    client: &Client,
+    client: &reqwest::Client,
     block_number: u64,
 ) -> Result<Value, Box<dyn Error>> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
