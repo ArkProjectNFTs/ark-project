@@ -4,4 +4,5 @@ pub mod create;
 pub mod get_collection;
 pub mod get_contract;
 pub mod list;
+pub mod update_collection;
 pub mod update_latest_mint;

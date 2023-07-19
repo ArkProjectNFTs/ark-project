@@ -1,19 +1,24 @@
 use crate::dynamo::add_collection_activity;
+use crate::dynamo::add_token::add_token;
 use crate::dynamo::get_collection::get_collection;
 use crate::dynamo::update_latest_mint::update_latest_mint;
 use crate::events::transfer_processor::add_collection_activity::add_collection_activity;
 use crate::events::update_token_transfers::update_token_transfers;
+use crate::starknet::client::call_contract;
 use crate::starknet::{client::get_block_with_txs, utils::get_contract_property_string};
 use crate::utils::sanitize_uri;
+use aws_sdk_dynamodb::types::AttributeValue;
 use log::info;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
+use serde_json::to_string;
 use serde_json::Value;
-use starknet::core::types::EmittedEvent;
+use starknet::core::types::{EmittedEvent, FieldElement};
+use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Attribute {
+struct MetadataAttribute {
     trait_type: String,
     value: String,
     display_type: String,
@@ -21,25 +26,68 @@ struct Attribute {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NormalizedMetadata {
-    description: String,
-    external_url: String,
-    image: String,
-    name: String,
-    attributes: Vec<Attribute>,
+    pub description: String,
+    pub external_url: String,
+    pub image: String,
+    pub name: String,
+    attributes: Vec<MetadataAttribute>,
 }
 
+impl From<NormalizedMetadata> for HashMap<String, AttributeValue> {
+    fn from(metadata: NormalizedMetadata) -> Self {
+        let mut attributes: HashMap<String, AttributeValue> = HashMap::new();
+
+        attributes.insert(
+            "description".to_string(),
+            AttributeValue::S(metadata.description),
+        );
+        attributes.insert(
+            "external_url".to_string(),
+            AttributeValue::S(metadata.external_url),
+        );
+        attributes.insert("image".to_string(), AttributeValue::S(metadata.image));
+        attributes.insert("name".to_string(), AttributeValue::S(metadata.name));
+
+        let attributes_list: Vec<AttributeValue> = metadata
+            .attributes
+            .into_iter()
+            .map(|attribute| {
+                let mut attribute_map: HashMap<String, AttributeValue> = HashMap::new();
+                attribute_map.insert(
+                    "trait_type".to_string(),
+                    AttributeValue::S(attribute.trait_type),
+                );
+                attribute_map.insert("value".to_string(), AttributeValue::S(attribute.value));
+                attribute_map.insert(
+                    "display_type".to_string(),
+                    AttributeValue::S(attribute.display_type),
+                );
+                AttributeValue::M(attribute_map)
+            })
+            .collect();
+
+        attributes.insert("attributes".to_string(), AttributeValue::L(attributes_list));
+
+        attributes
+    }
+}
 async fn get_token_uri(
     client: &reqwest::Client,
-    token_id_low: &str,
-    token_id_high: &str,
+    token_id_low: u128,
+    token_id_high: u128,
     contract_address: &str,
     block_number: u64,
 ) -> String {
+    info!("get_token_id: [{:?}, {:?}]", token_id_low, token_id_high);
+
+    let token_id_low_hex = format!("{:x}", token_id_low);
+    let token_id_high_hex = format!("{:x}", token_id_high);
+
     let token_uri_cairo0 = get_contract_property_string(
         client,
         contract_address,
         "tokenURI",
-        vec![&token_id_low, &token_id_high],
+        vec![&token_id_low_hex, &token_id_high_hex],
         block_number,
     )
     .await;
@@ -52,16 +100,18 @@ async fn get_token_uri(
         client,
         contract_address,
         "token_uri",
-        vec![&token_id_low, &token_id_high],
+        vec![&token_id_low_hex, &token_id_high_hex],
         block_number,
     )
     .await;
+
+    info!("token_uri: {:?}", token_uri);
 
     if token_uri != "undefined" && !token_uri.is_empty() {
         return token_uri;
     }
 
-    String::from("undefined")
+    "undefined".to_string()
 }
 
 pub async fn process_transfers(
@@ -85,23 +135,17 @@ pub async fn process_transfers(
     let to_address = format!("{:#064x}", event.data[1]);
     let contract_address = format!("{:#064x}", event.from_address);
     let transaction_hash = format!("{:#064x}", event.transaction_hash);
-    let token_id_low = format!("{:#064x}", event.data[2]);
-    let token_id_high = format!("{:#064x}", event.data[3]);
 
-    let data_strings: Vec<String> = event
-        .data
-        .iter()
-        .map(|field_element| field_element.to_string())
-        .collect();
+    let token_id_low = event.data[2];
+    let token_id_high = event.data[3];
 
-    let from_address = data_strings[0].as_str();
-    let to_address = data_strings[1].as_str();
+    let token_id_low_hex = format!("{:#064x}", token_id_low);
+    let token_id_high_hex = format!("{:#064x}", token_id_high);
 
-    let token_id_low = &data_strings[2].as_str();
-    let token_id_high = &data_strings[3].as_str();
+    info!("token_id: [{},{}]", token_id_low_hex, token_id_high_hex);
 
-    let low = u128::from_str_radix(data_strings[2].as_str(), 10).unwrap();
-    let high = u128::from_str_radix(data_strings[3].as_str(), 10).unwrap();
+    let low = u128::from_str_radix(token_id_low.to_string().as_str(), 10).unwrap();
+    let high = u128::from_str_radix(token_id_high.to_string().as_str(), 10).unwrap();
 
     let low_bytes = low.to_be_bytes();
     let high_bytes = high.to_be_bytes();
@@ -112,14 +156,16 @@ pub async fn process_transfers(
 
     let token_id_big_uint = BigUint::from_bytes_be(&bytes[..]);
     let token_id = token_id_big_uint.to_str_radix(10);
-    let contract_address = serde_json::to_string(&event.from_address).unwrap();
-    let block_number = event.block_number;
+    let contract_address = format!("{:#064x}", event.from_address);
 
-    let token_uri = get_token_uri(
+    let block_number = event.block_number;
+    let token_uri = get_token_uri(client, low, high, &contract_address, block_number).await;
+
+    let token_owner = get_token_owner(
         client,
         token_id_low,
         token_id_high,
-        &contract_address,
+        contract_address.as_str(),
         block_number,
     )
     .await;
@@ -140,7 +186,7 @@ pub async fn process_transfers(
     )
     .await;
 
-    if from_address == "0" {
+    if event.data[0] == FieldElement::ZERO {
         info!(
         "\n\n=== MINT DETECTED ===\n\nContract address: {} - Token ID: {} - Token URI: {} - Block number: {}\n\n===========\n\n",
         contract_address, token_id, token_uri, block_number
@@ -149,9 +195,13 @@ pub async fn process_transfers(
         process_mint_event(
             client,
             dynamo_db_client,
+            token_id.as_str(),
             token_uri.as_str(),
             timestamp,
             contract_address.as_str(),
+            token_owner.as_str(),
+            transaction_hash.as_str(),
+            block_number,
         )
         .await;
     } else {
@@ -161,17 +211,50 @@ pub async fn process_transfers(
     Ok(())
 }
 
+async fn get_token_owner(
+    client: &reqwest::Client,
+    token_id_low: FieldElement,
+    token_id_high: FieldElement,
+    contract_address: &str,
+    block_number: u64,
+) -> String {
+    let token_id_low_hex = format!("{:x}", token_id_low);
+    let token_id_high_hex = format!("{:x}", token_id_high);
+    let calldata = vec![token_id_low_hex.as_str(), token_id_high_hex.as_str()];
+
+    match call_contract(client, contract_address, "ownerOf", calldata, block_number).await {
+        Ok(result) => {
+            if let Some(token_owner) = result.get(0) {
+                token_owner.to_string()
+            } else {
+                "".to_string()
+            }
+        }
+        Err(error) => "".to_string(),
+    }
+}
+
 async fn process_mint_event(
     client: &reqwest::Client,
     dynamo_client: &aws_sdk_dynamodb::Client,
+    token_id: &str,
     token_uri: &str,
     timestamp: u64,
     collection_address: &str,
+    token_owner: &str,
+    transaction_hash: &str,
+    block_number: u64,
 ) {
-    println!("token_uri: {:?}", token_uri);
-
     let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_uri).await;
+
+    info!(
+        "metadata_uri: {:?} - initial_metadata_uri: {:?} - token_uri: {:?}",
+        metadata_uri, initial_metadata_uri, token_uri
+    );
+
     let collection_result = get_collection(dynamo_client, collection_address).await;
+
+    info!("collection_result: {:?}", collection_result);
 
     match collection_result {
         Ok(Some(collection)) => {
@@ -220,19 +303,26 @@ async fn process_mint_event(
 
         match result {
             Ok((raw_metadata, normalized_metadata)) => {
-                println!("Raw metadata: {:?}", raw_metadata);
+                println!(
+                    "Raw metadata: {:?} - Normalized_metadata: {:?}",
+                    raw_metadata, normalized_metadata
+                );
 
                 // TODO: Uploading image to S3
 
-                // TODO: Inserting into ark_mainnet_tokens
-
-                // let _ = add_token(
-                //     dynamo_client,
-                //     collection_address.to_string(),
-                //     "".to_string(),
-                //     "".to_string(),
-                // )
-                // .await;
+                let _ = add_token(
+                    dynamo_client,
+                    collection_address.to_string(),
+                    token_id.to_string(),
+                    token_uri.to_string(),
+                    to_string(&raw_metadata).unwrap(),
+                    normalized_metadata,
+                    token_owner.to_string(),
+                    token_owner.to_string(),
+                    transaction_hash.to_string(),
+                    block_number,
+                )
+                .await;
             }
             Err(e) => {
                 info!("Error fetching metadata: {}", e);
@@ -261,9 +351,9 @@ pub async fn fetch_metadata(
         .and_then(|attr| attr.as_array())
         .unwrap_or(&empty_vec);
 
-    let normalized_attributes: Vec<Attribute> = attributes
+    let normalized_attributes: Vec<MetadataAttribute> = attributes
         .iter()
-        .map(|attribute| Attribute {
+        .map(|attribute| MetadataAttribute {
             trait_type: attribute
                 .get("trait_type")
                 .and_then(|trait_type| trait_type.as_str())

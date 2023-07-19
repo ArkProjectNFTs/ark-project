@@ -1,9 +1,7 @@
+use crate::arkindexer::contract_processor::identify_contract_types_from_transfers;
 use crate::utils::{extract_events, filter_transfer_events, get_selector_from_name};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-
-use crate::arkindexer::contract_processor::identify_contract_types_from_transfers;
-use reqwest::Client;
 use serde_json::Value;
 use std::collections::HashMap;
 

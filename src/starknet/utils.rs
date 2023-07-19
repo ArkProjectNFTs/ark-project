@@ -79,6 +79,8 @@ pub async fn get_contract_property_string(
                     .map(|v| v.as_str().unwrap().to_string())
                     .collect();
 
+                info!("String array: {:?}", string_array);
+
                 let long_string = decode_string_array(&string_array);
                 info!("Long string: {}", long_string);
                 long_string

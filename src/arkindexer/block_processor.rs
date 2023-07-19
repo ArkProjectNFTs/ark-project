@@ -43,6 +43,7 @@ pub async fn get_blocks(
             } else {
                 mark_block_status(dynamo_client, current_block_number, false).await?;
                 let block = fetch_block(reqwest_client, current_block_number).await;
+
                 get_transfer_events(
                     reqwest_client,
                     block.unwrap(),
@@ -50,6 +51,7 @@ pub async fn get_blocks(
                     kinesis_client,
                 )
                 .await;
+
                 mark_block_status(dynamo_client, current_block_number, true).await?;
                 let execution_time_elapsed_time = execution_time.elapsed();
                 let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();

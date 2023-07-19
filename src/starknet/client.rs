@@ -116,6 +116,8 @@ pub async fn call_contract(
     let response = client.post(rpc_provider).json(&payload).send().await?;
     let result: Value = response.json().await?;
 
+    info!("RPC Result: {:?}", result);
+
     let elapsed_time = start_time.elapsed();
     let elapsed_time_ms = elapsed_time.as_millis();
     info!(

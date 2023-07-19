@@ -11,7 +11,7 @@ pub async fn get_collection(
         .table_name("ark_mainnet_collections") // make sure to provide table name
         .key("address", AttributeValue::S(address.to_string()));
 
-    let result = request.send().await?;
+    let response = request.send().await?;
 
-    Ok(result.item) // No need for a match here as you are simply returning the option
+    Ok(response.item)
 }

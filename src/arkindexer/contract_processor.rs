@@ -1,6 +1,5 @@
 use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
-use crate::dynamo;
 use crate::dynamo::create::{add_collection_item, CollectionItem};
 use crate::events::transfer_processor::process_transfers;
 use crate::kinesis::send::send_to_kinesis;
@@ -9,10 +8,10 @@ use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
 use log::info;
-use reqwest::Client;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
+use std::error::Error;
 use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
@@ -60,6 +59,8 @@ pub async fn identify_contract_types_from_transfers(
         let contract_status = get_contract_status(dynamo_client, contract_address)
             .await
             .unwrap_or(None);
+
+        // ...
 
         if let Some(contract_type) = contract_status {
             if contract_type == "unknown" {
@@ -139,6 +140,15 @@ pub async fn identify_contract_types_from_transfers(
                 if contract_type != "unknown" {
                     // TODO: use common function
                     if is_dev {
+                        update_additional_collection_data(
+                            client,
+                            dynamo_client,
+                            contract_address,
+                            block_number,
+                        )
+                        .await
+                        .unwrap();
+
                         process_transfers(client, dynamo_client, &json_event)
                             .await
                             .unwrap();
@@ -166,4 +176,32 @@ pub async fn identify_contract_types_from_transfers(
     }
     let duration = start_time.elapsed();
     println!("Time elapsed in contracts block is: {:?}", duration);
+}
+
+async fn update_additional_collection_data(
+    client: &reqwest::Client,
+    dynamo_client: &DynamoClient,
+    contract_address: &str,
+    block_number: u64,
+) -> Result<(), Box<dyn Error>> {
+    info!("update_additional_collection_data");
+
+    let collection_symbol =
+        get_contract_property_string(client, contract_address, "symbol", vec![], block_number)
+            .await;
+
+    let collection_name =
+        get_contract_property_string(client, contract_address, "name", vec![], block_number).await;
+
+    info!("collection_name: {:?}", collection_name);
+
+    update_collection(
+        dynamo_client,
+        contract_address.to_string(),
+        collection_name,
+        collection_symbol,
+    )
+    .await?;
+
+    Ok(())
 }
