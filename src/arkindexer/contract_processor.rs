@@ -104,7 +104,7 @@ pub async fn identify_contract_types_from_transfers(
 
         // Get uri
         let uri_result = get_contract_property_string(
-            &client,
+            client,
             contract_address,
             "uri",
             [].to_vec(),

@@ -1,43 +1,37 @@
 use crate::dynamo::add_collection_activity;
 use crate::dynamo::get_collection::get_collection;
+use crate::dynamo::update_latest_mint::update_latest_mint;
+use crate::events::transfer_processor::add_collection_activity::add_collection_activity;
 use crate::events::update_token_transfers::update_token_transfers;
 use crate::starknet::{client::get_block_with_txs, utils::get_contract_property_string};
+use crate::utils::sanitize_uri;
 use log::info;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use starknet::core::types::EmittedEvent;
-use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Metadata {
+struct Attribute {
+    trait_type: String,
+    value: String,
+    display_type: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NormalizedMetadata {
     description: String,
     external_url: String,
     image: String,
     name: String,
-    attributes: Option<Vec<HashMap<String, String>>>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct NormalizedMetadata {
-    description: String,
-    #[serde(rename = "external_url")]
-    initial_metadata_uri: String,
-    image: String,
-    name: String,
-    attributes: Vec<HashMap<String, String>>,
-}
-
-fn left_pad_hex_32(hex_string: String) -> String {
-    let trimmed_string = hex_string.as_str().trim_start_matches("0x");
-    let padded_string = format!("{:0>32}", trimmed_string);
-    padded_string
+    attributes: Vec<Attribute>,
 }
 
 async fn get_token_uri(
     client: &reqwest::Client,
-    token_id_low: String,
-    token_id_high: String,
+    token_id_low: &str,
+    token_id_high: &str,
     contract_address: &str,
     block_number: u64,
 ) -> String {
@@ -94,8 +88,20 @@ pub async fn process_transfers(
     let token_id_low = format!("{:#064x}", event.data[2]);
     let token_id_high = format!("{:#064x}", event.data[3]);
 
-    let low = u128::from_str_radix(&left_pad_hex_32(token_id_low.clone()), 16).unwrap();
-    let high = u128::from_str_radix(&left_pad_hex_32(token_id_high.clone()), 16).unwrap();
+    let data_strings: Vec<String> = event
+        .data
+        .iter()
+        .map(|field_element| field_element.to_string())
+        .collect();
+
+    let from_address = data_strings[0].as_str();
+    let to_address = data_strings[1].as_str();
+
+    let token_id_low = &data_strings[2].as_str();
+    let token_id_high = &data_strings[3].as_str();
+
+    let low = u128::from_str_radix(data_strings[2].as_str(), 10).unwrap();
+    let high = u128::from_str_radix(data_strings[3].as_str(), 10).unwrap();
 
     let low_bytes = low.to_be_bytes();
     let high_bytes = high.to_be_bytes();
@@ -106,8 +112,7 @@ pub async fn process_transfers(
 
     let token_id_big_uint = BigUint::from_bytes_be(&bytes[..]);
     let token_id = token_id_big_uint.to_str_radix(10);
-
-    let contract_address = event.from_address.to_string();
+    let contract_address = serde_json::to_string(&event.from_address).unwrap();
     let block_number = event.block_number;
 
     let token_uri = get_token_uri(
@@ -135,13 +140,18 @@ pub async fn process_transfers(
     )
     .await;
 
-    if from_address == "0x0" {
+    if from_address == "0" {
+        info!(
+        "\n\n=== MINT DETECTED ===\n\nContract address: {} - Token ID: {} - Token URI: {} - Block number: {}\n\n===========\n\n",
+        contract_address, token_id, token_uri, block_number
+    );
+
         process_mint_event(
             client,
             dynamo_db_client,
-            &token_uri,
+            token_uri.as_str(),
             timestamp,
-            &contract_address,
+            contract_address.as_str(),
         )
         .await;
     } else {
@@ -153,13 +163,15 @@ pub async fn process_transfers(
 
 async fn process_mint_event(
     client: &reqwest::Client,
-    dynamo_db_client: &aws_sdk_dynamodb::Client,
+    dynamo_client: &aws_sdk_dynamodb::Client,
     token_uri: &str,
     timestamp: u64,
     collection_address: &str,
 ) {
+    println!("token_uri: {:?}", token_uri);
+
     let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_uri).await;
-    let collection_result = get_collection(dynamo_db_client, collection_address).await;
+    let collection_result = get_collection(dynamo_client, collection_address).await;
 
     match collection_result {
         Ok(Some(collection)) => {
@@ -168,10 +180,17 @@ async fn process_mint_event(
                 match latest_mint_str.parse::<u64>() {
                     Ok(latest_mint_value) => {
                         if latest_mint_value > timestamp {
-                            // TODO: Update ark_mainnet_collections (latest_mint)
+                            let _ = update_latest_mint(
+                                dynamo_client,
+                                latest_mint_value,
+                                collection_address.to_string(),
+                            )
+                            .await;
                         }
 
                         //  TODO: Inserting into ark_mainnet_collection_activities
+
+                        let _ = add_collection_activity(dynamo_client).await;
                     }
                     Err(parse_err) => {
                         info!("Error parsing latest_mint: {}", parse_err);
@@ -189,63 +208,99 @@ async fn process_mint_event(
         }
     }
 
+    println!("metadata_uri: {:?}", metadata_uri);
+
     if !metadata_uri.is_empty() {
-        let metadata = fetch_metadata(client, &metadata_uri, &initial_metadata_uri)
-            .await
-            .unwrap();
+        let result = fetch_metadata(
+            client,
+            &metadata_uri.as_str(),
+            &initial_metadata_uri.as_str(),
+        )
+        .await;
 
-        // TODO: Uploading image to S3
+        match result {
+            Ok((raw_metadata, normalized_metadata)) => {
+                println!("Raw metadata: {:?}", raw_metadata);
 
-        // TODO: Inserting into ark_mainnet_tokens
+                // TODO: Uploading image to S3
+
+                // TODO: Inserting into ark_mainnet_tokens
+
+                // let _ = add_token(
+                //     dynamo_client,
+                //     collection_address.to_string(),
+                //     "".to_string(),
+                //     "".to_string(),
+                // )
+                // .await;
+            }
+            Err(e) => {
+                info!("Error fetching metadata: {}", e);
+                return;
+            }
+        };
     }
 }
 
-async fn sanitize_uri(token_uri: &str) -> (String, String) {
-    let mut request_uri = token_uri
-        .trim()
-        .replace("\u{0003}", "")
-        .replace("-https://", "https://");
-    request_uri = convert_ipfs_uri_to_http_uri(request_uri);
-    (request_uri.clone(), request_uri)
-}
-
-fn convert_ipfs_uri_to_http_uri(request_uri: String) -> String {
-    let result = if request_uri.contains("ipfs://") {
-        format!(
-            "http://ec2-54-89-64-17.compute-1.amazonaws.com:8080/ipfs/{}",
-            request_uri.split("ipfs://").last().unwrap()
-        )
-    } else {
-        request_uri
-    };
-    result
-}
-
-async fn fetch_metadata(
+pub async fn fetch_metadata(
     client: &reqwest::Client,
     metadata_uri: &str,
     initial_metadata_uri: &str,
-) -> Result<NormalizedMetadata, Box<dyn std::error::Error>> {
-    let res = client.get(metadata_uri).send().await?;
-    let raw_metadata: Metadata = res.json().await?;
+) -> Result<(Value, NormalizedMetadata), Box<dyn Error>> {
+    println!("Fetching metadata: {}", metadata_uri);
 
-    let mut normalized_attributes = vec![];
+    let response = client.get(metadata_uri).send().await?;
+    let raw_metadata: Value = response.json().await?;
 
-    if let Some(attributes) = raw_metadata.attributes {
-        for attribute in attributes {
-            let mut new_attribute = HashMap::new();
-            new_attribute.insert("trait_type".into(), attribute["trait_type"].clone());
-            new_attribute.insert("value".into(), attribute["value"].clone());
-            new_attribute.insert("display_type".into(), attribute["display_type"].clone());
-            normalized_attributes.push(new_attribute);
-        }
-    }
+    println!("Metadata: {:?}", raw_metadata);
 
-    Ok(NormalizedMetadata {
-        description: raw_metadata.description,
-        initial_metadata_uri: initial_metadata_uri.to_string(),
-        image: raw_metadata.image,
-        name: raw_metadata.name,
+    let empty_vec = Vec::new();
+
+    let attributes = raw_metadata
+        .get("attributes")
+        .and_then(|attr| attr.as_array())
+        .unwrap_or(&empty_vec);
+
+    let normalized_attributes: Vec<Attribute> = attributes
+        .iter()
+        .map(|attribute| Attribute {
+            trait_type: attribute
+                .get("trait_type")
+                .and_then(|trait_type| trait_type.as_str())
+                .unwrap_or("")
+                .to_string(),
+            value: attribute
+                .get("value")
+                .and_then(|value| value.as_str())
+                .unwrap_or("")
+                .to_string(),
+            display_type: attribute
+                .get("display_type")
+                .and_then(|display_type| display_type.as_str())
+                .unwrap_or("")
+                .to_string(),
+        })
+        .collect();
+
+    let normalized_metadata = NormalizedMetadata {
+        description: raw_metadata
+            .get("description")
+            .and_then(|desc| desc.as_str())
+            .unwrap_or("")
+            .to_string(),
+        external_url: initial_metadata_uri.to_string(),
+        image: raw_metadata
+            .get("image")
+            .and_then(|img| img.as_str())
+            .unwrap_or("")
+            .to_string(),
+        name: raw_metadata
+            .get("name")
+            .and_then(|name| name.as_str())
+            .unwrap_or("")
+            .to_string(),
         attributes: normalized_attributes,
-    })
+    };
+
+    Ok((raw_metadata, normalized_metadata))
 }

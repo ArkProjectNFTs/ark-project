@@ -11,7 +11,7 @@ use tokio::time::sleep;
 
 // This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
 pub async fn get_blocks(
-    reqwest_client: &Client,
+    reqwest_client: &reqwest::Client,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
 ) -> Result<(), Box<dyn std::error::Error>> {

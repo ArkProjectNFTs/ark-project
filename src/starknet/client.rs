@@ -82,7 +82,7 @@ pub async fn get_block_with_txs(
 }
 
 pub async fn call_contract(
-    client: &Client,
+    client: &reqwest::Client,
     contract_address: &str,
     selector_name: &str,
     calldata: Vec<&str>,
@@ -137,7 +137,7 @@ pub async fn call_contract(
     Ok(result.get("result").cloned().unwrap_or(Value::Null))
 }
 
-pub async fn get_latest_block(client: &Client) -> Result<u64, Box<dyn Error>> {
+pub async fn get_latest_block(client: &reqwest::Client) -> Result<u64, Box<dyn Error>> {
     dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload: Value = json!({

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 // This function extracts and filters transfer events from a blockchain block.
 // TODO: send events to a kinesis queue for further processing
 pub async fn get_transfer_events(
-    client: &Client,
+    reqwest_client: &reqwest::Client,
     block: HashMap<String, Value>,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
@@ -20,6 +20,11 @@ pub async fn get_transfer_events(
     println!("All detected events: {}", events.len());
     let transfer_events = filter_transfer_events(events, &event_hash);
     println!("Transfer events: {}", transfer_events.len());
-    identify_contract_types_from_transfers(client, transfer_events, dynamo_client, kinesis_client)
-        .await;
+    identify_contract_types_from_transfers(
+        &reqwest_client,
+        transfer_events,
+        dynamo_client,
+        kinesis_client,
+    )
+    .await;
 }
