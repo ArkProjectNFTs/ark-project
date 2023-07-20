@@ -94,7 +94,6 @@ pub async fn update_token_transfers(
 // Function to convert a Transfer into a Map<AttributeValue>
 fn convert_transfer_to_map(transfer: &Transfer) -> AttributeValue {
     let mut map: HashMap<String, AttributeValue> = HashMap::new();
-
     map.insert("from".into(), AttributeValue::S(transfer.from.clone()));
     map.insert("to".into(), AttributeValue::S(transfer.to.clone()));
     map.insert(
