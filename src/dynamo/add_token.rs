@@ -1,6 +1,10 @@
+use aws_sdk_dynamodb::error::SdkError;
+use aws_sdk_dynamodb::operation::put_item::{PutItemError, PutItemOutput};
 use aws_sdk_dynamodb::types::AttributeValue;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::events::transfer_processor::NormalizedMetadata;
 
 pub async fn add_token(
     client: &aws_sdk_dynamodb::Client,

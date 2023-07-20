@@ -1,6 +1,7 @@
 use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
 use crate::dynamo::create::{add_collection_item, CollectionItem};
+use crate::dynamo::update_collection::update_collection;
 use crate::events::transfer_processor::process_transfers;
 use crate::kinesis::send::send_to_kinesis;
 use crate::starknet::utils::get_contract_property_string;
@@ -62,10 +63,10 @@ pub async fn identify_contract_types_from_transfers(
 
         // ...
 
-        if let Some(contract_type) = contract_status {
-            if contract_type == "unknown" {
+        if let Some(existing_contract_type) = contract_status {
+            if existing_contract_type == "unknown" {
                 continue; // If it's unknown, skip this iteration of the loop
-            } else if contract_type == "erc721" || contract_type == "erc1155" {
+            } else if existing_contract_type == "erc721" || existing_contract_type == "erc1155" {
                 // TODO: use common function
                 if is_dev {
                     process_transfers(client, dynamo_client, &json_event)
@@ -85,44 +86,7 @@ pub async fn identify_contract_types_from_transfers(
             }
         }
 
-        let token_uri_cairo_0 = get_contract_property_string(
-            client,
-            contract_address,
-            "tokenURI",
-            vec!["1", "0"],
-            block_number,
-        )
-        .await;
-
-        let token_uri = get_contract_property_string(
-            client,
-            contract_address,
-            "token_uri",
-            vec!["1", "0"],
-            block_number,
-        )
-        .await;
-
-        // Get uri
-        let uri_result = get_contract_property_string(
-            client,
-            contract_address,
-            "uri",
-            [].to_vec(),
-            block_number,
-        )
-        .await;
-
-        // Init contract type
-        let mut contract_type = "unknown".to_string();
-        if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
-            || (token_uri != "undefined" && !token_uri.is_empty())
-        {
-            contract_type = "erc721".to_string()
-        } else if uri_result != "undefined" {
-            contract_type = "erc1155".to_string()
-        }
-
+        let contract_type = get_contract_type(client, contract_address, block_number).await;
         let collection_item = CollectionItem {
             address: contract_address.to_string(),
             contract_type: contract_type.clone(),
@@ -204,4 +168,45 @@ async fn update_additional_collection_data(
     .await?;
 
     Ok(())
+}
+
+async fn get_contract_type(
+    client: &reqwest::Client,
+    contract_address: &str,
+    block_number: u64,
+) -> String {
+    let token_uri_cairo_0 = get_contract_property_string(
+        client,
+        contract_address,
+        "tokenURI",
+        vec!["1", "0"],
+        block_number,
+    )
+    .await;
+
+    let token_uri = get_contract_property_string(
+        client,
+        contract_address,
+        "token_uri",
+        vec!["1", "0"],
+        block_number,
+    )
+    .await;
+
+    // Get uri
+    let uri_result: String =
+        get_contract_property_string(client, contract_address, "uri", [].to_vec(), block_number)
+            .await;
+
+    // Init contract type
+    let mut contract_type = "unknown".to_string();
+    if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
+        || (token_uri != "undefined" && !token_uri.is_empty())
+    {
+        contract_type = "erc721".to_string()
+    } else if uri_result != "undefined" {
+        contract_type = "erc1155".to_string()
+    }
+
+    contract_type
 }

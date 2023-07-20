@@ -155,7 +155,7 @@ pub async fn process_transfers(
     bytes.extend(low_bytes);
 
     let token_id_big_uint = BigUint::from_bytes_be(&bytes[..]);
-    let token_id = token_id_big_uint.to_str_radix(10);
+    let token_id: String = token_id_big_uint.to_str_radix(10);
     let contract_address = format!("{:#064x}", event.from_address);
 
     let block_number = event.block_number;
