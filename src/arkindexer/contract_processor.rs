@@ -1,8 +1,9 @@
 use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
 use crate::dynamo::create::{add_collection_item, CollectionItem};
-use crate::events::transfers::process_transfers;
+use crate::events::transfer_processor::process_transfers;
 use crate::starknet::utils::get_contract_property_string;
+use crate::kinesis::send::send_to_kinesis;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
@@ -18,20 +19,28 @@ pub async fn identify_contract_types_from_transfers(
     client: &Client,
     events: Vec<HashMap<String, Value>>,
     dynamo_client: &DynamoClient,
-    __kinesis_client: &KinesisClient,
+    kinesis_client: &KinesisClient,
 ) {
-    // Get dynamo table to work with
+    
+    // TODO: move to env file
     dotenv().ok();
+    let is_dev = match env::var("IS_DEV") {
+        Ok(val) => match val.to_lowercase().as_str() {
+            "true" | "1" => true,
+            "false" | "0" | "" => false,
+            _ => panic!("IS_DEV must be set to true or false"),
+        },
+        Err(_) => panic!("IS_DEV must be set"),
+    };
+    // Get dynamo table to work with
     let table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
-    let _kinesis_stream = env::var("KINESIS_STREAM_NAME").expect("KINESIS_STREAM_NAME must be set");
+    let kinesis_stream = env::var("KINESIS_STREAM_NAME").expect("KINESIS_STREAM_NAME must be set");
 
     // Init start time
     let start_time = Instant::now();
 
     for event in events {
-        println!("Processing event: {:?}", event);
-
         // Filter contract with most transactions from identification
         if let Some(from_address) = event.get("from_address").and_then(|addr| addr.as_str()) {
             if BLACKLIST.contains(&from_address) {
@@ -40,7 +49,6 @@ pub async fn identify_contract_types_from_transfers(
         }
 
         let json_event = serde_json::to_string(&event).unwrap();
-        println!("Processing event: {:?}", json_event);
         // Get contract address
 
         let contract_address = event.get("from_address").unwrap().as_str().unwrap();
@@ -57,18 +65,21 @@ pub async fn identify_contract_types_from_transfers(
             if contract_type == "unknown" {
                 continue; // If it's unknown, skip this iteration of the loop
             } else if contract_type == "erc721" || contract_type == "erc1155" {
-                process_transfers(client, &json_event).await.unwrap();
-
-                // TODO: Send Kinesis event here
-                // send_to_kinesis(
-                //     _kinesis_client,
-                //     kinesis_stream.as_str(),
-                //     "transfer",
-                //     &json_event,
-                // )
-                // .await
-                // .unwrap();
-
+                // TODO: use common function
+                if is_dev {
+                    process_transfers(client, dynamo_client, &json_event)
+                        .await
+                        .unwrap();
+                } else {
+                    send_to_kinesis(
+                        kinesis_client,
+                        kinesis_stream.as_str(),
+                        "transfer",
+                        &json_event,
+                    )
+                    .await
+                    .unwrap();
+                }
                 continue; // After sending event, skip this iteration of the loop
             }
         }
@@ -126,16 +137,21 @@ pub async fn identify_contract_types_from_transfers(
                 );
 
                 if contract_type != "unknown" {
-                    process_transfers(client, &json_event).await.unwrap();
-
-                    // send_to_kinesis(
-                    //     _kinesis_client,
-                    //     kinesis_stream.as_str(),
-                    //     "transfer",
-                    //     &json_event,
-                    // )
-                    // .await
-                    // .unwrap();
+                    // TODO: use common function
+                    if is_dev {
+                        process_transfers(client, dynamo_client, &json_event)
+                            .await
+                            .unwrap();
+                    } else {
+                        send_to_kinesis(
+                            kinesis_client,
+                            kinesis_stream.as_str(),
+                            "transfer",
+                            &json_event,
+                        )
+                        .await
+                        .unwrap();
+                    }
                 }
             }
             Err(e) => {

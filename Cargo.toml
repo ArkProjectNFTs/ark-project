@@ -8,7 +8,7 @@ tokio = { version = "1", features = ["full"] }
 mini-redis = "0.4"
 reqwest = { version = "0.11", features = ["json"] }
 serde_json = "1.0"
-starknet = "0.4.0"
+starknet = "0.5.0"
 dotenv = "0.15.0"
 serde = "1.0.164"
 aws-config = "0.55.3"
@@ -23,8 +23,3 @@ tracing-subscriber = "0.3.17"
 num-bigint = { version = "0.4.3", default-features = false }
 log = "0.4"
 simple_logger = "4.2.0"
-rusoto_core = "0.46.0"
-rusoto_s3 = "0.46.0"
-rusoto_kinesis = "0.46.0"
-uuid = { version = "0.8", features = ["v4"] }
-rusoto_dynamodb = "0.47.0"
