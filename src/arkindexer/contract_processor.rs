@@ -10,6 +10,7 @@ use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
 use log::info;
 use serde_json::Value;
+use starknet::core::types::FieldElement;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
@@ -51,8 +52,14 @@ pub async fn identify_contract_types_from_transfers(
         let json_event = serde_json::to_string(&event).unwrap();
         // Get contract address
 
-        let contract_address = event.get("from_address").unwrap().as_str().unwrap();
-        let block_number = event.get("block_number").unwrap().as_u64().unwrap();
+        println!("event: {:?}", event);
+
+        let contract_address_raw = event.get("from_address").unwrap().as_str().unwrap();
+        let contract_address_field = FieldElement::from_hex_be(contract_address_raw).unwrap();
+        let contract_address_string = format!("{:#064x}", contract_address_field);
+        let contract_address = &contract_address_string.as_str();
+
+        let block_number: u64 = event.get("block_number").unwrap().as_u64().unwrap();
 
         // check if contract present and is a NFT then send event to the kinesis stream
 
@@ -87,6 +94,9 @@ pub async fn identify_contract_types_from_transfers(
         }
 
         let contract_type = get_contract_type(client, contract_address, block_number).await;
+
+        println!("contract_type: {:?}", contract_type);
+
         let collection_item = CollectionItem {
             address: contract_address.to_string(),
             contract_type: contract_type.clone(),

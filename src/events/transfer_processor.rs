@@ -157,6 +157,7 @@ pub async fn process_transfers(
     let token_id_big_uint = BigUint::from_bytes_be(&bytes[..]);
     let token_id: String = token_id_big_uint.to_str_radix(10);
     let contract_address = format!("{:#064x}", event.from_address);
+    let token_type = &"erc721"; // TODO
 
     let block_number = event.block_number;
     let token_uri = get_token_uri(client, low, high, &contract_address, block_number).await;
@@ -202,6 +203,9 @@ pub async fn process_transfers(
             token_owner.as_str(),
             transaction_hash.as_str(),
             block_number,
+            &from_address,
+            &to_address,
+            token_type,
         )
         .await;
     } else {
@@ -244,6 +248,9 @@ async fn process_mint_event(
     token_owner: &str,
     transaction_hash: &str,
     block_number: u64,
+    from_address: &str,
+    to_address: &str,
+    token_type: &str,
 ) {
     let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_uri).await;
 
@@ -252,9 +259,11 @@ async fn process_mint_event(
         metadata_uri, initial_metadata_uri, token_uri
     );
 
-    let collection_result = get_collection(dynamo_client, collection_address).await;
-
-    info!("collection_result: {:?}", collection_result);
+    let collection_result = get_collection(dynamo_client, collection_address.to_string()).await;
+    info!(
+        "collection_result: {:?} - with collection address: {:?}",
+        collection_result, collection_address
+    );
 
     match collection_result {
         Ok(Some(collection)) => {
@@ -262,6 +271,11 @@ async fn process_mint_event(
                 let latest_mint_str = latest_mint.as_s().unwrap();
                 match latest_mint_str.parse::<u64>() {
                     Ok(latest_mint_value) => {
+                        println!(
+                            "Check latest mint: {:?} / {:?}",
+                            latest_mint_value, timestamp
+                        );
+
                         if latest_mint_value > timestamp {
                             let _ = update_latest_mint(
                                 dynamo_client,
@@ -273,7 +287,20 @@ async fn process_mint_event(
 
                         //  TODO: Inserting into ark_mainnet_collection_activities
 
-                        let _ = add_collection_activity(dynamo_client).await;
+                        let _ = add_collection_activity(
+                            dynamo_client,
+                            collection_address.to_string(),
+                            timestamp,
+                            block_number,
+                            "mint".to_string(),
+                            from_address.to_string(),
+                            token_id.to_string(),
+                            token_uri.to_string(),
+                            to_address.to_string(),
+                            transaction_hash.to_string(),
+                            token_type.to_string(),
+                        )
+                        .await;
                     }
                     Err(parse_err) => {
                         info!("Error parsing latest_mint: {}", parse_err);

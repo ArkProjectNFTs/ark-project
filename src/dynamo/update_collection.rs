@@ -1,7 +1,6 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use log::info;
-use std::collections::HashMap;
 
 pub async fn update_collection(
     dynamo_client: &Client,

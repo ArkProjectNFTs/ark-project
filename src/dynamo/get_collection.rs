@@ -4,14 +4,18 @@ use std::collections::HashMap;
 
 pub async fn get_collection(
     client: &Client,
-    address: &str,
+    address: String,
 ) -> Result<Option<HashMap<String, AttributeValue>>, Error> {
+    println!("get_collection: {:?}", address);
+
     let request = client
         .get_item()
         .table_name("ark_mainnet_collections") // make sure to provide table name
-        .key("address", AttributeValue::S(address.to_string()));
+        .key("address", AttributeValue::S(address))
+        .send()
+        .await?;
 
-    let response = request.send().await?;
+    println!("dynamodb result: {:?}", request.item);
 
-    Ok(response.item)
+    Ok(request.item)
 }

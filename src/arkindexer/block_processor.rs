@@ -4,7 +4,6 @@ use crate::starknet::client::{fetch_block, get_latest_block};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
-use reqwest::Client;
 use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;

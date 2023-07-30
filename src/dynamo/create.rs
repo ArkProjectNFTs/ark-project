@@ -17,6 +17,8 @@ pub async fn add_collection_item(
     item: CollectionItem,
     table: &String,
 ) -> Result<(), Error> {
+    println!("add_collection_item {:?}", item.address);
+
     let request = client
         .put_item()
         .table_name(table)
