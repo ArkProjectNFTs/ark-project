@@ -1,5 +1,5 @@
-use crate::dynamo::add_collection_activity;
-use crate::dynamo::add_token::update_token;
+use crate::dynamo::add_collection_activity::{self, CollectionActivity};
+use crate::dynamo::add_token::{update_token, UpdateTokenData};
 use crate::dynamo::get_collection::get_collection;
 use crate::dynamo::update_collection::update_collection;
 use crate::dynamo::update_collection_latest_mint::update_collection_latest_mint;
@@ -176,8 +176,11 @@ pub async fn process_transfers(
 
     info!("token_id: [{},{}]", token_id_low_hex, token_id_high_hex);
 
-    let low = u128::from_str_radix(token_id_low.to_string().as_str(), 10).unwrap();
-    let high = u128::from_str_radix(token_id_high.to_string().as_str(), 10).unwrap();
+    // let low = u128::from_str_radix(token_id_low.to_string().as_str(), 10).unwrap();
+    let low = token_id_low.to_string().as_str().parse::<u128>().unwrap();
+
+    // let high = u128::from_str_radix(token_id_high.to_string().as_str(), 10).unwrap();
+    let high = token_id_high.to_string().as_str().parse::<u128>().unwrap();
 
     let low_bytes = low.to_be_bytes();
     let high_bytes = high.to_be_bytes();
@@ -233,19 +236,25 @@ pub async fn process_transfers(
         contract_address, token_id, token_uri, block_number
     );
 
+        let transaction_data = TransactionData {
+            timestamp,
+            block_number,
+            from_address: from_address.to_string(),
+            to_address: to_address.to_string(),
+            hash: transaction_hash.to_string(),
+        };
+
         process_mint_event(
             client,
             dynamo_db_client,
-            token_id.as_str(),
-            token_uri.as_str(),
-            timestamp,
             contract_address.as_str(),
-            token_owner.as_str(),
-            transaction_hash.as_str(),
-            block_number,
-            &from_address,
-            &to_address,
-            contract_type,
+            TokenData {
+                token_id,
+                token_uri,
+                owner: token_owner,
+                token_type: contract_type.to_string(),
+            },
+            transaction_data,
         )
         .await;
     } else {
@@ -278,25 +287,33 @@ async fn get_token_owner(
     }
 }
 
+pub struct TokenData {
+    pub token_id: String,
+    pub token_uri: String,
+    pub owner: String,
+    pub token_type: String,
+}
+
+pub struct TransactionData {
+    pub timestamp: u64,
+    pub block_number: u64,
+    pub from_address: String,
+    pub to_address: String,
+    pub hash: String,
+}
+
 async fn process_mint_event(
     client: &reqwest::Client,
     dynamo_client: &aws_sdk_dynamodb::Client,
-    token_id: &str,
-    token_uri: &str,
-    timestamp: u64,
     collection_address: &str,
-    token_owner: &str,
-    transaction_hash: &str,
-    block_number: u64,
-    from_address: &str,
-    to_address: &str,
-    token_type: &str,
+    token_data: TokenData,
+    transaction_data: TransactionData,
 ) {
-    let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_uri).await;
+    let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_data.token_uri.as_str()).await;
 
     info!(
         "metadata_uri: {:?} - initial_metadata_uri: {:?} - token_uri: {:?}",
-        metadata_uri, initial_metadata_uri, token_uri
+        metadata_uri, initial_metadata_uri, token_data.token_uri
     );
 
     let collection_result = get_collection(dynamo_client, collection_address.to_string()).await;
@@ -315,15 +332,15 @@ async fn process_mint_event(
                     Ok(latest_mint_value) => {
                         println!(
                             "Check latest mint: {:?} / {:?}",
-                            latest_mint_value, timestamp
+                            latest_mint_value, transaction_data.timestamp
                         );
 
-                        if latest_mint_value > timestamp {
+                        if latest_mint_value > transaction_data.timestamp {
                             let _ = update_collection_latest_mint(
                                 dynamo_client,
                                 latest_mint_value,
                                 collection_address.to_string(),
-                                token_type.to_string(),
+                                token_data.token_type.to_string(),
                             )
                             .await;
                         }
@@ -335,29 +352,29 @@ async fn process_mint_event(
             } else {
                 let _ = update_collection_latest_mint(
                     dynamo_client,
-                    timestamp,
+                    transaction_data.timestamp,
                     collection_address.to_string(),
-                    token_type.to_string(),
+                    token_data.token_type.to_string(),
                 )
                 .await;
             }
 
             //  TODO: Inserting into ark_mainnet_collection_activities
 
-            let _ = add_collection_activity(
-                dynamo_client,
-                collection_address.to_string(),
-                timestamp,
-                block_number,
-                "mint".to_string(),
-                from_address.to_string(),
-                token_id.to_string(),
-                token_uri.to_string(),
-                to_address.to_string(),
-                transaction_hash.to_string(),
-                token_type.to_string(),
-            )
-            .await;
+            let activity = CollectionActivity {
+                address: collection_address.to_string(),
+                timestamp: transaction_data.timestamp,
+                block_number: transaction_data.block_number,
+                event_type: "mint".to_string(),
+                from_address: transaction_data.from_address.clone(),
+                token_id: token_data.token_id.clone(),
+                token_uri: token_data.token_uri.clone(),
+                to_address: transaction_data.to_address.clone(),
+                transaction_hash: transaction_data.hash.clone(),
+                token_type: token_data.token_type.clone(),
+            };
+
+            let _ = add_collection_activity(dynamo_client, activity).await;
         }
         Ok(None) => {
             info!("No collection found at address");
@@ -382,18 +399,18 @@ async fn process_mint_event(
 
                 // TODO: Uploading image to S3
 
-                let _ = update_token(
-                    dynamo_client,
-                    collection_address.to_string(),
-                    token_id.to_string(),
-                    token_uri.to_string(),
-                    to_string(&raw_metadata).unwrap(),
-                    normalized_metadata,
-                    token_owner.to_string(),
-                    transaction_hash.to_string(),
-                    block_number,
-                )
-                .await;
+                let update_token_data = UpdateTokenData {
+                    collection_address: collection_address.to_string(),
+                    token_id: token_data.token_id,
+                    token_uri: token_data.token_uri,
+                    owner: token_data.owner,
+                    mint_transaction_hash: transaction_data.hash,
+                    block_number_minted: transaction_data.block_number,
+                    raw: to_string(&raw_metadata).unwrap(),
+                    normalized: normalized_metadata,
+                };
+
+                let _ = update_token(dynamo_client, update_token_data).await;
             }
             Err(e) => {
                 info!("Error fetching metadata: {}", e);

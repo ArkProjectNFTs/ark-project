@@ -1,34 +1,62 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 
+pub struct CollectionActivity {
+    pub address: String,
+    pub timestamp: u64,
+    pub block_number: u64,
+    pub event_type: String,
+    pub from_address: String,
+    pub token_id: String,
+    pub token_uri: String,
+    pub to_address: String,
+    pub transaction_hash: String,
+    pub token_type: String,
+}
+
 pub async fn add_collection_activity(
     dynamo_client: &Client,
-    address: String,
-    timestamp: u64,
-    block_number: u64,
-    event_type: String,
-    from_address: String,
-    token_id: String,
-    token_uri: String,
-    to_address: String,
-    transaction_hash: String,
-    token_type: String,
+    collection_activity: CollectionActivity,
 ) -> Result<(), Error> {
-    println!("add_collection_activity: {:?}", address);
+    println!("add_collection_activity: {:?}", collection_activity.address);
 
     let result = dynamo_client
         .put_item()
         .table_name("ark_mainnet_collection_activities")
-        .item("address", AttributeValue::S(address))
-        .item("timestamp", AttributeValue::N(timestamp.to_string()))
-        .item("block_number", AttributeValue::N(block_number.to_string()))
-        .item("event_type", AttributeValue::S(event_type))
-        .item("from_address", AttributeValue::S(from_address))
-        .item("to_address", AttributeValue::S(to_address))
-        .item("token_id", AttributeValue::S(token_id))
-        .item("token_uri", AttributeValue::S(token_uri))
-        .item("transaction_hash", AttributeValue::S(transaction_hash))
-        .item("collection_type", AttributeValue::S(token_type))
+        .item("address", AttributeValue::S(collection_activity.address))
+        .item(
+            "timestamp",
+            AttributeValue::N(collection_activity.timestamp.to_string()),
+        )
+        .item(
+            "block_number",
+            AttributeValue::N(collection_activity.block_number.to_string()),
+        )
+        .item(
+            "event_type",
+            AttributeValue::S(collection_activity.event_type),
+        )
+        .item(
+            "from_address",
+            AttributeValue::S(collection_activity.from_address),
+        )
+        .item(
+            "to_address",
+            AttributeValue::S(collection_activity.to_address),
+        )
+        .item("token_id", AttributeValue::S(collection_activity.token_id))
+        .item(
+            "token_uri",
+            AttributeValue::S(collection_activity.token_uri),
+        )
+        .item(
+            "transaction_hash",
+            AttributeValue::S(collection_activity.transaction_hash),
+        )
+        .item(
+            "collection_type",
+            AttributeValue::S(collection_activity.token_type),
+        )
         .send()
         .await;
 
