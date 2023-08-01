@@ -238,7 +238,7 @@ pub async fn process_transfers(
             dynamo_db_client,
             token_id.as_str(),
             token_uri.as_str(),
-            timestamp.clone(),
+            timestamp,
             contract_address.as_str(),
             token_owner.as_str(),
             transaction_hash.as_str(),
@@ -269,7 +269,7 @@ async fn get_token_owner(
     match call_contract(client, contract_address, "ownerOf", calldata, block_number).await {
         Ok(result) => {
             if let Some(token_owner) = result.get(0) {
-                token_owner.to_string().replace("\"", "")
+                token_owner.to_string().replace('\"', "")
             } else {
                 "".to_string()
             }
@@ -335,7 +335,7 @@ async fn process_mint_event(
             } else {
                 let __ = update_collection_latest_mint(
                     dynamo_client,
-                    timestamp.clone(),
+                    timestamp,
                     collection_address.to_string(),
                     token_type.to_string(),
                 )
@@ -347,7 +347,7 @@ async fn process_mint_event(
             let _ = add_collection_activity(
                 dynamo_client,
                 collection_address.to_string(),
-                timestamp.clone(),
+                timestamp,
                 block_number,
                 "mint".to_string(),
                 from_address.to_string(),
@@ -370,12 +370,8 @@ async fn process_mint_event(
     println!("metadata_uri: {:?}", metadata_uri);
 
     if !metadata_uri.is_empty() {
-        let result = fetch_metadata(
-            client,
-            &metadata_uri.as_str(),
-            &initial_metadata_uri.as_str(),
-        )
-        .await;
+        let result =
+            fetch_metadata(client, metadata_uri.as_str(), initial_metadata_uri.as_str()).await;
 
         match result {
             Ok((raw_metadata, normalized_metadata)) => {
@@ -401,7 +397,6 @@ async fn process_mint_event(
             }
             Err(e) => {
                 info!("Error fetching metadata: {}", e);
-                return;
             }
         };
     }
