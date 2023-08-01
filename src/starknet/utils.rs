@@ -1,6 +1,5 @@
 use crate::{starknet::client::call_contract, utils::decode_long_string};
 use log::info;
-use reqwest::Client;
 use serde_json::Value;
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 
@@ -20,6 +19,8 @@ fn convert_felt_array_to_string(value1: &str, value2: &str) -> String {
 }
 
 pub fn decode_string_array(string_array: &Vec<String>) -> String {
+    info!("String array: {:?}", string_array);
+
     match string_array.len() {
         0 => "".to_string(),
         1 => {
@@ -34,9 +35,11 @@ pub fn decode_string_array(string_array: &Vec<String>) -> String {
         }
         3 => convert_felt_array_to_string(&string_array[1], &string_array[0]),
         _ => {
-            if let Some((_, new_string_array)) = string_array.split_first() {
+            if let Some((_array_size, new_string_array)) = string_array.split_first() {
+                info!("New string array: {:?}", new_string_array);
                 let new_string_array: Vec<String> = new_string_array.to_vec();
                 let long_string = decode_long_string(&new_string_array).unwrap();
+                info!("Long string: {}", long_string);
                 long_string
             } else {
                 panic!("String array is empty!");
@@ -46,7 +49,7 @@ pub fn decode_string_array(string_array: &Vec<String>) -> String {
 }
 
 pub async fn get_contract_property_string(
-    client: &Client,
+    client: &reqwest::Client,
     contract_address: &str,
     selector_name: &str,
     calldata: Vec<&str>,
@@ -75,7 +78,11 @@ pub async fn get_contract_property_string(
                     .map(|v| v.as_str().unwrap().to_string())
                     .collect();
 
-                decode_string_array(&string_array)
+                info!("String array: {:?}", string_array);
+
+                let long_string = decode_string_array(&string_array);
+                info!("Long string: {}", long_string);
+                long_string
             }
             _ => "undefined".to_string(),
         },

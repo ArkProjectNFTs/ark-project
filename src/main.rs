@@ -4,20 +4,21 @@ mod dynamo;
 mod kinesis;
 mod starknet;
 mod utils;
+mod events;
 use arkindexer::block_processor::get_blocks;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-use log::LevelFilter;
 use reqwest::Client;
+use log::LevelFilter;
 use simple_logger::SimpleLogger;
-mod events;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     SimpleLogger::new()
         .env()
-        .with_level(LevelFilter::Info)
+        .with_level(LevelFilter::Warn)
+        .with_module_level("ark_indexer::events", LevelFilter::Info)
         .init()
         .unwrap();
 

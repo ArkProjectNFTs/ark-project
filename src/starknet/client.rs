@@ -1,3 +1,4 @@
+use super::utils::get_contract_property_string;
 use dotenv::dotenv;
 use log::info;
 use reqwest::Client;
@@ -52,7 +53,7 @@ fn get_selector_as_string(selector: &str) -> String {
 }
 
 pub async fn get_block_with_txs(
-    client: &Client,
+    client: &reqwest::Client,
     block_number: u64,
 ) -> Result<Value, Box<dyn Error>> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
@@ -82,7 +83,7 @@ pub async fn get_block_with_txs(
 }
 
 pub async fn call_contract(
-    client: &Client,
+    client: &reqwest::Client,
     contract_address: &str,
     selector_name: &str,
     calldata: Vec<&str>,
@@ -116,6 +117,8 @@ pub async fn call_contract(
     let response = client.post(rpc_provider).json(&payload).send().await?;
     let result: Value = response.json().await?;
 
+    info!("RPC Result: {:?}", result);
+
     let elapsed_time = start_time.elapsed();
     let elapsed_time_ms = elapsed_time.as_millis();
     info!(
@@ -137,7 +140,7 @@ pub async fn call_contract(
     Ok(result.get("result").cloned().unwrap_or(Value::Null))
 }
 
-pub async fn get_latest_block(client: &Client) -> Result<u64, Box<dyn Error>> {
+pub async fn get_latest_block(client: &reqwest::Client) -> Result<u64, Box<dyn Error>> {
     dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload: Value = json!({
@@ -163,4 +166,45 @@ pub async fn get_latest_block(client: &Client) -> Result<u64, Box<dyn Error>> {
         .and_then(Value::as_u64)
         .ok_or("Failed to parse block number")?;
     Ok(block_number)
+}
+
+pub async fn get_contract_type(
+    client: &reqwest::Client,
+    contract_address: &str,
+    block_number: u64,
+) -> String {
+    let token_uri_cairo_0 = get_contract_property_string(
+        client,
+        contract_address,
+        "tokenURI",
+        vec!["1", "0"],
+        block_number,
+    )
+    .await;
+
+    let token_uri = get_contract_property_string(
+        client,
+        contract_address,
+        "token_uri",
+        vec!["1", "0"],
+        block_number,
+    )
+    .await;
+
+    // Get uri
+    let uri_result: String =
+        get_contract_property_string(client, contract_address, "uri", [].to_vec(), block_number)
+            .await;
+
+    // Init contract type
+    let mut contract_type = "unknown".to_string();
+    if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
+        || (token_uri != "undefined" && !token_uri.is_empty())
+    {
+        contract_type = "erc721".to_string()
+    } else if uri_result != "undefined" {
+        contract_type = "erc1155".to_string()
+    }
+
+    contract_type
 }

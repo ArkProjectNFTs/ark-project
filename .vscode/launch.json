@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'ark-indexer'",
+      "cargo": {
+        "args": ["build", "--bin=ark-indexer", "--package=ark-indexer"],
+        "filter": {
+          "name": "ark-indexer",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'ark-indexer'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=ark-indexer",
+          "--package=ark-indexer"
+        ],
+        "filter": {
+          "name": "ark-indexer",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
