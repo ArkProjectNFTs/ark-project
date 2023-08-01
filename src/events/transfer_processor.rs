@@ -6,7 +6,7 @@ use crate::dynamo::update_collection_latest_mint::update_collection_latest_mint;
 use crate::events::transfer_processor::add_collection_activity::add_collection_activity;
 use crate::events::update_token_transfers::update_token_transfers;
 use crate::starknet::client::call_contract;
-use crate::starknet::utils::convert_field_elements_to_token_id;
+use crate::starknet::utils::TokenId;
 use crate::starknet::{client::get_block_with_txs, utils::get_contract_property_string};
 use crate::utils::sanitize_uri;
 use aws_sdk_dynamodb::types::AttributeValue;
@@ -170,13 +170,19 @@ pub async fn process_transfers(
 
     let token_id_low = event.data[2];
     let token_id_high = event.data[3];
-    let token_id_result = convert_field_elements_to_token_id(token_id_low, token_id_high);
+
+    let token_id = TokenId {
+        low: token_id_low,
+        high: token_id_high,
+    };
+
+    let converted_token_id = token_id.convert();
 
     let block_number = event.block_number;
     let token_uri = get_token_uri(
         client,
-        token_id_result.low,
-        token_id_result.high,
+        converted_token_id.low,
+        converted_token_id.high,
         &contract_address,
         block_number,
     )
@@ -193,7 +199,7 @@ pub async fn process_transfers(
 
     info!(
         "Contract address: {} - Token ID: {} - Token URI: {} - Block number: {}",
-        contract_address, token_id_result.token_id, token_uri, block_number
+        contract_address, converted_token_id.token_id, token_uri, block_number
     );
 
     update_additional_collection_data(
@@ -209,7 +215,7 @@ pub async fn process_transfers(
     let _transfer = update_token_transfers(
         dynamo_db_client,
         &contract_address,
-        token_id_result.padded_token_id.clone(),
+        converted_token_id.padded_token_id.clone(),
         &from_address,
         &to_address,
         &timestamp,
@@ -220,7 +226,7 @@ pub async fn process_transfers(
     if event.data[0] == FieldElement::ZERO {
         info!(
         "\n\n=== MINT DETECTED ===\n\nContract address: {} - Token ID: {} - Token URI: {} - Block number: {}\n\n===========\n\n",
-        contract_address, token_id_result.token_id, token_uri, block_number
+        contract_address, converted_token_id.token_id, token_uri, block_number
     );
 
         let transaction_data = TransactionData {
@@ -236,7 +242,7 @@ pub async fn process_transfers(
             dynamo_db_client,
             contract_address.as_str(),
             TokenData {
-                padded_token_id: token_id_result.padded_token_id.clone(),
+                padded_token_id: converted_token_id.padded_token_id.clone(),
                 token_uri,
                 owner: token_owner,
                 token_type: contract_type.to_string(),
