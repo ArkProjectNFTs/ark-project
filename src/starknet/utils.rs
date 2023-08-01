@@ -8,7 +8,7 @@ use crate::{
     utils::{decode_long_string, format_token_id},
 };
 
-pub struct TokenIdTransformation {
+pub struct FormattedTokenId {
     pub low: u128,
     pub high: u128,
     pub token_id: String,
@@ -22,7 +22,7 @@ pub struct TokenId {
 
 impl TokenId {
     // Implement the format_token_id as a method on the struct
-    pub fn convert(&self) -> TokenIdTransformation {
+    pub fn format(&self) -> FormattedTokenId {
         // let token_id_low_hex = format!("{:#064x}", token_id_low);
         // let token_id_high_hex = format!("{:#064x}", token_id_high);
 
@@ -43,7 +43,7 @@ impl TokenId {
         let token_id: String = token_id_big_uint.to_str_radix(10);
         let padded_token_id = format_token_id(token_id.clone());
 
-        TokenIdTransformation {
+        FormattedTokenId {
             low,
             high,
             token_id: token_id.clone(),

@@ -176,13 +176,13 @@ pub async fn process_transfers(
         high: token_id_high,
     };
 
-    let converted_token_id = token_id.convert();
+    let formated_token_id = token_id.format();
 
     let block_number = event.block_number;
     let token_uri = get_token_uri(
         client,
-        converted_token_id.low,
-        converted_token_id.high,
+        formated_token_id.low,
+        formated_token_id.high,
         &contract_address,
         block_number,
     )
@@ -199,7 +199,7 @@ pub async fn process_transfers(
 
     info!(
         "Contract address: {} - Token ID: {} - Token URI: {} - Block number: {}",
-        contract_address, converted_token_id.token_id, token_uri, block_number
+        contract_address, formated_token_id.token_id, token_uri, block_number
     );
 
     update_additional_collection_data(
@@ -215,7 +215,7 @@ pub async fn process_transfers(
     let _transfer = update_token_transfers(
         dynamo_db_client,
         &contract_address,
-        converted_token_id.padded_token_id.clone(),
+        formated_token_id.padded_token_id.clone(),
         &from_address,
         &to_address,
         &timestamp,
@@ -226,7 +226,7 @@ pub async fn process_transfers(
     if event.data[0] == FieldElement::ZERO {
         info!(
         "\n\n=== MINT DETECTED ===\n\nContract address: {} - Token ID: {} - Token URI: {} - Block number: {}\n\n===========\n\n",
-        contract_address, converted_token_id.token_id, token_uri, block_number
+        contract_address, formated_token_id.token_id, token_uri, block_number
     );
 
         let transaction_data = TransactionData {
@@ -242,7 +242,7 @@ pub async fn process_transfers(
             dynamo_db_client,
             contract_address.as_str(),
             TokenData {
-                padded_token_id: converted_token_id.padded_token_id.clone(),
+                padded_token_id: formated_token_id.padded_token_id.clone(),
                 token_uri,
                 owner: token_owner,
                 token_type: contract_type.to_string(),
