@@ -1,4 +1,4 @@
-use crate::core::contract_processor::identify_contract_types_from_transfers;
+use crate::core::contract::identify_contract_types_from_transfers;
 use crate::utils::{extract_events, filter_transfer_events, get_selector_from_name};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
