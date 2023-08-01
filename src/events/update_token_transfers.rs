@@ -25,7 +25,7 @@ struct Transfer {
 pub async fn update_token_transfers(
     dynamo_client: &aws_sdk_dynamodb::Client,
     contract_address: &str,
-    token_id: &str,
+    padded_token_id: String,
     from_address: &str,
     to_address: &str,
     timestamp: &u64,
@@ -34,7 +34,7 @@ pub async fn update_token_transfers(
     dotenv().ok();
     let table = env::var("ARK_TOKENS_TABLE_NAME").expect("ARK_TOKENS_TABLE_NAME must be set");
     let contract_address_av = AttributeValue::S(contract_address.to_string());
-    let token_id_av = AttributeValue::S(token_id.to_string());
+    let token_id_av = AttributeValue::S(padded_token_id);
 
     // TODO read current value from dynamo
     let request = dynamo_client

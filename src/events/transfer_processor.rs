@@ -6,11 +6,11 @@ use crate::dynamo::update_collection_latest_mint::update_collection_latest_mint;
 use crate::events::transfer_processor::add_collection_activity::add_collection_activity;
 use crate::events::update_token_transfers::update_token_transfers;
 use crate::starknet::client::call_contract;
+use crate::starknet::utils::TokenId;
 use crate::starknet::{client::get_block_with_txs, utils::get_contract_property_string};
 use crate::utils::sanitize_uri;
 use aws_sdk_dynamodb::types::AttributeValue;
 use log::info;
-use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 use serde_json::Value;
@@ -171,29 +171,22 @@ pub async fn process_transfers(
     let token_id_low = event.data[2];
     let token_id_high = event.data[3];
 
-    let token_id_low_hex = format!("{:#064x}", token_id_low);
-    let token_id_high_hex = format!("{:#064x}", token_id_high);
+    let token_id = TokenId {
+        low: token_id_low,
+        high: token_id_high,
+    };
 
-    info!("token_id: [{},{}]", token_id_low_hex, token_id_high_hex);
-
-    // let low = u128::from_str_radix(token_id_low.to_string().as_str(), 10).unwrap();
-    let low = token_id_low.to_string().as_str().parse::<u128>().unwrap();
-
-    // let high = u128::from_str_radix(token_id_high.to_string().as_str(), 10).unwrap();
-    let high = token_id_high.to_string().as_str().parse::<u128>().unwrap();
-
-    let low_bytes = low.to_be_bytes();
-    let high_bytes = high.to_be_bytes();
-
-    let mut bytes: Vec<u8> = Vec::new();
-    bytes.extend(high_bytes);
-    bytes.extend(low_bytes);
-
-    let token_id_big_uint = BigUint::from_bytes_be(&bytes[..]);
-    let token_id: String = token_id_big_uint.to_str_radix(10);
+    let formated_token_id = token_id.format();
 
     let block_number = event.block_number;
-    let token_uri = get_token_uri(client, low, high, &contract_address, block_number).await;
+    let token_uri = get_token_uri(
+        client,
+        formated_token_id.low,
+        formated_token_id.high,
+        &contract_address,
+        block_number,
+    )
+    .await;
 
     let token_owner = get_token_owner(
         client,
@@ -206,7 +199,7 @@ pub async fn process_transfers(
 
     info!(
         "Contract address: {} - Token ID: {} - Token URI: {} - Block number: {}",
-        contract_address, token_id, token_uri, block_number
+        contract_address, formated_token_id.token_id, token_uri, block_number
     );
 
     update_additional_collection_data(
@@ -222,7 +215,7 @@ pub async fn process_transfers(
     let _transfer = update_token_transfers(
         dynamo_db_client,
         &contract_address,
-        &token_id,
+        formated_token_id.padded_token_id.clone(),
         &from_address,
         &to_address,
         &timestamp,
@@ -233,7 +226,7 @@ pub async fn process_transfers(
     if event.data[0] == FieldElement::ZERO {
         info!(
         "\n\n=== MINT DETECTED ===\n\nContract address: {} - Token ID: {} - Token URI: {} - Block number: {}\n\n===========\n\n",
-        contract_address, token_id, token_uri, block_number
+        contract_address, formated_token_id.token_id, token_uri, block_number
     );
 
         let transaction_data = TransactionData {
@@ -249,7 +242,7 @@ pub async fn process_transfers(
             dynamo_db_client,
             contract_address.as_str(),
             TokenData {
-                token_id,
+                padded_token_id: formated_token_id.padded_token_id.clone(),
                 token_uri,
                 owner: token_owner,
                 token_type: contract_type.to_string(),
@@ -288,7 +281,7 @@ async fn get_token_owner(
 }
 
 pub struct TokenData {
-    pub token_id: String,
+    pub padded_token_id: String,
     pub token_uri: String,
     pub owner: String,
     pub token_type: String,
@@ -367,7 +360,7 @@ async fn process_mint_event(
                 block_number: transaction_data.block_number,
                 event_type: "mint".to_string(),
                 from_address: transaction_data.from_address.clone(),
-                token_id: token_data.token_id.clone(),
+                padded_token_id: token_data.padded_token_id.clone(),
                 token_uri: token_data.token_uri.clone(),
                 to_address: transaction_data.to_address.clone(),
                 transaction_hash: transaction_data.hash.clone(),
@@ -401,7 +394,7 @@ async fn process_mint_event(
 
                 let update_token_data = UpdateTokenData {
                     collection_address: collection_address.to_string(),
-                    token_id: token_data.token_id,
+                    padded_token_id: token_data.padded_token_id.clone(),
                     token_uri: token_data.token_uri,
                     owner: token_data.owner,
                     mint_transaction_hash: transaction_data.hash,
