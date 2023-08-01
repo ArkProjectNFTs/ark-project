@@ -1,5 +1,5 @@
 use aws_sdk_dynamodb::types::AttributeValue;
-use aws_sdk_dynamodb::{Client, Error};
+use aws_sdk_dynamodb::Error;
 use dotenv::dotenv;
 use log::info;
 use serde::{Deserialize, Serialize};

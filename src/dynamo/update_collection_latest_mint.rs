@@ -9,7 +9,7 @@ pub async fn update_collection_latest_mint(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Update latest_mint: {:?}", latest_mint);
 
-    let result = dynamo_client
+    let _result = dynamo_client
         .update_item()
         .table_name("ark_mainnet_collections")
         .key("address", AttributeValue::S(collection_address))

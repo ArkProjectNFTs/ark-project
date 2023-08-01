@@ -1,5 +1,3 @@
-use hex;
-
 use log::info;
 use serde_json::Value;
 use starknet::core::utils::starknet_keccak;
@@ -65,7 +63,7 @@ pub fn decode_long_string(array: &Vec<String>) -> Result<String, Box<dyn Error>>
 }
 
 #[allow(dead_code)]
-pub async fn upload_image_to_s3(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn upload_image_to_s3(_url: &str) -> Result<String, Box<dyn std::error::Error>> {
     //     let client = reqwest::Client::new();
     //     let res = client.get(url).send().await?;
 

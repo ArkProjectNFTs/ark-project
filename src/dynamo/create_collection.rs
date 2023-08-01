@@ -31,7 +31,7 @@ pub async fn create_collection(
 
     // If results returns 0 results
     if result.item.is_none() {
-        let __ = client
+        let _ = client
             .put_item()
             .table_name(table_name)
             .item("address", AttributeValue::S(item.address))

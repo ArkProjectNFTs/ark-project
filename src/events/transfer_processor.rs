@@ -333,7 +333,7 @@ async fn process_mint_event(
                     }
                 }
             } else {
-                let __ = update_collection_latest_mint(
+                let _ = update_collection_latest_mint(
                     dynamo_client,
                     timestamp,
                     collection_address.to_string(),
