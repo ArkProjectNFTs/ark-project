@@ -27,4 +27,5 @@ jobs:
       - uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: chmod +x src/scripts/clippy.sh
       - run: src/scripts/clippy.sh
