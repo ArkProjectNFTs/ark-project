@@ -19,7 +19,7 @@ pub async fn add_collection_activity(
     dynamo_client: &Client,
     collection_activity: CollectionActivity,
 ) -> Result<(), Error> {
-    println!("add_collection_activity: {:?}", collection_activity.address);
+    info!("add_collection_activity: {:?}", collection_activity.address);
 
     let padded_token_id = format!("{:0>width$}", collection_activity.token_id, width = 78);
 
@@ -47,7 +47,7 @@ pub async fn add_collection_activity(
             "to_address",
             AttributeValue::S(collection_activity.to_address),
         )
-        .item("token_id", AttributeValue::S(collection_activity.token_id))
+        .item("token_id", AttributeValue::S(padded_token_id))
         .item(
             "token_uri",
             AttributeValue::S(collection_activity.token_uri),
