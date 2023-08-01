@@ -6,11 +6,10 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::events::transfer_processor::NormalizedMetadata;
-use crate::utils::format_token_id;
 
 pub struct UpdateTokenData {
     pub collection_address: String,
-    pub token_id: String,
+    pub padded_token_id: String,
     pub token_uri: String,
     pub owner: String,
     pub mint_transaction_hash: String,
@@ -32,13 +31,11 @@ pub async fn update_token(
         .expect("Failed to get current timestamp")
         .as_secs();
 
-    let padded_token_id = format_token_id(update_token_data.token_id);
-
     let result = client
         .update_item()
         .table_name("ark_mainnet_tokens")
         .key("address", AttributeValue::S(update_token_data.collection_address))
-        .key("token_id", AttributeValue::S(padded_token_id))
+        .key("token_id", AttributeValue::S(update_token_data.padded_token_id))
         .update_expression(
             "SET last_metadata_refresh = :last_metadata_refresh, token_uri = :token_uri, raw_metadata = :raw_metadata, normalized_metadata = :normalized_metadata, image_uri = :image_uri, token_owner = :token_owner, mint_transaction_hash = :mint_transaction_hash, block_number_minted = :block_number_minted",
         )
