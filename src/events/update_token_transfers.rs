@@ -7,6 +7,8 @@ use serde_json;
 use std::collections::HashMap;
 use std::env;
 
+use crate::utils::format_token_id;
+
 #[derive(Serialize, Deserialize, Debug)]
 enum TransferType {
     In,
@@ -35,7 +37,7 @@ pub async fn update_token_transfers(
     let table = env::var("ARK_TOKENS_TABLE_NAME").expect("ARK_TOKENS_TABLE_NAME must be set");
     let contract_address_av = AttributeValue::S(contract_address.to_string());
 
-    let padded_token_id = format!("{:0>width$}", token_id.to_string(), width = 78);
+    let padded_token_id = format_token_id(token_id.to_string());
     let token_id_av = AttributeValue::S(padded_token_id);
 
     // TODO read current value from dynamo

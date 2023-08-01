@@ -4,6 +4,10 @@ use starknet::core::utils::starknet_keccak;
 use std::collections::HashMap;
 use std::error::Error;
 
+pub fn format_token_id(token_id: String) -> String {
+    format!("{:0>width$}", token_id, width = 78)
+}
+
 pub fn extract_events(block: &HashMap<String, Value>) -> Vec<Value> {
     let events = block.get("result").unwrap().get("events").unwrap();
     events.as_array().unwrap().clone()

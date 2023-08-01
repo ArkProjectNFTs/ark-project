@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::events::transfer_processor::NormalizedMetadata;
+use crate::utils::format_token_id;
 
 pub struct UpdateTokenData {
     pub collection_address: String,
@@ -31,7 +32,7 @@ pub async fn update_token(
         .expect("Failed to get current timestamp")
         .as_secs();
 
-    let padded_token_id = format!("{:0>width$}", update_token_data.token_id, width = 78);
+    let padded_token_id = format_token_id(update_token_data.token_id);
 
     let result = client
         .update_item()
