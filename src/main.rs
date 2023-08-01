@@ -5,7 +5,8 @@ mod kinesis;
 mod services;
 mod starknet;
 mod utils;
-use crate::core::block::process_blocks_continuously;
+
+use crate::core::block_processor::get_blocks;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
