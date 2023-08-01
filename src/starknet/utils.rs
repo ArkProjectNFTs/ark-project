@@ -1,6 +1,5 @@
 use crate::{starknet::client::call_contract, utils::decode_long_string};
 use log::info;
-use reqwest::Client;
 use serde_json::Value;
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 

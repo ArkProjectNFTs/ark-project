@@ -1,7 +1,7 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
 
-pub async fn update_latest_mint(
+pub async fn update_collection_latest_mint(
     dynamo_client: &Client,
     latest_mint: u64,
     collection_address: String,

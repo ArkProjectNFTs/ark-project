@@ -12,7 +12,7 @@ pub struct ItemOut {
     pub contract_type: Option<AttributeValue>,
 }
 
-pub async fn add_collection_item(
+pub async fn create_collection(
     client: &Client,
     item: CollectionItem,
     table_name: &str,

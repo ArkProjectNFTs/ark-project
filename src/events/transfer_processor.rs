@@ -2,7 +2,7 @@ use crate::dynamo::add_collection_activity;
 use crate::dynamo::add_token::update_token;
 use crate::dynamo::get_collection::get_collection;
 use crate::dynamo::update_collection::update_collection;
-use crate::dynamo::update_latest_mint::update_latest_mint;
+use crate::dynamo::update_collection_latest_mint::update_collection_latest_mint;
 use crate::events::transfer_processor::add_collection_activity::add_collection_activity;
 use crate::events::update_token_transfers::update_token_transfers;
 use crate::starknet::client::call_contract;
@@ -216,7 +216,7 @@ pub async fn process_transfers(
     .await
     .unwrap();
 
-    let transfer = update_token_transfers(
+    let _transfer = update_token_transfers(
         dynamo_db_client,
         &contract_address,
         &token_id,
@@ -274,7 +274,7 @@ async fn get_token_owner(
                 "".to_string()
             }
         }
-        Err(error) => "".to_string(),
+        Err(_error) => "".to_string(),
     }
 }
 
@@ -319,7 +319,7 @@ async fn process_mint_event(
                         );
 
                         if latest_mint_value > timestamp {
-                            let _ = update_latest_mint(
+                            let _ = update_collection_latest_mint(
                                 dynamo_client,
                                 latest_mint_value,
                                 collection_address.to_string(),
@@ -333,7 +333,7 @@ async fn process_mint_event(
                     }
                 }
             } else {
-                let __ = update_latest_mint(
+                let __ = update_collection_latest_mint(
                     dynamo_client,
                     timestamp.clone(),
                     collection_address.to_string(),

@@ -1,10 +1,10 @@
 use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
-use crate::dynamo::create::{add_collection_item, CollectionItem};
 
+use crate::dynamo::create_collection::{create_collection, CollectionItem};
 use crate::events::transfer_processor::process_transfers;
 use crate::kinesis::send::send_to_kinesis;
-use crate::starknet::utils::get_contract_property_string;
+use crate::starknet::client::get_contract_type;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
@@ -104,7 +104,7 @@ pub async fn identify_contract_types_from_transfers(
             contract_type: contract_type.clone(),
         };
 
-        match add_collection_item(
+        match create_collection(
             dynamo_client,
             collection_item,
             &collections_table,
@@ -156,45 +156,4 @@ pub async fn identify_contract_types_from_transfers(
     }
     let duration = start_time.elapsed();
     println!("Time elapsed in contracts block is: {:?}", duration);
-}
-
-async fn get_contract_type(
-    client: &reqwest::Client,
-    contract_address: &str,
-    block_number: u64,
-) -> String {
-    let token_uri_cairo_0 = get_contract_property_string(
-        client,
-        contract_address,
-        "tokenURI",
-        vec!["1", "0"],
-        block_number,
-    )
-    .await;
-
-    let token_uri = get_contract_property_string(
-        client,
-        contract_address,
-        "token_uri",
-        vec!["1", "0"],
-        block_number,
-    )
-    .await;
-
-    // Get uri
-    let uri_result: String =
-        get_contract_property_string(client, contract_address, "uri", [].to_vec(), block_number)
-            .await;
-
-    // Init contract type
-    let mut contract_type = "unknown".to_string();
-    if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
-        || (token_uri != "undefined" && !token_uri.is_empty())
-    {
-        contract_type = "erc721".to_string()
-    } else if uri_result != "undefined" {
-        contract_type = "erc1155".to_string()
-    }
-
-    contract_type
 }

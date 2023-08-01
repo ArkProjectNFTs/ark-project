@@ -1,3 +1,4 @@
+use super::utils::get_contract_property_string;
 use dotenv::dotenv;
 use log::info;
 use reqwest::Client;
@@ -165,4 +166,45 @@ pub async fn get_latest_block(client: &reqwest::Client) -> Result<u64, Box<dyn E
         .and_then(Value::as_u64)
         .ok_or("Failed to parse block number")?;
     Ok(block_number)
+}
+
+pub async fn get_contract_type(
+    client: &reqwest::Client,
+    contract_address: &str,
+    block_number: u64,
+) -> String {
+    let token_uri_cairo_0 = get_contract_property_string(
+        client,
+        contract_address,
+        "tokenURI",
+        vec!["1", "0"],
+        block_number,
+    )
+    .await;
+
+    let token_uri = get_contract_property_string(
+        client,
+        contract_address,
+        "token_uri",
+        vec!["1", "0"],
+        block_number,
+    )
+    .await;
+
+    // Get uri
+    let uri_result: String =
+        get_contract_property_string(client, contract_address, "uri", [].to_vec(), block_number)
+            .await;
+
+    // Init contract type
+    let mut contract_type = "unknown".to_string();
+    if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
+        || (token_uri != "undefined" && !token_uri.is_empty())
+    {
+        contract_type = "erc721".to_string()
+    } else if uri_result != "undefined" {
+        contract_type = "erc1155".to_string()
+    }
+
+    contract_type
 }
