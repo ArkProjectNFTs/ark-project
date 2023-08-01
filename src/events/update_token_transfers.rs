@@ -3,12 +3,7 @@ use aws_sdk_dynamodb::Error;
 use dotenv::dotenv;
 use log::info;
 use serde::{Deserialize, Serialize};
-<<<<<<< HEAD
-use serde_json;
 use std::collections::HashMap;
-=======
-// use serde_json;
->>>>>>> 80f1c1a (feat(transferts): remove king)
 use std::env;
 
 #[derive(Serialize, Deserialize, Debug)]
