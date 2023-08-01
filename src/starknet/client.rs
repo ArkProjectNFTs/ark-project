@@ -3,6 +3,7 @@ use dotenv::dotenv;
 use log::info;
 use reqwest::Client;
 use serde_json::{json, Value};
+use starknet::core::types::FieldElement;
 use starknet::core::utils::get_selector_from_name;
 use std::collections::HashMap;
 use std::env;
@@ -207,4 +208,27 @@ pub async fn get_contract_type(
     }
 
     contract_type
+}
+
+pub async fn get_token_owner(
+    client: &reqwest::Client,
+    token_id_low: FieldElement,
+    token_id_high: FieldElement,
+    contract_address: &str,
+    block_number: u64,
+) -> String {
+    let token_id_low_hex = format!("{:x}", token_id_low);
+    let token_id_high_hex = format!("{:x}", token_id_high);
+    let calldata = vec![token_id_low_hex.as_str(), token_id_high_hex.as_str()];
+
+    match call_contract(client, contract_address, "ownerOf", calldata, block_number).await {
+        Ok(result) => {
+            if let Some(token_owner) = result.get(0) {
+                token_owner.to_string().replace('\"', "")
+            } else {
+                "".to_string()
+            }
+        }
+        Err(_error) => "".to_string(),
+    }
 }

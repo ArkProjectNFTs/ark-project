@@ -1,5 +1,5 @@
 pub mod block_processor;
-pub mod block_status;
 pub mod contract_processor;
-pub mod contract_status;
 pub mod event_processor;
+pub mod transfer_processor;
+pub mod mint_processor;

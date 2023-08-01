@@ -1,24 +1,12 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 
-pub struct CollectionItem {
-    pub address: String,
-    pub contract_type: String,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct ItemOut {
-    pub address: Option<AttributeValue>,
-    pub contract_type: Option<AttributeValue>,
-}
-
 pub async fn create_collection(
     client: &Client,
-    item: CollectionItem,
     table_name: &str,
     token_address: &str,
 ) -> Result<(), Error> {
-    println!("add_collection_item {:?}", item.address);
+    println!("add_collection_item {:?}", token_address);
 
     let result = client
         .get_item()
@@ -32,8 +20,7 @@ pub async fn create_collection(
         let _ = client
             .put_item()
             .table_name(table_name)
-            .item("address", AttributeValue::S(item.address))
-            .item("collection_type", AttributeValue::S(item.contract_type))
+            .item("address", AttributeValue::S(token_address.to_string()))
             .send()
             .await?;
     }

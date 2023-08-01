@@ -1,8 +1,8 @@
-use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
+use crate::dynamo::contract::get::get_contract;
 
-use crate::dynamo::create_collection::{create_collection, CollectionItem};
-use crate::events::transfer_processor::process_transfers;
+use crate::core::transfer_processor::process_transfers;
+use crate::dynamo::collection::create::create_collection;
 use crate::kinesis::send::send_to_kinesis;
 use crate::starknet::client::get_contract_type;
 use aws_sdk_dynamodb::Client as DynamoClient;
@@ -60,20 +60,16 @@ pub async fn identify_contract_types_from_transfers(
 
         let block_number: u64 = event.get("block_number").unwrap().as_u64().unwrap();
 
-        // check if contract present and is a NFT then send event to the kinesis stream
-
         // Check if contract present and type
-        let contract_status = get_contract_status(dynamo_client, contract_address)
+        let contract_status = get_contract(dynamo_client, contract_address)
             .await
             .unwrap_or(None);
-
-        // ...
 
         if let Some(existing_contract_type) = contract_status {
             if existing_contract_type == "unknown" {
                 continue; // If it's unknown, skip this iteration of the loop
             } else if existing_contract_type == "erc721" || existing_contract_type == "erc1155" {
-                // TODO: use common function
+                // TODO: use a common function
                 if is_dev {
                     let _ = process_transfers(
                         client,
@@ -99,14 +95,8 @@ pub async fn identify_contract_types_from_transfers(
 
         println!("contract_type: {:?}", contract_type);
 
-        let collection_item = CollectionItem {
-            address: contract_address.to_string(),
-            contract_type: contract_type.clone(),
-        };
-
         match create_collection(
             dynamo_client,
-            collection_item,
             &collections_table,
             contract_address,
         )
@@ -121,7 +111,7 @@ pub async fn identify_contract_types_from_transfers(
                 );
 
                 if contract_type != "unknown" {
-                    // TODO: use common function
+                    // TODO: use a common function
                     if is_dev {
                         process_transfers(
                             client,
