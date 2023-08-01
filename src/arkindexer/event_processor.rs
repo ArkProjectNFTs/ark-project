@@ -19,7 +19,7 @@ pub async fn get_transfer_events(
     let transfer_events = filter_transfer_events(events, &event_hash);
     println!("Transfer events: {}", transfer_events.len());
     identify_contract_types_from_transfers(
-        &reqwest_client,
+        reqwest_client,
         transfer_events,
         dynamo_client,
         kinesis_client,

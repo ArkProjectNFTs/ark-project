@@ -16,17 +16,16 @@ permissions:
 
 jobs:
   clippy:
-    runs-on: ubuntu-latest-32-cores
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: ${{ env.RUST_VERSION }}
           components: clippy
 
       - uses: Swatinem/rust-cache@v2
       - uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - run: scripts/clippy.sh
+      - run: chmod +x src/scripts/clippy.sh
+      - run: src/scripts/clippy.sh
