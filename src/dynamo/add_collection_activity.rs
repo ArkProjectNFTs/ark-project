@@ -1,5 +1,6 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
+use log::info;
 
 pub struct CollectionActivity {
     pub address: String,
@@ -19,6 +20,8 @@ pub async fn add_collection_activity(
     collection_activity: CollectionActivity,
 ) -> Result<(), Error> {
     println!("add_collection_activity: {:?}", collection_activity.address);
+
+    let padded_token_id = format!("{:0>width$}", collection_activity.token_id, width = 78);
 
     let result = dynamo_client
         .put_item()

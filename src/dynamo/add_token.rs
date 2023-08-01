@@ -31,11 +31,13 @@ pub async fn update_token(
         .expect("Failed to get current timestamp")
         .as_secs();
 
+    let padded_token_id = format!("{:0>width$}", update_token_data.token_id, width = 78);
+
     let result = client
         .update_item()
         .table_name("ark_mainnet_tokens")
         .key("address", AttributeValue::S(update_token_data.collection_address))
-        .key("token_id", AttributeValue::S(update_token_data.token_id))
+        .key("token_id", AttributeValue::S(padded_token_id))
         .update_expression(
             "SET last_metadata_refresh = :last_metadata_refresh, token_uri = :token_uri, raw_metadata = :raw_metadata, normalized_metadata = :normalized_metadata, image_uri = :image_uri, token_owner = :token_owner, mint_transaction_hash = :mint_transaction_hash, block_number_minted = :block_number_minted",
         )
