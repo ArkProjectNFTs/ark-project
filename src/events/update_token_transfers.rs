@@ -3,8 +3,12 @@ use aws_sdk_dynamodb::Error;
 use dotenv::dotenv;
 use log::info;
 use serde::{Deserialize, Serialize};
+<<<<<<< HEAD
 use serde_json;
 use std::collections::HashMap;
+=======
+// use serde_json;
+>>>>>>> 80f1c1a (feat(transferts): remove king)
 use std::env;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -36,7 +40,6 @@ pub async fn update_token_transfers(
     let contract_address_av = AttributeValue::S(contract_address.to_string());
     let token_id_av = AttributeValue::S(padded_token_id);
 
-    // TODO read current value from dynamo
     let request = dynamo_client
         .get_item()
         .table_name(&table)
@@ -58,6 +61,7 @@ pub async fn update_token_transfers(
     info!("current_transfer: {:?}", current_transfer);
 
     match &result.item {
+        // If the item exists, we need to update it
         Some(item) => {
             log::info!("item: {:?}", item);
             if let Some(transfers_av) = item.get("transfers") {
@@ -72,12 +76,10 @@ pub async fn update_token_transfers(
                     .item("transfers", transfers_av);
                 request.send().await?;
             }
-            // TODO update the current entry
         }
+        // If the item doesn't exist, we need to create it
         None => {
-            // TODO build the body for the dynamo table save
             let transfers_av = AttributeValue::L(vec![current_transfer_av]);
-
             let request = dynamo_client
                 .put_item()
                 .table_name(&table)
@@ -96,10 +98,6 @@ fn convert_transfer_to_map(transfer: &Transfer) -> AttributeValue {
     let mut map: HashMap<String, AttributeValue> = HashMap::new();
     map.insert("from".into(), AttributeValue::S(transfer.from.clone()));
     map.insert("to".into(), AttributeValue::S(transfer.to.clone()));
-    map.insert(
-        "kind".into(),
-        AttributeValue::S(serde_json::to_string(&transfer.kind).unwrap()),
-    );
     map.insert(
         "timestamp".into(),
         AttributeValue::S(transfer.timestamp.clone()),
