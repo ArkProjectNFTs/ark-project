@@ -15,17 +15,30 @@ pub struct ItemOut {
 pub async fn add_collection_item(
     client: &Client,
     item: CollectionItem,
-    table: &String,
+    table_name: &str,
+    token_address: &str,
+    token_type: &str,
 ) -> Result<(), Error> {
     println!("add_collection_item {:?}", item.address);
 
-    let request = client
-        .put_item()
-        .table_name(table)
-        .item("address", AttributeValue::S(item.address))
-        .item("type", AttributeValue::S(item.contract_type));
+    let result = client
+        .get_item()
+        .key("address", AttributeValue::S(token_address.to_string()))
+        .key("collection_type", AttributeValue::S(token_type.to_string()))
+        .table_name(table_name)
+        .send()
+        .await?;
 
-    request.send().await?;
+    // If results returns 0 results
+    if result.item.is_none() {
+        let __ = client
+            .put_item()
+            .table_name(table_name)
+            .item("address", AttributeValue::S(item.address))
+            .item("collection_type", AttributeValue::S(item.contract_type))
+            .send()
+            .await?;
+    }
 
     Ok(())
 }

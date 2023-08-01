@@ -9,13 +9,13 @@ pub async fn get_collection(
     println!("get_collection: {:?}", address);
 
     let request = client
-        .get_item()
-        .table_name("ark_mainnet_collections") // make sure to provide table name
-        .key("address", AttributeValue::S(address))
+        .query()
+        .table_name("ark_mainnet_collections")
+        .key_condition_expression("#address = :address")
+        .expression_attribute_names("#address", "address")
+        .expression_attribute_values(":address", AttributeValue::S(address))
         .send()
         .await?;
 
-    println!("dynamodb result: {:?}", request.item);
-
-    Ok(request.item)
+    Ok(request.items.unwrap().pop())
 }

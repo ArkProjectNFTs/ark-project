@@ -55,7 +55,7 @@ pub async fn update_token_transfers(
 
     let current_transfer_av = convert_transfer_to_map(&current_transfer);
 
-    info!("result: {:?}", current_transfer);
+    info!("current_transfer: {:?}", current_transfer);
 
     match &result.item {
         Some(item) => {

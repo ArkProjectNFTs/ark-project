@@ -18,7 +18,7 @@ pub async fn get_contract_status(
 
     let result = request.send().await?;
     if let Some(item) = result.item {
-        if let Some(contract_type) = item.get("type") {
+        if let Some(contract_type) = item.get("collection_type") {
             match contract_type.as_s() {
                 Ok(contract_type_string) => return Ok(Some(contract_type_string.to_string())),
                 Err(_) => return Ok(None),

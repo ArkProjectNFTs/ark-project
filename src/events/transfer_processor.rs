@@ -1,6 +1,7 @@
 use crate::dynamo::add_collection_activity;
-use crate::dynamo::add_token::add_token;
+use crate::dynamo::add_token::update_token;
 use crate::dynamo::get_collection::get_collection;
+use crate::dynamo::update_collection::update_collection;
 use crate::dynamo::update_latest_mint::update_latest_mint;
 use crate::events::transfer_processor::add_collection_activity::add_collection_activity;
 use crate::events::update_token_transfers::update_token_transfers;
@@ -114,10 +115,41 @@ async fn get_token_uri(
     "undefined".to_string()
 }
 
+async fn update_additional_collection_data(
+    client: &reqwest::Client,
+    dynamo_client: &aws_sdk_dynamodb::Client,
+    contract_address: &str,
+    contract_type: String,
+    block_number: u64,
+) -> Result<(), Box<dyn Error>> {
+    info!("update_additional_collection_data");
+
+    let collection_symbol =
+        get_contract_property_string(client, contract_address, "symbol", vec![], block_number)
+            .await;
+
+    let collection_name =
+        get_contract_property_string(client, contract_address, "name", vec![], block_number).await;
+
+    info!("collection_name: {:?}", collection_name);
+
+    update_collection(
+        dynamo_client,
+        contract_address.to_string(),
+        contract_type.to_string(),
+        collection_name,
+        collection_symbol,
+    )
+    .await?;
+
+    Ok(())
+}
+
 pub async fn process_transfers(
     client: &reqwest::Client,
     dynamo_db_client: &aws_sdk_dynamodb::Client,
     value: &str,
+    contract_type: &str,
 ) -> Result<(), Box<dyn Error>> {
     println!("Processing transfers: {:?}", value);
 
@@ -156,8 +188,6 @@ pub async fn process_transfers(
 
     let token_id_big_uint = BigUint::from_bytes_be(&bytes[..]);
     let token_id: String = token_id_big_uint.to_str_radix(10);
-    let contract_address = format!("{:#064x}", event.from_address);
-    let token_type = &"erc721"; // TODO
 
     let block_number = event.block_number;
     let token_uri = get_token_uri(client, low, high, &contract_address, block_number).await;
@@ -175,6 +205,16 @@ pub async fn process_transfers(
         "Contract address: {} - Token ID: {} - Token URI: {} - Block number: {}",
         contract_address, token_id, token_uri, block_number
     );
+
+    update_additional_collection_data(
+        client,
+        dynamo_db_client,
+        contract_address.as_str(),
+        contract_type.to_string(),
+        block_number,
+    )
+    .await
+    .unwrap();
 
     let transfer = update_token_transfers(
         dynamo_db_client,
@@ -198,14 +238,14 @@ pub async fn process_transfers(
             dynamo_db_client,
             token_id.as_str(),
             token_uri.as_str(),
-            timestamp,
+            timestamp.clone(),
             contract_address.as_str(),
             token_owner.as_str(),
             transaction_hash.as_str(),
             block_number,
             &from_address,
             &to_address,
-            token_type,
+            contract_type,
         )
         .await;
     } else {
@@ -229,7 +269,7 @@ async fn get_token_owner(
     match call_contract(client, contract_address, "ownerOf", calldata, block_number).await {
         Ok(result) => {
             if let Some(token_owner) = result.get(0) {
-                token_owner.to_string()
+                token_owner.to_string().replace("\"", "")
             } else {
                 "".to_string()
             }
@@ -267,6 +307,8 @@ async fn process_mint_event(
 
     match collection_result {
         Ok(Some(collection)) => {
+            println!("collection: {:?}", collection);
+
             if let Some(latest_mint) = collection.get("latest_mint") {
                 let latest_mint_str = latest_mint.as_s().unwrap();
                 match latest_mint_str.parse::<u64>() {
@@ -281,34 +323,41 @@ async fn process_mint_event(
                                 dynamo_client,
                                 latest_mint_value,
                                 collection_address.to_string(),
+                                token_type.to_string(),
                             )
                             .await;
                         }
-
-                        //  TODO: Inserting into ark_mainnet_collection_activities
-
-                        let _ = add_collection_activity(
-                            dynamo_client,
-                            collection_address.to_string(),
-                            timestamp,
-                            block_number,
-                            "mint".to_string(),
-                            from_address.to_string(),
-                            token_id.to_string(),
-                            token_uri.to_string(),
-                            to_address.to_string(),
-                            transaction_hash.to_string(),
-                            token_type.to_string(),
-                        )
-                        .await;
                     }
                     Err(parse_err) => {
                         info!("Error parsing latest_mint: {}", parse_err);
                     }
                 }
             } else {
-                info!("No latest_mint in the collection");
+                let __ = update_latest_mint(
+                    dynamo_client,
+                    timestamp.clone(),
+                    collection_address.to_string(),
+                    token_type.to_string(),
+                )
+                .await;
             }
+
+            //  TODO: Inserting into ark_mainnet_collection_activities
+
+            let _ = add_collection_activity(
+                dynamo_client,
+                collection_address.to_string(),
+                timestamp.clone(),
+                block_number,
+                "mint".to_string(),
+                from_address.to_string(),
+                token_id.to_string(),
+                token_uri.to_string(),
+                to_address.to_string(),
+                transaction_hash.to_string(),
+                token_type.to_string(),
+            )
+            .await;
         }
         Ok(None) => {
             info!("No collection found at address");
@@ -337,14 +386,13 @@ async fn process_mint_event(
 
                 // TODO: Uploading image to S3
 
-                let _ = add_token(
+                let _ = update_token(
                     dynamo_client,
                     collection_address.to_string(),
                     token_id.to_string(),
                     token_uri.to_string(),
                     to_string(&raw_metadata).unwrap(),
                     normalized_metadata,
-                    token_owner.to_string(),
                     token_owner.to_string(),
                     transaction_hash.to_string(),
                     block_number,

@@ -1,7 +1,7 @@
 use crate::arkindexer::contract_status::get_contract_status;
 use crate::constants::BLACKLIST;
 use crate::dynamo::create::{add_collection_item, CollectionItem};
-use crate::dynamo::update_collection::update_collection;
+
 use crate::events::transfer_processor::process_transfers;
 use crate::kinesis::send::send_to_kinesis;
 use crate::starknet::utils::get_contract_property_string;
@@ -13,7 +13,6 @@ use serde_json::Value;
 use starknet::core::types::FieldElement;
 use std::collections::HashMap;
 use std::env;
-use std::error::Error;
 use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
@@ -34,7 +33,7 @@ pub async fn identify_contract_types_from_transfers(
         Err(_) => panic!("IS_DEV must be set"),
     };
     // Get dynamo table to work with
-    let table =
+    let collections_table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
     let kinesis_stream = env::var("KINESIS_STREAM_NAME").expect("KINESIS_STREAM_NAME must be set");
 
@@ -57,7 +56,7 @@ pub async fn identify_contract_types_from_transfers(
         let contract_address_raw = event.get("from_address").unwrap().as_str().unwrap();
         let contract_address_field = FieldElement::from_hex_be(contract_address_raw).unwrap();
         let contract_address_string = format!("{:#064x}", contract_address_field);
-        let contract_address = &contract_address_string.as_str();
+        let contract_address = contract_address_string.as_str();
 
         let block_number: u64 = event.get("block_number").unwrap().as_u64().unwrap();
 
@@ -76,18 +75,21 @@ pub async fn identify_contract_types_from_transfers(
             } else if existing_contract_type == "erc721" || existing_contract_type == "erc1155" {
                 // TODO: use common function
                 if is_dev {
-                    process_transfers(client, dynamo_client, &json_event)
-                        .await
-                        .unwrap();
+                    let _ = process_transfers(
+                        client,
+                        dynamo_client,
+                        &json_event,
+                        existing_contract_type.as_str(),
+                    )
+                    .await;
                 } else {
-                    send_to_kinesis(
+                    let _ = send_to_kinesis(
                         kinesis_client,
                         kinesis_stream.as_str(),
                         "transfer",
                         &json_event,
                     )
-                    .await
-                    .unwrap();
+                    .await;
                 }
                 continue; // After sending event, skip this iteration of the loop
             }
@@ -102,30 +104,34 @@ pub async fn identify_contract_types_from_transfers(
             contract_type: contract_type.clone(),
         };
 
-        match add_collection_item(dynamo_client, collection_item, &table).await {
+        match add_collection_item(
+            dynamo_client,
+            collection_item,
+            &collections_table,
+            contract_address,
+            contract_type.as_str(),
+        )
+        .await
+        {
             Ok(success) => {
                 info!(
                     "[Success] New collection item added successfully.\n\
                     - Item Details: {:?}\n\
                     - Table: {}",
-                    success, &table
+                    success, &collections_table
                 );
 
                 if contract_type != "unknown" {
                     // TODO: use common function
                     if is_dev {
-                        update_additional_collection_data(
+                        process_transfers(
                             client,
                             dynamo_client,
-                            contract_address,
-                            block_number,
+                            &json_event,
+                            contract_type.as_str(),
                         )
                         .await
                         .unwrap();
-
-                        process_transfers(client, dynamo_client, &json_event)
-                            .await
-                            .unwrap();
                     } else {
                         send_to_kinesis(
                             kinesis_client,
@@ -143,41 +149,13 @@ pub async fn identify_contract_types_from_transfers(
                     "[Error] Failed to add a new item to the collection.\n\
                     - Error Details: {:?}\n\
                     - Target Table: {}",
-                    e, &table
+                    e, &collections_table
                 );
             }
         }
     }
     let duration = start_time.elapsed();
     println!("Time elapsed in contracts block is: {:?}", duration);
-}
-
-async fn update_additional_collection_data(
-    client: &reqwest::Client,
-    dynamo_client: &DynamoClient,
-    contract_address: &str,
-    block_number: u64,
-) -> Result<(), Box<dyn Error>> {
-    info!("update_additional_collection_data");
-
-    let collection_symbol =
-        get_contract_property_string(client, contract_address, "symbol", vec![], block_number)
-            .await;
-
-    let collection_name =
-        get_contract_property_string(client, contract_address, "name", vec![], block_number).await;
-
-    info!("collection_name: {:?}", collection_name);
-
-    update_collection(
-        dynamo_client,
-        contract_address.to_string(),
-        collection_name,
-        collection_symbol,
-    )
-    .await?;
-
-    Ok(())
 }
 
 async fn get_contract_type(

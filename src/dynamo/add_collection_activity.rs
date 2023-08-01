@@ -28,7 +28,7 @@ pub async fn add_collection_activity(
         .item("token_id", AttributeValue::S(token_id))
         .item("token_uri", AttributeValue::S(token_uri))
         .item("transaction_hash", AttributeValue::S(transaction_hash))
-        .item("type", AttributeValue::S(token_type))
+        .item("collection_type", AttributeValue::S(token_type))
         .send()
         .await;
 
