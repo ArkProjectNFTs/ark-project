@@ -1,7 +1,7 @@
 use crate::constants::BLACKLIST;
 use crate::dynamo::contract::get::get_contract;
 
-use crate::core::transfer_processor::process_transfers;
+use crate::core::transfer::process_transfers;
 use crate::dynamo::collection::create::create_collection;
 use crate::kinesis::send::send_to_kinesis;
 use crate::starknet::client::get_contract_type;

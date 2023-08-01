@@ -1,4 +1,4 @@
-use crate::core::mint_processor::{process_mint_event, TokenData, TransactionData};
+use crate::core::mint::{process_mint_event, TokenData, TransactionData};
 use crate::dynamo::collection::update::update_collection;
 use crate::dynamo::token::update::update_token;
 use crate::starknet::utils::TokenId;
