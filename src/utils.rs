@@ -1,4 +1,4 @@
-use log::info;
+use log::{error, info};
 use serde_json::Value;
 use starknet::core::utils::starknet_keccak;
 use std::collections::HashMap;
@@ -54,11 +54,16 @@ pub fn decode_long_string(array: &Vec<String>) -> Result<String, Box<dyn Error>>
         info!("Hex string: {}", hex_str_fixed_length);
 
         let bytes = hex::decode(hex_str_fixed_length)?;
-        let str = String::from_utf8(bytes)?;
-
-        if !str.is_empty() {
-            info!("result: {}", result);
-            result.push_str(&str);
+        match String::from_utf8(bytes) {
+            Ok(str) => {
+                if !str.is_empty() {
+                    info!("result: {}", result);
+                    result.push_str(&str);
+                }
+            }
+            Err(err) => {
+                error!("UTF-8 parsing error: {:?}", err);
+            }
         }
     }
 
