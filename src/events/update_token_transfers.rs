@@ -69,7 +69,8 @@ pub async fn update_token_transfers(
                     .table_name(&table)
                     .item("address", contract_address_av.clone())
                     .item("token_id", token_id_av.clone())
-                    .item("transfers", transfers_av);
+                    .item("transfers", transfers_av)
+                    .item("token_owner", AttributeValue::S(to_address.to_string()));
                 request.send().await?;
             }
             // TODO update the current entry
@@ -83,7 +84,8 @@ pub async fn update_token_transfers(
                 .table_name(&table)
                 .item("address", contract_address_av.clone())
                 .item("token_id", token_id_av.clone())
-                .item("transfers", transfers_av);
+                .item("transfers", transfers_av)
+                .item("token_owner", AttributeValue::S(to_address.to_string()));
             request.send().await?;
         }
     }
