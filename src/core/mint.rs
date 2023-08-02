@@ -1,6 +1,6 @@
 use crate::utils::sanitize_uri;
 use ark_db::collection::get::get_collection;
-use ark_db::collection::update::update_collection_latest_mint;
+use ark_db::collection::update::{increment_collection_token_count, update_collection_latest_mint};
 use ark_db::collection_activity::create::{create_collection_activity, CollectionActivity};
 use ark_db::token::create::{create_token, CreateTokenData};
 use ark_metadata::get::get_metadata;
@@ -49,6 +49,13 @@ pub async fn process_mint_event(
     match collection_result {
         Ok(Some(collection)) => {
             println!("collection: {:?}", collection);
+
+            let _ = increment_collection_token_count(
+                dynamo_client,
+                token_data.collection_address.clone(),
+                token_data.token_type.clone(),
+            )
+            .await;
 
             if let Some(latest_mint) = collection.get("latest_mint") {
                 let latest_mint_str = latest_mint.as_s().unwrap();
