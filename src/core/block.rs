@@ -1,8 +1,8 @@
 use crate::core::event::extract_transfer_events;
-use crate::dynamo::block::create::create_block;
-use crate::dynamo::block::update::update_block;
-use crate::dynamo::block::get::get_block;
-use crate::starknet::client::{fetch_block, get_latest_block};
+use ark_db::block::create::create_block;
+use ark_db::block::get::get_block;
+use ark_db::block::update::update_block;
+use ark_starknet::client::{fetch_block, get_latest_block};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
@@ -42,7 +42,6 @@ pub async fn process_blocks_continuously(
                 println!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
             } else {
-
                 create_block(dynamo_client, current_block_number, false).await?;
                 let block = fetch_block(reqwest_client, current_block_number).await;
 
@@ -55,7 +54,7 @@ pub async fn process_blocks_continuously(
                 .await;
 
                 update_block(dynamo_client, current_block_number, true).await?;
-                
+
                 let execution_time_elapsed_time = execution_time.elapsed();
                 let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
                 println!(

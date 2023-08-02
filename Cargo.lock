@@ -102,6 +102,59 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-collection-update-lambda"
+version = "0.1.0"
+dependencies = [
+ "ark-db",
+ "ark-starknet",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-kinesis",
+ "aws-types",
+ "clap 4.3.8",
+ "dotenv",
+ "hex",
+ "log",
+ "mini-redis",
+ "num-bigint",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "starknet",
+ "structopt",
+ "tokio",
+ "tracing",
+ "tracing-subscriber 0.3.17",
+]
+
+[[package]]
+name = "ark-db"
+version = "0.1.0"
+dependencies = [
+ "ark-metadata",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-kinesis",
+ "aws-types",
+ "clap 4.3.8",
+ "dotenv",
+ "hex",
+ "log",
+ "mini-redis",
+ "num-bigint",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "starknet",
+ "structopt",
+ "tokio",
+ "tracing",
+ "tracing-subscriber 0.3.17",
+]
+
+[[package]]
 name = "ark-ff"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -148,6 +201,34 @@ dependencies = [
 name = "ark-indexer"
 version = "0.1.0"
 dependencies = [
+ "ark-collection-update-lambda",
+ "ark-db",
+ "ark-metadata",
+ "ark-starknet",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-kinesis",
+ "aws-types",
+ "clap 4.3.8",
+ "dotenv",
+ "hex",
+ "log",
+ "num-bigint",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "starknet",
+ "structopt",
+ "tokio",
+ "tracing",
+ "tracing-subscriber 0.3.17",
+]
+
+[[package]]
+name = "ark-metadata"
+version = "0.1.0"
+dependencies = [
  "aws-config",
  "aws-sdk-dynamodb",
  "aws-sdk-kinesis",
@@ -178,6 +259,21 @@ dependencies = [
  "ark-std",
  "digest",
  "num-bigint",
+]
+
+[[package]]
+name = "ark-starknet"
+version = "0.1.0"
+dependencies = [
+ "ark-db",
+ "dotenv",
+ "hex",
+ "log",
+ "num-bigint",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "starknet",
 ]
 
 [[package]]

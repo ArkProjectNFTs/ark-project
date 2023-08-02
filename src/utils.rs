@@ -1,12 +1,6 @@
-use log::{error, info};
 use serde_json::Value;
 use starknet::core::utils::starknet_keccak;
 use std::collections::HashMap;
-use std::error::Error;
-
-pub fn format_token_id(token_id: String) -> String {
-    format!("{:0>width$}", token_id, width = 78)
-}
 
 pub fn extract_events(block: &HashMap<String, Value>) -> Vec<Value> {
     let events = block.get("result").unwrap().get("events").unwrap();
@@ -39,37 +33,7 @@ pub fn get_selector_from_name(name: &str) -> String {
     selector
 }
 
-pub fn decode_long_string(array: &Vec<String>) -> Result<String, Box<dyn Error>> {
-    let mut result = String::new();
-    for hex_str in array {
-        let hex_str_without_prefix = hex_str.strip_prefix("0x").unwrap_or(hex_str);
 
-        // Prepend a zero if the length is odd
-        let hex_str_fixed_length = if hex_str_without_prefix.len() % 2 != 0 {
-            format!("0{}", hex_str_without_prefix)
-        } else {
-            hex_str_without_prefix.to_string()
-        };
-
-        info!("Hex string: {}", hex_str_fixed_length);
-
-        let bytes = hex::decode(hex_str_fixed_length)?;
-        match String::from_utf8(bytes) {
-            Ok(str) => {
-                if !str.is_empty() {
-                    info!("result: {}", result);
-                    result.push_str(&str);
-                }
-            }
-            Err(err) => {
-                error!("UTF-8 parsing error: {:?}", err);
-            }
-        }
-    }
-
-    info!("result: {}", result);
-    Ok(result)
-}
 
 #[allow(dead_code)]
 pub async fn upload_image_to_s3(_url: &str) -> Result<String, Box<dyn std::error::Error>> {

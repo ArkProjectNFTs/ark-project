@@ -1,4 +1,4 @@
-use crate::dynamo::token::utils::{convert_transfer_to_map, Transfer, TransferType};
+use super::utils::{convert_transfer_to_map, Transfer, TransferType};
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Error;
 use dotenv::dotenv;
