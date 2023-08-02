@@ -57,12 +57,13 @@ fn convert_felt_array_to_string(value1: &str, value2: &str) -> String {
 
     let felt1: FieldElement = FieldElement::from_hex_be(value1).unwrap();
     info!("Felt1: {:?}", felt1);
-
     let short_string1 = parse_cairo_short_string(&felt1).unwrap();
     info!("Short string1: {:?}", short_string1);
 
     let felt2: FieldElement = FieldElement::from_hex_be(value2).unwrap();
+    info!("Felt2: {:?}", felt2);
     let short_string2 = parse_cairo_short_string(&felt2).unwrap();
+    info!("Short string2: {:?}", short_string2);
 
     short_string1 + &short_string2
 }
@@ -82,7 +83,7 @@ pub fn decode_string_array(string_array: &Vec<String>) -> String {
             info!("Values: {:?} - {:?}", value1, value2);
             convert_felt_array_to_string(value1, value2)
         }
-        3 => convert_felt_array_to_string(&string_array[1], &string_array[0]),
+        3 => convert_felt_array_to_string(&string_array[1], &string_array[2]),
         _ => {
             if let Some((_array_size, new_string_array)) = string_array.split_first() {
                 info!("New string array: {:?}", new_string_array);
