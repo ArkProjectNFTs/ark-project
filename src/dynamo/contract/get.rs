@@ -3,7 +3,7 @@ use aws_sdk_dynamodb::{Client, Error};
 use dotenv::dotenv;
 use std::env;
 
-pub async fn get_contract_status(
+pub async fn get_contract(
     dynamo_client: &Client,
     contract_address: &str,
 ) -> Result<Option<String>, Error> {

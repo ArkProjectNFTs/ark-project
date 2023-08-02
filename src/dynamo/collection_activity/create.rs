@@ -15,7 +15,7 @@ pub struct CollectionActivity {
     pub token_type: String,
 }
 
-pub async fn add_collection_activity(
+pub async fn create_collection_activity(
     dynamo_client: &Client,
     collection_activity: CollectionActivity,
 ) -> Result<(), Error> {

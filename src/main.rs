@@ -1,11 +1,11 @@
-mod arkindexer;
 mod constants;
+mod core;
 mod dynamo;
-mod events;
 mod kinesis;
+mod services;
 mod starknet;
 mod utils;
-use arkindexer::block_processor::get_blocks;
+use crate::core::block::process_blocks_continuously;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
@@ -27,5 +27,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let kinesis_client = KinesisClient::new(&config);
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = Client::new();
-    get_blocks(&reqwest_client, &dynamo_client, &kinesis_client).await
+    process_blocks_continuously(&reqwest_client, &dynamo_client, &kinesis_client).await
 }

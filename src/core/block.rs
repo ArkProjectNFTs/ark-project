@@ -1,5 +1,7 @@
-use crate::arkindexer::block_status::{get_block_status, mark_block_status};
-use crate::arkindexer::event_processor::get_transfer_events;
+use crate::core::event::extract_transfer_events;
+use crate::dynamo::block::create::create_block;
+use crate::dynamo::block::update::update_block;
+use crate::dynamo::block::get::get_block;
 use crate::starknet::client::{fetch_block, get_latest_block};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
@@ -9,7 +11,7 @@ use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 // This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
-pub async fn get_blocks(
+pub async fn process_blocks_continuously(
     reqwest_client: &reqwest::Client,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
@@ -34,16 +36,17 @@ pub async fn get_blocks(
         );
 
         if current_block_number <= latest_block_number {
-            let is_block_fetched = get_block_status(dynamo_client, current_block_number).await?;
+            let is_block_fetched = get_block(dynamo_client, current_block_number).await?;
 
             if is_block_fetched {
                 println!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
             } else {
-                mark_block_status(dynamo_client, current_block_number, false).await?;
+
+                create_block(dynamo_client, current_block_number, false).await?;
                 let block = fetch_block(reqwest_client, current_block_number).await;
 
-                get_transfer_events(
+                extract_transfer_events(
                     reqwest_client,
                     block.unwrap(),
                     dynamo_client,
@@ -51,7 +54,8 @@ pub async fn get_blocks(
                 )
                 .await;
 
-                mark_block_status(dynamo_client, current_block_number, true).await?;
+                update_block(dynamo_client, current_block_number, true).await?;
+                
                 let execution_time_elapsed_time = execution_time.elapsed();
                 let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
                 println!(
