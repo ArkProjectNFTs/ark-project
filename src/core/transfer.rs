@@ -5,12 +5,12 @@ use ark_starknet::{
     client::get_block_with_txs, client::get_token_owner, utils::get_contract_property_string,
 };
 use log::info;
+use reqwest::Client as ReqwestClient;
 use starknet::core::types::{EmittedEvent, FieldElement};
-
 use std::error::Error;
 
 async fn get_token_uri(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     token_id_low: u128,
     token_id_high: u128,
     contract_address: &str,
@@ -53,7 +53,7 @@ async fn get_token_uri(
 }
 
 pub async fn process_transfers(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     dynamo_db_client: &aws_sdk_dynamodb::Client,
     value: &str,
     contract_type: &str,

@@ -2,12 +2,13 @@ use crate::core::contract::identify_contract_types_from_transfers;
 use crate::utils::{extract_events, filter_transfer_events, get_selector_from_name};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
+use reqwest::Client as ReqwestClient;
 use serde_json::Value;
 use std::collections::HashMap;
 
 // This function extracts and filters transfer events from a block.
 pub async fn extract_transfer_events(
-    reqwest_client: &reqwest::Client,
+    reqwest_client: &ReqwestClient,
     block: HashMap<String, Value>,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,

@@ -1,5 +1,6 @@
 use log::{error, info};
 use num_bigint::BigUint;
+use reqwest::Client as ReqwestClient;
 use serde_json::Value;
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 use std::error::Error;
@@ -98,7 +99,7 @@ pub fn decode_string_array(string_array: &Vec<String>) -> String {
 }
 
 pub async fn get_contract_property_string(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     contract_address: &str,
     selector_name: &str,
     calldata: Vec<&str>,

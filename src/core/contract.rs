@@ -9,6 +9,7 @@ use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
 use log::info;
+use reqwest::Client as ReqwestClient;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
 use std::collections::HashMap;
@@ -17,7 +18,7 @@ use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
 pub async fn identify_contract_types_from_transfers(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     events: Vec<HashMap<String, Value>>,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
