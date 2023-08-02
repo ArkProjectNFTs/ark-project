@@ -109,7 +109,6 @@ pub async fn identify_contract_types_from_transfers(
             collection_item,
             &collections_table,
             contract_address,
-            contract_type.as_str(),
         )
         .await
         {

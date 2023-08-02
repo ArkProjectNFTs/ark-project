@@ -119,7 +119,6 @@ async fn update_additional_collection_data(
     client: &reqwest::Client,
     dynamo_client: &aws_sdk_dynamodb::Client,
     contract_address: &str,
-    contract_type: String,
     block_number: u64,
 ) -> Result<(), Box<dyn Error>> {
     info!("update_additional_collection_data");
@@ -136,7 +135,6 @@ async fn update_additional_collection_data(
     update_collection(
         dynamo_client,
         contract_address.to_string(),
-        contract_type.to_string(),
         collection_name,
         collection_symbol,
     )
@@ -206,7 +204,6 @@ pub async fn process_transfers(
         client,
         dynamo_db_client,
         contract_address.as_str(),
-        contract_type.to_string(),
         block_number,
     )
     .await
@@ -333,7 +330,6 @@ async fn process_mint_event(
                                 dynamo_client,
                                 latest_mint_value,
                                 collection_address.to_string(),
-                                token_data.token_type.to_string(),
                             )
                             .await;
                         }
@@ -347,7 +343,6 @@ async fn process_mint_event(
                     dynamo_client,
                     transaction_data.timestamp,
                     collection_address.to_string(),
-                    token_data.token_type.to_string(),
                 )
                 .await;
             }

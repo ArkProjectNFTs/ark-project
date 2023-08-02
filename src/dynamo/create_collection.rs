@@ -17,14 +17,12 @@ pub async fn create_collection(
     item: CollectionItem,
     table_name: &str,
     token_address: &str,
-    token_type: &str,
 ) -> Result<(), Error> {
     println!("add_collection_item {:?}", item.address);
 
     let result = client
         .get_item()
         .key("address", AttributeValue::S(token_address.to_string()))
-        .key("collection_type", AttributeValue::S(token_type.to_string()))
         .table_name(table_name)
         .send()
         .await?;

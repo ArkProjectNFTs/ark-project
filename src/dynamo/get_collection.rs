@@ -9,13 +9,11 @@ pub async fn get_collection(
     println!("get_collection: {:?}", address);
 
     let request = client
-        .query()
+        .get_item()
         .table_name("ark_mainnet_collections")
-        .key_condition_expression("#address = :address")
-        .expression_attribute_names("#address", "address")
-        .expression_attribute_values(":address", AttributeValue::S(address))
+        .key("address", AttributeValue::S(address))
         .send()
         .await?;
 
-    Ok(request.items.unwrap().pop())
+    Ok(request.item)
 }
