@@ -58,7 +58,7 @@ pub async fn process_transfers(
     value: &str,
     contract_type: &str,
 ) -> Result<(), Box<dyn Error>> {
-    println!("Processing transfers: {:?}", value);
+    info!("Processing transfers: {:?}", value);
 
     //let data = str::from_utf8(&value.as_bytes())?;
     let event: EmittedEvent = serde_json::from_str(value)?;
