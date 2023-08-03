@@ -13,7 +13,6 @@ pub async fn fetch_block(
     client: &ReqwestClient,
     block_number: u64,
 ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
-    dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload = json!({
         "jsonrpc": "2.0",

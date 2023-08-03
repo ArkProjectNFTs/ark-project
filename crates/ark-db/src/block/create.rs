@@ -9,7 +9,6 @@ pub async fn create_block(
   block_number: u64,
   status: bool,
 ) -> Result<(), Error> {
-  dotenv().ok();
   let table = env::var("ARK_BLOCKS_TABLE_NAME").expect("ARK_BLOCKS_TABLE_NAME must be set");
   let block_number_av = AttributeValue::N(block_number.to_string());
   let is_fetched_av = AttributeValue::Bool(status);
