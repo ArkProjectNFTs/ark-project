@@ -8,6 +8,7 @@ members = [
   "crates/ark-transfers",
   "crates/ark-stream",
   "crates/arkchain-indexer",
+  "crates/ark-marketplace-indexer",
 ]
 
 [package]
