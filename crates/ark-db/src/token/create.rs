@@ -2,7 +2,6 @@ use super::utils::{convert_transfer_to_map, Transfer, TransferType};
 use ark_metadata::get::NormalizedMetadata;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Error;
-use dotenv::dotenv;
 use log::info;
 use std::collections::HashMap;
 use std::env;
@@ -24,7 +23,6 @@ pub async fn create_token(
     dynamo_client: &aws_sdk_dynamodb::Client,
     token_data: CreateTokenData,
 ) -> Result<Option<String>, Error> {
-    dotenv().ok();
     let token_table = env::var("ARK_TOKENS_TABLE_NAME").expect("ARK_TOKENS_TABLE_NAME must be set");
     let image_uri = token_data.normalized_metadata.image.clone();
     let current_transfer = Transfer {

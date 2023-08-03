@@ -1,6 +1,5 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
-use dotenv::dotenv;
 use std::env;
 
 pub async fn get_block(dynamo_client: &Client, block_number: u64) -> Result<bool, Error> {

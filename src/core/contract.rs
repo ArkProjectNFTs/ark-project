@@ -7,7 +7,6 @@ use ark_starknet::client::get_contract_type;
 use ark_stream::send::send_to_kinesis;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-use dotenv::dotenv;
 use log::{error, info};
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
@@ -23,8 +22,6 @@ pub async fn identify_contract_types_from_transfers(
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
 ) {
-    // TODO: move to env file
-    dotenv().ok();
     let is_dev = match env::var("IS_DEV") {
         Ok(val) => match val.to_lowercase().as_str() {
             "true" | "1" => true,
