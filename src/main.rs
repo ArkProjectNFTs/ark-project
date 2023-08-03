@@ -1,6 +1,5 @@
 mod constants;
 mod core;
-mod stream;
 mod utils;
 use crate::core::block::process_blocks_continuously;
 use aws_config::meta::region::RegionProviderChain;
