@@ -1,5 +1,10 @@
 [workspace]
-members = ["ark-collection-update-lambda", "ark-db"]
+members = [
+  "crates/ark-collection-update-lambda",
+  "crates/ark-db",
+  "crates/ark-metadata",
+  "crates/ark-starknet",
+]
 
 [package]
 name = "ark-indexer"
@@ -25,7 +30,7 @@ tracing-subscriber = "0.3.17"
 num-bigint = { version = "0.4.3", default-features = false }
 log = "0.4"
 simple_logger = "4.2.0"
-ark-db = { path = "./ark-db" }
-ark-starknet = { path = "./ark-starknet" }
-ark-metadata = { path = "./ark-metadata" }
-ark-collection-update-lambda = { path = "./ark-collection-update-lambda" }
+ark-collection-update-lambda = { path = "./crates/ark-collection-update-lambda" }
+ark-db = { path = "./crates/ark-db" }
+ark-starknet = { path = "./crates/ark-starknet" }
+ark-metadata = { path = "./crates/ark-metadata" }

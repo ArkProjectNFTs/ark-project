@@ -1,10 +1,9 @@
-use super::utils::get_contract_property_string;
+use super::utils::{get_contract_property_string, get_selector_as_string};
 use dotenv::dotenv;
 use log::info;
 use reqwest::Client;
 use serde_json::{json, Value};
 use starknet::core::types::FieldElement;
-use starknet::core::utils::get_selector_from_name;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
@@ -45,12 +44,6 @@ pub async fn fetch_block(
     );
 
     Ok(block)
-}
-
-fn get_selector_as_string(selector: &str) -> String {
-    let selector_field = get_selector_from_name(selector).unwrap();
-    let bytes = selector_field.to_bytes_be();
-    hex::encode(bytes)
 }
 
 pub async fn get_block_with_txs(

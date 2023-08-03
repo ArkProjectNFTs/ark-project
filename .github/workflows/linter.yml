@@ -28,4 +28,4 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - run: chmod +x src/scripts/clippy.sh
-      - run: src/scripts/clippy.sh
+      - run: scripts/clippy.sh

@@ -3,6 +3,7 @@ use num_bigint::BigUint;
 use serde_json::Value;
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 use std::error::Error;
+use starknet::core::utils::get_selector_from_name;
 
 use super::client::call_contract;
 
@@ -172,4 +173,10 @@ pub fn decode_long_string(array: &Vec<String>) -> Result<String, Box<dyn Error>>
 
 pub fn format_token_id(token_id: String) -> String {
     format!("{:0>width$}", token_id, width = 78)
+}
+
+pub fn get_selector_as_string(selector: &str) -> String {
+    let selector_field = get_selector_from_name(selector).unwrap();
+    let bytes = selector_field.to_bytes_be();
+    hex::encode(bytes)
 }
