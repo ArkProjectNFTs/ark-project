@@ -1,10 +1,10 @@
 use crate::constants::BLACKLIST;
-use crate::dynamo::contract::get::get_contract;
-
 use crate::core::transfer::process_transfers;
-use crate::dynamo::collection::create::create_collection;
-use crate::kinesis::send::send_to_kinesis;
-use crate::starknet::client::get_contract_type;
+use ark_collection_update_lambda::update_additional_collection_data;
+use ark_db::collection::create::create_collection;
+use ark_db::contract::get::get_contract;
+use ark_starknet::client::get_contract_type;
+use ark_stream::send::send_to_kinesis;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
@@ -95,13 +95,7 @@ pub async fn identify_contract_types_from_transfers(
 
         println!("contract_type: {:?}", contract_type);
 
-        match create_collection(
-            dynamo_client,
-            &collections_table,
-            contract_address,
-        )
-        .await
-        {
+        match create_collection(dynamo_client, &collections_table, contract_address).await {
             Ok(success) => {
                 info!(
                     "[Success] New collection item added successfully.\n\
@@ -121,7 +115,17 @@ pub async fn identify_contract_types_from_transfers(
                         )
                         .await
                         .unwrap();
+
+                        update_additional_collection_data(
+                            client,
+                            dynamo_client,
+                            contract_address,
+                            block_number,
+                        )
+                        .await
+                        .unwrap();
                     } else {
+                        // TODO: add send kinesis event for update_additional_collection_data
                         send_to_kinesis(
                             kinesis_client,
                             kinesis_stream.as_str(),

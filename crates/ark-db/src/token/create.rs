@@ -1,12 +1,11 @@
-use crate::dynamo::token::utils::{convert_transfer_to_map, Transfer, TransferType};
-use crate::services::metadata::get::NormalizedMetadata;
+use super::utils::{convert_transfer_to_map, Transfer, TransferType};
+use ark_metadata::get::NormalizedMetadata;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Error;
 use dotenv::dotenv;
 use log::info;
 use std::collections::HashMap;
 use std::env;
-
 pub struct CreateTokenData {
     pub address: String,
     pub padded_token_id: String,

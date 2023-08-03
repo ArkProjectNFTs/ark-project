@@ -1,9 +1,5 @@
 mod constants;
 mod core;
-mod dynamo;
-mod kinesis;
-mod services;
-mod starknet;
 mod utils;
 use crate::core::block::process_blocks_continuously;
 use aws_config::meta::region::RegionProviderChain;

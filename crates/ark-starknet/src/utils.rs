@@ -1,12 +1,11 @@
-use log::info;
+use log::{error, info};
 use num_bigint::BigUint;
 use serde_json::Value;
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
+use std::error::Error;
+use starknet::core::utils::get_selector_from_name;
 
-use crate::{
-    starknet::client::call_contract,
-    utils::{decode_long_string, format_token_id},
-};
+use super::client::call_contract;
 
 pub struct FormattedTokenId {
     pub low: u128,
@@ -138,4 +137,46 @@ pub async fn get_contract_property_string(
         },
         Err(_) => "undefined".to_string(),
     }
+}
+
+pub fn decode_long_string(array: &Vec<String>) -> Result<String, Box<dyn Error>> {
+    let mut result = String::new();
+    for hex_str in array {
+        let hex_str_without_prefix = hex_str.strip_prefix("0x").unwrap_or(hex_str);
+
+        // Prepend a zero if the length is odd
+        let hex_str_fixed_length = if hex_str_without_prefix.len() % 2 != 0 {
+            format!("0{}", hex_str_without_prefix)
+        } else {
+            hex_str_without_prefix.to_string()
+        };
+
+        info!("Hex string: {}", hex_str_fixed_length);
+
+        let bytes = hex::decode(hex_str_fixed_length)?;
+        match String::from_utf8(bytes) {
+            Ok(str) => {
+                if !str.is_empty() {
+                    info!("result: {}", result);
+                    result.push_str(&str);
+                }
+            }
+            Err(err) => {
+                error!("UTF-8 parsing error: {:?}", err);
+            }
+        }
+    }
+
+    info!("result: {}", result);
+    Ok(result)
+}
+
+pub fn format_token_id(token_id: String) -> String {
+    format!("{:0>width$}", token_id, width = 78)
+}
+
+pub fn get_selector_as_string(selector: &str) -> String {
+    let selector_field = get_selector_from_name(selector).unwrap();
+    let bytes = selector_field.to_bytes_be();
+    hex::encode(bytes)
 }

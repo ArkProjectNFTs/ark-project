@@ -1,8 +1,7 @@
 use crate::core::mint::{process_mint_event, TokenData, TransactionData};
-use crate::dynamo::collection::update::update_collection;
-use crate::dynamo::token::update::update_token;
-use crate::starknet::utils::TokenId;
-use crate::starknet::{
+use ark_db::token::update::update_token;
+use ark_starknet::utils::TokenId;
+use ark_starknet::{
     client::get_block_with_txs, client::get_token_owner, utils::get_contract_property_string,
 };
 use log::info;
@@ -51,34 +50,6 @@ async fn get_token_uri(
     }
 
     "undefined".to_string()
-}
-
-async fn update_additional_collection_data(
-    client: &reqwest::Client,
-    dynamo_client: &aws_sdk_dynamodb::Client,
-    contract_address: &str,
-    block_number: u64,
-) -> Result<(), Box<dyn Error>> {
-    info!("update_additional_collection_data");
-
-    let collection_symbol =
-        get_contract_property_string(client, contract_address, "symbol", vec![], block_number)
-            .await;
-
-    let collection_name =
-        get_contract_property_string(client, contract_address, "name", vec![], block_number).await;
-
-    info!("collection_name: {:?}", collection_name);
-
-    update_collection(
-        dynamo_client,
-        contract_address.to_string(),
-        collection_name,
-        collection_symbol,
-    )
-    .await?;
-
-    Ok(())
 }
 
 pub async fn process_transfers(
@@ -139,15 +110,6 @@ pub async fn process_transfers(
         "Contract address: {} - Token ID: {} - Token URI: {} - Block number: {}",
         contract_address, formated_token_id.token_id, token_uri, block_number
     );
-
-    update_additional_collection_data(
-        client,
-        dynamo_db_client,
-        contract_address.as_str(),
-        block_number,
-    )
-    .await
-    .unwrap();
 
     if from_address_field_element == FieldElement::ZERO {
         info!(

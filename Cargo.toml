@@ -1,3 +1,11 @@
+[workspace]
+members = [
+  "crates/ark-collection-update-lambda",
+  "crates/ark-db",
+  "crates/ark-metadata",
+  "crates/ark-starknet",
+]
+
 [package]
 name = "ark-indexer"
 version = "0.1.0"
@@ -5,7 +13,6 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-mini-redis = "0.4"
 reqwest = { version = "0.11", features = ["json"] }
 serde_json = "1.0"
 starknet = "0.5.0"
@@ -23,3 +30,8 @@ tracing-subscriber = "0.3.17"
 num-bigint = { version = "0.4.3", default-features = false }
 log = "0.4"
 simple_logger = "4.2.0"
+ark-collection-update-lambda = { path = "./crates/ark-collection-update-lambda" }
+ark-db = { path = "./crates/ark-db" }
+ark-starknet = { path = "./crates/ark-starknet" }
+ark-metadata = { path = "./crates/ark-metadata" }
+ark-stream = { path = "./crates/ark-stream" }
