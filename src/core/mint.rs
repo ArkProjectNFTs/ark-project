@@ -1,8 +1,8 @@
 use crate::utils::sanitize_uri;
 use ark_db::collection::get::get_collection;
 use ark_db::collection::update::{increment_collection_token_count, update_collection_latest_mint};
-use ark_db::collection_activity::create::{create_collection_activity, CollectionActivity};
 use ark_db::token::create::{create_token, CreateTokenData};
+use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_metadata::get::get_metadata;
 use log::info;
 use serde_json::to_string;
@@ -88,7 +88,7 @@ pub async fn process_mint_event(
                 .await;
             }
 
-            let activity: CollectionActivity = CollectionActivity {
+            let token_event = TokenEvent {
                 address: token_data.collection_address.to_string(),
                 timestamp: transaction_data.timestamp,
                 block_number: transaction_data.block_number,
@@ -102,7 +102,7 @@ pub async fn process_mint_event(
             };
 
             //  TODO: Inserting into ark_mainnet_collection_activities
-            let _ = create_collection_activity(dynamo_client, activity).await;
+            let _ = create_token_event(dynamo_client, token_event).await;
         }
         Ok(None) => {
             info!("No collection found at address");
