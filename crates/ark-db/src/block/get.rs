@@ -1,10 +1,8 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
-use dotenv::dotenv;
 use std::env;
 
 pub async fn get_block(dynamo_client: &Client, block_number: u64) -> Result<bool, Error> {
-    dotenv().ok();
     let table = env::var("ARK_BLOCKS_TABLE_NAME").expect("ARK_BLOCKS_TABLE_NAME must be set");
     let block_number_av = AttributeValue::N(block_number.to_string());
     let request = dynamo_client

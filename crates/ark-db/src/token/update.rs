@@ -1,7 +1,6 @@
 use super::utils::{convert_transfer_to_map, Transfer, TransferType};
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Error;
-use dotenv::dotenv;
 use std::env;
 
 pub async fn update_token(
@@ -13,7 +12,6 @@ pub async fn update_token(
     timestamp: &u64,
     transaction_hash: String,
 ) -> Result<(), Error> {
-    dotenv().ok();
     let token_table = env::var("ARK_TOKENS_TABLE_NAME").expect("ARK_TOKENS_TABLE_NAME must be set");
 
     let contract_address_av = AttributeValue::S(collection_address.clone());

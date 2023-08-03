@@ -1,6 +1,5 @@
-name: clippy-action
-on: [pull_request]
-
+on: push
+name: Clippy check
 permissions:
   actions: read
   checks: write
@@ -13,19 +12,19 @@ permissions:
   repository-projects: read
   security-events: read
   statuses: read
-
 jobs:
-  clippy:
+  clippy_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly
           components: clippy
-
-      - uses: Swatinem/rust-cache@v2
-      - uses: arduino/setup-protoc@v1
+          override: true
+      - uses: actions-rs/clippy-check@v1
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
       - run: chmod +x scripts/clippy.sh
       - run: scripts/clippy.sh

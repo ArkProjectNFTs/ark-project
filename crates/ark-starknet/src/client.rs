@@ -1,5 +1,4 @@
 use super::utils::{get_contract_property_string, get_selector_as_string};
-use dotenv::dotenv;
 use log::info;
 use reqwest::Client as ReqwestClient;
 use serde_json::{json, Value};
@@ -13,7 +12,6 @@ pub async fn fetch_block(
     client: &ReqwestClient,
     block_number: u64,
 ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
-    dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload = json!({
         "jsonrpc": "2.0",
@@ -83,7 +81,6 @@ pub async fn call_contract(
     calldata: Vec<&str>,
     block_number: u64,
 ) -> Result<Value, Box<dyn Error>> {
-    dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let selector_string = selector_name.to_string();
     let selector = get_selector_as_string(&selector_string);
@@ -135,7 +132,6 @@ pub async fn call_contract(
 }
 
 pub async fn get_latest_block(client: &ReqwestClient) -> Result<u64, Box<dyn Error>> {
-    dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload: Value = json!({
         "jsonrpc": "2.0",

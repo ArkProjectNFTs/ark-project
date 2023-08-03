@@ -1,13 +1,11 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
-use dotenv::dotenv;
 use std::env;
 
 pub async fn get_contract(
     dynamo_client: &Client,
     contract_address: &str,
 ) -> Result<Option<String>, Error> {
-    dotenv().ok();
     let table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
     let contract_address_av = AttributeValue::S(contract_address.to_string());

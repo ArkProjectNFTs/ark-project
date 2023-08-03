@@ -5,7 +5,6 @@ use ark_db::block::update::update_block;
 use ark_starknet::client::{fetch_block, get_latest_block};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-use dotenv::dotenv;
 use log::info;
 use reqwest::Client as ReqwestClient;
 use std::env;
@@ -18,7 +17,6 @@ pub async fn process_blocks_continuously(
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
     let starting_block = env::var("START_BLOCK")
         .expect("START_BLOCK must be set")
         .parse::<u64>()

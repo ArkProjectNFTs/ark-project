@@ -8,9 +8,11 @@ use aws_sdk_kinesis::Client as KinesisClient;
 use log::LevelFilter;
 use reqwest::Client as ReqwestClient;
 use simple_logger::SimpleLogger;
+use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv().ok();
     SimpleLogger::new()
         .env()
         .with_level(LevelFilter::Warn)
