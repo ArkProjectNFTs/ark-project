@@ -1,5 +1,17 @@
 on: push
 name: Clippy check
+permissions:
+  actions: read
+  checks: write
+  contents: write
+  deployments: write
+  id-token: write
+  discussions: write
+  pages: write
+  pull-requests: write
+  repository-projects: read
+  security-events: read
+  statuses: read
 jobs:
   clippy_check:
     runs-on: ubuntu-latest
