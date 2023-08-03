@@ -6,13 +6,14 @@ use ark_starknet::client::{fetch_block, get_latest_block};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
+use reqwest::Client as ReqwestClient;
 use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 // This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
 pub async fn process_blocks_continuously(
-    reqwest_client: &reqwest::Client,
+    reqwest_client: &ReqwestClient,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
 ) -> Result<(), Box<dyn std::error::Error>> {

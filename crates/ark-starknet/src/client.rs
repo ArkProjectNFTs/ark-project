@@ -1,7 +1,7 @@
 use super::utils::{get_contract_property_string, get_selector_as_string};
 use dotenv::dotenv;
 use log::info;
-use reqwest::Client;
+use reqwest::Client as ReqwestClient;
 use serde_json::{json, Value};
 use starknet::core::types::FieldElement;
 use std::collections::HashMap;
@@ -10,7 +10,7 @@ use std::error::Error;
 use std::time::Instant;
 
 pub async fn fetch_block(
-    client: &Client,
+    client: &ReqwestClient,
     block_number: u64,
 ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
     dotenv().ok();
@@ -47,7 +47,7 @@ pub async fn fetch_block(
 }
 
 pub async fn get_block_with_txs(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     block_number: u64,
 ) -> Result<Value, Box<dyn Error>> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
@@ -77,7 +77,7 @@ pub async fn get_block_with_txs(
 }
 
 pub async fn call_contract(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     contract_address: &str,
     selector_name: &str,
     calldata: Vec<&str>,
@@ -134,7 +134,7 @@ pub async fn call_contract(
     Ok(result.get("result").cloned().unwrap_or(Value::Null))
 }
 
-pub async fn get_latest_block(client: &reqwest::Client) -> Result<u64, Box<dyn Error>> {
+pub async fn get_latest_block(client: &ReqwestClient) -> Result<u64, Box<dyn Error>> {
     dotenv().ok();
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload: Value = json!({
@@ -163,7 +163,7 @@ pub async fn get_latest_block(client: &reqwest::Client) -> Result<u64, Box<dyn E
 }
 
 pub async fn get_contract_type(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     contract_address: &str,
     block_number: u64,
 ) -> String {
@@ -204,7 +204,7 @@ pub async fn get_contract_type(
 }
 
 pub async fn get_token_owner(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     token_id_low: FieldElement,
     token_id_high: FieldElement,
     contract_address: &str,

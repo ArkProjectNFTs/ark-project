@@ -1,4 +1,5 @@
 use aws_sdk_dynamodb::types::AttributeValue;
+use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -60,7 +61,7 @@ impl From<NormalizedMetadata> for HashMap<String, AttributeValue> {
 }
 
 pub async fn get_metadata(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     metadata_uri: &str,
     initial_metadata_uri: &str,
 ) -> Result<(Value, NormalizedMetadata), Box<dyn Error>> {

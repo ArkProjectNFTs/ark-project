@@ -1,10 +1,11 @@
 use ark_db::collection::update::update_collection;
 use ark_starknet::utils::get_contract_property_string;
 use log::info;
+use reqwest::Client as ReqwestClient;
 use std::error::Error;
 
 pub async fn update_additional_collection_data(
-    client: &reqwest::Client,
+    client: &ReqwestClient,
     dynamo_client: &aws_sdk_dynamodb::Client,
     contract_address: &str,
     block_number: u64,
