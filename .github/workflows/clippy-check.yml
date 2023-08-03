@@ -26,3 +26,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
+      - run: chmod +x scripts/clippy.sh
+      - run: scripts/clippy.sh
