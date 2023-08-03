@@ -6,6 +6,7 @@ use ark_starknet::client::{fetch_block, get_latest_block};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
+use log::info;
 use reqwest::Client as ReqwestClient;
 use std::env;
 use std::time::{Duration, Instant};
@@ -29,7 +30,7 @@ pub async fn process_blocks_continuously(
         let execution_time = Instant::now();
         let latest_block_number = get_latest_block(reqwest_client).await?;
 
-        println!(
+        info!(
             "Latest block: {}, Current block: {}, Indexing progress: {:.2}%",
             latest_block_number,
             current_block_number,
@@ -40,7 +41,7 @@ pub async fn process_blocks_continuously(
             let is_block_fetched = get_block(dynamo_client, current_block_number).await?;
 
             if is_block_fetched {
-                println!("Current block {} is already fetched", current_block_number);
+                info!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
             } else {
                 create_block(dynamo_client, current_block_number, false).await?;
@@ -58,7 +59,7 @@ pub async fn process_blocks_continuously(
 
                 let execution_time_elapsed_time = execution_time.elapsed();
                 let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
-                println!(
+                info!(
                     "Indexing time: {}ms (block {})",
                     execution_time_elapsed_time_ms, current_block_number
                 );

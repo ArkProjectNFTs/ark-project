@@ -8,7 +8,7 @@ pub async fn update_collection(
     name: String,
     symbol: String,
 ) -> Result<(), Error> {
-    println!(
+    info!(
         "update_collection: {} {} {}",
         collection_address, name, symbol
     );
@@ -31,7 +31,7 @@ pub async fn update_collection_latest_mint(
     latest_mint: u64,
     collection_address: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Update latest_mint: {:?}", latest_mint);
+    info!("Update latest_mint: {:?}", latest_mint);
 
     dynamo_client
         .update_item()

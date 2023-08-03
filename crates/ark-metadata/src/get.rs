@@ -1,4 +1,5 @@
 use aws_sdk_dynamodb::types::AttributeValue;
+use log::info;
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -65,12 +66,12 @@ pub async fn get_metadata(
     metadata_uri: &str,
     initial_metadata_uri: &str,
 ) -> Result<(Value, NormalizedMetadata), Box<dyn Error>> {
-    println!("Fetching metadata: {}", metadata_uri);
+    info!("Fetching metadata: {}", metadata_uri);
 
     let response = client.get(metadata_uri).send().await?;
     let raw_metadata: Value = response.json().await?;
 
-    println!("Metadata: {:?}", raw_metadata);
+    info!("Metadata: {:?}", raw_metadata);
 
     let empty_vec = Vec::new();
 

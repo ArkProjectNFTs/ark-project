@@ -21,7 +21,7 @@ pub async fn create_collection_activity(
 ) -> Result<(), Error> {
     info!("add_collection_activity: {:?}", collection_activity.address);
 
-    let result = dynamo_client
+    let _result = dynamo_client
         .put_item()
         .table_name("ark_mainnet_collection_activities")
         .item("address", AttributeValue::S(collection_activity.address))
@@ -63,8 +63,6 @@ pub async fn create_collection_activity(
         )
         .send()
         .await;
-
-    println!("dynamodb result: {:?}", result);
 
     Ok(())
 }
