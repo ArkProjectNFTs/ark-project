@@ -37,7 +37,6 @@ pub async fn create_token_event(
         .item("from_address", AttributeValue::S(token_event.from_address))
         .item("to_address", AttributeValue::S(token_event.to_address))
         .item("token_id", AttributeValue::S(token_event.padded_token_id))
-        .item("token_uri", AttributeValue::S(token_event.token_uri))
         .item(
             "transaction_hash",
             AttributeValue::S(token_event.transaction_hash),
