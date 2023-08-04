@@ -1,9 +1,10 @@
-use crate::core::mint::{process_mint_event, TokenData, TransactionData};
+use super::mint::{process_mint_event, TokenData, TransactionData};
 use ark_db::token::update::update_token;
 use ark_starknet::utils::TokenId;
 use ark_starknet::{
     client::get_block_with_txs, client::get_token_owner, utils::get_contract_property_string,
 };
+use aws_sdk_dynamodb::Client as DynamoClient;
 use log::info;
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{EmittedEvent, FieldElement};
@@ -54,7 +55,7 @@ async fn get_token_uri(
 
 pub async fn process_transfers(
     client: &ReqwestClient,
-    dynamo_db_client: &aws_sdk_dynamodb::Client,
+    dynamo_db_client: &DynamoClient,
     value: &str,
     contract_type: &str,
 ) -> Result<(), Box<dyn Error>> {

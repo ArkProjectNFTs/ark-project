@@ -1,4 +1,4 @@
-use crate::core::event::extract_transfer_events;
+use super::event::extract_transfer_events;
 use ark_db::block::create::create_block;
 use ark_db::block::get::get_block;
 use ark_db::block::update::update_block;

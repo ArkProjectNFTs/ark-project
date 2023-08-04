@@ -1,10 +1,11 @@
 use super::utils::{convert_transfer_to_map, Transfer, TransferType};
 use aws_sdk_dynamodb::types::AttributeValue;
+use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_dynamodb::Error;
 use std::env;
 
 pub async fn update_token(
-    dynamo_client: &aws_sdk_dynamodb::Client,
+    dynamo_client: &DynamoClient,
     collection_address: String,
     padded_token_id: &str,
     from_address: String,

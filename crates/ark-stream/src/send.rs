@@ -1,7 +1,9 @@
 use aws_sdk_kinesis::error::SdkError;
 use aws_sdk_kinesis::operation::put_record::PutRecordError;
+use aws_smithy_http::body::SdkBody;
 use aws_sdk_kinesis::primitives::Blob;
 use aws_sdk_kinesis::Client as KinesisClient;
+use http::response::Response;
 use log::{error, info};
 
 pub async fn send_to_kinesis(
@@ -9,7 +11,7 @@ pub async fn send_to_kinesis(
     stream: &str,
     key: &str,
     data: &str,
-) -> Result<(), SdkError<PutRecordError>> {
+) -> Result<(), SdkError<PutRecordError, Response<SdkBody>>> {
     let blob = Blob::new(data);
 
     info!("Sending data to {} stream: {}", key, data);

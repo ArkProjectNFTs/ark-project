@@ -1,4 +1,4 @@
-use crate::utils::sanitize_uri;
+use super::utils::sanitize_uri;
 use ark_db::collection::get::get_collection;
 use ark_db::collection::update::{increment_collection_token_count, update_collection_latest_mint};
 use ark_db::token::create::{create_token, CreateTokenData};
@@ -6,6 +6,8 @@ use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_metadata::get::get_metadata;
 use log::info;
 use serde_json::to_string;
+use reqwest::Client as ReqwestClient;
+use aws_sdk_dynamodb::Client as DynamoClient;
 
 pub struct TokenData {
     pub padded_token_id: String,
@@ -24,8 +26,8 @@ pub struct TransactionData {
 }
 
 pub async fn process_mint_event(
-    client: &reqwest::Client,
-    dynamo_client: &aws_sdk_dynamodb::Client,
+    client: &ReqwestClient,
+    dynamo_client: &DynamoClient,
     padded_token_id: &str,
     token_uri: &str,
     timestamp: u64,
