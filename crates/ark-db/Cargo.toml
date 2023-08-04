@@ -7,5 +7,5 @@ edition = "2021"
 serde = "1.0.164"
 log = "0.4"
 ark-metadata = { path = "../ark-metadata" }
-aws-sdk-dynamodb = "0.28.0"
+aws-sdk-dynamodb = "0.29.0"
 dotenv = "0.15.0"

@@ -1,5 +1,5 @@
 use crate::constants::BLACKLIST;
-use crate::core::transfer::process_transfers;
+use ark_transfers::transfer::process_transfers;
 use ark_collection_update_lambda::update_additional_collection_data;
 use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
