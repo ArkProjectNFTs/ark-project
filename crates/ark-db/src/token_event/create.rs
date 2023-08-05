@@ -1,8 +1,8 @@
-use std::env;
-
+use anyhow::Result;
 use aws_sdk_dynamodb::types::AttributeValue;
-use aws_sdk_dynamodb::{Client, Error};
+use aws_sdk_dynamodb::Client as DynamoClient;
 use log::info;
+use std::env;
 
 #[derive(Debug, Clone, Default)]
 pub struct TokenEvent {
@@ -22,9 +22,9 @@ pub struct TokenEvent {
     pub price: Option<String>,
 }
 pub async fn create_token_event(
-    dynamo_client: &Client,
+    dynamo_client: &DynamoClient,
     token_event: TokenEvent,
-) -> Result<(), Error> {
+) -> Result<()> {
     info!("create_token_event: {:?}", token_event.address);
 
     let token_events_table_name =
