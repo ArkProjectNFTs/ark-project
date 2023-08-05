@@ -23,7 +23,7 @@ pub fn convert_transfer_to_map(transfer: &Transfer) -> AttributeValue {
     map.insert("from".into(), AttributeValue::S(transfer.from.clone()));
     map.insert("to".into(), AttributeValue::S(transfer.to.clone()));
     map.insert(
-        "timestamp".into(),
+        "event_timestamp".into(),
         AttributeValue::S(transfer.timestamp.clone()),
     );
     map.insert(

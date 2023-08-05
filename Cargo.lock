@@ -234,6 +234,7 @@ dependencies = [
  "ark-db",
  "ark-metadata",
  "ark-starknet",
+ "ark-transfers",
  "aws-config",
  "aws-sdk-dynamodb",
  "aws-types",

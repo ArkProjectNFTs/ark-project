@@ -8,6 +8,49 @@ use std::collections::HashMap;
 use std::env;
 use std::time::Instant;
 
+pub async fn get_token_uri(
+    client: &ReqwestClient,
+    token_id_low: u128,
+    token_id_high: u128,
+    contract_address: &str,
+    block_number: u64,
+) -> String {
+    info!("get_token_id: [{:?}, {:?}]", token_id_low, token_id_high);
+
+    let token_id_low_hex = format!("{:x}", token_id_low);
+    let token_id_high_hex = format!("{:x}", token_id_high);
+
+    let token_uri_cairo0 = get_contract_property_string(
+        client,
+        contract_address,
+        "tokenURI",
+        vec![token_id_low_hex.clone(), token_id_high_hex.clone()],
+        block_number,
+    )
+    .await;
+
+    if token_uri_cairo0 != "undefined" && !token_uri_cairo0.is_empty() {
+        return token_uri_cairo0;
+    }
+
+    let token_uri = get_contract_property_string(
+        client,
+        contract_address,
+        "token_uri",
+        vec![token_id_low_hex.clone(), token_id_high_hex.clone()],
+        block_number,
+    )
+    .await;
+
+    info!("token_uri: {:?}", token_uri);
+
+    if token_uri != "undefined" && !token_uri.is_empty() {
+        return token_uri;
+    }
+
+    "undefined".to_string()
+}
+
 pub async fn fetch_block(
     client: &ReqwestClient,
     block_number: u64,
