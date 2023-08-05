@@ -1,5 +1,7 @@
 use super::mint::{process_mint_event, TokenData, TransactionData};
 use super::utils::get_token_uri;
+use ark_db::owners::create::{create_token_owner, CreateTokenOwnerData};
+use ark_db::owners::delete::{delete_token_owner, DeleteTokenOwnerData};
 use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_starknet::utils::TokenId;
 use ark_starknet::{client::get_block_with_txs, client::get_token_owner};
@@ -99,6 +101,14 @@ pub async fn process_transfers(
             transaction_data,
         )
         .await;
+
+        let owner_data = CreateTokenOwnerData {
+            address: contract_address.clone(),
+            padded_token_id: formated_token_id.padded_token_id.clone(),
+            owner: to_address.to_string(),
+        };
+
+        create_token_owner(dynamo_db_client, owner_data).await?;
     } else {
         let token_event = TokenEvent {
             address: contract_address.clone(),
@@ -113,6 +123,18 @@ pub async fn process_transfers(
             token_type: contract_type.to_string(),
         };
         let _ = create_token_event(dynamo_db_client, token_event).await;
+        let old_owner_data = DeleteTokenOwnerData {
+            address: contract_address.clone(),
+            padded_token_id: formated_token_id.padded_token_id.clone(),
+            owner: from_address.to_string(),
+        };
+        delete_token_owner(dynamo_db_client, old_owner_data).await;
+        let owner_data = CreateTokenOwnerData {
+            address: contract_address.clone(),
+            padded_token_id: formated_token_id.padded_token_id.clone(),
+            owner: to_address.to_string(),
+        };
+        create_token_owner(dynamo_db_client, owner_data).await?;
     }
 
     Ok(())
