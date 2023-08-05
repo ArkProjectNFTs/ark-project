@@ -26,7 +26,7 @@ pub async fn create_token_event(
         .table_name("ark_mainnet_token_events")
         .item("address", AttributeValue::S(token_event.address))
         .item(
-            "timestamp",
+            "event_timestamp",
             AttributeValue::N(token_event.timestamp.to_string()),
         )
         .item(
