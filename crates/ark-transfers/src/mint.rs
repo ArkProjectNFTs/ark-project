@@ -56,7 +56,6 @@ pub async fn process_mint_event(
             let _ = increment_collection_token_count(
                 dynamo_client,
                 token_data.collection_address.clone(),
-                token_data.token_type.clone(),
             )
             .await;
 

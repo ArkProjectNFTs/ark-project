@@ -8,21 +8,21 @@ use std::error::Error;
 
 use super::client::call_contract;
 
-pub struct FormattedTokenId {
+pub struct FormattedStarknetU256 {
     pub low: u128,
     pub high: u128,
-    pub token_id: String,
-    pub padded_token_id: String,
+    pub value_str: String,
+    pub padded_value: String,
 }
 
-pub struct TokenId {
+pub struct StarknetU256 {
     pub low: FieldElement,
     pub high: FieldElement,
 }
 
-impl TokenId {
+impl StarknetU256 {
     // Implement the format_token_id as a method on the struct
-    pub fn format(&self) -> FormattedTokenId {
+    pub fn format(&self) -> FormattedStarknetU256 {
         // let token_id_low_hex = format!("{:#064x}", token_id_low);
         // let token_id_high_hex = format!("{:#064x}", token_id_high);
 
@@ -40,14 +40,14 @@ impl TokenId {
         bytes.extend(low_bytes);
 
         let token_id_big_uint = BigUint::from_bytes_be(&bytes[..]);
-        let token_id: String = token_id_big_uint.to_str_radix(10);
-        let padded_token_id = format_token_id(token_id.clone());
+        let value_str: String = token_id_big_uint.to_str_radix(10);
+        let padded_value_str = format_token_id(value_str.clone());
 
-        FormattedTokenId {
+        FormattedStarknetU256 {
             low,
             high,
-            token_id: token_id.clone(),
-            padded_token_id,
+            value_str: value_str.clone(),
+            padded_value: padded_value_str,
         }
     }
 }

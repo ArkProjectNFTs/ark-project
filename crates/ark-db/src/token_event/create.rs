@@ -20,6 +20,11 @@ pub struct TokenEvent {
     pub token_image: Option<String>,
     pub order_hash: Option<String>,
     pub price: Option<String>,
+    pub marketplace: Option<String>,
+    pub amount: Option<String>,
+    pub total_fee: Option<String>,
+    pub currency_contract: Option<String>,
+    pub currency_name: Option<String>,
 }
 pub async fn create_token_event(
     dynamo_client: &DynamoClient,
@@ -69,9 +74,27 @@ pub async fn create_token_event(
         result = result.item("price", AttributeValue::S(price.clone()));
     }
 
-    let response = result.send().await;
+    if let Some(marketplace_value) = token_event.marketplace {
+        result = result.item("marketplace", AttributeValue::S(marketplace_value));
+    }
 
-    println!("dynamodb result: {:?}", response);
+    if let Some(total_fee) = token_event.total_fee {
+        result = result.item("total_fee", AttributeValue::S(total_fee));
+    }
+
+    if let Some(currency_contract) = token_event.currency_contract {
+        result = result.item("currency_contract", AttributeValue::S(currency_contract));
+    }
+
+    if let Some(currency_name) = token_event.currency_name {
+        result = result.item("currency_name", AttributeValue::S(currency_name));
+    }
+
+    if let Some(amount) = token_event.amount {
+        result = result.item("amount", AttributeValue::S(amount));
+    }
+
+    result.send().await?;
 
     Ok(())
 }

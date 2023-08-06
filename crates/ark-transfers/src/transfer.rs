@@ -8,7 +8,7 @@ use ark_db::token::get::get_token;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_starknet::client::get_block_with_txs;
 use ark_starknet::collection_manager::CollectionManager;
-use ark_starknet::utils::{FormattedTokenId, TokenId};
+use ark_starknet::utils::{FormattedStarknetU256, StarknetU256};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use log::{debug, info, warn};
 use reqwest::Client as ReqwestClient;
@@ -46,7 +46,7 @@ pub async fn process_transfers(
     let token_id_low = event.data[2];
     let token_id_high = event.data[3];
 
-    let token_id = TokenId {
+    let token_id = StarknetU256 {
         low: token_id_low,
         high: token_id_high,
     };
@@ -83,13 +83,13 @@ pub async fn process_transfers(
 
     info!(
         "\n\n\t=== TRANSFER DETECTED ===\n\n\tContract address: {}\n\tToken ID: {}\n\tToken URI: {}\n\tBlock number: {}\n\tFrom: {}\n\tTo: {}\n\tTx hash: {}\n\t Token owner: {}\n\n",
-        contract_address, formated_token_id.token_id, token_uri, block_number, from_address, to_address, transaction_hash, token_owner
+        contract_address, formated_token_id.value_str, token_uri, block_number, from_address, to_address, transaction_hash, token_owner
     );
 
     if from_address_field_element == FieldElement::ZERO {
         info!(
         "\n\n\t=== MINT DETECTED ===\n\n\tContract address: {}\n\t Token ID: {}\n\tToken URI: {}\n\tBlock number: {}\n\n",
-        contract_address, formated_token_id.token_id, token_uri, block_number
+        contract_address, formated_token_id.value_str, token_uri, block_number
     );
 
         let transaction_data = TransactionData {
@@ -101,7 +101,7 @@ pub async fn process_transfers(
         };
 
         let token_data = TokenData {
-            padded_token_id: formated_token_id.padded_token_id.clone(),
+            padded_token_id: formated_token_id.padded_value.clone(),
             token_uri: token_uri.clone(),
             owner: token_owner.clone(),
             token_type: contract_type.to_string(),
@@ -111,7 +111,7 @@ pub async fn process_transfers(
         process_mint_event(
             client,
             dynamo_db_client,
-            formated_token_id.padded_token_id.as_str(),
+            formated_token_id.padded_value.as_str(),
             token_uri.as_str(),
             timestamp,
             token_data,
@@ -122,8 +122,8 @@ pub async fn process_transfers(
         create_token_owner(
             dynamo_db_client,
             contract_address.as_str(),
-            formated_token_id.token_id.as_str(),
-            formated_token_id.padded_token_id.as_str(),
+            formated_token_id.value_str.as_str(),
+            formated_token_id.padded_value.as_str(),
             to_address.as_str(),
             block_number,
         )
@@ -132,7 +132,7 @@ pub async fn process_transfers(
         let get_token_result = get_token(
             dynamo_db_client,
             contract_address.clone(),
-            formated_token_id.padded_token_id.clone(),
+            formated_token_id.padded_value.clone(),
         )
         .await;
 
@@ -169,7 +169,7 @@ pub async fn process_transfers(
             block_number,
             event_type: "transfer".to_string(),
             from_address: from_address.to_string(),
-            padded_token_id: formated_token_id.padded_token_id.clone(),
+            padded_token_id: formated_token_id.padded_value.clone(),
             token_uri: token_uri.clone(),
             to_address: to_address.to_string(),
             transaction_hash: transaction_hash.clone(),
@@ -197,7 +197,7 @@ pub async fn process_transfers(
 async fn update_token_owner(
     dynamo_db_client: &DynamoClient,
     contract_address: String,
-    formatted_token_id: FormattedTokenId,
+    formatted_token_id: FormattedStarknetU256,
     from_address: String,
     to_address: String,
     block_number: u64,
@@ -205,7 +205,7 @@ async fn update_token_owner(
     if let Some(owner_block_number) = get_owner_block_number(
         dynamo_db_client,
         contract_address.clone(),
-        formatted_token_id.token_id.clone(),
+        formatted_token_id.value_str.clone(),
         from_address.clone(),
     )
     .await
@@ -213,7 +213,7 @@ async fn update_token_owner(
         if owner_block_number < block_number {
             let old_owner_data = DeleteTokenOwnerData {
                 address: contract_address.clone(),
-                padded_token_id: formatted_token_id.padded_token_id.clone(),
+                padded_token_id: formatted_token_id.padded_value.clone(),
                 owner: from_address.to_string(),
             };
             delete_token_owner(dynamo_db_client, old_owner_data).await;
@@ -223,7 +223,7 @@ async fn update_token_owner(
     match get_owner_block_number(
         dynamo_db_client,
         contract_address.clone(),
-        formatted_token_id.token_id.clone(),
+        formatted_token_id.value_str.clone(),
         to_address.clone(),
     )
     .await
@@ -233,8 +233,8 @@ async fn update_token_owner(
                 create_token_owner(
                     dynamo_db_client,
                     contract_address.as_str(),
-                    formatted_token_id.token_id.as_str(),
-                    formatted_token_id.padded_token_id.as_str(),
+                    formatted_token_id.value_str.as_str(),
+                    formatted_token_id.padded_value.as_str(),
                     to_address.as_str(),
                     block_number,
                 )
@@ -245,8 +245,8 @@ async fn update_token_owner(
             create_token_owner(
                 dynamo_db_client,
                 contract_address.as_str(),
-                formatted_token_id.token_id.as_str(),
-                formatted_token_id.padded_token_id.as_str(),
+                formatted_token_id.value_str.as_str(),
+                formatted_token_id.padded_value.as_str(),
                 to_address.as_str(),
                 block_number,
             )

@@ -62,7 +62,6 @@ pub async fn update_collection_latest_mint(
 pub async fn increment_collection_token_count(
     dynamo_client: &Client,
     collection_address: String,
-    collection_type: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!(
         "Incrementing token count for collection: {:?}",
@@ -76,7 +75,6 @@ pub async fn increment_collection_token_count(
         .update_item()
         .table_name(collections_table_name)
         .key("address", AttributeValue::S(collection_address))
-        .key("collection_type", AttributeValue::S(collection_type))
         .update_expression("ADD token_count :token_count")
         .expression_attribute_values(":token_count", AttributeValue::N("1".to_string()))
         .send()

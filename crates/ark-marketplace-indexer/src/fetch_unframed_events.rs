@@ -2,10 +2,11 @@ use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_metadata::get::get_metadata;
 use ark_metadata::utils::sanitize_uri;
 use ark_starknet::client::{get_contract_type, get_token_uri};
-use ark_starknet::utils::TokenId;
+use ark_starknet::utils::StarknetU256;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use log::{error, info};
 use reqwest::Client as ReqwestClient;
+use starknet::core::types::MaybePendingBlockWithTxHashes::Block;
 use starknet::core::types::MaybePendingTransactionReceipt::{self};
 use starknet::core::types::{Event, TransactionReceipt};
 use starknet::{
@@ -71,6 +72,27 @@ pub async fn fetch_unframed_events(
 
         for event in event_page.events {
             if event.keys.contains(&executed_order_selector) {
+                let formatted_amount = StarknetU256 {
+                    low: event.data[0],
+                    high: event.data[1],
+                }
+                .format();
+
+                let formatted_price = StarknetU256 {
+                    low: event.data[2],
+                    high: event.data[3],
+                }
+                .format();
+
+                let formatted_total_fee = StarknetU256 {
+                    low: event.data[4],
+                    high: event.data[5],
+                }
+                .format();
+
+                let currency_contract = event.data[6];
+                let currency_contract_str = format!("{:#064x}", currency_contract);
+
                 let transaction_hash_hex: String = format!("{:#064x}", event.transaction_hash);
                 info!("transaction_hash_hex: {:?}", transaction_hash_hex);
 
@@ -103,13 +125,13 @@ pub async fn fetch_unframed_events(
                 let to_address_field = nft_transfer_event.data[1].clone();
                 let token_id_low = nft_transfer_event.data[2].clone();
                 let token_id_high = nft_transfer_event.data[3].clone();
-                let token_id = TokenId {
+                let token_id = StarknetU256 {
                     low: token_id_low,
                     high: token_id_high,
                 };
                 let formatted_token_id = token_id.format();
 
-                info!("Sale detected: {}", formatted_token_id.token_id);
+                info!("Sale detected: {}", formatted_token_id.padded_value);
 
                 let contract_address = format!("{:#064x}", contract_address_field);
                 let contract_type =
@@ -148,30 +170,35 @@ pub async fn fetch_unframed_events(
                     _ => {}
                 }
 
-                // if let Block(block) = block_result {
-                //     let token_event = TokenEvent {
-                //         address: contract_address,
-                //         block_number,
-                //         event_type: "sale".to_string(),
-                //         from_address: format!("{:#064x}", from_address_field),
-                //         padded_token_id: formatted_token_id.padded_token_id,
-                //         timestamp: block.timestamp,
-                //         to_address: format!("{:#064x}", to_address_field),
-                //         token_type: contract_type,
-                //         token_name,
-                //         token_image,
-                //         token_uri,
-                //         transaction_hash: transaction_hash_hex,
-                //     };
+                if let Block(block) = block_result {
+                    let token_event = TokenEvent {
+                        address: contract_address,
+                        block_number,
+                        event_type: "sale".to_string(),
+                        from_address: format!("{:#064x}", from_address_field),
+                        padded_token_id: formatted_token_id.padded_value,
+                        timestamp: block.timestamp,
+                        to_address: format!("{:#064x}", to_address_field),
+                        token_type: contract_type,
+                        token_name,
+                        token_image,
+                        token_uri,
+                        transaction_hash: transaction_hash_hex,
+                        marketplace: Some("unframed".to_string()),
+                        currency_contract: Some(currency_contract_str),
+                        currency_name: None,
+                        price: Some(formatted_price.padded_value),
+                        total_fee: Some(formatted_total_fee.padded_value),
+                        amount: Some(formatted_amount.padded_value),
+                    };
 
-                //     let create_token_event_result =
-                //         create_token_event(&dynamo_client, token_event).await;
-
-                //     match create_token_event_result {
-                //         Ok(_) => info!("Token event created"),
-                //         Err(e) => error!("Error creating token event: {:?}", e),
-                //     }
-                // }
+                    let create_token_event_result =
+                        create_token_event(&dynamo_client, token_event).await;
+                    match create_token_event_result {
+                        Ok(_) => info!("Token event created"),
+                        Err(e) => error!("Error creating token event: {:?}", e),
+                    }
+                }
             }
         }
 
