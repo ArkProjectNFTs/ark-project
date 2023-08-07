@@ -23,5 +23,6 @@ jobs:
           AWS_REGION: us-east-1
           LAMBDA_FUNCTION_NAME: ${{ secrets.TRANSFER_LAMBDA_FUNCTION_NAME }}
         run: |
-          docker build -t ark-transfer-lambda .github/actions/deploy-transfer-lambda/
+          docker build -t ark-transfer-lambda -f .github/actions/deploy-transfer-lambda/Dockerfile .
+
           docker run -e LAMBDA_FUNCTION_NAME ark-transfer-lambda
