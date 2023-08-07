@@ -1,5 +1,7 @@
 FROM rust:latest
 
+ENV AWS_DEFAULT_REGION=us-east-1
+
 # Set the current working directory inside the container
 WORKDIR /app
 
