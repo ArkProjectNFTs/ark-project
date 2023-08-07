@@ -1,21 +1,19 @@
-FROM rust:latest as builder
+FROM rust:latest
 
-# Set the working directory inside the container.
-WORKDIR /usr/src/arkindexer
+# Set the current working directory inside the container
+WORKDIR /app
 
-# Install system dependencies:
-# 1. musl-tools for musl target build support
-# 2. openssl & pkg-config for OpenSSL dependencies
-RUN apt-get update && \
-    apt-get install -y musl-tools openssl pkg-config libssl-dev && \
-    rustup target add x86_64-unknown-linux-musl
-
-# Copy the full repo into the container.
+# Copy the entire repo into the container
 COPY . .
 
-# Build the crate
-WORKDIR /usr/src/arkindexer/crates/ark-transfers
-RUN cargo build --release --target x86_64-unknown-linux-musl
+# Build the project in the crates/ark-transfers directory
+RUN cd ./crates/ark-transfers && cargo build --release
 
-# Package binary and bootstrap into zip
-RUN zip -j lambda.zip target/x86_64-unknown-linux-musl/release/your_binary_name bootstrap
+# Zip the built binary (adjust the path if necessary)
+RUN zip lambda.zip ./crates/ark-transfers/target/release/ark-transfers
+
+# Install AWS CLI
+RUN apt-get update && apt-get install -y awscli
+
+# Default command to run when starting the container
+CMD ["aws", "lambda", "update-function-code", "--function-name", "$LAMBDA_FUNCTION_NAME", "--zip-file", "fileb://lambda.zip"]
