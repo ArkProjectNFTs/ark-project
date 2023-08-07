@@ -9,9 +9,10 @@ WORKDIR /app
 COPY . .
 
 # Build the project in the crates/ark-transfers directory, install required packages, and prepare for deployment
-RUN cd ./crates/ark-transfers && cargo build --release &&
-  apt-get update && apt-get install -y zip awscli &&
-  cd ../.. && zip lambda.zip ./target/release/ark-transfers
+RUN cd ./crates/ark-transfers && cargo build --release && \
+    cd /app && \
+    apt-get update && apt-get install -y zip awscli && \
+    zip lambda.zip ./target/release/ark-transfers
 
 # Use shell form to ensure environment variable is expanded
 CMD aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://lambda.zip
