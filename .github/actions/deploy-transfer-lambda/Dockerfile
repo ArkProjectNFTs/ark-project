@@ -9,6 +9,9 @@ COPY . .
 # Build the project in the crates/ark-transfers directory
 RUN cd ./crates/ark-transfers && cargo build --release
 
+# Update package list and install zip
+RUN apt-get update && apt-get install -y zip
+
 # Zip the built binary (adjust the path if necessary)
 RUN zip lambda.zip ./crates/ark-transfers/target/release/ark-transfers
 
