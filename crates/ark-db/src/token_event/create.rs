@@ -1,3 +1,5 @@
+use std::env;
+
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use log::info;
@@ -21,9 +23,12 @@ pub async fn create_token_event(
 ) -> Result<(), Error> {
     info!("create_token_event: {:?}", token_event.address);
 
+    let token_events_table_name =
+        env::var("ARK_TOKENS_OWNERS_TABLE_NAME").expect("ARK_TOKENS_OWNERS_TABLE_NAME must be set");
+
     let result = dynamo_client
         .put_item()
-        .table_name("ark_mainnet_token_events")
+        .table_name(token_events_table_name)
         .item("address", AttributeValue::S(token_event.address))
         .item(
             "event_timestamp",

@@ -1,3 +1,5 @@
+use std::env;
+
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use log::info;
@@ -13,10 +15,13 @@ pub async fn update_collection(
         collection_address, name, symbol
     );
 
+    let collections_table_name =
+        env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
+
     let _ = dynamo_client
         .update_item()
         .key("address", AttributeValue::S(collection_address))
-        .table_name("ark_mainnet_collections")
+        .table_name(collections_table_name)
         .update_expression("SET collection_name = :n, symbol = :s")
         .expression_attribute_values(":n", AttributeValue::S(name.to_string()))
         .expression_attribute_values(":s", AttributeValue::S(symbol.to_string()))
@@ -33,9 +38,12 @@ pub async fn update_collection_latest_mint(
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("Update latest_mint: {:?}", latest_mint);
 
+    let collections_table_name =
+        env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
+
     dynamo_client
         .update_item()
-        .table_name("ark_mainnet_collections")
+        .table_name(collections_table_name)
         .key("address", AttributeValue::S(collection_address))
         .update_expression("SET latest_mint = :latest_mint")
         .expression_attribute_values(":latest_mint", AttributeValue::S(latest_mint.to_string()))
@@ -55,9 +63,12 @@ pub async fn increment_collection_token_count(
         collection_address
     );
 
+    let collections_table_name =
+        env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
+
     let _result = dynamo_client
         .update_item()
-        .table_name("ark_mainnet_collections")
+        .table_name(collections_table_name)
         .key("address", AttributeValue::S(collection_address))
         .key("collection_type", AttributeValue::S(collection_type))
         .update_expression("ADD token_count :token_count")
