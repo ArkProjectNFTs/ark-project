@@ -12,8 +12,8 @@ RUN cd ./crates/ark-transfers && cargo build --release
 # Update package list and install zip
 RUN apt-get update && apt-get install -y zip
 
-# Zip the built binary (adjust the path if necessary)
-RUN zip lambda.zip ./crates/ark-transfers/target/release/ark-transfers
+# Zip the built binary
+RUN zip lambda.zip ./target/release/ark-transfers
 
 # Install AWS CLI
 RUN apt-get update && apt-get install -y awscli
