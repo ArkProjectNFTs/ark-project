@@ -12,36 +12,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        target: x86_64-unknown-linux-musl
-        override: true
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-musl
+          override: true
 
-    - name: Install MUSL tools
-      run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Install MUSL tools
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
 
-    - name: Set up environment for MUSL
-      run: echo "CC_x86_64_unknown_linux_musl=musl-gcc" >> $GITHUB_ENV
+      - name: Install OpenSSL (Ubuntu)
+        run: sudo apt-get install libssl-dev pkg-config -y
 
+      - name: Set up environment for MUSL
+        run: echo "CC_x86_64_unknown_linux_musl=musl-gcc" >> $GITHUB_ENV
 
-    - name: Build and Zip Lambda
-      run: |
-        cd ./crates/ark-transfers
-        cargo build --release --target x86_64-unknown-linux-musl
-        zip -j lambda.zip target/x86_64-unknown-linux-musl/release/rust_lambda
+      - name: Build and Zip Lambda
+        run: |
+          cd ./crates/ark-transfers
+          cargo build --release --target x86_64-unknown-linux-musl
+          zip -j lambda.zip target/x86_64-unknown-linux-musl/release/rust_lambda
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
-    - name: Upload to AWS Lambda
-      run: |
-        aws lambda update-function-code --function-name ${{ secrets.TRANSFER_LAMBDA_FUNCTION_NAME }} --zip-file fileb://lambda.zip
+      - name: Upload to AWS Lambda
+        run: |
+          aws lambda update-function-code --function-name ${{ secrets.TRANSFER_LAMBDA_FUNCTION_NAME }} --zip-file fileb://lambda.zip
