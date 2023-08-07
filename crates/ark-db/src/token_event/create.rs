@@ -24,7 +24,7 @@ pub struct TokenEvent {
     pub amount: Option<String>,
     pub total_fee: Option<String>,
     pub currency_contract: Option<String>,
-    pub currency_name: Option<String>,
+    pub currency_symbol: Option<String>,
 }
 pub async fn create_token_event(
     dynamo_client: &DynamoClient,
@@ -86,8 +86,8 @@ pub async fn create_token_event(
         result = result.item("currency_contract", AttributeValue::S(currency_contract));
     }
 
-    if let Some(currency_name) = token_event.currency_name {
-        result = result.item("currency_name", AttributeValue::S(currency_name));
+    if let Some(currency_symbol) = token_event.currency_symbol {
+        result = result.item("currency_symbol", AttributeValue::S(currency_symbol));
     }
 
     if let Some(amount) = token_event.amount {

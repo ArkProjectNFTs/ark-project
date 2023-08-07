@@ -1,3 +1,4 @@
+use ark_db::marketplaces::update::update_marketplace_index;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_metadata::get::get_metadata;
 use ark_metadata::utils::sanitize_uri;
@@ -9,6 +10,7 @@ use reqwest::Client as ReqwestClient;
 use starknet::core::types::MaybePendingBlockWithTxHashes::Block;
 use starknet::core::types::MaybePendingTransactionReceipt::{self};
 use starknet::core::types::{Event, TransactionReceipt};
+
 use starknet::{
     core::{
         types::{BlockId, EventFilter, FieldElement},
@@ -16,15 +18,18 @@ use starknet::{
     },
     providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
 };
+use std::env;
 use std::error::Error;
 use std::str::FromStr;
+
+use crate::utils::fetch_currency_data;
 
 pub async fn fetch_unframed_events(
     rpc_client: JsonRpcClient<HttpTransport>,
     dynamo_client: DynamoClient,
     reqwest_client: ReqwestClient,
     from_block: BlockId,
-    to_block: Option<BlockId>,
+    to_block: BlockId,
     address: FieldElement,
     eth_token_address: &str,
 ) -> Result<(), Box<dyn Error>> {
@@ -35,9 +40,14 @@ pub async fn fetch_unframed_events(
 
     let filter = EventFilter {
         from_block: Some(from_block),
-        to_block: to_block,
+        to_block: Some(to_block),
         address: Some(address),
         keys: Some(keys),
+    };
+
+    let dest_block = match rpc_client.get_block_with_tx_hashes(to_block).await {
+        Ok(Block(block)) => Some(block.block_number),
+        _ => None,
     };
 
     // let mut events = vec![];
@@ -91,7 +101,7 @@ pub async fn fetch_unframed_events(
                 .format();
 
                 let currency_contract = event.data[6];
-                let currency_contract_str = format!("{:#064x}", currency_contract);
+                let currency_data = fetch_currency_data(&rpc_client, currency_contract).await;
 
                 let transaction_hash_hex: String = format!("{:#064x}", event.transaction_hash);
                 info!("transaction_hash_hex: {:?}", transaction_hash_hex);
@@ -107,6 +117,8 @@ pub async fn fetch_unframed_events(
                     },
                     _ => (vec![], 0),
                 };
+
+                info!("block number: {:?}", block_number);
 
                 let transfer_selector = get_selector_from_name(&"Transfer").unwrap();
                 let eth_token_address_field = FieldElement::from_str(eth_token_address).unwrap();
@@ -185,8 +197,8 @@ pub async fn fetch_unframed_events(
                         token_uri,
                         transaction_hash: transaction_hash_hex,
                         marketplace: Some("unframed".to_string()),
-                        currency_contract: Some(currency_contract_str),
-                        currency_name: None,
+                        currency_contract: Some(currency_data.contract_address),
+                        currency_symbol: Some(currency_data.symbol),
                         price: Some(formatted_price.padded_value),
                         total_fee: Some(formatted_total_fee.padded_value),
                         amount: Some(formatted_amount.padded_value),
@@ -206,9 +218,30 @@ pub async fn fetch_unframed_events(
         println!("Continuation token: {:?}", continuation_token);
 
         if continuation_token.is_none() {
-            break;
+            if let Some(block_number) = dest_block {
+                let contract_address = format!("{:#064x}", address);
+
+                info!("Updating marketplace index: {:?}", contract_address);
+
+                let marketplaces_table_name = env::var("ARK_TOKENS_MARKETPLACES_TABLE_NAME")
+                    .unwrap_or("ark_mainnet_marketplaces".to_string());
+
+                let result = update_marketplace_index(
+                    &dynamo_client,
+                    &marketplaces_table_name,
+                    &contract_address,
+                    block_number,
+                )
+                .await;
+
+                match result {
+                    Ok(_) => info!("Marketplace index updated"),
+                    Err(e) => error!("Error updating marketplace index: {:?}", e),
+                }
+
+                break;
+            }
         }
     }
-
     Ok(())
 }

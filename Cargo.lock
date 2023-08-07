@@ -149,6 +149,7 @@ dependencies = [
  "anyhow",
  "ark-metadata",
  "aws-sdk-dynamodb",
+ "chrono",
  "dotenv",
  "log",
  "serde",
@@ -450,7 +451,7 @@ dependencies = [
  "http",
  "hyper",
  "ring",
- "time",
+ "time 0.3.28",
  "tokio",
  "tower",
  "tracing",
@@ -623,7 +624,7 @@ dependencies = [
  "percent-encoding",
  "regex",
  "sha2",
- "time",
+ "time 0.3.28",
  "tracing",
 ]
 
@@ -768,7 +769,7 @@ dependencies = [
  "num-integer",
  "ryu",
  "serde",
- "time",
+ "time 0.3.28",
 ]
 
 [[package]]
@@ -915,7 +916,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "time",
+ "time 0.3.28",
  "uuid 1.4.1",
 ]
 
@@ -979,8 +980,11 @@ checksum = "95ed24df0632f708f5f6d8082675bef2596f7084dee3dd55f632290bf35bfe0f"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "time 0.1.45",
+ "wasm-bindgen",
  "windows-targets",
 ]
 
@@ -1552,7 +1556,7 @@ dependencies = [
  "cfg-if",
  "js-sys",
  "libc",
- "wasi",
+ "wasi 0.11.0+wasi-snapshot-preview1",
  "wasm-bindgen",
 ]
 
@@ -2055,7 +2059,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
 dependencies = [
  "libc",
- "wasi",
+ "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.48.0",
 ]
 
@@ -2916,7 +2920,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with_macros 2.3.3",
- "time",
+ "time 0.3.28",
 ]
 
 [[package]]
@@ -2933,7 +2937,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with_macros 3.3.0",
- "time",
+ "time 0.3.28",
 ]
 
 [[package]]
@@ -3021,7 +3025,7 @@ checksum = "2230cd5c29b815c9b699fb610b49a5ed65588f3509d9f0108be3a885da629333"
 dependencies = [
  "colored",
  "log",
- "time",
+ "time 0.3.28",
  "windows-sys 0.42.0",
 ]
 
@@ -3364,6 +3368,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.29",
+]
+
+[[package]]
+name = "time"
+version = "0.1.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b797afad3f312d1c66a56d11d0316f916356d11bd158fbc6ca6389ff6bf805a"
+dependencies = [
+ "libc",
+ "wasi 0.10.0+wasi-snapshot-preview1",
+ "winapi",
 ]
 
 [[package]]
@@ -3773,6 +3788,12 @@ checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
 dependencies = [
  "try-lock",
 ]
+
+[[package]]
+name = "wasi"
+version = "0.10.0+wasi-snapshot-preview1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasi"

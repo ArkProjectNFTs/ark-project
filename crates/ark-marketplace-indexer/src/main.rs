@@ -1,6 +1,6 @@
-mod fetch_unframed_events;
+mod unframed;
+mod utils;
 
-use crate::fetch_unframed_events::fetch_unframed_events;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use dotenv::dotenv;
@@ -8,11 +8,13 @@ use log::LevelFilter;
 use reqwest::Client as ReqwestClient;
 use simple_logger::SimpleLogger;
 use starknet::{
-    core::types::{BlockId, FieldElement},
+    core::types::{BlockId, BlockTag, FieldElement},
     providers::{jsonrpc::HttpTransport, JsonRpcClient},
 };
 use std::env;
 use url::Url;
+
+use crate::unframed::events::fetch_unframed_events;
 
 #[tokio::main]
 async fn main() {
@@ -32,23 +34,45 @@ async fn main() {
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
 
-    let rpc_client = JsonRpcClient::new(HttpTransport::new(
-        Url::parse("https://starknode.thearkproject.dev/mainnet").unwrap(),
-    ));
+    let rpc_provider = env::var("RPC_PROVIDER").unwrap();
+    let rpc_client = JsonRpcClient::new(HttpTransport::new(Url::parse(&rpc_provider).unwrap()));
 
-    // // Unframed contract
+    let starting_block = env::var("START_BLOCK")
+        .expect("START_BLOCK must be set")
+        .parse::<u64>()
+        .unwrap();
 
-    let unframed_start_block = BlockId::Number(105658);
-    let unframed_contract_address = FieldElement::from_hex_be(
-        "0x051734077ba7baf5765896c56ce10b389d80cdcee8622e23c0556fb49e82df1b",
+    fetch_marketplace_events(
+        rpc_client,
+        dynamo_client,
+        reqwest_client,
+        starting_block,
+        &eth_token_address,
     )
-    .unwrap();
+    .await;
+}
+
+async fn fetch_marketplace_events(
+    rpc_client: JsonRpcClient<HttpTransport>,
+    dynamo_client: DynamoClient,
+    reqwest_client: ReqwestClient,
+    starting_block: u64,
+    eth_token_address: &str,
+) {
+    // Unframed contract
+
+    let unframed_start_block = BlockId::Number(starting_block);
+    let unframed_contract_address_str =
+        env::var("UNFRAMED_CONTRACT_ADDRESS").expect("UNFRAMED_CONTRACT_ADDRESS must be set");
+    let unframed_contract_address =
+        FieldElement::from_hex_be(&unframed_contract_address_str).unwrap();
+
     let events = fetch_unframed_events(
         rpc_client,
         dynamo_client,
         reqwest_client,
         unframed_start_block,
-        None,
+        BlockId::Tag(BlockTag::Latest),
         unframed_contract_address,
         &eth_token_address,
     )
