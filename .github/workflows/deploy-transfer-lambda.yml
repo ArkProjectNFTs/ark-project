@@ -26,29 +26,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Install Zig toolchain
-        uses: korandoru/setup-zig@v1
-        with:
-          zig-version: 0.10.0
-      - name: Install Cargo Lambda
-        uses: jaxxstorm/action-install-gh-release@v1.9.0
-        with:
-          repo: cargo-lambda/cargo-lambda
-          platform: linux
-          arch: x86_64
-
-      - name: Build Lambda using Cargo
+      # Build and Deploy using Docker
+      - name: Build and Deploy with Docker
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+          LAMBDA_FUNCTION_NAME: ${{ secrets.TRANSFER_LAMBDA_FUNCTION_NAME }}
         run: |
-          cd $GITHUB_WORKSPACE/crates/ark-transfers
-          cargo lambda build --release
+          docker build \
+            --build-arg AWS_DEFAULT_REGION=$AWS_REGION \
+            --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+            --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+            -t ark-transfer-lambda -f .github/actions/deploy-transfer-lambda/Dockerfile .
+          docker run \
+            -e LAMBDA_FUNCTION_NAME=$LAMBDA_FUNCTION_NAME \
+            -e AWS_DEFAULT_REGION=$AWS_REGION \
+            -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+            -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+            ark-transfer-lambda
 
-      - name: Zip the Lambda binary
-        run: |
-          cd $GITHUB_WORKSPACE/crates/ark-transfers/target/lambda/release
-          zip lambda.zip bootstrap
-
-      - name: Deploy to AWS Lambda
-        run: |
-          aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://$GITHUB_WORKSPACE/crates/ark-transfers/target/lambda/release/lambda.zip
