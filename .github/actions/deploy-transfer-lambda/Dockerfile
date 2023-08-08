@@ -12,7 +12,7 @@ COPY . .
 RUN cd ./crates/ark-transfers && cargo lambda build --release --output-format zip
 RUN pwd && ls -la
 RUN cd ./target && pwd && ls -la
-RUN cd ./target/lambda && pwd && ls -la
+RUN cd ./target/lambda/ark-transfers && pwd && ls -la
 RUN cd ./target/release && pwd && ls -la
 
 RUN cp ./target/lambda/ark-transfers /app/bootstrap
