@@ -14,16 +14,26 @@ pub async fn get_block(dynamo_client: &Client, block_number: u64) -> Result<bool
         .table_name(table)
         .key("block_number", block_number_av);
 
-    let result = request.send().await?;
+    let result = request.send().await;
 
-    info!("get_block: {:?}", result.item);
+    match result {
+        Ok(value) => {
+            info!("get_block: {:?}", value.item);
 
-    if let Some(item) = result.item {
-        if let Some(is_fetched) = item.get("isFetched") {
-            match is_fetched.as_bool() {
-                Ok(is_fetched_bool) => return Ok(*is_fetched_bool),
-                Err(_) => return Ok(false),
+            if let Some(item) = value.item {
+                if let Some(is_fetched) = item.get("isFetched") {
+                    match is_fetched.as_bool() {
+                        Ok(is_fetched_bool) => return Ok(*is_fetched_bool),
+                        Err(_) => return Ok(false),
+                    }
+                }
             }
+        }
+        Err(e) => {
+            println!(
+                "Error requesting block number {} to the list of fetched blocks: {:?}",
+                block_number, e
+            );
         }
     }
 
