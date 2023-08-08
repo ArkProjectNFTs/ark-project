@@ -36,3 +36,4 @@ ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
 ark-stream = { path = "./crates/ark-stream" }
 ark-transfers = { path = "./crates/ark-transfers" }
+openssl = { version = "0.10", features = ["vendored"] }
