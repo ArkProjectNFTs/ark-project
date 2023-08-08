@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/provided:al2
+FROM ghcr.io/cargo-lambda/cargo-lambda
 
 ENV AWS_DEFAULT_REGION=us-east-1
 
@@ -19,7 +19,7 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 RUN source $HOME/.cargo/env
 
 # Build the Rust project
-RUN cd ./crates/ark-transfers && cargo build --release
+RUN cd ./crates/ark-transfers && cargo lambda build --release
 
 # Copy the built binary to the /app directory
 RUN cp ./crates/ark-transfers/target/release/ark-transfers /app/bootstrap
