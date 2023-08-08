@@ -21,6 +21,9 @@ pub async fn process_blocks_continuously(
         .expect("START_BLOCK must be set")
         .parse::<u64>()
         .unwrap();
+
+    info!("Starting block: {}", starting_block);
+
     // Set starting block
     let mut current_block_number: u64 = starting_block;
     // Loop Through Blocks and wait for new blocks

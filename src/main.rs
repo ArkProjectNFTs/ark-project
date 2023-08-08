@@ -5,10 +5,10 @@ use crate::core::block::process_blocks_continuously;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
+use dotenv::dotenv;
 use log::LevelFilter;
 use reqwest::Client as ReqwestClient;
 use simple_logger::SimpleLogger;
-use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,6 +17,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .env()
         .with_level(LevelFilter::Warn)
         .with_module_level("ark_indexer", LevelFilter::Info)
+        .with_module_level("ark_db", LevelFilter::Info)
+        .with_module_level("ark_metadata", LevelFilter::Info)
+        .with_module_level("ark_owner", LevelFilter::Info)
+        .with_module_level("ark_starknet", LevelFilter::Info)
+        .with_module_level("ark_stream", LevelFilter::Info)
+        .with_module_level("ark_transfers", LevelFilter::Info)
         .init()
         .unwrap();
 
