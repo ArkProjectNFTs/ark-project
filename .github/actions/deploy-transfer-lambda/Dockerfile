@@ -14,7 +14,7 @@ RUN apt-get update && \
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 # Source the Rust environment
-RUN source $HOME/.cargo/env
+RUN /bin/bash -c "source $HOME/.cargo/env"
 
 # Build the Rust project
 RUN cd ./crates/ark-transfers && cargo lambda build --release
