@@ -6,11 +6,9 @@ WORKDIR /app
 
 COPY . .
 
-# Install Development Tools
-RUN yum groupinstall -y "Development Tools"
-
-# Install necessary dependencies
-RUN yum install -y curl openssl-devel zip
+# Install Development Tools and necessary dependencies
+RUN apt-get update && \
+    apt-get install -y build-essential curl openssl zip awscli
 
 # Install Rust using rustup
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
