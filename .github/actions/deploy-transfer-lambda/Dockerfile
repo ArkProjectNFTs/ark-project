@@ -9,10 +9,8 @@ WORKDIR /app
 COPY . .
 
 # Build the project in the crates/ark-transfers directory and rename the binary to 'bootstrap'
-RUN cd ./crates/ark-transfers && cargo lambda build --release && \
-    cp ../../target/release/ark-transfers /app/bootstrap && \
-    apt-get update && apt-get install -y zip awscli && \
-    cd /app && zip lambda.zip bootstrap
+RUN cd ./crates/ark-transfers && cargo lambda build --release --output-format zip && \
+    cp ../../target/lambda/ark-transfers /app/bootstrap
 
 # Use shell form to ensure environment variable is expanded
 CMD aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://lambda.zip
