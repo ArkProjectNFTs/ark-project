@@ -9,7 +9,7 @@ WORKDIR /app
 COPY . .
 
 # Build the project in the crates/ark-transfers directory and rename the binary to 'bootstrap'
-RUN cd ./crates/ark-transfers && cargo build --release && \
+RUN cd ./crates/ark-transfers && cargo lambda build --release && \
     cp ../../target/release/ark-transfers /app/bootstrap && \
     apt-get update && apt-get install -y zip awscli && \
     cd /app && zip lambda.zip bootstrap
