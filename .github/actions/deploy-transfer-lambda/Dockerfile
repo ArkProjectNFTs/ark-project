@@ -1,4 +1,4 @@
-FROM rust:latest
+FROM rustserverless/lambda-rust:latest
 
 ENV AWS_DEFAULT_REGION=us-east-1
 
