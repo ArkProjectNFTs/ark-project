@@ -16,8 +16,6 @@ RUN cd ./target/release && pwd && ls -la
 
 RUN cp ./target/lambda/ark-transfers/bootstrap.zip /app/bootstrap.zip
 
-RUN cd /app/bootstrap && pwd && ls -la
-
 # Use shell form to ensure environment variable is expanded
 CMD cargo lambda deploy --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://bootstrap.zip
 # CMD --env-vars FOO=BAR --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://bootstrap.zip
