@@ -1,5 +1,6 @@
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
+use log::info;
 use std::env;
 
 pub async fn get_block(dynamo_client: &Client, block_number: u64) -> Result<bool, Error> {
@@ -11,6 +12,9 @@ pub async fn get_block(dynamo_client: &Client, block_number: u64) -> Result<bool
         .key("block_number", block_number_av);
 
     let result = request.send().await?;
+
+    info!("get_block: {:?}", result.item);
+
     if let Some(item) = result.item {
         if let Some(is_fetched) = item.get("isFetched") {
             match is_fetched.as_bool() {
