@@ -1,4 +1,5 @@
 FROM ghcr.io/cargo-lambda/cargo-lambda:0.20.2
+ARG LAMBDA_FUNCTION_NAME
 
 ENV AWS_DEFAULT_REGION=us-east-1
 
@@ -9,10 +10,10 @@ WORKDIR /app
 COPY . .
 
 RUN cd ./crates/ark-transfers && cargo lambda build
-RUN mkdir -p "./target/lambda/$LAMBDA_FUNCTION_NAME"
-RUN cp ./target/lambda/ark-transfers/bootstrap "./target/lambda/$LAMBDA_FUNCTION_NAME/bootstrap"
-RUN cd ./target/lambda && ls -la
-RUN cd "./target/lambda/$LAMBDA_FUNCTION_NAME" && ls -la
+RUN mkdir -p "./target/lambda/${LAMBDA_FUNCTION_NAME}"
+RUN cp ./target/lambda/ark-transfers/bootstrap "./target/lambda/${LAMBDA_FUNCTION_NAME}/bootstrap"
+RUN cd /app/target/lambda && ls -la
+RUN cd "/app/target/lambda/${LAMBDA_FUNCTION_NAME}" && ls -la
 
 # Use shell form to ensure environment variable is expanded
 CMD cargo lambda deploy $LAMBDA_FUNCTION_NAME
