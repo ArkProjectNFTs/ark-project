@@ -9,8 +9,8 @@ WORKDIR /app
 COPY . .
 
 RUN cd ./crates/ark-transfers && cargo lambda build --output-format zip
-RUN mkdir -p ./target/lambda/arkMainnetTransferEventProcessor
-RUN cp ./target/lambda/ark-transfers/bootstrap.zip ./target/lambda/arkMainnetTransferEventProcessor/bootstrap.zip
+RUN mkdir -p app/target/lambda/arkMainnetTransferEventProcessor
+RUN cp ./target/lambda/ark-transfers/bootstrap.zip app/target/lambda/arkMainnetTransferEventProcessor/bootstrap.zip
 
 # Use shell form to ensure environment variable is expanded
 CMD cargo lambda deploy $LAMBDA_FUNCTION_NAME
