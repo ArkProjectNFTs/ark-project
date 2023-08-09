@@ -13,7 +13,8 @@ RUN cd ./crates/ark-transfers && cargo lambda build
 RUN mkdir -p "./target/lambda/${LAMBDA_FUNCTION_NAME}"
 RUN cp ./target/lambda/ark-transfers/bootstrap "./target/lambda/${LAMBDA_FUNCTION_NAME}/bootstrap"
 RUN cd /app/target/lambda && ls -la
-RUN cd "/app/target/lambda/${LAMBDA_FUNCTION_NAME}" && ls -la
+RUN cd "/app/target/lambda/${LAMBDA_FUNCTION_NAME}" && ls -la && pwd
+RUN cd "./target/lambda/${LAMBDA_FUNCTION_NAME}/bootstrap" && pwd && ls -la
 
 # Use shell form to ensure environment variable is expanded
 CMD cargo lambda deploy $LAMBDA_FUNCTION_NAME
