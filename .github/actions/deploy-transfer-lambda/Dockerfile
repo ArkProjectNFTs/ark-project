@@ -15,7 +15,6 @@ RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/test/bootstrap
 RUN cd /app/target/lambda && ls -la && pwd
 RUN cd /app/target/lambda/ark-transfers && ls -la && pwd
 RUN cd /app/target/lambda/test && ls -la && pwd
-RUN cd ./target/lambda/test/bootstrap && pwd && ls -la
 
 # Use shell form to ensure environment variable is expanded
-CMD cargo lambda deploy $LAMBDA_FUNCTION_NAME
+CMD cargo lambda deploy test
