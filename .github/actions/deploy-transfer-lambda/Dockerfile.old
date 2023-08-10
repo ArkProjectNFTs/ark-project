@@ -9,8 +9,11 @@ WORKDIR /app
 COPY . .
 
 RUN cd ./crates/ark-transfers && cargo lambda build
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/bootstrap
-
-# Debugging (Remove these lines once you've confirmed paths are correct)
+RUN mkdir -p ./target/lambda/test
+RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/test/bootstrap
 RUN cd /app/target/lambda && ls -la && pwd
 RUN cd /app/target/lambda/ark-transfers && ls -la && pwd
+RUN cd /app/target/lambda/test && ls -la && pwd
+
+# Use shell form to ensure environment variable is expanded
+CMD cargo lambda deploy test --iam-role arn:aws:iam::223605539824:role/ArkProject-API-Lambda
