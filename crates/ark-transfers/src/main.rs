@@ -5,12 +5,18 @@ use crate::transfer::process_transfers;
 use aws_config::meta::region::RegionProviderChain;
 use aws_lambda_events::event::kinesis::KinesisEvent;
 use aws_sdk_dynamodb::Client as DynamoClient;
-use base64;
-use base64::{engine::general_purpose, Engine as _};
+use base64::{
+    alphabet,
+    engine::{self, general_purpose},
+    Engine as _,
+};
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use log::{info, LevelFilter};
 use reqwest::Client as ReqwestClient;
 use simple_logger::SimpleLogger;
+
+const CUSTOM_ENGINE: engine::GeneralPurpose =
+    engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::PAD);
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -42,15 +48,19 @@ async fn handle_kinesis_event(
 
     for record in kinesis_event.records {
         info!("Event ID: {:?}", record.event_id);
+        let mut buffer = Vec::new();
 
-        // Decode the base64 data
-        match general_purpose::STANDARD.decode(&record.kinesis.data.0) {
-            Ok(decoded_data) => {
-                let decoded_str = String::from_utf8(decoded_data)
-                    .unwrap_or_else(|_| "Invalid UTF-8 data".to_string());
-                // Log the decoded data
+        match CUSTOM_ENGINE.decode_vec(&record.kinesis.data.0, &mut buffer) {
+            Ok(_) => {
+                let decoded_str = match String::from_utf8(buffer) {
+                    Ok(s) => s,
+                    Err(_) => {
+                        info!("Invalid UTF-8 data");
+                        continue; // Skip this iteration if the data isn't valid UTF-8
+                    }
+                };
                 info!("Decoded data: {}", decoded_str);
-
+                
                 // Call your process_transfers function
                 let partition_key = match &record.kinesis.partition_key {
                     Some(key) => key,
