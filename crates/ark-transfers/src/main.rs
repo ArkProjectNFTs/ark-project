@@ -1,25 +1,23 @@
 use lambda_runtime::{service_fn, Error, LambdaEvent};
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize)]
-struct Request {}
-
-#[derive(Debug, Serialize)]
-struct Response {
-    req_id: String,
-    body: String,
-}
+use serde_json::Value;
+use aws_lambda_events::event::kinesis::KinesisEvent;
+use log::info;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    lambda_runtime::run(service_fn(|event: LambdaEvent<Request>| async {
-        handle_request(event).await
-    }))
-    .await
+    lambda_runtime::run(service_fn(handle_kinesis_event)).await
 }
 
-async fn handle_request(event: LambdaEvent<Request>) -> Result<(), Error> {
-    // Your Lambda logic here
-    log::info!("my request: {:?}", event.context);
-    Ok(()) // Return the event or any response
+async fn handle_kinesis_event(event: LambdaEvent<KinesisEvent>) -> Result<(), Error> {
+    // Iterate over each Kinesis record
+    for record in event.data.records {
+        // Kinesis records are Base64 encoded
+        let decoded = base64::decode(&record.kinesis.data).unwrap();
+        let payload: Value = serde_json::from_slice(&decoded).unwrap();
+
+        // Do something with the decoded payload
+        info!("Processed record with payload: {:?}", payload);
+    }
+
+    Ok(())
 }
