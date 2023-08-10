@@ -1,5 +1,4 @@
 FROM ghcr.io/cargo-lambda/cargo-lambda:0.20.2
-ARG LAMBDA_FUNCTION_NAME
 
 ENV AWS_DEFAULT_REGION=us-east-1
 
@@ -17,4 +16,4 @@ RUN cd /app/target/lambda/ark-transfers && ls -la && pwd
 RUN cd /app/target/lambda/test && ls -la && pwd
 
 # Use shell form to ensure environment variable is expanded
-CMD cargo lambda deploy test
+CMD cargo lambda deploy test --iam-role arn:aws:iam::223605539824:role/ArkProject-API-Lambda
