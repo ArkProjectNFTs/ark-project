@@ -1,4 +1,4 @@
-name: Push Docker image to Amazon ECR
+name: Push indexer Docker image to Amazon ECR
 
 on:
   push:

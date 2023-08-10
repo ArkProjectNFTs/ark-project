@@ -36,3 +36,12 @@ ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
 ark-stream = { path = "./crates/ark-stream" }
 ark-transfers = { path = "./crates/ark-transfers" }
+openssl = { version = "0.10", features = ["vendored"] }
+
+[package.metadata.lambda.deploy]
+tracing = "active"             # Tracing mode
+role = "role-full-arn"         # Function's execution role
+env_file = ".env.production"   # File to load environment variables from
+binary_name = "toto"
+name = "toto"
+function_name = "test"
