@@ -12,8 +12,8 @@ COPY . .
 RUN cd ./crates/ark-transfers && cargo lambda build
 
 # Copying the binary to both Lambda directories
-RUN mkdir -p ./target/lambda/arkMainnetMarketplaceEventProcessor
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkMainnetMarketplaceEventProcessor/bootstrap
+RUN mkdir -p ./target/lambda/arkMainnetTransferEventProcessor
+RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkMainnetTransferEventProcessor/bootstrap
 
-RUN mkdir -p ./target/lambda/arkTestnetMarketplaceEventProcessor
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkTestnetMarketplaceEventProcessor/bootstrap
+RUN mkdir -p ./target/lambda/arkTestnetTransferEventProcessor
+RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkTestnetTransferEventProcessor/bootstrap
