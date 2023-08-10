@@ -7,7 +7,7 @@ use simple_logger::SimpleLogger;
 async fn main() -> Result<(), Error> {
     SimpleLogger::new()
         .env()
-        .with_level(LevelFilter::Warn)
+        .with_level(LevelFilter::Info)
         .init()
         .unwrap();
     lambda_runtime::run(service_fn(handle_kinesis_event)).await
