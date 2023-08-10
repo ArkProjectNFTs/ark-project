@@ -1,8 +1,8 @@
 use aws_sdk_kinesis::error::SdkError;
 use aws_sdk_kinesis::operation::put_record::PutRecordError;
-use aws_smithy_http::body::SdkBody;
 use aws_sdk_kinesis::primitives::Blob;
 use aws_sdk_kinesis::Client as KinesisClient;
+use aws_smithy_http::body::SdkBody;
 use http::response::Response;
 use log::{error, info};
 
@@ -25,7 +25,7 @@ pub async fn send_to_kinesis(
     let result = request.send().await;
     match result {
         Ok(_) => {
-            info!("Put data into stream.");
+            info!("Successfully added record to Kinesis stream {:?}", result);
             Ok(())
         }
         Err(err) => {
