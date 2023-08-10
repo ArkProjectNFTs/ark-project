@@ -20,6 +20,6 @@ async fn main() -> Result<(), Error> {
 
 async fn handle_request(event: LambdaEvent<Request>) -> Result<(), Error> {
     // Your Lambda logic here
-    log::info!("Request: {:?}", event.context);
+    log::info!("my request: {:?}", event.context);
     Ok(()) // Return the event or any response
 }

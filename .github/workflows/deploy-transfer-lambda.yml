@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/transfer-lambda
 
 jobs:
   build-and-deploy:
