@@ -1,7 +1,7 @@
 use lambda_runtime::{service_fn, Error, LambdaEvent};
-use serde_json::Value;
 use aws_lambda_events::event::kinesis::KinesisEvent;
 use log::info;
+use base64::alphabet::STANDARD;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -9,12 +9,15 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_kinesis_event(event: LambdaEvent<KinesisEvent>) -> Result<(), Error> {
-    // Iterate over each Kinesis record
-    for record in event.data.records {
-        // Kinesis records are Base64 encoded
-        let decoded = base64::decode(&record.kinesis.data).unwrap();
-        let payload: Value = serde_json::from_slice(&decoded).unwrap();
+    // The actual Kinesis event data is in the payload field
+    let kinesis_event = event.payload;
 
+    // Iterate over each Kinesis record
+    for record in kinesis_event.records {
+        // Kinesis records are Base64 encoded using the STANDARD config
+        let decoded = base64::decode_config(&record.kinesis.data, STANDARD).unwrap();
+        let payload: serde_json::Value = serde_json::from_slice(&decoded).unwrap();
+    
         // Do something with the decoded payload
         info!("Processed record with payload: {:?}", payload);
     }
