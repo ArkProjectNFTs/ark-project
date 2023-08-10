@@ -38,7 +38,6 @@ jobs:
             --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
             -t ark-transfer-lambda -f .github/actions/deploy-transfer-lambda/Dockerfile .
 
-      # Deploy lambdas
       - name: Deploy lambdas
         env:
           AWS_DEFAULT_REGION: us-east-1

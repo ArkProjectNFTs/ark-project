@@ -8,9 +8,12 @@ WORKDIR /app
 # Copy the entire repo into the container
 COPY . .
 
+# Building the Rust Lambda function
 RUN cd ./crates/ark-transfers && cargo lambda build
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/bootstrap
 
-# Debugging (Remove these lines once you've confirmed paths are correct)
-RUN cd /app/target/lambda && ls -la && pwd
-RUN cd /app/target/lambda/ark-transfers && ls -la && pwd
+# Copying the binary to both Lambda directories
+RUN mkdir -p ./target/lambda/arkMainnetMarketplaceEventProcessor
+RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkMainnetMarketplaceEventProcessor/bootstrap
+
+RUN mkdir -p ./target/lambda/arkTestnetMarketplaceEventProcessor
+RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkTestnetMarketplaceEventProcessor/bootstrap
