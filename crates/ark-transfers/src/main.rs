@@ -48,47 +48,39 @@ async fn handle_kinesis_event(
 
     for record in kinesis_event.records {
         info!("Event ID: {:?}", record.event_id);
-        let mut buffer = Vec::new();
 
-        match CUSTOM_ENGINE.decode_vec(&record.kinesis.data.0, &mut buffer) {
-            Ok(_) => {
-                let decoded_str = match String::from_utf8(buffer) {
-                    Ok(s) => s,
-                    Err(_) => {
-                        info!("Invalid UTF-8 data");
-                        continue; // Skip this iteration if the data isn't valid UTF-8
-                    }
-                };
-                info!("Decoded data: {}", decoded_str);
-                
-                // Call your process_transfers function
-                let partition_key = match &record.kinesis.partition_key {
-                    Some(key) => key,
-                    None => {
-                        info!("No partition key found in the record");
-                        continue; // Skip this iteration of the loop
-                    }
-                };
-
-                let parts: Vec<&str> = partition_key.split(':').collect();
-                let contract_type = parts.get(0).unwrap_or(&""); // or provide a default
-
-                let result = process_transfers(
-                    reqwest_client,
-                    dynamo_db_client,
-                    &decoded_str,
-                    contract_type,
-                )
-                .await;
-
-                // Handle any errors from process_transfers
-                if let Err(err) = result {
-                    log::error!("Failed to process transfer: {:?}", err);
-                }
+        let decoded_str = match String::from_utf8(record.kinesis.data.0) {
+            Ok(s) => s,
+            Err(_) => {
+                info!("Invalid UTF-8 data");
+                continue; // Skip this iteration if the data isn't valid UTF-8
             }
-            Err(e) => {
-                info!("Failed to decode base64 data: {:?}", e);
+        };
+        info!("Decoded data: {}", decoded_str);
+
+        // Call your process_transfers function
+        let partition_key = match &record.kinesis.partition_key {
+            Some(key) => key,
+            None => {
+                info!("No partition key found in the record");
+                continue; // Skip this iteration of the loop
             }
+        };
+
+        let parts: Vec<&str> = partition_key.split(':').collect();
+        let contract_type = parts.get(0).unwrap_or(&""); // or provide a default
+
+        let result = process_transfers(
+            reqwest_client,
+            dynamo_db_client,
+            &decoded_str,
+            contract_type,
+        )
+        .await;
+
+        // Handle any errors from process_transfers
+        if let Err(err) = result {
+            log::error!("Failed to process transfer: {:?}", err);
         }
     }
 
