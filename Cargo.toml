@@ -4,6 +4,9 @@ members = [
   "crates/ark-db",
   "crates/ark-metadata",
   "crates/ark-starknet",
+  "crates/ark-tables",
+  "crates/ark-transfers",
+  "crates/ark-stream",
 ]
 
 [package]
