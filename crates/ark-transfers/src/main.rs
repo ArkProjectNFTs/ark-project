@@ -5,18 +5,10 @@ use crate::transfer::process_transfers;
 use aws_config::meta::region::RegionProviderChain;
 use aws_lambda_events::event::kinesis::KinesisEvent;
 use aws_sdk_dynamodb::Client as DynamoClient;
-use base64::{
-    alphabet,
-    engine::{self, general_purpose},
-    Engine as _,
-};
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use log::{info, LevelFilter};
 use reqwest::Client as ReqwestClient;
 use simple_logger::SimpleLogger;
-
-const CUSTOM_ENGINE: engine::GeneralPurpose =
-    engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::PAD);
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
