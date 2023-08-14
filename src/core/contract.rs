@@ -1,10 +1,10 @@
 use crate::constants::BLACKLIST;
-use ark_transfers::transfer::process_transfers;
 use ark_collection_update_lambda::update_additional_collection_data;
 use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
 use ark_stream::send::send_to_kinesis;
+use ark_transfers::transfer::process_transfers;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::{error, info};
@@ -82,9 +82,11 @@ pub async fn identify_contract_types_from_transfers(
                         kinesis_stream.as_str(),
                         "transfer",
                         &json_event,
+                        existing_contract_type.as_str(),
                     )
                     .await;
                 }
+
                 continue; // After sending event, skip this iteration of the loop
             }
         }
@@ -113,7 +115,6 @@ pub async fn identify_contract_types_from_transfers(
                         )
                         .await
                         .unwrap();
-
                         update_additional_collection_data(
                             client,
                             dynamo_client,
@@ -129,9 +130,9 @@ pub async fn identify_contract_types_from_transfers(
                             kinesis_stream.as_str(),
                             "transfer",
                             &json_event,
+                            contract_type.as_str(),
                         )
-                        .await
-                        .unwrap();
+                        .await.unwrap();
                     }
                 }
             }

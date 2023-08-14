@@ -24,7 +24,7 @@ pub async fn create_token_event(
     info!("create_token_event: {:?}", token_event.address);
 
     let token_events_table_name =
-        env::var("ARK_TOKENS_OWNERS_TABLE_NAME").expect("ARK_TOKENS_OWNERS_TABLE_NAME must be set");
+        env::var("ARK_TOKENS_EVENTS_TABLE_NAME").expect("ARK_TOKENS_EVENTS_TABLE_NAME must be set");
 
     let result = dynamo_client
         .put_item()
