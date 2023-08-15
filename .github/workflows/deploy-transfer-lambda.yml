@@ -7,7 +7,7 @@ on:
       - feat/transfer-events-lambda
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-transfer:
     runs-on: ubuntu-latest
 
     steps:

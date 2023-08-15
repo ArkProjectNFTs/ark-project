@@ -7,7 +7,7 @@ on:
       - feat/collection-update
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-collection:
     runs-on: ubuntu-latest
 
     steps:
