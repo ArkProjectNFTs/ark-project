@@ -139,7 +139,6 @@ pub async fn identify_contract_types_from_transfers(
                         )
                         .await
                         .unwrap();
-                        // TODO: add send kinesis event for update_additional_collection_data
                         send_to_kinesis(
                             kinesis_client,
                             kinesis_transfer_stream.as_str(),
