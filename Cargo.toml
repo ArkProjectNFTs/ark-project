@@ -5,7 +5,7 @@ members = [
   "crates/ark-metadata",
   "crates/ark-starknet",
   "crates/ark-tables",
-  "crates/ark-transfers",
+  "crates/ark-transfers-lambda",
   "crates/ark-stream",
 ]
 
@@ -38,7 +38,7 @@ ark-db = { path = "./crates/ark-db" }
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
 ark-stream = { path = "./crates/ark-stream" }
-ark-transfers = { path = "./crates/ark-transfers" }
+ark-transfers-lambda = { path = "./crates/ark-transfers-lambda" }
 openssl = { version = "0.10", features = ["vendored"] }
 
 [package.metadata.lambda.deploy]

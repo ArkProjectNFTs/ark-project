@@ -9,11 +9,11 @@ WORKDIR /app
 COPY . .
 
 # Building the Rust Lambda function
-RUN cd ./crates/ark-transfers && cargo lambda build --release
+RUN cd ./crates/ark-transfers-lambda && cargo lambda build --release
 
 # Copying the binary to both Lambda directories
 RUN mkdir -p ./target/lambda/arkMainnetTransferEventProcessor
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkMainnetTransferEventProcessor/bootstrap
+RUN cp ./target/lambda/ark-transfers-lambda/bootstrap ./target/lambda/arkMainnetTransferEventProcessor/bootstrap
 
 RUN mkdir -p ./target/lambda/arkTestnetTransferEventProcessor
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkTestnetTransferEventProcessor/bootstrap
+RUN cp ./target/lambda/ark-transfers-lambda/bootstrap ./target/lambda/arkTestnetTransferEventProcessor/bootstrap

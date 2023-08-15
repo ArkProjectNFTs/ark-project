@@ -4,7 +4,7 @@ use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
 use ark_stream::send::send_to_kinesis;
-use ark_transfers::transfer::process_transfers;
+use ark_transfers_lambda::transfer::process_transfers;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::{error, info};

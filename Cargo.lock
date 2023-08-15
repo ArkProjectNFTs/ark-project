@@ -191,7 +191,7 @@ dependencies = [
  "ark-metadata",
  "ark-starknet",
  "ark-stream",
- "ark-transfers",
+ "ark-transfers-lambda",
  "aws-config",
  "aws-sdk-dynamodb",
  "aws-sdk-kinesis",
@@ -285,7 +285,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-transfers"
+name = "ark-transfers-lambda"
 version = "0.1.0"
 dependencies = [
  "ark-db",
