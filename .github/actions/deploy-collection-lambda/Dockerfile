@@ -13,7 +13,7 @@ RUN cd ./crates/ark-collection-update-lambda && cargo lambda build --release
 
 # Copying the binary to both Lambda directories
 RUN mkdir -p ./target/lambda/arkMainnetCollectionUpdateProcessor
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkMainnetCollectionUpdateProcessor/bootstrap
+RUN cp ./target/lambda/ark-collection-update-lambda/bootstrap ./target/lambda/arkMainnetCollectionUpdateProcessor/bootstrap
 
 RUN mkdir -p ./target/lambda/arkTestnetCollectionUpdateProcessor
-RUN cp ./target/lambda/ark-transfers/bootstrap ./target/lambda/arkTestnetCollectionUpdateProcessor/bootstrap
+RUN cp ./target/lambda/ark-collection-update-lambda/bootstrap ./target/lambda/arkTestnetCollectionUpdateProcessor/bootstrap
