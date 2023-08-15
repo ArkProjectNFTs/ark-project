@@ -36,6 +36,15 @@ async fn handle_kinesis_event(
 
     for record in kinesis_event.records {
         info!("Event ID: {:?}", record.event_id);
+
+        let decoded_str = match String::from_utf8(record.kinesis.data.0) {
+            Ok(s) => s,
+            Err(_) => {
+                info!("Invalid UTF-8 data");
+                continue; // Skip this iteration if the data isn't valid UTF-8
+            }
+        };
+        info!("Decoded data: {}", decoded_str);
     }
 
     Ok(())

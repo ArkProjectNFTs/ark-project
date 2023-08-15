@@ -33,7 +33,11 @@ pub async fn identify_contract_types_from_transfers(
     // Get dynamo table to work with
     let collections_table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
-    let kinesis_stream = env::var("KINESIS_STREAM_NAME").expect("KINESIS_STREAM_NAME must be set");
+    let kinesis_transfer_stream =
+        env::var("KINESIS_TRANSFER_STREAM_NAME").expect("KINESIS_TRANSFER_STREAM_NAME must be set");
+
+    let kinesis_collection_stream = env::var("KINESIS_COLLECTION_STREAM_NAME")
+        .expect("KINESIS_COLLECTION_STREAM_NAME must be set");
 
     // Init start time
     let start_time = Instant::now();
@@ -79,7 +83,7 @@ pub async fn identify_contract_types_from_transfers(
                 } else {
                     let _ = send_to_kinesis(
                         kinesis_client,
-                        kinesis_stream.as_str(),
+                        kinesis_transfer_stream.as_str(),
                         "transfer",
                         &json_event,
                         existing_contract_type.as_str(),
@@ -126,21 +130,23 @@ pub async fn identify_contract_types_from_transfers(
                     } else {
                         send_to_kinesis(
                             kinesis_client,
-                            kinesis_stream.as_str(),
+                            kinesis_collection_stream.as_str(),
                             "collection",
                             contract_address,
                             contract_type.as_str(),
                         )
-                        .await.unwrap();
+                        .await
+                        .unwrap();
                         // TODO: add send kinesis event for update_additional_collection_data
                         send_to_kinesis(
                             kinesis_client,
-                            kinesis_stream.as_str(),
+                            kinesis_transfer_stream.as_str(),
                             "transfer",
                             &json_event,
                             contract_type.as_str(),
                         )
-                        .await.unwrap();
+                        .await
+                        .unwrap();
                     }
                 }
             }
