@@ -33,7 +33,11 @@ pub async fn identify_contract_types_from_transfers(
     // Get dynamo table to work with
     let collections_table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
-    let kinesis_stream = env::var("KINESIS_STREAM_NAME").expect("KINESIS_STREAM_NAME must be set");
+    let kinesis_transfer_stream =
+        env::var("KINESIS_TRANSFER_STREAM_NAME").expect("KINESIS_TRANSFER_STREAM_NAME must be set");
+
+    let kinesis_collection_stream = env::var("KINESIS_COLLECTION_STREAM_NAME")
+        .expect("KINESIS_COLLECTION_STREAM_NAME must be set");
 
     // Init start time
     let start_time = Instant::now();
@@ -47,8 +51,6 @@ pub async fn identify_contract_types_from_transfers(
         }
 
         let json_event = serde_json::to_string(&event).unwrap();
-        // Get contract address
-
         info!("event: {:?}", event);
 
         let contract_address_raw = event.get("from_address").unwrap().as_str().unwrap();
@@ -79,7 +81,7 @@ pub async fn identify_contract_types_from_transfers(
                 } else {
                     let _ = send_to_kinesis(
                         kinesis_client,
-                        kinesis_stream.as_str(),
+                        kinesis_transfer_stream.as_str(),
                         "transfer",
                         &json_event,
                         existing_contract_type.as_str(),
@@ -124,15 +126,28 @@ pub async fn identify_contract_types_from_transfers(
                         .await
                         .unwrap();
                     } else {
-                        // TODO: add send kinesis event for update_additional_collection_data
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("contract_address", Value::String(contract_address.to_string()));
+                        map.insert("block_number", Value::Number(block_number.into()));
+                        let serialized_map = serde_json::to_string(&map).unwrap();
                         send_to_kinesis(
                             kinesis_client,
-                            kinesis_stream.as_str(),
+                            kinesis_collection_stream.as_str(),
+                            "collection",
+                            &serialized_map,
+                            contract_type.as_str(),
+                        )
+                        .await
+                        .unwrap();
+                        send_to_kinesis(
+                            kinesis_client,
+                            kinesis_transfer_stream.as_str(),
                             "transfer",
                             &json_event,
                             contract_type.as_str(),
                         )
-                        .await.unwrap();
+                        .await
+                        .unwrap();
                     }
                 }
             }

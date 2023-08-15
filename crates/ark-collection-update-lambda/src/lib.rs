@@ -16,6 +16,8 @@ pub async fn update_additional_collection_data(
         get_contract_property_string(client, contract_address, "symbol", vec![], block_number)
             .await;
 
+    info!("collection_symbol: {:?}", collection_symbol);
+
     let collection_name =
         get_contract_property_string(client, contract_address, "name", vec![], block_number).await;
 
