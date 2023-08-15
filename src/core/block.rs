@@ -24,10 +24,31 @@ pub async fn process_blocks_continuously(
 
     info!("Starting block: {}", starting_block);
 
+    let ending_block: Option<u64> = env::var("END_BLOCK")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok());
+
+    if let Some(end) = ending_block {
+        info!("Ending block: {}", end);
+    } else {
+        info!("No ending block specified, will process continuously.");
+    }
+
     // Set starting block
     let mut current_block_number: u64 = starting_block;
     // Loop Through Blocks and wait for new blocks
     loop {
+        // If the END_BLOCK is specified and current block number exceeds it, break the loop.
+        if let Some(end_block) = ending_block {
+            if current_block_number > end_block {
+                info!(
+                    "Indexed up to and including END_BLOCK: {}. Exiting...",
+                    end_block
+                );
+                break;
+            }
+        }
+
         let execution_time = Instant::now();
         let latest_block_number = get_latest_block(reqwest_client).await?;
 
@@ -70,4 +91,6 @@ pub async fn process_blocks_continuously(
             sleep(Duration::from_secs(10)).await;
         }
     }
+
+    Ok(())
 }
