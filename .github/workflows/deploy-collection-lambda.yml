@@ -1,0 +1,54 @@
+name: Build and Deploy collection Lambda
+
+on:
+  push:
+    branches:
+      - main
+      - feat/collection-update
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Build using Docker
+      - name: Build with Docker
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: |
+          docker build \
+            --build-arg AWS_DEFAULT_REGION=$AWS_REGION \
+            --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+            --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+            -t ark-collection-lambda -f .github/actions/deploy-collection-lambda/Dockerfile .
+
+      - name: Deploy lambdas
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          for LAMBDA_FUNCTION_NAME in arkMainnetCollectionUpdateProcessor arkTestnetCollectionUpdateProcessor; do
+            docker run \
+              -e LAMBDA_FUNCTION_NAME=$LAMBDA_FUNCTION_NAME \
+              -e AWS_DEFAULT_REGION=$AWS_REGION \
+              -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+              -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+              ark-transfer-lambda cargo lambda deploy "${LAMBDA_FUNCTION_NAME}" --iam-role arn:aws:iam::223605539824:role/ArkProject-API-Lambda
+          done
