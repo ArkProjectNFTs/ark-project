@@ -51,8 +51,6 @@ pub async fn identify_contract_types_from_transfers(
         }
 
         let json_event = serde_json::to_string(&event).unwrap();
-        // Get contract address
-
         info!("event: {:?}", event);
 
         let contract_address_raw = event.get("from_address").unwrap().as_str().unwrap();
@@ -128,11 +126,15 @@ pub async fn identify_contract_types_from_transfers(
                         .await
                         .unwrap();
                     } else {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("contract_address", Value::String(contract_address.to_string()));
+                        map.insert("block_number", Value::Number(block_number.into()));
+                        let serialized_map = serde_json::to_string(&map).unwrap();
                         send_to_kinesis(
                             kinesis_client,
                             kinesis_collection_stream.as_str(),
                             "collection",
-                            contract_address,
+                            &serialized_map,
                             contract_type.as_str(),
                         )
                         .await

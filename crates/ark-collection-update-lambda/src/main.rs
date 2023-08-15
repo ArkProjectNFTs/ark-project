@@ -5,6 +5,10 @@ use lambda_runtime::{service_fn, Error, LambdaEvent};
 use log::{info, LevelFilter};
 use reqwest::Client as ReqwestClient;
 use simple_logger::SimpleLogger;
+mod lib;
+use lib::update_additional_collection_data;
+use serde_json::Value;
+use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -44,7 +48,18 @@ async fn handle_kinesis_event(
                 continue; // Skip this iteration if the data isn't valid UTF-8
             }
         };
+        let deserialized_map: HashMap<String, Value> = serde_json::from_str(&decoded_str).unwrap();
+        let contract_address = deserialized_map["contract_address"].as_str().unwrap();
+        let block_number = deserialized_map["block_number"].as_u64().unwrap();
+
         info!("Decoded data: {}", decoded_str);
+        update_additional_collection_data(
+            reqwest_client,
+            dynamo_db_client,
+            contract_address,
+            block_number,
+        ).await
+        .unwrap();
     }
 
     Ok(())

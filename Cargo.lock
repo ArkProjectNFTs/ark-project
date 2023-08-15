@@ -122,6 +122,7 @@ dependencies = [
  "log",
  "reqwest",
  "serde",
+ "serde_json",
  "simple_logger",
  "starknet",
  "tokio",
