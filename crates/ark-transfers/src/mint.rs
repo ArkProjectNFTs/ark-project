@@ -4,10 +4,10 @@ use ark_db::collection::update::{increment_collection_token_count, update_collec
 use ark_db::token::create::{create_token, CreateTokenData};
 use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_metadata::get::get_metadata;
-use log::info;
-use serde_json::to_string;
-use reqwest::Client as ReqwestClient;
 use aws_sdk_dynamodb::Client as DynamoClient;
+use log::info;
+use reqwest::Client as ReqwestClient;
+use serde_json::to_string;
 
 pub struct TokenData {
     pub padded_token_id: String,
@@ -116,7 +116,7 @@ pub async fn process_mint_event(
 
     println!("metadata_uri: {:?}", metadata_uri);
 
-    if !metadata_uri.is_empty() {
+    if !metadata_uri.is_empty() && metadata_uri != "undefined" {
         let result =
             get_metadata(client, metadata_uri.as_str(), initial_metadata_uri.as_str()).await;
 
@@ -128,26 +128,44 @@ pub async fn process_mint_event(
                 );
 
                 let raw_metadata_str = to_string(&raw_metadata).unwrap();
-                let create_token_data = CreateTokenData {
-                    address: token_data.collection_address.to_string(),
-                    padded_token_id: padded_token_id.to_string(),
-                    from_address: transaction_data.from_address.clone(),
-                    to_address: transaction_data.to_address.clone(),
-                    timestamp,
-                    token_uri: token_uri.to_string(),
-                    raw_metadata: raw_metadata_str,
-                    normalized_metadata,
-                    owner: token_data.owner.to_string(),
-                    mint_transaction_hash: transaction_data.hash.clone(),
-                    block_number_minted: transaction_data.block_number,
-                };
-
-                // TODO replace for create
-                let _ = create_token(dynamo_client, create_token_data).await;
-                // TODO: Uploading image to S3
+                let _ = create_token(
+                    dynamo_client,
+                    CreateTokenData {
+                        address: token_data.collection_address.to_string(),
+                        padded_token_id: padded_token_id.to_string(),
+                        from_address: transaction_data.from_address.clone(),
+                        to_address: transaction_data.to_address.clone(),
+                        timestamp,
+                        token_uri: token_uri.to_string(),
+                        raw_metadata: Some(raw_metadata_str),
+                        normalized_metadata: Some(normalized_metadata),
+                        owner: token_data.owner.to_string(),
+                        mint_transaction_hash: transaction_data.hash.clone(),
+                        block_number_minted: transaction_data.block_number,
+                    },
+                )
+                .await;
             }
             Err(e) => {
                 info!("Error fetching metadata: {}", e);
+
+                let _ = create_token(
+                    dynamo_client,
+                    CreateTokenData {
+                        address: token_data.collection_address.to_string(),
+                        padded_token_id: padded_token_id.to_string(),
+                        from_address: transaction_data.from_address.clone(),
+                        to_address: transaction_data.to_address.clone(),
+                        timestamp,
+                        token_uri: token_uri.to_string(),
+                        raw_metadata: None,
+                        normalized_metadata: None,
+                        owner: token_data.owner.to_string(),
+                        mint_transaction_hash: transaction_data.hash.clone(),
+                        block_number_minted: transaction_data.block_number,
+                    },
+                )
+                .await;
             }
         };
     }

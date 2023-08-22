@@ -65,13 +65,13 @@ pub async fn process_transfers(
     .await;
 
     info!(
-        "Contract address: {} - Token ID: {} - Token URI: {} - Block number: {}",
-        contract_address, formated_token_id.token_id, token_uri, block_number
+        "\n\n\t=== TRANSFER DETECTED ===\n\n\tContract address: {}\n\tToken ID: {}\n\tToken URI: {}\n\tBlock number: {}\n\tFrom: {}\n\tTo: {}\n\tTx hash: {}\n\n",
+        contract_address, formated_token_id.token_id, token_uri, block_number, from_address, to_address, transaction_hash
     );
 
     if from_address_field_element == FieldElement::ZERO {
         info!(
-        "\n\n=== MINT DETECTED ===\n\nContract address: {} - Token ID: {} - Token URI: {} - Block number: {}\n\n===========\n\n",
+        "\n\n\t=== MINT DETECTED ===\n\n\tContract address: {}\n\t Token ID: {}\n\tToken URI: {}\n\tBlock number: {}\n\n",
         contract_address, formated_token_id.token_id, token_uri, block_number
     );
 
