@@ -27,18 +27,24 @@ pub async fn get_collection_supply(
     match call_result {
         Ok(data) => {
             info!("Get supply data: {:?}", data);
+            if data.len() == 1 {
+                let supply = data[0].to_string().as_str().parse::<u128>().unwrap();
+                supply.to_string()
+            } else if data.len() == 2 {
+                let supply_low = data[0].to_string().as_str().parse::<u128>().unwrap();
+                let supply_high = data[1].to_string().as_str().parse::<u128>().unwrap();
+                let low_bytes = supply_low.to_be_bytes();
+                let high_bytes = supply_high.to_be_bytes();
+                let mut bytes: Vec<u8> = Vec::new();
+                bytes.extend(high_bytes);
+                bytes.extend(low_bytes);
+                let supply_big_uint = BigUint::from_bytes_be(&bytes[..]);
+                let supply: String = supply_big_uint.to_str_radix(10);
 
-            let supply_low = data[0].to_string().as_str().parse::<u128>().unwrap();
-            let supply_high = data[1].to_string().as_str().parse::<u128>().unwrap();
-            let low_bytes = supply_low.to_be_bytes();
-            let high_bytes = supply_high.to_be_bytes();
-            let mut bytes: Vec<u8> = Vec::new();
-            bytes.extend(high_bytes);
-            bytes.extend(low_bytes);
-            let supply_big_uint = BigUint::from_bytes_be(&bytes[..]);
-            let supply: String = supply_big_uint.to_str_radix(10);
-
-            supply
+                supply
+            } else {
+                "".to_string()
+            }
         }
         Err(e) => {
             info!("Get supply error: {:?}", e);
