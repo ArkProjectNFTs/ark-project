@@ -26,6 +26,8 @@ pub async fn get_collection_supply(
 
     match call_result {
         Ok(data) => {
+            info!("Get supply data: {:?}", data);
+
             let supply_low = data[0].to_string().as_str().parse::<u128>().unwrap();
             let supply_high = data[1].to_string().as_str().parse::<u128>().unwrap();
             let low_bytes = supply_low.to_be_bytes();
