@@ -5,10 +5,13 @@ use aws_sdk_kinesis::Client as KinesisClient;
 use log::info;
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
 
 // This function extracts and filters transfer events from a block.
 pub async fn extract_transfer_events(
+    rpc_client: &JsonRpcClient<HttpTransport>,
     reqwest_client: &ReqwestClient,
     block: HashMap<String, Value>,
     dynamo_client: &DynamoClient,
@@ -20,6 +23,7 @@ pub async fn extract_transfer_events(
     let transfer_events = filter_transfer_events(events, &event_hash);
     info!("Transfer events: {}", transfer_events.len());
     identify_contract_types_from_transfers(
+        rpc_client,
         reqwest_client,
         transfer_events,
         dynamo_client,

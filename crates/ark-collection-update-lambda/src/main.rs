@@ -3,12 +3,13 @@ use aws_lambda_events::event::kinesis::KinesisEvent;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use log::{info, LevelFilter};
-use reqwest::Client as ReqwestClient;
+use reqwest::{Client as ReqwestClient, Url};
 use simple_logger::SimpleLogger;
 mod lib;
 use lib::update_additional_collection_data;
 use serde_json::Value;
-use std::collections::HashMap;
+use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
+use std::{collections::HashMap, env};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -24,13 +25,19 @@ async fn main() -> Result<(), Error> {
     let reqwest_client = ReqwestClient::new();
     let dynamo_db_client = DynamoClient::new(&config);
 
+    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
+    let rpc_client = JsonRpcClient::new(HttpTransport::new(
+        Url::parse(rpc_provider.as_str()).unwrap(),
+    ));
+
     lambda_runtime::run(service_fn(|event: LambdaEvent<KinesisEvent>| {
-        handle_kinesis_event(event, &reqwest_client, &dynamo_db_client)
+        handle_kinesis_event(&rpc_client, event, &reqwest_client, &dynamo_db_client)
     }))
     .await
 }
 
 async fn handle_kinesis_event(
+    rpc_client: &JsonRpcClient<HttpTransport>,
     event: LambdaEvent<KinesisEvent>,
     reqwest_client: &ReqwestClient,
     dynamo_db_client: &DynamoClient,
@@ -54,11 +61,13 @@ async fn handle_kinesis_event(
 
         info!("Decoded data: {}", decoded_str);
         update_additional_collection_data(
+            rpc_client,
             reqwest_client,
             dynamo_db_client,
             contract_address,
             block_number,
-        ).await
+        )
+        .await
         .unwrap();
     }
 

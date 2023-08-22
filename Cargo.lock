@@ -120,6 +120,7 @@ dependencies = [
  "base64 0.21.2",
  "lambda_runtime",
  "log",
+ "num-bigint",
  "reqwest",
  "serde",
  "serde_json",

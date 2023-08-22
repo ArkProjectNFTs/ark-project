@@ -7,12 +7,15 @@ use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::info;
 use reqwest::Client as ReqwestClient;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
 use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 // This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
 pub async fn process_blocks_continuously(
+    rpc_client: &JsonRpcClient<HttpTransport>,
     reqwest_client: &ReqwestClient,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
@@ -49,6 +52,7 @@ pub async fn process_blocks_continuously(
                 let block = fetch_block(reqwest_client, current_block_number).await;
 
                 extract_transfer_events(
+                    rpc_client,
                     reqwest_client,
                     block.unwrap(),
                     dynamo_client,

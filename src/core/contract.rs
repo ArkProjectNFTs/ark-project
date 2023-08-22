@@ -11,12 +11,15 @@ use log::{error, info};
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
 use std::env;
 use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
 pub async fn identify_contract_types_from_transfers(
+    rpc_client: &JsonRpcClient<HttpTransport>,
     client: &ReqwestClient,
     events: Vec<HashMap<String, Value>>,
     dynamo_client: &DynamoClient,
@@ -125,6 +128,7 @@ pub async fn identify_contract_types_from_transfers(
                         .await
                         .unwrap();
                         update_additional_collection_data(
+                            rpc_client,
                             client,
                             dynamo_client,
                             contract_address,
