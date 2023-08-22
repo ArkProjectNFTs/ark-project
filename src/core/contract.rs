@@ -97,7 +97,14 @@ pub async fn identify_contract_types_from_transfers(
 
         info!("contract_type: {:?}", contract_type);
 
-        match create_collection(dynamo_client, &collections_table, contract_address).await {
+        match create_collection(
+            dynamo_client,
+            &collections_table,
+            contract_address,
+            &contract_type,
+        )
+        .await
+        {
             Ok(success) => {
                 info!(
                     "[Success] New collection item added successfully.\n\
@@ -127,7 +134,10 @@ pub async fn identify_contract_types_from_transfers(
                         .unwrap();
                     } else {
                         let mut map = std::collections::HashMap::new();
-                        map.insert("contract_address", Value::String(contract_address.to_string()));
+                        map.insert(
+                            "contract_address",
+                            Value::String(contract_address.to_string()),
+                        );
                         map.insert("block_number", Value::Number(block_number.into()));
                         let serialized_map = serde_json::to_string(&map).unwrap();
                         send_to_kinesis(

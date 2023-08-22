@@ -6,25 +6,20 @@ pub async fn create_collection(
     client: &Client,
     table_name: &str,
     token_address: &str,
+    contract_type: &str,
 ) -> Result<(), Error> {
     info!("create_collection {:?}", token_address);
 
-    let result = client
-        .get_item()
-        .key("address", AttributeValue::S(token_address.to_string()))
+    let _ = client
+        .put_item()
         .table_name(table_name)
+        .item("address", AttributeValue::S(token_address.to_string()))
+        .item(
+            "collection_type",
+            AttributeValue::S(contract_type.to_string()),
+        )
         .send()
         .await?;
-
-    // If results returns 0 results
-    if result.item.is_none() {
-        let _ = client
-            .put_item()
-            .table_name(table_name)
-            .item("address", AttributeValue::S(token_address.to_string()))
-            .send()
-            .await?;
-    }
 
     Ok(())
 }
