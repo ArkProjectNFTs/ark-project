@@ -1,5 +1,5 @@
 use aws_sdk_dynamodb::types::AttributeValue;
-use log::info;
+use log::{info,error};
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -68,58 +68,73 @@ pub async fn get_metadata(
 ) -> Result<(Value, NormalizedMetadata), Box<dyn Error>> {
     info!("Fetching metadata: {}", metadata_uri);
 
-    let response = client.get(metadata_uri).send().await?;
-    let raw_metadata: Value = response.json().await?;
+    let response = client.get(metadata_uri).timeout(Duration::from_secs(10)).send().await?;
 
-    info!("Metadata: {:?}", raw_metadata);
 
-    let empty_vec = Vec::new();
+    match response {
+        Ok(resp) => {
+            let raw_metadata: Value = response.json().await?;
 
-    let attributes = raw_metadata
-        .get("attributes")
-        .and_then(|attr| attr.as_array())
-        .unwrap_or(&empty_vec);
-
-    let normalized_attributes: Vec<MetadataAttribute> = attributes
-        .iter()
-        .map(|attribute| MetadataAttribute {
-            trait_type: attribute
-                .get("trait_type")
-                .and_then(|trait_type| trait_type.as_str())
-                .unwrap_or("")
-                .to_string(),
-            value: attribute
-                .get("value")
-                .and_then(|value| value.as_str())
-                .unwrap_or("")
-                .to_string(),
-            display_type: attribute
-                .get("display_type")
-                .and_then(|display_type| display_type.as_str())
-                .unwrap_or("")
-                .to_string(),
-        })
-        .collect();
-
-    let normalized_metadata = NormalizedMetadata {
-        description: raw_metadata
-            .get("description")
-            .and_then(|desc| desc.as_str())
-            .unwrap_or("")
-            .to_string(),
-        external_url: initial_metadata_uri.to_string(),
-        image: raw_metadata
-            .get("image")
-            .and_then(|img| img.as_str())
-            .unwrap_or("")
-            .to_string(),
-        name: raw_metadata
-            .get("name")
-            .and_then(|name| name.as_str())
-            .unwrap_or("")
-            .to_string(),
-        attributes: normalized_attributes,
-    };
-
-    Ok((raw_metadata, normalized_metadata))
+            info!("Metadata: {:?}", raw_metadata);
+        
+            let empty_vec = Vec::new();
+        
+            let attributes = raw_metadata
+                .get("attributes")
+                .and_then(|attr| attr.as_array())
+                .unwrap_or(&empty_vec);
+        
+            let normalized_attributes: Vec<MetadataAttribute> = attributes
+                .iter()
+                .map(|attribute| MetadataAttribute {
+                    trait_type: attribute
+                        .get("trait_type")
+                        .and_then(|trait_type| trait_type.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    value: attribute
+                        .get("value")
+                        .and_then(|value| value.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    display_type: attribute
+                        .get("display_type")
+                        .and_then(|display_type| display_type.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                })
+                .collect();
+        
+            let normalized_metadata = NormalizedMetadata {
+                description: raw_metadata
+                    .get("description")
+                    .and_then(|desc| desc.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                external_url: initial_metadata_uri.to_string(),
+                image: raw_metadata
+                    .get("image")
+                    .and_then(|img| img.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                name: raw_metadata
+                    .get("name")
+                    .and_then(|name| name.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                attributes: normalized_attributes,
+            };
+        
+            Ok((raw_metadata, normalized_metadata))
+        }
+        Err(e) => {
+            // Gérer l'erreur, y compris les timeouts
+            if e.is_timeout() {
+                warn!("Metadata request timeout: {:?}", e);
+            } else {
+                error!("Metadata request error : {:?}", e);
+            }
+            Err(e)
+        }
+    }
 }
