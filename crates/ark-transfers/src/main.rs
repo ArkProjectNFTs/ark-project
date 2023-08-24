@@ -38,6 +38,8 @@ async fn handle_kinesis_event(
     log::info!("Event invocation: {:?}", event);
     let kinesis_event = event.payload;
 
+    info!("Kinesis Event Records: {:?}", kinesis_event.records.len());
+
     for record in kinesis_event.records {
         info!("Event ID: {:?}", record.event_id);
 
