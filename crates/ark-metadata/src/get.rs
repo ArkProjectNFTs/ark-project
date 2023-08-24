@@ -1,10 +1,11 @@
 use aws_sdk_dynamodb::types::AttributeValue;
-use log::{info,error};
+use log::{error, info, warn};
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
+use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct MetadataAttribute {
@@ -68,22 +69,25 @@ pub async fn get_metadata(
 ) -> Result<(Value, NormalizedMetadata), Box<dyn Error>> {
     info!("Fetching metadata: {}", metadata_uri);
 
-    let response = client.get(metadata_uri).timeout(Duration::from_secs(10)).send().await?;
-
+    let response = client
+        .get(metadata_uri)
+        .timeout(Duration::from_secs(10))
+        .send()
+        .await;
 
     match response {
         Ok(resp) => {
-            let raw_metadata: Value = response.json().await?;
+            let raw_metadata: Value = resp.json().await?;
 
             info!("Metadata: {:?}", raw_metadata);
-        
+
             let empty_vec = Vec::new();
-        
+
             let attributes = raw_metadata
                 .get("attributes")
                 .and_then(|attr| attr.as_array())
                 .unwrap_or(&empty_vec);
-        
+
             let normalized_attributes: Vec<MetadataAttribute> = attributes
                 .iter()
                 .map(|attribute| MetadataAttribute {
@@ -104,7 +108,7 @@ pub async fn get_metadata(
                         .to_string(),
                 })
                 .collect();
-        
+
             let normalized_metadata = NormalizedMetadata {
                 description: raw_metadata
                     .get("description")
@@ -124,7 +128,7 @@ pub async fn get_metadata(
                     .to_string(),
                 attributes: normalized_attributes,
             };
-        
+
             Ok((raw_metadata, normalized_metadata))
         }
         Err(e) => {
@@ -134,7 +138,8 @@ pub async fn get_metadata(
             } else {
                 error!("Metadata request error : {:?}", e);
             }
-            Err(e)
+
+            Err(e.into())
         }
     }
 }
