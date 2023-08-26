@@ -18,8 +18,50 @@ use std::env;
 use std::error::Error;
 use std::time::Instant;
 
+fn is_dev_mode() -> bool {
+    match env::var("IS_DEV") {
+        Ok(val) => matches!(val.to_lowercase().as_str(), "true" | "1"),
+        Err(_) => panic!("IS_DEV must be set"),
+    }
+}
+
+async fn handle_existing_contract_type(
+    contract_type: &str,
+    collection_manager: &CollectionManager,
+    client: &ReqwestClient,
+    dynamo_client: &DynamoClient,
+    event_json: &str,
+    is_dev: bool,
+    kinesis_client: &KinesisClient,
+    kinesis_transfer_stream: &str,
+) {
+    if contract_type == "unknown" {
+        return;
+    }
+
+    if is_dev {
+        let _ = process_transfers(
+            collection_manager,
+            client,
+            dynamo_client,
+            event_json,
+            contract_type,
+        )
+        .await;
+    } else {
+        let _ = send_to_kinesis(
+            kinesis_client,
+            kinesis_transfer_stream,
+            "transfer",
+            event_json,
+            contract_type,
+        )
+        .await;
+    }
+}
+
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
-pub async fn identify_contract_types_from_transfers(
+pub async fn process_and_categorize_contract_events(
     collection_manager: &CollectionManager,
     rpc_client: &JsonRpcClient<HttpTransport>,
     client: &ReqwestClient,
@@ -27,14 +69,8 @@ pub async fn identify_contract_types_from_transfers(
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
 ) -> Result<(), Box<dyn Error>> {
-    let is_dev = match env::var("IS_DEV") {
-        Ok(val) => match val.to_lowercase().as_str() {
-            "true" | "1" => true,
-            "false" | "0" | "" => false,
-            _ => panic!("IS_DEV must be set to true or false"),
-        },
-        Err(_) => panic!("IS_DEV must be set"),
-    };
+    let is_dev = is_dev_mode();
+
     // Get dynamo table to work with
     let collections_table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
@@ -65,32 +101,18 @@ pub async fn identify_contract_types_from_transfers(
         let event_json = serde_json::to_string(&event).expect("Event not convertible to JSON");
 
         if let Some(existing_contract_type) = contract_status {
-            if existing_contract_type == "unknown" {
-                continue; // If it's unknown, skip this iteration of the loop
-            } else if existing_contract_type == "erc721" || existing_contract_type == "erc1155" {
-                // TODO: use a common function
-                if is_dev {
-                    let _ = process_transfers(
-                        collection_manager,
-                        client,
-                        dynamo_client,
-                        &event_json,
-                        existing_contract_type.as_str(),
-                    )
-                    .await;
-                } else {
-                    let _ = send_to_kinesis(
-                        kinesis_client,
-                        kinesis_transfer_stream.as_str(),
-                        "transfer",
-                        &event_json,
-                        existing_contract_type.as_str(),
-                    )
-                    .await;
-                }
-
-                continue; // After sending event, skip this iteration of the loop
-            }
+            handle_existing_contract_type(
+                &existing_contract_type,
+                collection_manager,
+                client,
+                dynamo_client,
+                &event_json,
+                is_dev,
+                kinesis_client,
+                &kinesis_transfer_stream,
+            )
+            .await;
+            continue;
         }
 
         let contract_type = get_contract_type(client, &contract_address, block_number).await;

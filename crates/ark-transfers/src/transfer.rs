@@ -1,18 +1,41 @@
 use super::mint::{process_mint_event, TokenData, TransactionData};
 use super::utils::get_token_uri;
 use anyhow::{anyhow, Result};
+use ark_db::block::create::create_block_info;
+use ark_db::block::get::get_block_info;
 use ark_db::owners::create::create_token_owner;
 use ark_db::owners::delete::{delete_token_owner, DeleteTokenOwnerData};
 use ark_db::owners::get::get_owner_block_number;
 use ark_db::token::get::get_token;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
-use ark_starknet::client::get_block_with_txs;
+use ark_starknet::client::fetch_block_with_transactions;
 use ark_starknet::collection_manager::CollectionManager;
 use ark_starknet::utils::{FormattedTokenId, TokenId};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use log::{debug, info, warn};
 use reqwest::Client as ReqwestClient;
+use serde_json::Value;
 use starknet::core::types::{EmittedEvent, FieldElement};
+
+pub async fn get_block_timestamp(
+    client: &ReqwestClient,
+    dynamo_client: &DynamoClient,
+    block_number: u64,
+) -> Result<u64> {
+    if let Ok(timestamp) = get_block_info(dynamo_client, block_number).await {
+        return Ok(timestamp);
+    }
+
+    // If getting block info fails, retrieve it from the source and then cache it.
+    let block = fetch_block_with_transactions(client, block_number).await?;
+    let timestamp = block
+        .get("timestamp")
+        .and_then(Value::as_u64)
+        .ok_or_else(|| anyhow!("Invalid timestamp format in block"))?;
+    create_block_info(dynamo_client, block_number, timestamp).await?;
+
+    Ok(timestamp)
+}
 
 pub async fn process_transfers(
     collection_manager: &CollectionManager,
@@ -23,14 +46,8 @@ pub async fn process_transfers(
 ) -> Result<()> {
     info!("Processing transfers: {:?}", value);
 
-    //let data = str::from_utf8(&value.as_bytes())?;
     let event: EmittedEvent = serde_json::from_str(value)?;
-
-    // Get block info
-    let block = get_block_with_txs(client, event.block_number)
-        .await
-        .unwrap();
-    let timestamp = block.get("timestamp").unwrap().as_u64().unwrap();
+    let timestamp = get_block_timestamp(client, dynamo_db_client, event.block_number).await?;
 
     if event.data.len() < 4 {
         return Err(anyhow!("Invalid event data"));

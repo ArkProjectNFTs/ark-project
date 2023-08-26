@@ -1,7 +1,7 @@
-use super::contract::identify_contract_types_from_transfers;
+use super::contract::process_and_categorize_contract_events;
 use anyhow::Result;
 use ark_db::block::create::create_block;
-use ark_db::block::get::get_block;
+use ark_db::block::get::is_fetched_block;
 use ark_db::block::update::update_block;
 use ark_starknet::collection_manager::CollectionManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
@@ -85,55 +85,58 @@ pub async fn process_blocks_continuously(
 
         // If the current block number is less than or equal to the destination block number
         if current_block_number <= dest_block_number {
-            let is_block_fetched = get_block(dynamo_client, current_block_number).await?;
-
-            // Skip already fetched blocks
-            if is_block_fetched {
-                info!("Current block {} is already fetched", current_block_number);
-                current_block_number += 1;
-                continue;
-            }
-
-            create_block(dynamo_client, current_block_number, false).await?;
-
-            if let Some(events_only) =
-                get_transfer_events(collection_manager, current_block_number).await?
-            {
-                info!(
-                    "{:?} events to process for block {:?}",
-                    events_only.len(),
-                    current_block_number
-                );
-
-                match identify_contract_types_from_transfers(
-                    collection_manager,
-                    rpc_client,
-                    reqwest_client,
-                    &events_only,
-                    dynamo_client,
-                    kinesis_client,
-                )
-                .await
-                {
-                    Ok(_) => {
-                        update_block(dynamo_client, current_block_number, true).await?;
-                        info!(
-                            "Indexing time: {}ms (block {})",
-                            execution_time.elapsed().as_millis(),
-                            current_block_number
-                        );
+            match is_fetched_block(dynamo_client, current_block_number).await {
+                Ok(is_already_fetched) => {
+                    if is_already_fetched {
+                        info!("Current block {} is already fetched", current_block_number);
                         current_block_number += 1;
-                    }
-                    Err(_err) => {
-                        error!("Error processing block: {:?}", current_block_number);
-                        sleep(Duration::from_secs(10)).await;
+                    } else {
+                        create_block(dynamo_client, current_block_number, false).await?;
+
+                        if let Some(events_only) =
+                            get_transfer_events(collection_manager, current_block_number).await?
+                        {
+                            info!(
+                                "{:?} events to process for block {:?}",
+                                events_only.len(),
+                                current_block_number
+                            );
+
+                            match process_and_categorize_contract_events(
+                                collection_manager,
+                                rpc_client,
+                                reqwest_client,
+                                &events_only,
+                                dynamo_client,
+                                kinesis_client,
+                            )
+                            .await
+                            {
+                                Ok(_) => {
+                                    update_block(dynamo_client, current_block_number, true).await?;
+                                    info!(
+                                        "Indexing time: {}ms (block {})",
+                                        execution_time.elapsed().as_millis(),
+                                        current_block_number
+                                    );
+                                    current_block_number += 1;
+                                }
+                                Err(_err) => {
+                                    error!("Error processing block: {:?}", current_block_number);
+                                    sleep(Duration::from_secs(10)).await;
+                                }
+                            }
+                        } else {
+                            info!("No event to process for block {:?}", current_block_number);
+                            update_block(dynamo_client, current_block_number, true).await?;
+                            current_block_number += 1;
+                        }
                     }
                 }
-            } else {
-                info!("No event to process for block {:?}", current_block_number);
-                update_block(dynamo_client, current_block_number, true).await?;
-                current_block_number += 1;
-            }
+                Err(_err) => {
+                    sleep(Duration::from_secs(10)).await;
+                }
+            };
         } else {
             // If END_BLOCK is set, exit the loop, otherwise wait for more blocks
             match env::var("END_BLOCK") {

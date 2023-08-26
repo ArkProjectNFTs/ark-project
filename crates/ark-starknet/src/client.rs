@@ -44,7 +44,10 @@ pub async fn fetch_block(
     Ok(block)
 }
 
-pub async fn get_block_with_txs(client: &ReqwestClient, block_number: u64) -> Result<Value> {
+pub async fn fetch_block_with_transactions(
+    client: &ReqwestClient,
+    block_number: u64,
+) -> Result<Value> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload = json!({
         "id": 1,
