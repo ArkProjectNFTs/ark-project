@@ -2,7 +2,7 @@ use ark_db::collection::update::update_collection;
 use ark_metadata::get::get_metadata;
 use ark_starknet::utils::get_contract_property_string;
 use ark_transfers::utils::sanitize_uri;
-use log::{debug, info};
+use log::{info, warn};
 use num_bigint::BigUint;
 use reqwest::Client as ReqwestClient;
 use starknet::{
@@ -64,7 +64,7 @@ pub async fn get_collection_image(
         client,
         contract_address,
         "tokenURI",
-        vec!["1", "0"],
+        vec!["0", "0"],
         block_number,
     )
     .await;
@@ -73,7 +73,10 @@ pub async fn get_collection_image(
     if !metadata_uri.is_empty() && metadata_uri != "undefined" {
         match get_metadata(client, metadata_uri.as_str(), initial_metadata_uri.as_str()).await {
             Ok((_raw_metadata, normalized_metadata)) => normalized_metadata.image,
-            Err(_err) => "".to_string(),
+            Err(err) => {
+                warn!("Error getting metadata: {}", err);
+                "".to_string()
+            }
         }
     } else {
         "".to_string()

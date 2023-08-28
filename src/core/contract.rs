@@ -15,6 +15,7 @@ use starknet::core::types::EmittedEvent;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use std::env;
+use std::error::Error;
 use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
@@ -25,7 +26,7 @@ pub async fn identify_contract_types_from_transfers(
     events: &[EmittedEvent],
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
-) {
+) -> Result<(), Box<dyn Error>> {
     let is_dev = match env::var("IS_DEV") {
         Ok(val) => match val.to_lowercase().as_str() {
             "true" | "1" => true,
@@ -120,8 +121,7 @@ pub async fn identify_contract_types_from_transfers(
                             &event_json,
                             contract_type.as_str(),
                         )
-                        .await
-                        .unwrap();
+                        .await?;
                         update_additional_collection_data(
                             rpc_client,
                             client,
@@ -129,8 +129,7 @@ pub async fn identify_contract_types_from_transfers(
                             &contract_address,
                             block_number,
                         )
-                        .await
-                        .unwrap();
+                        .await?;
                     } else {
                         let mut map = std::collections::HashMap::new();
                         map.insert("contract_address", Value::String(contract_address));
@@ -169,4 +168,6 @@ pub async fn identify_contract_types_from_transfers(
     }
     let duration = start_time.elapsed();
     debug!("Time elapsed in contracts block is: {:?}", duration);
+
+    Ok(())
 }

@@ -6,7 +6,6 @@ pub async fn sanitize_uri(token_uri: &str) -> (String, String) {
     let mut request_uri = token_uri
         .trim()
         .replace('\u{0003}', "")
-        .replace("/0", "")
         .replace('\u{2}', "")
         .replace("-https://", "https://");
     request_uri = convert_ipfs_uri_to_http_uri(request_uri);

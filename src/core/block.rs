@@ -6,7 +6,7 @@ use ark_db::block::update::update_block;
 use ark_starknet::client2::StarknetClient;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-use log::info;
+use log::{error, info};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, EmittedEvent};
 use starknet::core::utils::get_selector_from_name;
@@ -89,7 +89,7 @@ pub async fn process_blocks_continuously(
                 current_block_number
             );
 
-            identify_contract_types_from_transfers(
+            match identify_contract_types_from_transfers(
                 sn_client,
                 rpc_client,
                 reqwest_client,
@@ -97,17 +97,24 @@ pub async fn process_blocks_continuously(
                 dynamo_client,
                 kinesis_client,
             )
-            .await;
+            .await
+            {
+                Ok(_) => {
+                    update_block(dynamo_client, current_block_number, true).await?;
 
-            update_block(dynamo_client, current_block_number, true).await?;
-
-            let execution_time_elapsed_time = execution_time.elapsed();
-            let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
-            info!(
-                "Indexing time: {}ms (block {})",
-                execution_time_elapsed_time_ms, current_block_number
-            );
-            current_block_number += 1;
+                    let execution_time_elapsed_time = execution_time.elapsed();
+                    let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
+                    info!(
+                        "Indexing time: {}ms (block {})",
+                        execution_time_elapsed_time_ms, current_block_number
+                    );
+                    current_block_number += 1;
+                }
+                Err(_err) => {
+                    error!("Error processing block: {:?}", current_block_number);
+                    sleep(Duration::from_secs(10)).await;
+                }
+            }
         } else {
             sleep(Duration::from_secs(10)).await;
         }
