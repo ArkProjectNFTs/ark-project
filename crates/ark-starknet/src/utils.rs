@@ -2,9 +2,9 @@ use log::{error, info};
 use num_bigint::BigUint;
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
+use starknet::core::utils::get_selector_from_name;
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 use std::error::Error;
-use starknet::core::utils::get_selector_from_name;
 
 use super::client::call_contract;
 

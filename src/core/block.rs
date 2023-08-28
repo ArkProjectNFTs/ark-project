@@ -1,5 +1,5 @@
-use anyhow::Result;
 use super::contract::identify_contract_types_from_transfers;
+use anyhow::Result;
 use ark_db::block::create::create_block;
 use ark_db::block::get::get_block;
 use ark_db::block::update::update_block;
@@ -8,10 +8,10 @@ use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::info;
 use reqwest::Client as ReqwestClient;
+use starknet::core::types::BlockId;
+use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet::core::utils::get_selector_from_name;
-use starknet::core::types::BlockId;
 use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
@@ -59,11 +59,13 @@ pub async fn process_blocks_continuously(
             // We only want Transfer events.
             // The selector is always the first key, but the fetch blocks can
             // already filter for us.
-            let block_transfer_events = &sn_client.fetch_events(
-                BlockId::Number(current_block_number), 
-                BlockId::Number(current_block_number),
-                Some(vec![vec![get_selector_from_name("Transfer")?]])
-            ).await?;
+            let block_transfer_events = &sn_client
+                .fetch_events(
+                    BlockId::Number(current_block_number),
+                    BlockId::Number(current_block_number),
+                    Some(vec![vec![get_selector_from_name("Transfer")?]]),
+                )
+                .await?;
 
             let events_only = if block_transfer_events.contains_key(&current_block_number) {
                 &block_transfer_events[&current_block_number]
@@ -75,17 +77,21 @@ pub async fn process_blocks_continuously(
                 continue;
             };
 
-            info!("{:?} events to process for block {:?}", events_only.len(), current_block_number);
+            info!(
+                "{:?} events to process for block {:?}",
+                events_only.len(),
+                current_block_number
+            );
 
             identify_contract_types_from_transfers(
                 sn_client,
                 rpc_client,
                 reqwest_client,
-                &events_only,
+                events_only,
                 dynamo_client,
                 kinesis_client,
             )
-                .await;
+            .await;
 
             update_block(dynamo_client, current_block_number, true).await?;
 

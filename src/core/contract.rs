@@ -3,11 +3,12 @@ use ark_collection_update_lambda::update_additional_collection_data;
 use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
+use ark_starknet::client2::StarknetClient;
 use ark_stream::send::send_to_kinesis;
 use ark_transfers::transfer::process_transfers;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-use log::{error, info, debug};
+use log::{debug, error, info};
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
 use starknet::core::types::EmittedEvent;
@@ -15,7 +16,6 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use std::env;
 use std::time::Instant;
-use ark_starknet::client2::StarknetClient;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
 pub async fn identify_contract_types_from_transfers(
@@ -53,7 +53,7 @@ pub async fn identify_contract_types_from_transfers(
         if BLACKLIST.contains(&contract_address.as_str()) {
             continue;
         }
-    
+
         let block_number: u64 = event.block_number;
 
         // Check if contract present and type
@@ -133,10 +133,7 @@ pub async fn identify_contract_types_from_transfers(
                         .unwrap();
                     } else {
                         let mut map = std::collections::HashMap::new();
-                        map.insert(
-                            "contract_address",
-                            Value::String(contract_address),
-                        );
+                        map.insert("contract_address", Value::String(contract_address));
                         map.insert("block_number", Value::Number(block_number.into()));
                         let serialized_map = serde_json::to_string(&map).unwrap();
                         send_to_kinesis(

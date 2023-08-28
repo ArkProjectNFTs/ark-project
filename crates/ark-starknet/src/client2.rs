@@ -18,9 +18,7 @@ impl StarknetClient {
         let rpc_url = Url::parse(rpc_url)?;
         let provider = AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url)));
 
-        Ok(StarknetClient {
-            provider,
-        })
+        Ok(StarknetClient { provider })
     }
 
     ///
@@ -84,7 +82,7 @@ impl StarknetClient {
             from_block: Some(from_block),
             to_block: Some(to_block),
             address: None,
-            keys: keys,
+            keys,
         };
 
         let chunk_size = 1000;
@@ -121,7 +119,8 @@ impl StarknetClient {
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<Vec<FieldElement>> {
-        Ok(self.provider
+        Ok(self
+            .provider
             .call(
                 FunctionCall {
                     contract_address,

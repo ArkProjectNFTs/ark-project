@@ -3,8 +3,9 @@ mod core;
 mod utils;
 use std::env;
 
-use anyhow::Result;
 use crate::core::block::process_blocks_continuously;
+use anyhow::Result;
+use ark_starknet::client2::StarknetClient;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
@@ -13,7 +14,6 @@ use log::LevelFilter;
 use reqwest::{Client as ReqwestClient, Url};
 use simple_logger::SimpleLogger;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
-use ark_starknet::client2::StarknetClient;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -43,12 +43,12 @@ async fn main() -> Result<()> {
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
 
-    Ok(process_blocks_continuously(
+    process_blocks_continuously(
         &sn_client,
         &rpc_client,
         &reqwest_client,
         &dynamo_client,
         &kinesis_client,
     )
-       .await?)
+    .await
 }

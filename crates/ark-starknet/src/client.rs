@@ -1,5 +1,5 @@
-use anyhow::{anyhow, Result};
 use super::utils::{get_contract_property_string, get_selector_as_string};
+use anyhow::{anyhow, Result};
 use log::info;
 use reqwest::Client as ReqwestClient;
 use serde_json::{json, Value};
@@ -44,10 +44,7 @@ pub async fn fetch_block(
     Ok(block)
 }
 
-pub async fn get_block_with_txs(
-    client: &ReqwestClient,
-    block_number: u64,
-) -> Result<Value> {
+pub async fn get_block_with_txs(client: &ReqwestClient, block_number: u64) -> Result<Value> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload = json!({
         "id": 1,
@@ -121,7 +118,7 @@ pub async fn call_contract(
         let error_code = error["code"].as_u64().unwrap_or(0);
         let error_message = error["message"].as_str().unwrap_or("");
         if error_code == 21 && error_message == "Invalid message selector" {
-            return Err(anyhow!("Invalid message selector"))
+            return Err(anyhow!("Invalid message selector"));
         }
     }
 

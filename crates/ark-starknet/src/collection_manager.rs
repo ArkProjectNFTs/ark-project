@@ -1,10 +1,8 @@
 use anyhow::Result;
 use log::info;
+use serde::{Deserialize, Serialize};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
-use starknet::{
-    core::{types::FieldElement, types::*},
-};
-use serde::{Serialize, Deserialize};
+use starknet::core::{types::FieldElement, types::*};
 
 use super::client2::StarknetClient;
 
@@ -35,9 +33,7 @@ pub struct CollectionManager {
 impl CollectionManager {
     /// Initializes a new CollectionManager.
     pub async fn new(client: StarknetClient) -> CollectionManager {
-        CollectionManager {
-            client,
-        }
+        CollectionManager { client }
     }
 
     /// Retrieves the contract type for the given contract address.
@@ -46,30 +42,27 @@ impl CollectionManager {
         contract_address: FieldElement,
         block: BlockId,
     ) -> Result<ContractType> {
-        let token_uri_cairo_0 = self.get_contract_property_string(
-            contract_address,
-            "tokenURI",
-            vec![FieldElement::ONE, FieldElement::ZERO],
-            block,
-        )
-            .await?;
-
-        let token_uri = self.get_contract_property_string(
-            contract_address,
-            "token_uri",
-            vec![FieldElement::ONE, FieldElement::ZERO],
-            block,
-        )
-            .await?;
-        
-        // Get uri
-        let uri_result: String =
-            self.get_contract_property_string(
+        let token_uri_cairo_0 = self
+            .get_contract_property_string(
                 contract_address,
-                "uri",
-                vec![],
+                "tokenURI",
+                vec![FieldElement::ONE, FieldElement::ZERO],
                 block,
             )
+            .await?;
+
+        let token_uri = self
+            .get_contract_property_string(
+                contract_address,
+                "token_uri",
+                vec![FieldElement::ONE, FieldElement::ZERO],
+                block,
+            )
+            .await?;
+
+        // Get uri
+        let uri_result: String = self
+            .get_contract_property_string(contract_address, "uri", vec![], block)
             .await?;
 
         if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
@@ -92,14 +85,17 @@ impl CollectionManager {
     ) -> Result<String> {
         info!("Getting contract property: {:?}", selector_name);
 
-        let r = self.client.call_contract(
-            contract_address,            
-            get_selector_from_name(selector_name)?,
-            calldata,
-            block,
-        ).await?;
+        let r = self
+            .client
+            .call_contract(
+                contract_address,
+                get_selector_from_name(selector_name)?,
+                calldata,
+                block,
+            )
+            .await?;
 
-        Ok(decode_string_array(&r)?)
+        decode_string_array(&r)
     }
 }
 
@@ -107,20 +103,18 @@ pub fn decode_string_array(string_array: &Vec<FieldElement>) -> Result<String> {
     match string_array.len() {
         0 => Ok("".to_string()),
         1 => Ok(parse_cairo_short_string(&string_array[0])?),
-        2 => {
-            Ok(format!(
-                "{}{}",
-                parse_cairo_short_string(&string_array[0])?,
-                parse_cairo_short_string(&string_array[1])?,
-            ))
-        }
+        2 => Ok(format!(
+            "{}{}",
+            parse_cairo_short_string(&string_array[0])?,
+            parse_cairo_short_string(&string_array[1])?,
+        )),
         _ => {
             // The first element is the length of the string,
             // we can skip it as it's implicitely given by the vector itself.
             let mut result = String::new();
 
             for s in &string_array[1..] {
-                result.push_str(&parse_cairo_short_string(&s)?);
+                result.push_str(&parse_cairo_short_string(s)?);
             }
 
             Ok(result)
