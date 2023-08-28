@@ -8,7 +8,7 @@ use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::info;
 use reqwest::Client as ReqwestClient;
-use starknet::core::types::BlockId;
+use starknet::core::types::{BlockId, EmittedEvent};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -63,19 +63,25 @@ pub async fn process_blocks_continuously(
                 .fetch_events(
                     BlockId::Number(current_block_number),
                     BlockId::Number(current_block_number),
-                    Some(vec![vec![get_selector_from_name("Transfer")?]]),
+                    None,
                 )
                 .await?;
 
-            let events_only = if block_transfer_events.contains_key(&current_block_number) {
-                &block_transfer_events[&current_block_number]
-            } else {
-                // No event to process.
-                info!("No event to process for block {:?}", current_block_number);
-                update_block(dynamo_client, current_block_number, true).await?;
-                current_block_number += 1;
-                continue;
-            };
+            let events_only: Vec<EmittedEvent> =
+                if block_transfer_events.contains_key(&current_block_number) {
+                    block_transfer_events[&current_block_number]
+                        .clone()
+                        .into_iter()
+                        // Unwrap is safe as Transfer is a valid selector.
+                        .filter(|e| e.keys[0] == get_selector_from_name("Transfer").unwrap())
+                        .collect()
+                } else {
+                    // No event to process.
+                    info!("No event to process for block {:?}", current_block_number);
+                    update_block(dynamo_client, current_block_number, true).await?;
+                    current_block_number += 1;
+                    continue;
+                };
 
             info!(
                 "{:?} events to process for block {:?}",
@@ -87,7 +93,7 @@ pub async fn process_blocks_continuously(
                 sn_client,
                 rpc_client,
                 reqwest_client,
-                events_only,
+                &events_only,
                 dynamo_client,
                 kinesis_client,
             )
