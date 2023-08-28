@@ -161,7 +161,7 @@ pub async fn get_contract_type(
         client,
         contract_address,
         "tokenURI",
-        vec!["1", "0"],
+        vec!["0", "0"],
         block_number,
     )
     .await;
@@ -170,7 +170,7 @@ pub async fn get_contract_type(
         client,
         contract_address,
         "token_uri",
-        vec!["1", "0"],
+        vec!["0", "0"],
         block_number,
     )
     .await;
