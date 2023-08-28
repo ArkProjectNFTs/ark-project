@@ -1,6 +1,8 @@
 use ark_db::collection::update::update_collection;
+use ark_metadata::get::get_metadata;
 use ark_starknet::utils::get_contract_property_string;
-use log::info;
+use ark_transfers::utils::sanitize_uri;
+use log::{debug, info};
 use num_bigint::BigUint;
 use reqwest::Client as ReqwestClient;
 use starknet::{
@@ -53,6 +55,31 @@ pub async fn get_collection_supply(
     }
 }
 
+pub async fn get_collection_image(
+    client: &ReqwestClient,
+    contract_address: &str,
+    block_number: u64,
+) -> String {
+    let token_uri = get_contract_property_string(
+        client,
+        contract_address,
+        "tokenURI",
+        vec!["1", "0"],
+        block_number,
+    )
+    .await;
+
+    let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_uri.as_str()).await;
+    if !metadata_uri.is_empty() && metadata_uri != "undefined" {
+        match get_metadata(client, metadata_uri.as_str(), initial_metadata_uri.as_str()).await {
+            Ok((_raw_metadata, normalized_metadata)) => normalized_metadata.image,
+            Err(_err) => "".to_string(),
+        }
+    } else {
+        "".to_string()
+    }
+}
+
 pub async fn update_additional_collection_data(
     rpc_client: &JsonRpcClient<HttpTransport>,
     client: &ReqwestClient,
@@ -60,22 +87,26 @@ pub async fn update_additional_collection_data(
     contract_address: &str,
     block_number: u64,
 ) -> Result<(), Box<dyn Error>> {
-    info!("update_additional_collection_data");
+    debug!("update_additional_collection_data");
 
     let collection_symbol =
         get_contract_property_string(client, contract_address, "symbol", vec![], block_number)
             .await;
 
-    info!("collection_symbol: {:?}", collection_symbol);
+    debug!("collection_symbol: {:?}", collection_symbol);
 
     let collection_name =
         get_contract_property_string(client, contract_address, "name", vec![], block_number).await;
 
-    info!("collection_name: {:?}", collection_name);
+    debug!("collection_name: {:?}", collection_name);
 
     let collection_supply = get_collection_supply(rpc_client, contract_address).await;
 
-    info!("collection_supply: {}", collection_supply);
+    debug!("collection_supply: {}", collection_supply);
+
+    let collection_image = get_collection_image(client, contract_address, block_number).await;
+
+    debug!("collection_image: {:?}", collection_image);
 
     update_collection(
         dynamo_client,
@@ -83,6 +114,7 @@ pub async fn update_additional_collection_data(
         collection_name,
         collection_symbol,
         collection_supply,
+        collection_image,
     )
     .await?;
 

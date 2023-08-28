@@ -7,6 +7,8 @@ edition = "2021"
 starknet = "0.5.0"
 reqwest = { version = "0.11", features = ["json", "native-tls-vendored"] }
 ark-db = { path = "../ark-db" }
+ark-transfers = { path = "../ark-transfers" }
+ark-metadata = { path = "../ark-metadata" }
 aws-sdk-dynamodb = "0.29.0"
 log = "0.4"
 aws-sdk-kinesis = "0.29.0"

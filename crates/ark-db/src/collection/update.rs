@@ -10,6 +10,7 @@ pub async fn update_collection(
     name: String,
     symbol: String,
     total_supply: String,
+    collection_image: String,
 ) -> Result<(), Error> {
     info!(
         "update_collection: {} {} {}",
@@ -23,10 +24,13 @@ pub async fn update_collection(
         .update_item()
         .key("address", AttributeValue::S(collection_address))
         .table_name(collections_table_name)
-        .update_expression("SET collection_name = :n, symbol = :s, total_supply = :ts")
+        .update_expression(
+            "SET collection_name = :n, symbol = :s, total_supply = :ts, collection_image = :ci",
+        )
         .expression_attribute_values(":n", AttributeValue::S(name))
         .expression_attribute_values(":s", AttributeValue::S(symbol))
         .expression_attribute_values(":ts", AttributeValue::S(total_supply))
+        .expression_attribute_values(":ci", AttributeValue::S(collection_image))
         .send()
         .await?;
 
