@@ -6,7 +6,6 @@ use serde_json::{json, Value};
 use starknet::core::types::FieldElement;
 use std::collections::HashMap;
 use std::env;
-use std::error::Error;
 use std::time::Instant;
 
 pub async fn fetch_block(

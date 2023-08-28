@@ -1,9 +1,8 @@
 use anyhow::Result;
-use super::event::extract_transfer_events;
+use super::contract::identify_contract_types_from_transfers;
 use ark_db::block::create::create_block;
 use ark_db::block::get::get_block;
 use ark_db::block::update::update_block;
-use ark_starknet::client::{fetch_block, get_latest_block};
 use ark_starknet::client2::StarknetClient;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
@@ -12,11 +11,10 @@ use reqwest::Client as ReqwestClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::core::utils::get_selector_from_name;
-use starknet::core::types::{FieldElement, BlockId};
+use starknet::core::types::BlockId;
 use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
-
 
 // This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
 pub async fn process_blocks_continuously(
@@ -57,21 +55,33 @@ pub async fn process_blocks_continuously(
             }
 
             create_block(dynamo_client, current_block_number, false).await?;
-            let block = fetch_block(reqwest_client, current_block_number).await;
 
             // We only want Transfer events.
             // The selector is always the first key, but the fetch blocks can
             // already filter for us.
-            let block_transfer_events = sn_client.fetch_events(
+            let block_transfer_events = &sn_client.fetch_events(
                 BlockId::Number(current_block_number), 
                 BlockId::Number(current_block_number),
                 Some(vec![vec![get_selector_from_name("Transfer")?]])
             ).await?;
 
-            extract_transfer_events(
+            let events_only = if block_transfer_events.contains_key(&current_block_number) {
+                &block_transfer_events[&current_block_number]
+            } else {
+                // No event to process.
+                info!("No event to process for block {:?}", current_block_number);
+                update_block(dynamo_client, current_block_number, true).await?;
+                current_block_number += 1;
+                continue;
+            };
+
+            info!("{:?} events to process for block {:?}", events_only.len(), current_block_number);
+
+            identify_contract_types_from_transfers(
+                sn_client,
                 rpc_client,
                 reqwest_client,
-                block.unwrap(),
+                &events_only,
                 dynamo_client,
                 kinesis_client,
             )

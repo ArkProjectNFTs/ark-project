@@ -1,6 +1,6 @@
 use anyhow::Result;
 use aws_sdk_dynamodb::types::AttributeValue;
-use aws_sdk_dynamodb::{Client, Error};
+use aws_sdk_dynamodb::Client;
 use std::env;
 
 // This function adds a block number to the list of fetched blocks.

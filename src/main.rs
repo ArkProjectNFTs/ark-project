@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
     dotenv().ok();
     SimpleLogger::new()
         .env()
-        .with_level(LevelFilter::Warn)
+        .with_level(LevelFilter::Info)
         .with_module_level("ark_indexer", LevelFilter::Info)
         .with_module_level("ark_db", LevelFilter::Info)
         .with_module_level("ark_metadata", LevelFilter::Info)
