@@ -3,25 +3,26 @@ use ark_collection_update_lambda::update_additional_collection_data;
 use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
+use ark_starknet::client2::StarknetClient;
 use ark_stream::send::send_to_kinesis;
 use ark_transfers::transfer::process_transfers;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-use log::{error, info};
+use log::{debug, error, info};
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
-use starknet::core::types::FieldElement;
+use starknet::core::types::EmittedEvent;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use std::collections::HashMap;
 use std::env;
 use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
 pub async fn identify_contract_types_from_transfers(
+    _sn_client: &StarknetClient,
     rpc_client: &JsonRpcClient<HttpTransport>,
     client: &ReqwestClient,
-    events: Vec<HashMap<String, Value>>,
+    events: &[EmittedEvent],
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
 ) {
@@ -46,27 +47,21 @@ pub async fn identify_contract_types_from_transfers(
     let start_time = Instant::now();
 
     for event in events {
+        let contract_address = format!("{:#064x}", &event.from_address);
+
         // Filter contract with most transactions from identification
-        if let Some(from_address) = event.get("from_address").and_then(|addr| addr.as_str()) {
-            if BLACKLIST.contains(&from_address) {
-                continue;
-            }
+        if BLACKLIST.contains(&contract_address.as_str()) {
+            continue;
         }
 
-        let json_event = serde_json::to_string(&event).unwrap();
-        info!("event: {:?}", event);
-
-        let contract_address_raw = event.get("from_address").unwrap().as_str().unwrap();
-        let contract_address_field = FieldElement::from_hex_be(contract_address_raw).unwrap();
-        let contract_address_string = format!("{:#064x}", contract_address_field);
-        let contract_address = contract_address_string.as_str();
-
-        let block_number: u64 = event.get("block_number").unwrap().as_u64().unwrap();
+        let block_number: u64 = event.block_number;
 
         // Check if contract present and type
-        let contract_status = get_contract(dynamo_client, contract_address)
+        let contract_status = get_contract(dynamo_client, &contract_address)
             .await
             .unwrap_or(None);
+
+        let event_json = serde_json::to_string(&event).expect("Event not convertible to JSON");
 
         if let Some(existing_contract_type) = contract_status {
             if existing_contract_type == "unknown" {
@@ -77,7 +72,7 @@ pub async fn identify_contract_types_from_transfers(
                     let _ = process_transfers(
                         client,
                         dynamo_client,
-                        &json_event,
+                        &event_json,
                         existing_contract_type.as_str(),
                     )
                     .await;
@@ -86,7 +81,7 @@ pub async fn identify_contract_types_from_transfers(
                         kinesis_client,
                         kinesis_transfer_stream.as_str(),
                         "transfer",
-                        &json_event,
+                        &event_json,
                         existing_contract_type.as_str(),
                     )
                     .await;
@@ -96,14 +91,14 @@ pub async fn identify_contract_types_from_transfers(
             }
         }
 
-        let contract_type = get_contract_type(client, contract_address, block_number).await;
+        let contract_type = get_contract_type(client, &contract_address, block_number).await;
 
-        info!("contract_type: {:?}", contract_type);
+        debug!("contract_type: {:?}", contract_type);
 
         match create_collection(
             dynamo_client,
             &collections_table,
-            contract_address,
+            &contract_address,
             &contract_type,
         )
         .await
@@ -122,7 +117,7 @@ pub async fn identify_contract_types_from_transfers(
                         process_transfers(
                             client,
                             dynamo_client,
-                            &json_event,
+                            &event_json,
                             contract_type.as_str(),
                         )
                         .await
@@ -131,17 +126,14 @@ pub async fn identify_contract_types_from_transfers(
                             rpc_client,
                             client,
                             dynamo_client,
-                            contract_address,
+                            &contract_address,
                             block_number,
                         )
                         .await
                         .unwrap();
                     } else {
                         let mut map = std::collections::HashMap::new();
-                        map.insert(
-                            "contract_address",
-                            Value::String(contract_address.to_string()),
-                        );
+                        map.insert("contract_address", Value::String(contract_address));
                         map.insert("block_number", Value::Number(block_number.into()));
                         let serialized_map = serde_json::to_string(&map).unwrap();
                         send_to_kinesis(
@@ -157,7 +149,7 @@ pub async fn identify_contract_types_from_transfers(
                             kinesis_client,
                             kinesis_transfer_stream.as_str(),
                             "transfer",
-                            &json_event,
+                            &event_json,
                             contract_type.as_str(),
                         )
                         .await
@@ -176,5 +168,5 @@ pub async fn identify_contract_types_from_transfers(
         }
     }
     let duration = start_time.elapsed();
-    info!("Time elapsed in contracts block is: {:?}", duration);
+    debug!("Time elapsed in contracts block is: {:?}", duration);
 }

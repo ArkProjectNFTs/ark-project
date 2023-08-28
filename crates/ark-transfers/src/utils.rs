@@ -1,6 +1,6 @@
 use ark_starknet::utils::get_contract_property_string;
-use reqwest::Client as ReqwestClient;
 use log::info;
+use reqwest::Client as ReqwestClient;
 
 pub async fn sanitize_uri(token_uri: &str) -> (String, String) {
     let mut request_uri = token_uri

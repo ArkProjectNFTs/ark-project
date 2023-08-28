@@ -9,7 +9,7 @@ pub fn table_log(table_description: TableDescription) {
             .as_ref()
             .unwrap_or(&"N/A".to_string())
     );
-    
+
     if let Some(key_schema) = &table_description.key_schema {
         info!("- Key Schema:");
         for key in key_schema {
@@ -19,7 +19,7 @@ pub fn table_log(table_description: TableDescription) {
             );
         }
     }
-    
+
     if let Some(provisioned_throughput) = &table_description.provisioned_throughput {
         info!(
             "- Read Capacity: {}",

@@ -9,7 +9,7 @@ mod delete;
 mod logger;
 use create::{create_table, TableCreationData};
 use delete::delete_table;
-use log::{info, error, LevelFilter};
+use log::{debug, error, info, LevelFilter};
 use simple_logger::SimpleLogger;
 use tokio::time::{sleep, Duration};
 
@@ -19,6 +19,9 @@ struct Args {
     /// Name of table prefix
     #[arg(short, long)]
     prefix: String,
+    /// Base table to be copied in new tables with prefix name.
+    #[arg(short, long)]
+    base: String,
 }
 
 #[tokio::main]
@@ -41,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let table_names = resp.table_names.unwrap_or_default();
     let filtered_tables: Vec<&String> = table_names
         .iter()
-        .filter(|&table_name| table_name.contains(&args.prefix))
+        .filter(|&table_name| table_name.contains(&args.base))
         .collect();
 
     let mut tables_to_create = Vec::new();
@@ -55,6 +58,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match desc {
             Ok(response) => match &response.table {
                 Some(table_description) => {
+                    println!("TABLE DESC: {:?}", table_description);
                     let primary_key_name = table_description
                         .key_schema
                         .as_ref()
@@ -71,7 +75,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .map(|name| name.clone());
 
                     tables_to_create.push(TableCreationData {
-                        name: table_name.replace("mainnet", "test1"),
+                        name: table_name.replace(&args.base, &args.prefix),
                         primary_key_name,
                         sort_key_name,
                     });
@@ -91,6 +95,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     sleep(Duration::from_secs(5)).await;
+
+    println!("Table to create: {:?}", tables_to_create);
 
     for table_data in &tables_to_create {
         let result = create_table(&client, table_data).await;
