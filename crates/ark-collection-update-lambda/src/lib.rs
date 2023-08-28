@@ -2,7 +2,7 @@ use ark_db::collection::update::update_collection;
 use ark_metadata::get::get_metadata;
 use ark_starknet::utils::get_contract_property_string;
 use ark_transfers::utils::sanitize_uri;
-use log::{info, warn};
+use log::{debug, info, warn};
 use num_bigint::BigUint;
 use reqwest::Client as ReqwestClient;
 use starknet::{
