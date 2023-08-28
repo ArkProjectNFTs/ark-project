@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy-collection:
+  build-collection:
     runs-on: ubuntu-latest
 
     steps:
