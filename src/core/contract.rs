@@ -7,7 +7,7 @@ use ark_stream::send::send_to_kinesis;
 use ark_transfers::transfer::process_transfers;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
-use log::{error, info};
+use log::{error, info, debug};
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
@@ -54,7 +54,7 @@ pub async fn identify_contract_types_from_transfers(
         }
 
         let json_event = serde_json::to_string(&event).unwrap();
-        info!("event: {:?}", event);
+        debug!("event: {:?}", event);
 
         let contract_address_raw = event.get("from_address").unwrap().as_str().unwrap();
         let contract_address_field = FieldElement::from_hex_be(contract_address_raw).unwrap();
@@ -98,7 +98,7 @@ pub async fn identify_contract_types_from_transfers(
 
         let contract_type = get_contract_type(client, contract_address, block_number).await;
 
-        info!("contract_type: {:?}", contract_type);
+        debug!("contract_type: {:?}", contract_type);
 
         match create_collection(
             dynamo_client,
@@ -176,5 +176,5 @@ pub async fn identify_contract_types_from_transfers(
         }
     }
     let duration = start_time.elapsed();
-    info!("Time elapsed in contracts block is: {:?}", duration);
+    debug!("Time elapsed in contracts block is: {:?}", duration);
 }

@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use super::utils::{get_contract_property_string, get_selector_as_string};
 use log::info;
 use reqwest::Client as ReqwestClient;
@@ -11,7 +12,7 @@ use std::time::Instant;
 pub async fn fetch_block(
     client: &ReqwestClient,
     block_number: u64,
-) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
+) -> Result<HashMap<String, Value>> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload = json!({
         "jsonrpc": "2.0",
@@ -47,7 +48,7 @@ pub async fn fetch_block(
 pub async fn get_block_with_txs(
     client: &ReqwestClient,
     block_number: u64,
-) -> Result<Value, Box<dyn Error>> {
+) -> Result<Value> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload = json!({
         "id": 1,
@@ -80,7 +81,7 @@ pub async fn call_contract(
     selector_name: &str,
     calldata: Vec<&str>,
     block_number: u64,
-) -> Result<Value, Box<dyn Error>> {
+) -> Result<Value> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let selector_string = selector_name.to_string();
     let selector = get_selector_as_string(&selector_string);
@@ -121,17 +122,14 @@ pub async fn call_contract(
         let error_code = error["code"].as_u64().unwrap_or(0);
         let error_message = error["message"].as_str().unwrap_or("");
         if error_code == 21 && error_message == "Invalid message selector" {
-            return Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Invalid message selector",
-            )));
+            return Err(anyhow!("Invalid message selector"))
         }
     }
 
     Ok(result.get("result").cloned().unwrap_or(Value::Null))
 }
 
-pub async fn get_latest_block(client: &ReqwestClient) -> Result<u64, Box<dyn Error>> {
+pub async fn get_latest_block(client: &ReqwestClient) -> Result<u64> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let payload: Value = json!({
         "jsonrpc": "2.0",
@@ -154,7 +152,7 @@ pub async fn get_latest_block(client: &ReqwestClient) -> Result<u64, Box<dyn Err
     let block_number = result
         .get("result")
         .and_then(Value::as_u64)
-        .ok_or("Failed to parse block number")?;
+        .ok_or(anyhow!("Failed to parse block number"))?;
     Ok(block_number)
 }
 

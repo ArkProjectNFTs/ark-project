@@ -1,25 +1,31 @@
+use anyhow::Result;
 use super::event::extract_transfer_events;
 use ark_db::block::create::create_block;
 use ark_db::block::get::get_block;
 use ark_db::block::update::update_block;
 use ark_starknet::client::{fetch_block, get_latest_block};
+use ark_starknet::client2::StarknetClient;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::info;
 use reqwest::Client as ReqwestClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::core::utils::get_selector_from_name;
+use starknet::core::types::{FieldElement, BlockId};
 use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
+
 // This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
 pub async fn process_blocks_continuously(
+    sn_client: &StarknetClient,
     rpc_client: &JsonRpcClient<HttpTransport>,
     reqwest_client: &ReqwestClient,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     let starting_block = env::var("START_BLOCK")
         .expect("START_BLOCK must be set")
         .parse::<u64>()
@@ -32,7 +38,7 @@ pub async fn process_blocks_continuously(
     // Loop Through Blocks and wait for new blocks
     loop {
         let execution_time = Instant::now();
-        let latest_block_number = get_latest_block(reqwest_client).await?;
+        let latest_block_number = sn_client.block_number().await?;
 
         info!(
             "Latest block: {}, Current block: {}, Indexing progress: {:.2}%",
@@ -47,29 +53,39 @@ pub async fn process_blocks_continuously(
             if is_block_fetched {
                 info!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
-            } else {
-                create_block(dynamo_client, current_block_number, false).await?;
-                let block = fetch_block(reqwest_client, current_block_number).await;
+                continue;
+            }
 
-                extract_transfer_events(
-                    rpc_client,
-                    reqwest_client,
-                    block.unwrap(),
-                    dynamo_client,
-                    kinesis_client,
-                )
+            create_block(dynamo_client, current_block_number, false).await?;
+            let block = fetch_block(reqwest_client, current_block_number).await;
+
+            // We only want Transfer events.
+            // The selector is always the first key, but the fetch blocks can
+            // already filter for us.
+            let block_transfer_events = sn_client.fetch_events(
+                BlockId::Number(current_block_number), 
+                BlockId::Number(current_block_number),
+                Some(vec![vec![get_selector_from_name("Transfer")?]])
+            ).await?;
+
+            extract_transfer_events(
+                rpc_client,
+                reqwest_client,
+                block.unwrap(),
+                dynamo_client,
+                kinesis_client,
+            )
                 .await;
 
-                update_block(dynamo_client, current_block_number, true).await?;
+            update_block(dynamo_client, current_block_number, true).await?;
 
-                let execution_time_elapsed_time = execution_time.elapsed();
-                let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
-                info!(
-                    "Indexing time: {}ms (block {})",
-                    execution_time_elapsed_time_ms, current_block_number
-                );
-                current_block_number += 1;
-            }
+            let execution_time_elapsed_time = execution_time.elapsed();
+            let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
+            info!(
+                "Indexing time: {}ms (block {})",
+                execution_time_elapsed_time_ms, current_block_number
+            );
+            current_block_number += 1;
         } else {
             sleep(Duration::from_secs(10)).await;
         }

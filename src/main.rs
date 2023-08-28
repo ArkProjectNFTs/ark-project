@@ -3,6 +3,7 @@ mod core;
 mod utils;
 use std::env;
 
+use anyhow::Result;
 use crate::core::block::process_blocks_continuously;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
@@ -12,9 +13,10 @@ use log::LevelFilter;
 use reqwest::{Client as ReqwestClient, Url};
 use simple_logger::SimpleLogger;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
+use ark_starknet::client2::StarknetClient;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     dotenv().ok();
     SimpleLogger::new()
         .env()
@@ -30,6 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
+    let sn_client = StarknetClient::new(&rpc_provider.clone())?;
     let rpc_client = JsonRpcClient::new(HttpTransport::new(
         Url::parse(rpc_provider.as_str()).unwrap(),
     ));
@@ -39,11 +42,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let kinesis_client = KinesisClient::new(&config);
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
-    process_blocks_continuously(
+
+    Ok(process_blocks_continuously(
+        &sn_client,
         &rpc_client,
         &reqwest_client,
         &dynamo_client,
         &kinesis_client,
     )
-    .await
+       .await?)
 }

@@ -133,6 +133,7 @@ dependencies = [
 name = "ark-db"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ark-metadata",
  "aws-sdk-dynamodb",
  "dotenv",
@@ -187,6 +188,7 @@ dependencies = [
 name = "ark-indexer"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ark-collection-update-lambda",
  "ark-db",
  "ark-metadata",
@@ -241,14 +243,18 @@ dependencies = [
 name = "ark-starknet"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ark-db",
  "dotenv",
  "hex",
  "log",
  "num-bigint",
+ "regex",
  "reqwest",
+ "serde",
  "serde_json",
  "starknet",
+ "url",
 ]
 
 [[package]]

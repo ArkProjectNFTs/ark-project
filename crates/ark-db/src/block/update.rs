@@ -1,3 +1,4 @@
+use anyhow::Result;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use std::env;
@@ -7,7 +8,7 @@ pub async fn update_block(
   dynamo_client: &Client,
   block_number: u64,
   status: bool,
-) -> Result<(), Error> {
+) -> Result<()> {
   let table = env::var("ARK_BLOCKS_TABLE_NAME").expect("ARK_BLOCKS_TABLE_NAME must be set");
   let block_number_av = AttributeValue::N(block_number.to_string());
   let is_fetched_av = AttributeValue::Bool(status);
