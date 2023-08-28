@@ -15,7 +15,6 @@ pub async fn create_table(
     client: &Client,
     table_data: &TableCreationData,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("TABLE DATA {:?}", table_data);
 
     let ad_primary = AttributeDefinition::builder()
         .attribute_name(&table_data.primary_key_name)
