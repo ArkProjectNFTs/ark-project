@@ -21,7 +21,7 @@ pub async fn get_block(dynamo_client: &Client, block_number: u64) -> Result<bool
             info!("get_block: {:?}", value.item);
 
             if let Some(item) = value.item {
-                if let Some(is_fetched) = item.get("isFetched") {
+                if let Some(is_fetched) = item.get("is_fetched") {
                     match is_fetched.as_bool() {
                         Ok(is_fetched_bool) => return Ok(*is_fetched_bool),
                         Err(_) => return Ok(false),
