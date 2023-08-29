@@ -5,7 +5,7 @@ use ark_db::token::create::{create_token, CreateTokenData};
 use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_metadata::get::get_metadata;
 use aws_sdk_dynamodb::Client as DynamoClient;
-use log::info;
+use log::{debug, error, info};
 use reqwest::Client as ReqwestClient;
 use serde_json::to_string;
 
@@ -33,7 +33,7 @@ pub async fn process_mint_event(
     timestamp: u64,
     token_data: TokenData,
     transaction_data: TransactionData,
-) {
+) -> Result<(), Box<dyn std::error::Error>> {
     let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_uri).await;
 
     info!(
@@ -89,22 +89,6 @@ pub async fn process_mint_event(
                 )
                 .await;
             }
-
-            let token_event = TokenEvent {
-                address: token_data.collection_address.to_string(),
-                timestamp: transaction_data.timestamp,
-                block_number: transaction_data.block_number,
-                event_type: "mint".to_string(),
-                from_address: transaction_data.from_address.clone(),
-                padded_token_id: token_data.padded_token_id.clone(),
-                token_uri: token_data.token_uri.clone(),
-                to_address: transaction_data.to_address.clone(),
-                transaction_hash: transaction_data.hash.clone(),
-                token_type: token_data.token_type.clone(),
-            };
-
-            //  TODO: Inserting into ark_mainnet_collection_activities
-            let _ = create_token_event(dynamo_client, token_event).await;
         }
         Ok(None) => {
             info!("No collection found at address");
@@ -114,59 +98,66 @@ pub async fn process_mint_event(
         }
     }
 
-    println!("metadata_uri: {:?}", metadata_uri);
-
     if !metadata_uri.is_empty() && metadata_uri != "undefined" {
         let result =
             get_metadata(client, metadata_uri.as_str(), initial_metadata_uri.as_str()).await;
 
-        match result {
+        let (normalized_metadata, raw_metadata_str) = match result {
             Ok((raw_metadata, normalized_metadata)) => {
-                println!(
+                debug!(
                     "Raw metadata: {:?} - Normalized_metadata: {:?}",
                     raw_metadata, normalized_metadata
                 );
-
                 let raw_metadata_str = to_string(&raw_metadata).unwrap();
-                let _ = create_token(
-                    dynamo_client,
-                    CreateTokenData {
-                        address: token_data.collection_address.to_string(),
-                        padded_token_id: padded_token_id.to_string(),
-                        from_address: transaction_data.from_address.clone(),
-                        to_address: transaction_data.to_address.clone(),
-                        timestamp,
-                        token_uri: token_uri.to_string(),
-                        raw_metadata: Some(raw_metadata_str),
-                        normalized_metadata: Some(normalized_metadata),
-                        owner: token_data.owner.to_string(),
-                        mint_transaction_hash: transaction_data.hash.clone(),
-                        block_number_minted: transaction_data.block_number,
-                    },
-                )
-                .await;
+                (Some(normalized_metadata), Some(raw_metadata_str))
             }
             Err(e) => {
-                info!("Error fetching metadata: {}", e);
-
-                let _ = create_token(
-                    dynamo_client,
-                    CreateTokenData {
-                        address: token_data.collection_address.to_string(),
-                        padded_token_id: padded_token_id.to_string(),
-                        from_address: transaction_data.from_address.clone(),
-                        to_address: transaction_data.to_address.clone(),
-                        timestamp,
-                        token_uri: token_uri.to_string(),
-                        raw_metadata: None,
-                        normalized_metadata: None,
-                        owner: token_data.owner.to_string(),
-                        mint_transaction_hash: transaction_data.hash.clone(),
-                        block_number_minted: transaction_data.block_number,
-                    },
-                )
-                .await;
+                error!("Error fetching metadata: {}", e);
+                (None, None)
             }
         };
+
+        create_token(
+            dynamo_client,
+            CreateTokenData {
+                address: token_data.collection_address.to_string(),
+                padded_token_id: padded_token_id.to_string(),
+                from_address: transaction_data.from_address.clone(),
+                to_address: transaction_data.to_address.clone(),
+                timestamp,
+                token_uri: token_uri.to_string(),
+                raw_metadata: raw_metadata_str,
+                normalized_metadata: normalized_metadata.clone(),
+                owner: token_data.owner.to_string(),
+                mint_transaction_hash: transaction_data.hash.clone(),
+                block_number_minted: transaction_data.block_number,
+            },
+        )
+        .await?;
+
+        let (token_image, token_name) = match normalized_metadata {
+            Some(metadata) => (Some(metadata.image), Some(metadata.name)),
+            None => (None, None),
+        };
+
+        let token_event = TokenEvent {
+            address: token_data.collection_address.to_string(),
+            timestamp: transaction_data.timestamp,
+            block_number: transaction_data.block_number,
+            event_type: "mint".to_string(),
+            from_address: transaction_data.from_address.clone(),
+            padded_token_id: token_data.padded_token_id.clone(),
+            token_uri: token_data.token_uri.clone(),
+            to_address: transaction_data.to_address.clone(),
+            transaction_hash: transaction_data.hash.clone(),
+            token_type: token_data.token_type.clone(),
+            token_image,
+            token_name,
+        };
+
+        //  TODO: Inserting into ark_mainnet_collection_activities
+        create_token_event(dynamo_client, token_event).await?;
     }
+
+    Ok(())
 }

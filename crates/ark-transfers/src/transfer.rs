@@ -3,6 +3,7 @@ use super::utils::get_token_uri;
 use ark_db::owners::create::create_token_owner;
 use ark_db::owners::delete::{delete_token_owner, DeleteTokenOwnerData};
 use ark_db::owners::get::get_owner_block_number;
+use ark_db::token::get::get_token;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_starknet::utils::{FormattedTokenId, TokenId};
 use ark_starknet::{client::get_block_with_txs, client::get_token_owner};
@@ -101,7 +102,7 @@ pub async fn process_transfers(
             token_data,
             transaction_data,
         )
-        .await;
+        .await?;
 
         create_token_owner(
             dynamo_db_client,
@@ -113,6 +114,42 @@ pub async fn process_transfers(
         )
         .await?;
     } else {
+        let get_token_result = get_token(
+            dynamo_db_client,
+            contract_address.clone(),
+            formated_token_id.padded_token_id.clone(),
+        )
+        .await;
+
+        let (token_image, token_name) = match get_token_result {
+            Ok(query_result) => match query_result {
+                Some(token_result_hashmap) => {
+                    let normalized_metadata_av = token_result_hashmap.get("normalized_metadata");
+
+                    match normalized_metadata_av {
+                        Some(normalized_metadata_av) => {
+                            let normalized_metadata = normalized_metadata_av.as_m().unwrap();
+
+                            let image_uri = match normalized_metadata.get("image") {
+                                Some(value) => Some(value.as_s().unwrap().to_string()),
+                                None => None,
+                            };
+
+                            let name = match normalized_metadata.get("name") {
+                                Some(value) => Some(value.as_s().unwrap().to_string()),
+                                None => None,
+                            };
+
+                            (image_uri, name)
+                        }
+                        None => (None, None),
+                    }
+                }
+                None => (None, None),
+            },
+            Err(_err) => (None, None),
+        };
+
         let token_event = TokenEvent {
             address: contract_address.clone(),
             timestamp,
@@ -124,7 +161,10 @@ pub async fn process_transfers(
             to_address: to_address.to_string(),
             transaction_hash: transaction_hash.clone(),
             token_type: contract_type.to_string(),
+            token_image,
+            token_name,
         };
+
         create_token_event(dynamo_db_client, token_event).await?;
         update_token_owner(
             dynamo_db_client,

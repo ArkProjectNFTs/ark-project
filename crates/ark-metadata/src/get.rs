@@ -7,14 +7,14 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::time::Duration;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct MetadataAttribute {
     trait_type: String,
     value: String,
     display_type: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NormalizedMetadata {
     pub description: String,
     pub external_url: String,

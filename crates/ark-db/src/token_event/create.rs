@@ -4,6 +4,7 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use log::info;
 
+#[derive(Debug, Clone)]
 pub struct TokenEvent {
     pub address: String,
     pub timestamp: u64,
@@ -15,8 +16,9 @@ pub struct TokenEvent {
     pub to_address: String,
     pub transaction_hash: String,
     pub token_type: String,
+    pub token_name: Option<String>,
+    pub token_image: Option<String>,
 }
-
 pub async fn create_token_event(
     dynamo_client: &Client,
     token_event: TokenEvent,
@@ -26,7 +28,7 @@ pub async fn create_token_event(
     let token_events_table_name =
         env::var("ARK_TOKENS_EVENTS_TABLE_NAME").expect("ARK_TOKENS_EVENTS_TABLE_NAME must be set");
 
-    let result = dynamo_client
+    let mut result = dynamo_client
         .put_item()
         .table_name(token_events_table_name)
         .item("address", AttributeValue::S(token_event.address))
@@ -46,11 +48,19 @@ pub async fn create_token_event(
             "transaction_hash",
             AttributeValue::S(token_event.transaction_hash),
         )
-        .item("collection_type", AttributeValue::S(token_event.token_type))
-        .send()
-        .await;
+        .item("collection_type", AttributeValue::S(token_event.token_type));
 
-    println!("dynamodb result: {:?}", result);
+    if let Some(name) = &token_event.token_name {
+        result = result.item("token_name", AttributeValue::S(name.clone()));
+    }
+
+    if let Some(image) = &token_event.token_image {
+        result = result.item("token_image", AttributeValue::S(image.clone()));
+    }
+
+    let response = result.send().await;
+
+    println!("dynamodb result: {:?}", response);
 
     Ok(())
 }
