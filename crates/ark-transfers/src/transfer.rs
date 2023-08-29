@@ -1,9 +1,10 @@
 use super::mint::{process_mint_event, TokenData, TransactionData};
 use super::utils::get_token_uri;
-use ark_db::owners::create::{create_token_owner, CreateTokenOwnerData};
+use ark_db::owners::create::create_token_owner;
 use ark_db::owners::delete::{delete_token_owner, DeleteTokenOwnerData};
+use ark_db::owners::get::get_owner_block_number;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
-use ark_starknet::utils::TokenId;
+use ark_starknet::utils::{FormattedTokenId, TokenId};
 use ark_starknet::{client::get_block_with_txs, client::get_token_owner};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use log::info;
@@ -102,13 +103,15 @@ pub async fn process_transfers(
         )
         .await;
 
-        let owner_data = CreateTokenOwnerData {
-            address: contract_address.clone(),
-            padded_token_id: formated_token_id.padded_token_id.clone(),
-            owner: to_address.to_string(),
-        };
-
-        create_token_owner(dynamo_db_client, owner_data).await?;
+        create_token_owner(
+            dynamo_db_client,
+            contract_address.as_str(),
+            formated_token_id.token_id.as_str(),
+            formated_token_id.padded_token_id.as_str(),
+            to_address.as_str(),
+            block_number,
+        )
+        .await?;
     } else {
         let token_event = TokenEvent {
             address: contract_address.clone(),
@@ -122,20 +125,83 @@ pub async fn process_transfers(
             transaction_hash: transaction_hash.clone(),
             token_type: contract_type.to_string(),
         };
-        let _ = create_token_event(dynamo_db_client, token_event).await;
-        let old_owner_data = DeleteTokenOwnerData {
-            address: contract_address.clone(),
-            padded_token_id: formated_token_id.padded_token_id.clone(),
-            owner: from_address.to_string(),
-        };
-        delete_token_owner(dynamo_db_client, old_owner_data).await;
-        let owner_data = CreateTokenOwnerData {
-            address: contract_address.clone(),
-            padded_token_id: formated_token_id.padded_token_id.clone(),
-            owner: to_address.to_string(),
-        };
-        create_token_owner(dynamo_db_client, owner_data).await?;
+        create_token_event(dynamo_db_client, token_event).await?;
+        update_token_owner(
+            dynamo_db_client,
+            contract_address,
+            formated_token_id,
+            from_address,
+            to_address,
+            block_number,
+        )
+        .await?
     }
+
+    Ok(())
+}
+
+async fn update_token_owner(
+    dynamo_db_client: &DynamoClient,
+    contract_address: String,
+    formatted_token_id: FormattedTokenId,
+    from_address: String,
+    to_address: String,
+    block_number: u64,
+) -> Result<(), Box<dyn Error>> {
+    match get_owner_block_number(
+        dynamo_db_client,
+        contract_address.clone(),
+        formatted_token_id.token_id.clone(),
+        from_address.clone(),
+    )
+    .await
+    {
+        Some(owner_block_number) => {
+            if owner_block_number < block_number {
+                let old_owner_data = DeleteTokenOwnerData {
+                    address: contract_address.clone(),
+                    padded_token_id: formatted_token_id.padded_token_id.clone(),
+                    owner: from_address.to_string(),
+                };
+                delete_token_owner(dynamo_db_client, old_owner_data).await;
+            }
+        }
+        _ => {}
+    };
+
+    match get_owner_block_number(
+        dynamo_db_client,
+        contract_address.clone(),
+        formatted_token_id.token_id.clone(),
+        to_address.clone(),
+    )
+    .await
+    {
+        Some(owner_block_number) => {
+            if owner_block_number < block_number {
+                create_token_owner(
+                    dynamo_db_client,
+                    contract_address.as_str(),
+                    formatted_token_id.token_id.as_str(),
+                    formatted_token_id.padded_token_id.as_str(),
+                    to_address.as_str(),
+                    block_number,
+                )
+                .await?;
+            }
+        }
+        _ => {
+            create_token_owner(
+                dynamo_db_client,
+                contract_address.as_str(),
+                formatted_token_id.token_id.as_str(),
+                formatted_token_id.padded_token_id.as_str(),
+                to_address.as_str(),
+                block_number,
+            )
+            .await?;
+        }
+    };
 
     Ok(())
 }

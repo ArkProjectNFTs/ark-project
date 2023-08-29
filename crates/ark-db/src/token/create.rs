@@ -57,8 +57,6 @@ pub async fn create_token(
         .expect("Time went backwards")
         .as_secs();
 
-    info!("seconds: {:?}", seconds);
-
     let mut request = dynamo_client
         .put_item()
         .table_name(&token_table)

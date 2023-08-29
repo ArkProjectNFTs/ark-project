@@ -25,6 +25,7 @@ pub async fn delete_token_owner(
         .key("owner_address", owner_av.clone())
         .key("contract_address", address_av.clone())
         .key("token_id", token_id_av.clone());
+
     match request.send().await {
         Ok(_) => println!("Deleted item from table"),
         Err(e) => println!("Failed to delete item: {}", e),
