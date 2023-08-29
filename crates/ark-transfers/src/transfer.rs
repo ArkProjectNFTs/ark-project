@@ -148,7 +148,7 @@ async fn update_token_owner(
     to_address: String,
     block_number: u64,
 ) -> Result<(), Box<dyn Error>> {
-    match get_owner_block_number(
+    if let Some(owner_block_number) = get_owner_block_number(
         dynamo_db_client,
         contract_address.clone(),
         formatted_token_id.token_id.clone(),
@@ -156,17 +156,14 @@ async fn update_token_owner(
     )
     .await
     {
-        Some(owner_block_number) => {
-            if owner_block_number < block_number {
-                let old_owner_data = DeleteTokenOwnerData {
-                    address: contract_address.clone(),
-                    padded_token_id: formatted_token_id.padded_token_id.clone(),
-                    owner: from_address.to_string(),
-                };
-                delete_token_owner(dynamo_db_client, old_owner_data).await;
-            }
+        if owner_block_number < block_number {
+            let old_owner_data = DeleteTokenOwnerData {
+                address: contract_address.clone(),
+                padded_token_id: formatted_token_id.padded_token_id.clone(),
+                owner: from_address.to_string(),
+            };
+            delete_token_owner(dynamo_db_client, old_owner_data).await;
         }
-        _ => {}
     };
 
     match get_owner_block_number(
