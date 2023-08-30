@@ -145,15 +145,13 @@ pub async fn process_transfers(
                         Some(normalized_metadata_av) => {
                             let normalized_metadata = normalized_metadata_av.as_m().unwrap();
 
-                            let image_uri = match normalized_metadata.get("image") {
-                                Some(value) => Some(value.as_s().unwrap().to_string()),
-                                None => None,
-                            };
+                            let image_uri = normalized_metadata
+                                .get("image")
+                                .map(|value| value.as_s().unwrap().to_string());
 
-                            let name = match normalized_metadata.get("name") {
-                                Some(value) => Some(value.as_s().unwrap().to_string()),
-                                None => None,
-                            };
+                            let name = normalized_metadata
+                                .get("name")
+                                .map(|value| value.as_s().unwrap().to_string());
 
                             (image_uri, name)
                         }
