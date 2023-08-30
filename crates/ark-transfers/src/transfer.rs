@@ -1,5 +1,6 @@
 use super::mint::{process_mint_event, TokenData, TransactionData};
 use super::utils::get_token_uri;
+use anyhow::{anyhow, Result};
 use ark_db::owners::create::create_token_owner;
 use ark_db::owners::delete::{delete_token_owner, DeleteTokenOwnerData};
 use ark_db::owners::get::get_owner_block_number;
@@ -11,14 +12,13 @@ use aws_sdk_dynamodb::Client as DynamoClient;
 use log::info;
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{EmittedEvent, FieldElement};
-use std::error::Error;
 
 pub async fn process_transfers(
     client: &ReqwestClient,
     dynamo_db_client: &DynamoClient,
     value: &str,
     contract_type: &str,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     info!("Processing transfers: {:?}", value);
 
     //let data = str::from_utf8(&value.as_bytes())?;
@@ -29,6 +29,10 @@ pub async fn process_transfers(
         .await
         .unwrap();
     let timestamp = block.get("timestamp").unwrap().as_u64().unwrap();
+
+    if event.data.len() < 4 {
+        return Err(anyhow!("Invalid event data"));
+    }
 
     // Extracting "data" from event
     let from_address_field_element = event.data[0];
@@ -187,7 +191,7 @@ async fn update_token_owner(
     from_address: String,
     to_address: String,
     block_number: u64,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     if let Some(owner_block_number) = get_owner_block_number(
         dynamo_db_client,
         contract_address.clone(),

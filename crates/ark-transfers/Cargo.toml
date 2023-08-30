@@ -16,7 +16,8 @@ reqwest = { version = "0.11", features = ["json", "native-tls-vendored"] }
 starknet = "0.5.0"
 lambda_runtime = "0.8.0"
 tokio = { version = "1", features = ["full"] }
-aws-config= { version = "0.56.0", features = ["rustls"] }
+aws-config = { version = "0.56.0", features = ["rustls"] }
 serde = { version = "1.0", features = ["derive"] }
 aws_lambda_events = "0.10.0"
 base64 = "0.21.2"
+anyhow = "1.0.0"

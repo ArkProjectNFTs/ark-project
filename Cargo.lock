@@ -294,6 +294,7 @@ dependencies = [
 name = "ark-transfers"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ark-db",
  "ark-metadata",
  "ark-starknet",

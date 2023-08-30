@@ -6,7 +6,7 @@ use aws_config::meta::region::RegionProviderChain;
 use aws_lambda_events::event::kinesis::KinesisEvent;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
-use log::{info, LevelFilter};
+use log::{error, info, LevelFilter};
 use reqwest::Client as ReqwestClient;
 use simple_logger::SimpleLogger;
 
@@ -64,17 +64,18 @@ async fn handle_kinesis_event(
         let parts: Vec<&str> = partition_key.split(':').collect();
         let contract_type = parts.get(0).unwrap_or(&""); // or provide a default
 
-        let result = process_transfers(
+        match process_transfers(
             reqwest_client,
             dynamo_db_client,
             &decoded_str,
             contract_type,
         )
-        .await;
-
-        // Handle any errors from process_transfers
-        if let Err(err) = result {
-            log::error!("Failed to process transfer: {:?}", err);
+        .await
+        {
+            Ok(()) => {}
+            Err(err) => {
+                error!("Failed to process transfer: {:?}", err)
+            }
         }
     }
 

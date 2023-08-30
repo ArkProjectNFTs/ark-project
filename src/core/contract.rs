@@ -115,21 +115,36 @@ pub async fn identify_contract_types_from_transfers(
                 if contract_type != "unknown" {
                     // TODO: use a common function
                     if is_dev {
-                        process_transfers(
+                        match process_transfers(
                             client,
                             dynamo_client,
                             &event_json,
                             contract_type.as_str(),
                         )
-                        .await?;
-                        update_additional_collection_data(
+                        .await
+                        {
+                            Ok(_) => {}
+                            Err(e) => {
+                                error!("Failed to process transfer: {:?}", e);
+                                continue;
+                            }
+                        }
+
+                        match update_additional_collection_data(
                             rpc_client,
                             client,
                             dynamo_client,
                             &contract_address,
                             block_number,
                         )
-                        .await?;
+                        .await
+                        {
+                            Ok(_) => {}
+                            Err(e) => {
+                                error!("Failed to update additional collection data: {:?}", e);
+                                continue;
+                            }
+                        }
                     } else {
                         let mut map = std::collections::HashMap::new();
                         map.insert("contract_address", Value::String(contract_address));

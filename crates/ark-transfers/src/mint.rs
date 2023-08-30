@@ -1,4 +1,5 @@
 use super::utils::sanitize_uri;
+use anyhow::Result;
 use ark_db::collection::get::get_collection;
 use ark_db::collection::update::{increment_collection_token_count, update_collection_latest_mint};
 use ark_db::token::create::{create_token, CreateTokenData};
@@ -33,7 +34,7 @@ pub async fn process_mint_event(
     timestamp: u64,
     token_data: TokenData,
     transaction_data: TransactionData,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     let (metadata_uri, initial_metadata_uri) = sanitize_uri(token_uri).await;
 
     info!(
