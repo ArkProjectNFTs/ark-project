@@ -7,6 +7,7 @@ members = [
   "crates/ark-tables",
   "crates/ark-transfers",
   "crates/ark-stream",
+  "crates/arkchain-indexer",
 ]
 
 [package]

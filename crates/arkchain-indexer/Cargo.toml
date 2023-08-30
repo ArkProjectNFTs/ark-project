@@ -1,0 +1,27 @@
+[package]
+name = "arkchain-indexer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1.68"
+futures = "0.3.28"
+mongodb = "2.6.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+starknet = "0.5.0"
+tokio = { version = "1", features = ["full"] }
+url = "2.3.1"
+clap = { version = "4.3.19", features = ["derive", "env", "string"] }
+regex = "1.9.1"
+env_logger = "0.10.0"
+log = "0.4.17"
+dotenv = "0.15.0"
+aws-config = "0.56.0"
+aws-sdk-dynamodb = "0.29.0"
+
+ark-starknet = { path = "../ark-starknet" }
+ark-db = { path = "../ark-db" }

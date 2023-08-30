@@ -4,7 +4,7 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use log::info;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TokenEvent {
     pub address: String,
     pub timestamp: u64,
@@ -18,6 +18,8 @@ pub struct TokenEvent {
     pub token_type: String,
     pub token_name: Option<String>,
     pub token_image: Option<String>,
+    pub order_hash: Option<String>,
+    pub price: Option<String>,
 }
 pub async fn create_token_event(
     dynamo_client: &Client,
@@ -56,6 +58,14 @@ pub async fn create_token_event(
 
     if let Some(image) = &token_event.token_image {
         result = result.item("token_image", AttributeValue::S(image.clone()));
+    }
+
+    if let Some(order_hash) = &token_event.order_hash {
+        result = result.item("order_hash", AttributeValue::S(order_hash.clone()));
+    }
+
+    if let Some(price) = &token_event.price {
+        result = result.item("price", AttributeValue::S(price.clone()));
     }
 
     let response = result.send().await;
