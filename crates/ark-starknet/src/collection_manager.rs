@@ -75,9 +75,7 @@ impl CollectionManager {
                         info!("owner_of result: {:?}", result);
                         Ok(result)
                     }
-                    Err(_error) => {
-                        return Err(anyhow!("Failed to get token owner"));
-                    }
+                    Err(_error) => Err(anyhow!("Failed to get token owner")),
                 }
             }
         }
