@@ -75,7 +75,7 @@ pub async fn call_contract(
     client: &ReqwestClient,
     contract_address: &str,
     selector_name: &str,
-    calldata: Vec<&str>,
+    calldata: Vec<String>,
     block_number: u64,
 ) -> Result<Value> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
@@ -161,7 +161,7 @@ pub async fn get_contract_type(
         client,
         contract_address,
         "tokenURI",
-        vec!["0", "0"],
+        vec!["0".to_string(), "0".to_string()],
         block_number,
     )
     .await;
@@ -170,7 +170,7 @@ pub async fn get_contract_type(
         client,
         contract_address,
         "token_uri",
-        vec!["0", "0"],
+        vec!["0".to_string(), "0".to_string()],
         block_number,
     )
     .await;
@@ -202,9 +202,16 @@ pub async fn get_token_owner(
 ) -> String {
     let token_id_low_hex = format!("{:x}", token_id_low);
     let token_id_high_hex = format!("{:x}", token_id_high);
-    let calldata = vec![token_id_low_hex.as_str(), token_id_high_hex.as_str()];
 
-    match call_contract(client, contract_address, "ownerOf", calldata, block_number).await {
+    match call_contract(
+        client,
+        contract_address,
+        "ownerOf",
+        vec![token_id_low_hex.clone(), token_id_high_hex.clone()],
+        block_number,
+    )
+    .await
+    {
         Ok(result) => {
             if let Some(token_owner) = result.get(0) {
                 token_owner.to_string().replace('\"', "")
@@ -212,6 +219,27 @@ pub async fn get_token_owner(
                 "".to_string()
             }
         }
-        Err(_error) => "".to_string(),
+        Err(_error) => {
+            match call_contract(
+                client,
+                contract_address,
+                "owner_of",
+                vec![token_id_low_hex, token_id_high_hex],
+                block_number,
+            )
+            .await
+            {
+                Ok(result) => {
+                    info!("owner_of result: {:?}", result);
+
+                    if let Some(token_owner) = result.get(0) {
+                        token_owner.to_string().replace('\"', "")
+                    } else {
+                        "".to_string()
+                    }
+                }
+                Err(_error) => "".to_string(),
+            }
+        }
     }
 }

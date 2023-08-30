@@ -1,10 +1,11 @@
-use anyhow::Result;
 use log::info;
 use serde::{Deserialize, Serialize};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use starknet::core::{types::FieldElement, types::*};
+use starknet::macros::selector;
 
 use super::client2::StarknetClient;
+use anyhow::{anyhow, Result};
 
 ///
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,13 +28,57 @@ impl ToString for ContractType {
 }
 
 pub struct CollectionManager {
-    client: StarknetClient,
+    pub client: StarknetClient,
 }
 
 impl CollectionManager {
     /// Initializes a new CollectionManager.
-    pub async fn new(client: StarknetClient) -> CollectionManager {
+    pub fn new(client: StarknetClient) -> CollectionManager {
         CollectionManager { client }
+    }
+
+    pub async fn get_token_owner(
+        &self,
+        contract_address: FieldElement,
+        token_id_low: FieldElement,
+        token_id_high: FieldElement,
+        block_id: Option<BlockId>,
+    ) -> Result<Vec<FieldElement>> {
+        let effective_block_id = block_id.unwrap_or(BlockId::Tag(BlockTag::Latest));
+
+        match self
+            .client
+            .call_contract(
+                contract_address,
+                selector!("ownerOf"),
+                vec![token_id_low, token_id_high],
+                effective_block_id,
+            )
+            .await
+        {
+            Ok(result) => {
+                info!("ownerOf result: {:?}", result);
+                Ok(result)
+            }
+            Err(_error) => {
+                match self
+                    .client
+                    .call_contract(
+                        contract_address,
+                        selector!("owner_of"),
+                        vec![token_id_low, token_id_high],
+                        effective_block_id,
+                    )
+                    .await
+                {
+                    Ok(result) => {
+                        info!("owner_of result: {:?}", result);
+                        Ok(result)
+                    }
+                    Err(_error) => Err(anyhow!("Failed to get token owner")),
+                }
+            }
+        }
     }
 
     /// Retrieves the contract type for the given contract address.

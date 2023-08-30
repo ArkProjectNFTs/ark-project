@@ -1,7 +1,10 @@
 mod mint;
 mod transfer;
 mod utils;
+use std::env;
+
 use crate::transfer::process_transfers;
+use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
 use aws_config::meta::region::RegionProviderChain;
 use aws_lambda_events::event::kinesis::KinesisEvent;
 use aws_sdk_dynamodb::Client as DynamoClient;
@@ -24,13 +27,23 @@ async fn main() -> Result<(), Error> {
     let reqwest_client = ReqwestClient::new();
     let dynamo_db_client = DynamoClient::new(&config);
 
+    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
+    let sn_client = StarknetClient::new(&rpc_provider.clone())?;
+    let collection_manager = CollectionManager::new(sn_client);
+
     lambda_runtime::run(service_fn(|event: LambdaEvent<KinesisEvent>| {
-        handle_kinesis_event(event, &reqwest_client, &dynamo_db_client)
+        handle_kinesis_event(
+            &collection_manager,
+            event,
+            &reqwest_client,
+            &dynamo_db_client,
+        )
     }))
     .await
 }
 
 async fn handle_kinesis_event(
+    collection_manager: &CollectionManager,
     event: LambdaEvent<KinesisEvent>,
     reqwest_client: &ReqwestClient,
     dynamo_db_client: &DynamoClient,
@@ -65,6 +78,7 @@ async fn handle_kinesis_event(
         let contract_type = parts.get(0).unwrap_or(&""); // or provide a default
 
         match process_transfers(
+            collection_manager,
             reqwest_client,
             dynamo_db_client,
             &decoded_str,

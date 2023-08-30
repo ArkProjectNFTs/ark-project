@@ -7,7 +7,6 @@ use starknet::{
 use std::collections::HashMap;
 use url::Url;
 
-///
 pub struct StarknetClient {
     provider: AnyProvider,
 }

@@ -6,14 +6,16 @@ use ark_db::owners::delete::{delete_token_owner, DeleteTokenOwnerData};
 use ark_db::owners::get::get_owner_block_number;
 use ark_db::token::get::get_token;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
+use ark_starknet::client::get_block_with_txs;
+use ark_starknet::collection_manager::CollectionManager;
 use ark_starknet::utils::{FormattedTokenId, TokenId};
-use ark_starknet::{client::get_block_with_txs, client::get_token_owner};
 use aws_sdk_dynamodb::Client as DynamoClient;
-use log::info;
+use log::{debug, info, warn};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{EmittedEvent, FieldElement};
 
 pub async fn process_transfers(
+    collection_manager: &CollectionManager,
     client: &ReqwestClient,
     dynamo_db_client: &DynamoClient,
     value: &str,
@@ -60,19 +62,28 @@ pub async fn process_transfers(
         block_number,
     )
     .await;
-
-    let token_owner = get_token_owner(
-        client,
-        token_id_low,
-        token_id_high,
-        contract_address.as_str(),
-        block_number,
-    )
-    .await;
+    let token_owner = match collection_manager
+        .get_token_owner(event.from_address, token_id_low, token_id_high, None)
+        .await
+    {
+        Ok(result) if !result.is_empty() => {
+            let token_owner_fe = &result[0];
+            debug!("Token owner (field element): {:?}", token_owner_fe);
+            format!("{:#064x}", token_owner_fe)
+        }
+        Ok(_) => {
+            warn!("Empty token owner");
+            "".to_string()
+        }
+        Err(error) => {
+            warn!("Failed to get token owner: {:?}", error);
+            "".to_string()
+        }
+    };
 
     info!(
-        "\n\n\t=== TRANSFER DETECTED ===\n\n\tContract address: {}\n\tToken ID: {}\n\tToken URI: {}\n\tBlock number: {}\n\tFrom: {}\n\tTo: {}\n\tTx hash: {}\n\n",
-        contract_address, formated_token_id.token_id, token_uri, block_number, from_address, to_address, transaction_hash
+        "\n\n\t=== TRANSFER DETECTED ===\n\n\tContract address: {}\n\tToken ID: {}\n\tToken URI: {}\n\tBlock number: {}\n\tFrom: {}\n\tTo: {}\n\tTx hash: {}\n\t Token owner: {}\n\n",
+        contract_address, formated_token_id.token_id, token_uri, block_number, from_address, to_address, transaction_hash, token_owner
     );
 
     if from_address_field_element == FieldElement::ZERO {
@@ -134,15 +145,13 @@ pub async fn process_transfers(
                         Some(normalized_metadata_av) => {
                             let normalized_metadata = normalized_metadata_av.as_m().unwrap();
 
-                            let image_uri = match normalized_metadata.get("image") {
-                                Some(value) => Some(value.as_s().unwrap().to_string()),
-                                None => None,
-                            };
+                            let image_uri = normalized_metadata
+                                .get("image")
+                                .map(|value| value.as_s().unwrap().to_string());
 
-                            let name = match normalized_metadata.get("name") {
-                                Some(value) => Some(value.as_s().unwrap().to_string()),
-                                None => None,
-                            };
+                            let name = normalized_metadata
+                                .get("name")
+                                .map(|value| value.as_s().unwrap().to_string());
 
                             (image_uri, name)
                         }

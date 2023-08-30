@@ -1,3 +1,5 @@
+use std::env;
+
 use ark_starknet::utils::get_contract_property_string;
 use log::info;
 use reqwest::Client as ReqwestClient;
@@ -13,8 +15,10 @@ pub async fn sanitize_uri(token_uri: &str) -> (String, String) {
 
 pub fn convert_ipfs_uri_to_http_uri(request_uri: String) -> String {
     if request_uri.contains("ipfs://") {
+        let ipfs_gateway_uri = env::var("IPFS_GATEWAY_URI").expect("IPFS_GATEWAY_URI must be set");
         format!(
-            "http://ec2-54-89-64-17.compute-1.amazonaws.com:8080/ipfs/{}",
+            "{}/ipfs/{}",
+            ipfs_gateway_uri,
             request_uri.split("ipfs://").last().unwrap()
         )
     } else {
@@ -38,7 +42,7 @@ pub async fn get_token_uri(
         client,
         contract_address,
         "tokenURI",
-        vec![&token_id_low_hex, &token_id_high_hex],
+        vec![token_id_low_hex.clone(), token_id_high_hex.clone()],
         block_number,
     )
     .await;
@@ -51,7 +55,7 @@ pub async fn get_token_uri(
         client,
         contract_address,
         "token_uri",
-        vec![&token_id_low_hex, &token_id_high_hex],
+        vec![token_id_low_hex.clone(), token_id_high_hex.clone()],
         block_number,
     )
     .await;
