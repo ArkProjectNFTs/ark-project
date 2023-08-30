@@ -64,7 +64,7 @@ pub async fn get_collection_image(
         client,
         contract_address,
         "tokenURI",
-        vec!["0", "0"],
+        vec!["0".to_string(), "0".to_string()],
         block_number,
     )
     .await;

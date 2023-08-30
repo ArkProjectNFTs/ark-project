@@ -3,7 +3,7 @@ use ark_collection_update_lambda::update_additional_collection_data;
 use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::collection_manager::CollectionManager;
 use ark_stream::send::send_to_kinesis;
 use ark_transfers::transfer::process_transfers;
 use aws_sdk_dynamodb::Client as DynamoClient;
@@ -20,7 +20,7 @@ use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
 pub async fn identify_contract_types_from_transfers(
-    _sn_client: &StarknetClient,
+    collection_manager: &CollectionManager,
     rpc_client: &JsonRpcClient<HttpTransport>,
     client: &ReqwestClient,
     events: &[EmittedEvent],
@@ -71,6 +71,7 @@ pub async fn identify_contract_types_from_transfers(
                 // TODO: use a common function
                 if is_dev {
                     let _ = process_transfers(
+                        collection_manager,
                         client,
                         dynamo_client,
                         &event_json,
@@ -116,6 +117,7 @@ pub async fn identify_contract_types_from_transfers(
                     // TODO: use a common function
                     if is_dev {
                         match process_transfers(
+                            collection_manager,
                             client,
                             dynamo_client,
                             &event_json,

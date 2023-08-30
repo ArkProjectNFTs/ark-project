@@ -5,7 +5,7 @@ use std::env;
 
 use crate::core::block::process_blocks_continuously;
 use anyhow::Result;
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
@@ -21,6 +21,8 @@ async fn main() -> Result<()> {
 
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let sn_client = StarknetClient::new(&rpc_provider.clone())?;
+    let collection_manager = CollectionManager::new(sn_client);
+
     let rpc_client = JsonRpcClient::new(HttpTransport::new(
         Url::parse(rpc_provider.as_str()).unwrap(),
     ));
@@ -32,7 +34,7 @@ async fn main() -> Result<()> {
     let reqwest_client = ReqwestClient::new();
 
     process_blocks_continuously(
-        &sn_client,
+        &collection_manager,
         &rpc_client,
         &reqwest_client,
         &dynamo_client,

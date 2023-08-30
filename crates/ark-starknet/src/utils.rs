@@ -102,7 +102,7 @@ pub async fn get_contract_property_string(
     client: &ReqwestClient,
     contract_address: &str,
     selector_name: &str,
-    calldata: Vec<&str>,
+    calldata: Vec<String>,
     block_number: u64,
 ) -> String {
     info!("Getting contract property: {:?}", selector_name);

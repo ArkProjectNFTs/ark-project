@@ -3,7 +3,7 @@ use anyhow::Result;
 use ark_db::block::create::create_block;
 use ark_db::block::get::get_block;
 use ark_db::block::update::update_block;
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::collection_manager::CollectionManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::{error, info};
@@ -18,7 +18,7 @@ use tokio::time::sleep;
 
 // This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
 pub async fn process_blocks_continuously(
-    sn_client: &StarknetClient,
+    collection_manager: &CollectionManager,
     rpc_client: &JsonRpcClient<HttpTransport>,
     reqwest_client: &ReqwestClient,
     dynamo_client: &DynamoClient,
@@ -36,7 +36,7 @@ pub async fn process_blocks_continuously(
     // Loop Through Blocks and wait for new blocks
     loop {
         let execution_time = Instant::now();
-        let latest_block_number = sn_client.block_number().await?;
+        let latest_block_number = collection_manager.client.block_number().await?;
 
         info!(
             "Latest block: {}, Current block: {}, Indexing progress: {:.2}%",
@@ -59,7 +59,8 @@ pub async fn process_blocks_continuously(
             // We only want Transfer events.
             // The selector is always the first key, but the fetch blocks can
             // already filter for us.
-            let block_transfer_events = &sn_client
+            let block_transfer_events = &collection_manager
+                .client
                 .fetch_events(
                     BlockId::Number(current_block_number),
                     BlockId::Number(current_block_number),
@@ -90,7 +91,7 @@ pub async fn process_blocks_continuously(
             );
 
             match identify_contract_types_from_transfers(
-                sn_client,
+                collection_manager,
                 rpc_client,
                 reqwest_client,
                 &events_only,
