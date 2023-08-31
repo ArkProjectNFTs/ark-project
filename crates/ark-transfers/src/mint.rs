@@ -154,6 +154,7 @@ pub async fn process_mint_event(
             token_type: token_data.token_type.clone(),
             token_image,
             token_name,
+            ..Default::default()
         };
 
         //  TODO: Inserting into ark_mainnet_collection_activities
