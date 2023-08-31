@@ -1,16 +1,16 @@
 use anyhow::Result;
-use clap::Parser;
-use tokio::time::{self, Duration};
+use ark_db::token::update::update_token_listing;
+use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_starknet::client2::StarknetClient;
+use ark_starknet::utils::TokenId;
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_dynamodb::Client as DynamoClient;
+use clap::Parser;
+use dotenv::dotenv;
+use log::debug;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
-use log::debug;
-use dotenv::dotenv;
-use ark_db::token_event::create::{create_token_event, TokenEvent};
-use ark_db::token::update::update_token_listing;
-use aws_sdk_dynamodb::Client as DynamoClient;
-use aws_config::meta::region::RegionProviderChain;
-use ark_starknet::utils::TokenId;
+use tokio::time::{self, Duration};
 
 #[derive(Parser, Debug)]
 #[clap(about = "Arkchain indexer")]
@@ -74,11 +74,8 @@ async fn main() -> Result<()> {
             continue;
         }
 
-        let blocks_events = sn_client.fetch_events(
-            from_block,
-            to_block,
-            Some(vec![event_keys.to_vec()]),
-        )
+        let blocks_events = sn_client
+            .fetch_events(from_block, to_block, Some(vec![event_keys.to_vec()]))
             .await?;
 
         for (block_number, events) in blocks_events {
@@ -122,9 +119,9 @@ async fn main() -> Result<()> {
                             te.padded_token_id,
                             String::from("listed"),
                             te.price.unwrap_or(String::from("0")),
-                        ).await?;
+                        )
+                        .await?;
                     }
-                        
                 } else if e_selector == ev_order_buy_executing {
                     debug!("Order executing");
                     // Same data as finalized, but we don't send
@@ -143,9 +140,9 @@ async fn main() -> Result<()> {
                             te.padded_token_id,
                             String::from("pending"),
                             te.price.unwrap_or(String::from("0")),
-                        ).await?;
+                        )
+                        .await?;
                     }
-
                 } else if e_selector == ev_order_buy_finalized {
                     debug!("Order finalized");
 
@@ -164,7 +161,8 @@ async fn main() -> Result<()> {
                             te.padded_token_id,
                             String::from(""),
                             te.price.unwrap_or(String::from("")),
-                        ).await?;
+                        )
+                        .await?;
                     }
                 } else {
                     debug!("Event ignored");
@@ -179,11 +177,10 @@ async fn main() -> Result<()> {
                 if last_fetched_block >= n {
                     break;
                 }
-            },
+            }
             _ => continue,
         }
     }
-
 
     Ok(())
 }
