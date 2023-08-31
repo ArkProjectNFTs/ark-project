@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY . .
 
-RUN cargo build
+RUN cd ./crates/arkchain-indexer && cargo build --release
 
 CMD ["cd crates/arkchain-indexer/", "cargo", "run"]

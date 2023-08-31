@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  push-arkchain-indexer-image:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,5 +33,5 @@ jobs:
           REPOSITORY: arkproject-katana-indexer
           IMAGE_TAG: latest
         run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG . -f ./crates/arkchain-indexer/Dockerfile
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f .github/actions/deploy-arkchain-indexer/Dockerfile .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
