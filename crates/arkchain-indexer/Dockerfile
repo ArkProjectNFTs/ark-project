@@ -2,7 +2,7 @@ FROM rust:latest
 
 WORKDIR /app
 
-COPY . .
+COPY crates/arkchain-indexer/ .
 
 RUN cargo build
 
