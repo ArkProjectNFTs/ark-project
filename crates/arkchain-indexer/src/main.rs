@@ -5,49 +5,54 @@ use ark_starknet::client2::StarknetClient;
 use ark_starknet::utils::TokenId;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
-use clap::Parser;
 use dotenv::dotenv;
 use log::debug;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use tokio::time::{self, Duration};
 
-#[derive(Parser, Debug)]
-#[clap(about = "Arkchain indexer")]
-struct Args {
-    #[clap(long, help = "From block to start indexing")]
-    from_block: String,
+// #[derive(Parser, Debug)]
+// #[clap(about = "Arkchain indexer")]
+// struct Args {
+//     #[clap(long, help = "From block to start indexing")]
+//     from_block: String,
 
-    #[clap(long, help = "Block where indexing will stop")]
-    to_block: Option<String>,
+//     #[clap(long, help = "Block where indexing will stop")]
+//     to_block: Option<String>,
 
-    #[clap(long, help = "RPC url of the chain")]
-    rpc: String,
+//     #[clap(long, help = "RPC url of the chain")]
+//     rpc: String,
 
-    #[clap(long, help = "Address of the contract to index")]
-    contract: String,
+//     #[clap(long, help = "Address of the contract to index")]
+//     contract: String,
 
-    #[clap(long, help = "Fetch interval")]
-    fetch_interval: Option<u64>,
-}
+//     #[clap(long, help = "Fetch interval")]
+//     fetch_interval: Option<u64>,
+// }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    dotenv().ok();
     env_logger::init();
 
     let db_client = init_aws_dynamo_client().await;
 
-    let args = Args::parse();
-    let sn_client = StarknetClient::new(&args.rpc)?;
+    // let args = Args::parse();
 
-    let fetch_interval = match args.fetch_interval {
-        Some(f) => f,
-        None => 5,
-    };
+    let rpc = std::env::var("RPC_PROVIDER").expect("RPC_PROVIDER url not provided");
+    let sn_client = StarknetClient::new(&rpc)?;
 
-    let from_block = sn_client.parse_block_id(&args.from_block)?;
-    let to_block = if let Some(to) = &args.to_block {
-        sn_client.parse_block_id(to)?
+    let fetch_interval: u64 = std::env::var("FETCH_INTERVAL")
+        .unwrap_or_else(|_| "5".to_string())
+        .parse()
+        .expect("Invalid fetch interval");
+
+    let from_block_str = std::env::var("FROM_BLOCK").expect("From block not provided");
+    let from_block = sn_client.parse_block_id(&from_block_str)?;
+
+    let to_block_str = std::env::var("TO_BLOCK").unwrap_or_else(|_| "Latest".to_string());
+    let to_block = if to_block_str != "Latest" {
+        sn_client.parse_block_id(&to_block_str)?
     } else {
         BlockId::Tag(BlockTag::Latest)
     };
