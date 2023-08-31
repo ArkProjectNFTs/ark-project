@@ -2,8 +2,8 @@ FROM rust:latest
 
 WORKDIR /app
 
-COPY crates/arkchain-indexer/ .
+COPY . .
 
 RUN cargo build
 
-CMD ["cargo", "run"]
+CMD ["cd crates/arkchain-indexer/", "cargo", "run"]
