@@ -278,7 +278,7 @@ fn get_order_finalized_data(
         address: felt_to_hex_str(&collection),
         timestamp: timestamp.try_into().unwrap(),
         block_number,
-        event_type: String::from("listing"),
+        event_type: String::from("sale"),
         from_address: felt_to_hex_str(&seller),
         padded_token_id: token_id.padded_token_id.clone(),
         token_uri: String::from(""),
