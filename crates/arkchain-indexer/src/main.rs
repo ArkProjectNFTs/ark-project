@@ -2,14 +2,15 @@ use anyhow::Result;
 use clap::Parser;
 use tokio::time::{self, Duration};
 use ark_starknet::client2::StarknetClient;
-use starknet::core::types::{BlockId, BlockTag, EmittedEvent, FieldElement};
+use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
-use log::{debug, info};
+use log::debug;
 use dotenv::dotenv;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
+use ark_db::token::update::update_token_listing;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_config::meta::region::RegionProviderChain;
-use ark_starknet::utils::{FormattedTokenId, TokenId};
+use ark_starknet::utils::TokenId;
 
 #[derive(Parser, Debug)]
 #[clap(about = "Arkchain indexer")]
@@ -96,8 +97,7 @@ async fn main() -> Result<()> {
                 // Safe [0] as any events has at least 1 key: the selector.
                 let e_selector = ev.keys[0];
 
-                // Timestamp is always the first element of data.
-                let timestamp = ev.data[0];
+                let tx_hash_str = felt_to_hex_str(&ev.transaction_hash);
 
                 if e_selector == ev_broker_registered {
                     debug!("BrokerRegistered");
@@ -105,28 +105,66 @@ async fn main() -> Result<()> {
                     debug!("Order listing");
                     let token_event = get_order_listing_data(
                         block_number,
+                        tx_hash_str.clone(),
                         &ev.keys,
                         &ev.data,
                     );
-                    if token_event.is_some() {
-                        create_token_event(
+
+                    if let Some(te) = token_event {
+                        // TODO: we need to check if the token
+                        // is not already pending/finalized?
+
+                        create_token_event(&db_client, te.clone()).await?;
+
+                        update_token_listing(
                             &db_client,
-                            token_event.unwrap()).await?;
+                            te.address,
+                            te.padded_token_id,
+                            String::from("listed"),
+                            te.price.unwrap_or(String::from("0")),
+                        ).await?;
                     }
+                        
                 } else if e_selector == ev_order_buy_executing {
                     debug!("Order executing");
+                    // Same data as finalized, but we don't send
+                    // the token event. We only gather the data.
+                    let token_event = get_order_finalized_data(
+                        block_number,
+                        tx_hash_str.clone(),
+                        &ev.keys,
+                        &ev.data,
+                    );
+
+                    if let Some(te) = token_event {
+                        update_token_listing(
+                            &db_client,
+                            te.address,
+                            te.padded_token_id,
+                            String::from("pending"),
+                            te.price.unwrap_or(String::from("0")),
+                        ).await?;
+                    }
+
                 } else if e_selector == ev_order_buy_finalized {
                     debug!("Order finalized");
 
                     let token_event = get_order_finalized_data(
                         block_number,
+                        tx_hash_str.clone(),
                         &ev.keys,
                         &ev.data,
                     );
-                    if token_event.is_some() {
-                        create_token_event(
+                    if let Some(te) = token_event {
+                        create_token_event(&db_client, te.clone()).await?;
+
+                        update_token_listing(
                             &db_client,
-                            token_event.unwrap()).await?;
+                            te.address,
+                            te.padded_token_id,
+                            String::from(""),
+                            te.price.unwrap_or(String::from("")),
+                        ).await?;
                     }
                 } else {
                     debug!("Event ignored");
@@ -163,6 +201,7 @@ fn felt_to_hex_str(f: &FieldElement) -> String {
 
 fn get_order_listing_data(
     block_number: u64,
+    transaction_hash: String,
     keys: &[FieldElement],
     data: &[FieldElement],
 ) -> Option<TokenEvent> {
@@ -198,7 +237,7 @@ fn get_order_listing_data(
         padded_token_id: token_id.padded_token_id.clone(),
         token_uri: String::from(""),
         to_address: String::from(""),
-        transaction_hash: String::from(""),
+        transaction_hash,
         // TODO: need this info from somewhere.
         token_type: String::from("erc721"),
         order_hash,
@@ -209,6 +248,7 @@ fn get_order_listing_data(
 
 fn get_order_finalized_data(
     block_number: u64,
+    transaction_hash: String,
     keys: &[FieldElement],
     data: &[FieldElement],
 ) -> Option<TokenEvent> {
@@ -246,7 +286,7 @@ fn get_order_finalized_data(
         padded_token_id: token_id.padded_token_id.clone(),
         token_uri: String::from(""),
         to_address: felt_to_hex_str(&buyer),
-        transaction_hash: String::from(""),
+        transaction_hash,
         // TODO: need this info from somewhere.
         token_type: String::from("erc721"),
         order_hash,

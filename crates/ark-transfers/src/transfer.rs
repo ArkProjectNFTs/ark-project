@@ -163,6 +163,7 @@ pub async fn process_transfers(
             token_type: contract_type.to_string(),
             token_image,
             token_name,
+            ..Default::default()
         };
 
         create_token_event(dynamo_db_client, token_event).await?;
