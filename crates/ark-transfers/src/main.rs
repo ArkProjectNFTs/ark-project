@@ -27,12 +27,12 @@ async fn main() -> Result<(), Error> {
     let reqwest_client = ReqwestClient::new();
     let dynamo_db_client = DynamoClient::new(&config);
 
-    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let sn_client = StarknetClient::new(&rpc_provider.clone())?;
-    let collection_manager = CollectionManager::new(sn_client);
+    let rpc_endpoint_url = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
+    let starknet_client = StarknetClient::new(&rpc_endpoint_url.clone())?;
+    let collection_manager = CollectionManager::new(starknet_client);
 
     lambda_runtime::run(service_fn(|event: LambdaEvent<KinesisEvent>| {
-        handle_kinesis_event(
+        process_kinesis_records(
             &collection_manager,
             event,
             &reqwest_client,
@@ -42,31 +42,31 @@ async fn main() -> Result<(), Error> {
     .await
 }
 
-async fn handle_kinesis_event(
+async fn process_kinesis_records(
     collection_manager: &CollectionManager,
     event: LambdaEvent<KinesisEvent>,
     reqwest_client: &ReqwestClient,
     dynamo_db_client: &DynamoClient,
 ) -> Result<(), Error> {
     log::info!("Event invocation: {:?}", event);
-    let kinesis_event = event.payload;
+    let kinesis_payload = event.payload;
 
-    info!("Kinesis Event Records: {:?}", kinesis_event.records.len());
+    info!("Kinesis Event Records: {:?}", kinesis_payload.records.len());
 
-    for record in kinesis_event.records {
+    for record in kinesis_payload.records {
         info!("Event ID: {:?}", record.event_id);
 
-        let decoded_str = match String::from_utf8(record.kinesis.data.0) {
+        let decoded_data = match String::from_utf8(record.kinesis.data.0) {
             Ok(s) => s,
             Err(_) => {
                 info!("Invalid UTF-8 data");
                 continue; // Skip this iteration if the data isn't valid UTF-8
             }
         };
-        info!("Decoded data: {}", decoded_str);
+        info!("Decoded data: {}", decoded_data);
 
         // Call your process_transfers function
-        let partition_key = match &record.kinesis.partition_key {
+        let record_partition_key = match &record.kinesis.partition_key {
             Some(key) => key,
             None => {
                 info!("No partition key found in the record");
@@ -74,14 +74,14 @@ async fn handle_kinesis_event(
             }
         };
 
-        let parts: Vec<&str> = partition_key.split(':').collect();
-        let contract_type = parts.get(0).unwrap_or(&""); // or provide a default
+        let partition_key_parts: Vec<&str> = record_partition_key.split(':').collect();
+        let contract_type = partition_key_parts.get(0).unwrap_or(&""); // or provide a default
 
         match process_transfers(
             collection_manager,
             reqwest_client,
             dynamo_db_client,
-            &decoded_str,
+            &decoded_data,
             contract_type,
         )
         .await
