@@ -1,13 +1,10 @@
-use log::info;
-use serde::{Deserialize, Serialize};
-use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
-use starknet::core::{types::FieldElement, types::*};
-use starknet::macros::selector;
-
 use super::client2::StarknetClient;
 use anyhow::{anyhow, Result};
+use log::info;
+use serde::{Deserialize, Serialize};
+use starknet::core::types::{BlockId, BlockTag, FieldElement};
+use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 
-///
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ContractType {
@@ -16,13 +13,12 @@ pub enum ContractType {
     ERC1155,
 }
 
-///
 impl ToString for ContractType {
     fn to_string(&self) -> String {
         match self {
-            ContractType::Unknown => String::from("unknown"),
-            ContractType::ERC721 => String::from("erc721"),
-            ContractType::ERC1155 => String::from("erc1155"),
+            ContractType::Unknown => "unknown".to_string(),
+            ContractType::ERC721 => "erc721".to_string(),
+            ContractType::ERC1155 => "erc1155".to_string(),
         }
     }
 }
@@ -32,9 +28,8 @@ pub struct CollectionManager {
 }
 
 impl CollectionManager {
-    /// Initializes a new CollectionManager.
-    pub fn new(client: StarknetClient) -> CollectionManager {
-        CollectionManager { client }
+    pub fn new(client: StarknetClient) -> Self {
+        Self { client }
     }
 
     pub async fn get_token_owner(
@@ -47,41 +42,47 @@ impl CollectionManager {
         let effective_block_id = block_id.unwrap_or(BlockId::Tag(BlockTag::Latest));
 
         match self
-            .client
-            .call_contract(
+            .call_contract_helper(
                 contract_address,
-                selector!("ownerOf"),
-                vec![token_id_low, token_id_high],
+                "ownerOf",
+                token_id_low,
+                token_id_high,
                 effective_block_id,
             )
             .await
         {
-            Ok(result) => {
-                info!("ownerOf result: {:?}", result);
-                Ok(result)
-            }
-            Err(_error) => {
-                match self
-                    .client
-                    .call_contract(
-                        contract_address,
-                        selector!("owner_of"),
-                        vec![token_id_low, token_id_high],
-                        effective_block_id,
-                    )
-                    .await
-                {
-                    Ok(result) => {
-                        info!("owner_of result: {:?}", result);
-                        Ok(result)
-                    }
-                    Err(_error) => Err(anyhow!("Failed to get token owner")),
-                }
-            }
+            Ok(res) => Ok(res),
+            Err(_) => self
+                .call_contract_helper(
+                    contract_address,
+                    "owner_of",
+                    token_id_low,
+                    token_id_high,
+                    effective_block_id,
+                )
+                .await
+                .or_else(|_| Err(anyhow!("Failed to get token owner"))),
         }
     }
 
-    /// Retrieves the contract type for the given contract address.
+    async fn call_contract_helper(
+        &self,
+        contract_address: FieldElement,
+        selector_name: &str,
+        token_id_low: FieldElement,
+        token_id_high: FieldElement,
+        block_id: BlockId,
+    ) -> Result<Vec<FieldElement>> {
+        self.client
+            .call_contract(
+                contract_address,
+                get_selector_from_name(selector_name)?,
+                vec![token_id_low, token_id_high],
+                block_id,
+            )
+            .await
+    }
+
     pub async fn get_contract_type(
         &self,
         contract_address: FieldElement,
@@ -95,7 +96,6 @@ impl CollectionManager {
                 block,
             )
             .await?;
-
         let token_uri = self
             .get_contract_property_string(
                 contract_address,
@@ -104,9 +104,7 @@ impl CollectionManager {
                 block,
             )
             .await?;
-
-        // Get uri
-        let uri_result: String = self
+        let uri_result = self
             .get_contract_property_string(contract_address, "uri", vec![], block)
             .await?;
 
@@ -130,7 +128,7 @@ impl CollectionManager {
     ) -> Result<String> {
         info!("Getting contract property: {:?}", selector_name);
 
-        let r = self
+        let response = self
             .client
             .call_contract(
                 contract_address,
@@ -140,11 +138,11 @@ impl CollectionManager {
             )
             .await?;
 
-        decode_string_array(&r)
+        decode_string_array(&response)
     }
 }
 
-pub fn decode_string_array(string_array: &Vec<FieldElement>) -> Result<String> {
+pub fn decode_string_array(string_array: &[FieldElement]) -> Result<String> {
     match string_array.len() {
         0 => Ok("".to_string()),
         1 => Ok(parse_cairo_short_string(&string_array[0])?),
@@ -153,16 +151,9 @@ pub fn decode_string_array(string_array: &Vec<FieldElement>) -> Result<String> {
             parse_cairo_short_string(&string_array[0])?,
             parse_cairo_short_string(&string_array[1])?,
         )),
-        _ => {
-            // The first element is the length of the string,
-            // we can skip it as it's implicitely given by the vector itself.
-            let mut result = String::new();
-
-            for s in &string_array[1..] {
-                result.push_str(&parse_cairo_short_string(s)?);
-            }
-
-            Ok(result)
-        }
+        _ => string_array[1..]
+            .iter()
+            .map(parse_cairo_short_string)
+            .collect::<Result<String>>(),
     }
 }
