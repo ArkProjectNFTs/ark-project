@@ -16,7 +16,47 @@ use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-// This function continually fetches and processes blockchain blocks as they are mined, maintaining pace with the most recent block, extracting transfer events from each, and then pausing if it catches up, ensuring a continuous and up-to-date data stream.
+// Helper function to determine the destination block number
+async fn get_destination_block_number(
+    collection_manager: &CollectionManager,
+) -> Result<u64, env::VarError> {
+    match env::var("END_BLOCK") {
+        Ok(val) => Ok(val.parse::<u64>().unwrap()),
+        Err(_) => collection_manager
+            .client
+            .block_number()
+            .await
+            .map_err(|_| env::VarError::NotPresent),
+    }
+}
+
+// Helper function to fetch and filter only transfer events from a block
+async fn get_transfer_events(
+    collection_manager: &CollectionManager,
+    block_number: u64,
+) -> Result<Option<Vec<EmittedEvent>>> {
+    let events = &collection_manager
+        .client
+        .fetch_events(
+            BlockId::Number(block_number),
+            BlockId::Number(block_number),
+            None,
+        )
+        .await?;
+
+    if let Some(block_events) = events.get(&block_number) {
+        Ok(Some(
+            block_events
+                .clone()
+                .into_iter()
+                .filter(|e| e.keys[0] == get_selector_from_name("Transfer").unwrap()) // Assuming Transfer is a valid selector.
+                .collect(),
+        ))
+    } else {
+        Ok(None)
+    }
+}
+
 pub async fn process_blocks_continuously(
     collection_manager: &CollectionManager,
     rpc_client: &JsonRpcClient<HttpTransport>,
@@ -30,24 +70,24 @@ pub async fn process_blocks_continuously(
         .unwrap();
 
     info!("Starting block: {}", starting_block);
-
-    // Set starting block
     let mut current_block_number: u64 = starting_block;
-    // Loop Through Blocks and wait for new blocks
+
     loop {
         let execution_time = Instant::now();
-        let latest_block_number = collection_manager.client.block_number().await?;
+        let dest_block_number = get_destination_block_number(collection_manager).await?;
 
         info!(
-            "Latest block: {}, Current block: {}, Indexing progress: {:.2}%",
-            latest_block_number,
+            "Dest block: {}, Current block: {}, Indexing progress: {:.2}%",
+            dest_block_number,
             current_block_number,
-            (current_block_number as f64 / latest_block_number as f64) * 100.0
+            (current_block_number as f64 / dest_block_number as f64) * 100.0
         );
 
-        if current_block_number <= latest_block_number {
+        // If the current block number is less than or equal to the destination block number
+        if current_block_number <= dest_block_number {
             let is_block_fetched = get_block(dynamo_client, current_block_number).await?;
 
+            // Skip already fetched blocks
             if is_block_fetched {
                 info!("Current block {} is already fetched", current_block_number);
                 current_block_number += 1;
@@ -56,68 +96,52 @@ pub async fn process_blocks_continuously(
 
             create_block(dynamo_client, current_block_number, false).await?;
 
-            // We only want Transfer events.
-            // The selector is always the first key, but the fetch blocks can
-            // already filter for us.
-            let block_transfer_events = &collection_manager
-                .client
-                .fetch_events(
-                    BlockId::Number(current_block_number),
-                    BlockId::Number(current_block_number),
-                    None,
-                )
-                .await?;
-
-            let events_only: Vec<EmittedEvent> =
-                if block_transfer_events.contains_key(&current_block_number) {
-                    block_transfer_events[&current_block_number]
-                        .clone()
-                        .into_iter()
-                        // Unwrap is safe as Transfer is a valid selector.
-                        .filter(|e| e.keys[0] == get_selector_from_name("Transfer").unwrap())
-                        .collect()
-                } else {
-                    // No event to process.
-                    info!("No event to process for block {:?}", current_block_number);
-                    update_block(dynamo_client, current_block_number, true).await?;
-                    current_block_number += 1;
-                    continue;
-                };
-
-            info!(
-                "{:?} events to process for block {:?}",
-                events_only.len(),
-                current_block_number
-            );
-
-            match identify_contract_types_from_transfers(
-                collection_manager,
-                rpc_client,
-                reqwest_client,
-                &events_only,
-                dynamo_client,
-                kinesis_client,
-            )
-            .await
+            if let Some(events_only) =
+                get_transfer_events(collection_manager, current_block_number).await?
             {
-                Ok(_) => {
-                    update_block(dynamo_client, current_block_number, true).await?;
+                info!(
+                    "{:?} events to process for block {:?}",
+                    events_only.len(),
+                    current_block_number
+                );
 
-                    let execution_time_elapsed_time = execution_time.elapsed();
-                    let execution_time_elapsed_time_ms = execution_time_elapsed_time.as_millis();
-                    info!(
-                        "Indexing time: {}ms (block {})",
-                        execution_time_elapsed_time_ms, current_block_number
-                    );
-                    current_block_number += 1;
+                match identify_contract_types_from_transfers(
+                    collection_manager,
+                    rpc_client,
+                    reqwest_client,
+                    &events_only,
+                    dynamo_client,
+                    kinesis_client,
+                )
+                .await
+                {
+                    Ok(_) => {
+                        update_block(dynamo_client, current_block_number, true).await?;
+                        info!(
+                            "Indexing time: {}ms (block {})",
+                            execution_time.elapsed().as_millis(),
+                            current_block_number
+                        );
+                        current_block_number += 1;
+                    }
+                    Err(_err) => {
+                        error!("Error processing block: {:?}", current_block_number);
+                        sleep(Duration::from_secs(10)).await;
+                    }
                 }
-                Err(_err) => {
-                    error!("Error processing block: {:?}", current_block_number);
-                    sleep(Duration::from_secs(10)).await;
-                }
+            } else {
+                info!("No event to process for block {:?}", current_block_number);
+                update_block(dynamo_client, current_block_number, true).await?;
+                current_block_number += 1;
             }
         } else {
-            sleep(Duration::from_secs(10)).await;
+            // If END_BLOCK is set, exit the loop, otherwise wait for more blocks
+            match env::var("END_BLOCK") {
+                Ok(_) => break,
+                Err(_) => sleep(Duration::from_secs(10)).await,
+            }
         }
     }
+
+    Ok(())
 }
