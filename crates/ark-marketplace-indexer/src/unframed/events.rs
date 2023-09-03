@@ -193,8 +193,8 @@ pub async fn fetch_unframed_events(
                         timestamp: block.timestamp,
                         to_address: format!("{:#064x}", to_address_field),
                         token_type: contract_type,
-                        token_name,
-                        token_image,
+                        token_name: Some(token_name),
+                        token_image: Some(token_image),
                         token_uri,
                         transaction_hash: transaction_hash_hex,
                         marketplace: Some("unframed".to_string()),
@@ -203,6 +203,7 @@ pub async fn fetch_unframed_events(
                         price: Some(formatted_price.padded_value),
                         total_fee: Some(formatted_total_fee.padded_value),
                         amount: Some(formatted_amount.padded_value),
+                        order_hash: Some("".to_string()),
                     };
 
                     let create_token_event_result =
