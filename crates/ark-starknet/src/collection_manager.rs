@@ -142,7 +142,7 @@ impl CollectionManager {
     }
 }
 
-pub fn decode_string_array(string_array: &[FieldElement]) -> Result<String> {
+pub fn decode_string_array(string_array: &Vec<FieldElement>) -> Result<String> {
     match string_array.len() {
         0 => Ok("".to_string()),
         1 => Ok(parse_cairo_short_string(&string_array[0])?),
@@ -151,9 +151,16 @@ pub fn decode_string_array(string_array: &[FieldElement]) -> Result<String> {
             parse_cairo_short_string(&string_array[0])?,
             parse_cairo_short_string(&string_array[1])?,
         )),
-        _ => string_array[1..]
-            .iter()
-            .map(parse_cairo_short_string)
-            .collect::<Result<String>>(),
+        _ => {
+            // The first element is the length of the string,
+            // we can skip it as it's implicitely given by the vector itself.
+            let mut result = String::new();
+
+            for s in &string_array[1..] {
+                result.push_str(&parse_cairo_short_string(s)?);
+            }
+
+            Ok(result)
+        }
     }
 }
