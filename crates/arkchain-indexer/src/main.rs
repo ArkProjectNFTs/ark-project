@@ -124,6 +124,7 @@ async fn main() -> Result<()> {
                             te.padded_token_id,
                             String::from("listed"),
                             te.price.unwrap_or(String::from("0")),
+                            te.order_hash.unwrap_or(String::from("")),
                         )
                         .await?;
                     }
@@ -145,6 +146,7 @@ async fn main() -> Result<()> {
                             te.padded_token_id,
                             String::from("pending"),
                             te.price.unwrap_or(String::from("0")),
+                            te.order_hash.unwrap_or(String::from("")),
                         )
                         .await?;
                     }
@@ -166,6 +168,7 @@ async fn main() -> Result<()> {
                             te.padded_token_id,
                             String::from(""),
                             te.price.unwrap_or(String::from("")),
+                            te.order_hash.unwrap_or(String::from("")),
                         )
                         .await?;
                     }
