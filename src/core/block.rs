@@ -126,7 +126,6 @@ pub async fn process_blocks_continuously(
                     }
                     Err(_err) => {
                         error!("Error processing block: {:?}", current_block_number);
-                        sleep(Duration::from_secs(10)).await;
                     }
                 }
             } else {
@@ -134,12 +133,12 @@ pub async fn process_blocks_continuously(
                 update_block(dynamo_client, current_block_number, true).await?;
                 current_block_number += 1;
             }
-        } else {
-            // If END_BLOCK is set, exit the loop, otherwise wait for more blocks
-            match env::var("END_BLOCK") {
-                Ok(_) => break,
-                Err(_) => sleep(Duration::from_secs(10)).await,
-            }
+        }
+
+        // If END_BLOCK is set, exit the loop, otherwise wait for more blocks
+        match env::var("END_BLOCK") {
+            Ok(_) => break,
+            Err(_) => sleep(Duration::from_secs(5)).await,
         }
     }
 
