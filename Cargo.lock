@@ -230,6 +230,7 @@ dependencies = [
 name = "ark-metadata"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "aws-sdk-dynamodb",
  "dotenv",
  "log",

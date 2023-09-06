@@ -1,10 +1,10 @@
+use anyhow::Result;
 use aws_sdk_dynamodb::types::AttributeValue;
 use log::{error, info, warn};
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::error::Error;
 use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -62,84 +62,113 @@ impl From<NormalizedMetadata> for HashMap<String, AttributeValue> {
     }
 }
 
+pub fn get_normalized_metadata(
+    raw_metadata: Value,
+    initial_metadata_uri: &str,
+) -> NormalizedMetadata {
+    info!("Metadata: {:?}", raw_metadata);
+
+    let empty_vec = Vec::new();
+
+    let attributes = raw_metadata
+        .get("attributes")
+        .and_then(|attr| attr.as_array())
+        .unwrap_or(&empty_vec);
+
+    let normalized_attributes: Vec<MetadataAttribute> = attributes
+        .iter()
+        .map(|attribute| MetadataAttribute {
+            trait_type: attribute
+                .get("trait_type")
+                .and_then(|trait_type| trait_type.as_str())
+                .unwrap_or("")
+                .to_string(),
+            value: attribute
+                .get("value")
+                .and_then(|value| value.as_str())
+                .unwrap_or("")
+                .to_string(),
+            display_type: attribute
+                .get("display_type")
+                .and_then(|display_type| display_type.as_str())
+                .unwrap_or("")
+                .to_string(),
+        })
+        .collect();
+
+    let normalized_metadata = NormalizedMetadata {
+        description: raw_metadata
+            .get("description")
+            .and_then(|desc| desc.as_str())
+            .unwrap_or("")
+            .to_string(),
+        external_url: initial_metadata_uri.to_string(),
+        image: raw_metadata
+            .get("image")
+            .and_then(|img| img.as_str())
+            .unwrap_or("")
+            .to_string(),
+        name: raw_metadata
+            .get("name")
+            .and_then(|name| name.as_str())
+            .unwrap_or("")
+            .to_string(),
+        attributes: normalized_attributes,
+    };
+
+    normalized_metadata
+}
+
 pub async fn get_metadata(
     client: &ReqwestClient,
     metadata_uri: &str,
     initial_metadata_uri: &str,
-) -> Result<(Value, NormalizedMetadata), Box<dyn Error>> {
+) -> Result<(Value, NormalizedMetadata)> {
     info!("Fetching metadata: {}", metadata_uri);
 
-    let response = client
+    if metadata_uri.contains("data:application/json,") {
+        parse_embedded_metadata(metadata_uri)
+    } else {
+        fetch_metadata_from_url(client, metadata_uri, initial_metadata_uri).await
+    }
+}
+
+fn parse_embedded_metadata(metadata_uri: &str) -> Result<(Value, NormalizedMetadata)> {
+    // Handle the case where JSON is directly embedded within the tokenUri.
+    let content = metadata_uri.replace("data:application/json,", "");
+    match serde_json::from_str::<Value>(content.as_str()) {
+        Ok(raw_metadata) => {
+            let normalized_metadata = get_normalized_metadata(raw_metadata.clone(), &"");
+            Ok((raw_metadata, normalized_metadata))
+        }
+        Err(_) => Err(anyhow::Error::msg("Invalid metadata")),
+    }
+}
+
+async fn fetch_metadata_from_url(
+    client: &ReqwestClient,
+    metadata_uri: &str,
+    initial_metadata_uri: &str,
+) -> Result<(Value, NormalizedMetadata)> {
+    match client
         .get(metadata_uri)
         .timeout(Duration::from_secs(10))
         .send()
-        .await;
-
-    match response {
+        .await
+    {
         Ok(resp) => {
-            let raw_metadata: Value = resp.json().await?;
-
-            info!("Metadata: {:?}", raw_metadata);
-
-            let empty_vec = Vec::new();
-
-            let attributes = raw_metadata
-                .get("attributes")
-                .and_then(|attr| attr.as_array())
-                .unwrap_or(&empty_vec);
-
-            let normalized_attributes: Vec<MetadataAttribute> = attributes
-                .iter()
-                .map(|attribute| MetadataAttribute {
-                    trait_type: attribute
-                        .get("trait_type")
-                        .and_then(|trait_type| trait_type.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                    value: attribute
-                        .get("value")
-                        .and_then(|value| value.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                    display_type: attribute
-                        .get("display_type")
-                        .and_then(|display_type| display_type.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                })
-                .collect();
-
-            let normalized_metadata = NormalizedMetadata {
-                description: raw_metadata
-                    .get("description")
-                    .and_then(|desc| desc.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                external_url: initial_metadata_uri.to_string(),
-                image: raw_metadata
-                    .get("image")
-                    .and_then(|img| img.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                name: raw_metadata
-                    .get("name")
-                    .and_then(|name| name.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                attributes: normalized_attributes,
-            };
-
-            Ok((raw_metadata, normalized_metadata))
+            let rm: Value = resp.json().await?;
+            let normalized_metadata = get_normalized_metadata(rm.clone(), initial_metadata_uri);
+            Ok((rm, normalized_metadata))
         }
         Err(e) => {
-            // Gérer l'erreur, y compris les timeouts
+            // Handle error, including timeouts
             if e.is_timeout() {
                 warn!("Metadata request timeout: {:?}", e);
             } else {
-                error!("Metadata request error : {:?}", e);
+                error!("Metadata request error: {:?}", e);
             }
-
-            Err(e.into())
+            Err(anyhow::Error::msg("Invalid metadata"))
         }
     }
 }
