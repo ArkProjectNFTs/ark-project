@@ -33,15 +33,12 @@ pub async fn update_indexer(
         request = request.item("from", AttributeValue::N(from.unwrap().to_string()));
     }
 
-    if to.is_some() {
-        request = request.item("to", AttributeValue::N(to.unwrap().to_string()));
+    if let Some(value) = to {
+        request = request.item("to", AttributeValue::N(value.to_string()));
     }
 
-    if indexation_progress.is_some() {
-        request = request.item(
-            "indexation_progress",
-            AttributeValue::N(indexation_progress.unwrap().to_string()),
-        );
+    if let Some(value) = indexation_progress {
+        request = request.item("indexation_progress", AttributeValue::N(value.to_string()));
     }
 
     request.send().await?;
