@@ -23,10 +23,7 @@ pub async fn update_indexer(
         .put_item()
         .table_name(indexer_table_name)
         .item("PK", AttributeValue::S(String::from("Indexer")))
-        .item(
-            "SK",
-            AttributeValue::S(format!("{}_{}", indexer_version, task_id.to_string())),
-        )
+        .item("SK", AttributeValue::S(task_id.to_string()))
         .item("status", AttributeValue::S(status))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
         .item("version", AttributeValue::S(indexer_version))
@@ -63,10 +60,11 @@ pub async fn update_block(dynamo_client: &Client, task_id: &str, block_number: u
         .put_item()
         .table_name(indexer_table_name)
         .item("PK", AttributeValue::S(format!("Block_{}", block_number)))
-        .item("SK", AttributeValue::S(indexer_version))
+        .item("SK", AttributeValue::S(task_id.to_string()))
         .item("is_fetched", AttributeValue::Bool(true))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
         .item("indexer", AttributeValue::S(task_id.to_string()))
+        .item("version", AttributeValue::S(indexer_version))
         .send()
         .await?;
 
