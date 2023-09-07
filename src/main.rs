@@ -7,7 +7,7 @@ use crate::core::block::process_blocks_continuously;
 use anyhow::Result;
 use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_dynamodb::{types::AttributeValue, Client as DynamoClient};
+use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
 use reqwest::{Client as ReqwestClient, Url};
@@ -32,21 +32,6 @@ async fn main() -> Result<()> {
     let kinesis_client = KinesisClient::new(&config);
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
-
-    // let indexer_table_name =
-    // env::var("ARK_INDEXER_TABLE_NAME").expect("ARK_INDEXER_TABLE_NAME must be set");
-
-    // let indexer_table_name =
-    //     env::var("ARK_INDEXER_TABLE_NAME").expect("ARK_INDEXER_TABLE_NAME must be set");
-    // dynamo_client
-    //     .put_item()
-    //     .table_name(indexer_table_name)
-    //     .item("PK", AttributeValue::S());
-
-    // Iterate over all environment variables and log them
-    for (key, value) in env::vars() {
-        log::info!("{}: {}", key, value);
-    }
 
     process_blocks_continuously(
         &collection_manager,
