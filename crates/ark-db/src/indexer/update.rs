@@ -29,7 +29,7 @@ pub async fn update_indexer(
         .item("version", AttributeValue::S(indexer_version))
         .item("indexer", AttributeValue::S(task_id.to_string()));
 
-    if from.is_some() {
+    if let Some(value) = from {
         request = request.item("from", AttributeValue::N(from.unwrap().to_string()));
     }
 
