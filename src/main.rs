@@ -3,7 +3,6 @@ mod core;
 mod utils;
 use crate::core::block::process_blocks_continuously;
 use anyhow::Result;
-use ark_db::indexer::create::create_indexer;
 use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
@@ -13,13 +12,7 @@ use reqwest::{Client as ReqwestClient, Url};
 use simple_logger::SimpleLogger;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::env;
-
-fn extract_ecs_task_id(text: &str) -> Option<&str> {
-    let pattern = regex::Regex::new(r"/v3/([a-f0-9]{32})-").unwrap();
-    pattern
-        .captures(text)
-        .and_then(|cap| cap.get(1).map(|m| m.as_str()))
-}
+use utils::get_ecs_task_id;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -39,13 +32,8 @@ async fn main() -> Result<()> {
     let kinesis_client = KinesisClient::new(&config);
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
-
-    let container_metadata_uri = env::var("ECS_CONTAINER_METADATA_URI").unwrap_or("".to_string());
-    let task_id = extract_ecs_task_id(container_metadata_uri.as_str());
-
-    if task_id.is_some() {
-        create_indexer(&dynamo_client, task_id.unwrap()).await?;
-    }
+    let ecs_task_id = get_ecs_task_id();
+    let is_continous = env::var("END_BLOCK").is_ok();
 
     process_blocks_continuously(
         &collection_manager,
@@ -53,6 +41,10 @@ async fn main() -> Result<()> {
         &reqwest_client,
         &dynamo_client,
         &kinesis_client,
+        &ecs_task_id,
+        is_continous,
     )
-    .await
+    .await?;
+
+    Ok(())
 }
