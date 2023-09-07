@@ -22,7 +22,7 @@ pub async fn update_indexer(
     let mut request = dynamo_client
         .put_item()
         .table_name(indexer_table_name)
-        .item("PK", AttributeValue::S(String::from("Indexer")))
+        .item("PK", AttributeValue::S(String::from("INDEXER")))
         .item("SK", AttributeValue::S(task_id.to_string()))
         .item("status", AttributeValue::S(status))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
@@ -56,7 +56,7 @@ pub async fn update_block(dynamo_client: &Client, task_id: &str, block_number: u
     dynamo_client
         .put_item()
         .table_name(indexer_table_name)
-        .item("PK", AttributeValue::S(format!("Block_{}", block_number)))
+        .item("PK", AttributeValue::S(format!("BLOCK#{}", block_number)))
         .item("SK", AttributeValue::S(task_id.to_string()))
         .item("is_fetched", AttributeValue::Bool(true))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
