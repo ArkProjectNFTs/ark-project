@@ -22,13 +22,15 @@ pub async fn update_indexer(
     let mut request = dynamo_client
         .put_item()
         .table_name(indexer_table_name)
+        .item("PK", AttributeValue::S(String::from("Indexer")))
         .item(
-            "PK",
-            AttributeValue::S(format!("Indexer_{}", task_id.to_string())),
+            "SK",
+            AttributeValue::S(format!("{}_{}", indexer_version, task_id.to_string())),
         )
-        .item("SK", AttributeValue::S(String::from(indexer_version)))
         .item("status", AttributeValue::S(status))
-        .item("last_update", AttributeValue::N(unix_timestamp.to_string()));
+        .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
+        .item("version", AttributeValue::S(indexer_version))
+        .item("indexer", AttributeValue::S(task_id.to_string()));
 
     if from.is_some() {
         request = request.item("from", AttributeValue::N(from.unwrap().to_string()));
