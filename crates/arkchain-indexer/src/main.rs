@@ -235,7 +235,7 @@ fn get_order_listing_data(
 
     Some(TokenEvent {
         address: felt_to_hex_str(&collection),
-        timestamp: timestamp.try_into().unwrap(),
+        timestamp: timestamp.try_into().unwrap_or(0),
         block_number,
         event_type: String::from("listing"),
         from_address: felt_to_hex_str(&seller),
@@ -284,7 +284,7 @@ fn get_order_finalized_data(
 
     Some(TokenEvent {
         address: felt_to_hex_str(&collection),
-        timestamp: timestamp.try_into().unwrap(),
+        timestamp: timestamp.try_into().unwrap_or(0),
         block_number,
         event_type: String::from("sale"),
         from_address: felt_to_hex_str(&seller),
