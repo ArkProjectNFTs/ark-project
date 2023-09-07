@@ -85,7 +85,7 @@ pub async fn process_blocks_continuously(
 
         if !is_continous {
             update_indexer(
-                &dynamo_client,
+                dynamo_client,
                 ecs_task_id,
                 String::from("running"),
                 Some(starting_block),
@@ -144,19 +144,17 @@ pub async fn process_blocks_continuously(
                 update_block(dynamo_client, ecs_task_id, current_block_number).await?;
                 current_block_number += 1;
             }
+        } else if !is_continous {
+            break;
         } else {
-            if !is_continous {
-                break;
-            } else {
-                sleep(Duration::from_secs(5)).await;
-            }
+            sleep(Duration::from_secs(5)).await;
         }
     }
 
     if !is_continous {
         update_indexer(
-            &dynamo_client,
-            &ecs_task_id,
+            dynamo_client,
+            ecs_task_id,
             String::from("stopped"),
             None,
             None,

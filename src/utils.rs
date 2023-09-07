@@ -42,7 +42,7 @@ pub fn get_ecs_task_id() -> String {
     let task_id = pattern
         .captures(container_metadata_uri.as_str())
         .and_then(|cap| cap.get(1).map(|m| m.as_str()))
-        .unwrap_or(&"");
+        .unwrap_or("");
 
     info!("ECS task ID: {:?}", task_id);
     task_id.to_string()

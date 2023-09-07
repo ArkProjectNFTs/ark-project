@@ -5,7 +5,7 @@ use std::env;
 pub async fn get_block(dynamo_client: &Client, block_number: u64) -> Result<bool, Error> {
     let indexer_table_name =
         env::var("ARK_INDEXER_TABLE_NAME").expect("ARK_INDEXER_TABLE_NAME must be set");
-    let partition_key = format!("Block_{}", block_number.to_string());
+    let partition_key = format!("Block_{}", block_number);
 
     let request = dynamo_client
         .query()
