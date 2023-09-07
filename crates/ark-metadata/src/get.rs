@@ -138,7 +138,7 @@ fn parse_embedded_metadata(metadata_uri: &str) -> Result<(Value, NormalizedMetad
     let content = metadata_uri.replace("data:application/json,", "");
     match serde_json::from_str::<Value>(content.as_str()) {
         Ok(raw_metadata) => {
-            let normalized_metadata = get_normalized_metadata(raw_metadata.clone(), &"");
+            let normalized_metadata = get_normalized_metadata(raw_metadata.clone(), "");
             Ok((raw_metadata, normalized_metadata))
         }
         Err(_) => Err(anyhow::Error::msg("Invalid metadata")),
