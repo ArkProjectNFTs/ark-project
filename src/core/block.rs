@@ -1,8 +1,7 @@
 use super::contract::identify_contract_types_from_transfers;
 use anyhow::Result;
-use ark_db::block::create::create_block;
-use ark_db::block::get::get_block;
-use ark_db::block::update::update_block;
+use ark_db::indexer::get::get_block;
+use ark_db::indexer::update::{update_block, update_indexer};
 use ark_starknet::collection_manager::CollectionManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
@@ -63,6 +62,8 @@ pub async fn process_blocks_continuously(
     reqwest_client: &ReqwestClient,
     dynamo_client: &DynamoClient,
     kinesis_client: &KinesisClient,
+    ecs_task_id: &str,
+    is_continous: bool,
 ) -> Result<()> {
     let starting_block = env::var("START_BLOCK")
         .expect("START_BLOCK must be set")
@@ -75,13 +76,24 @@ pub async fn process_blocks_continuously(
     loop {
         let execution_time = Instant::now();
         let dest_block_number = get_destination_block_number(collection_manager).await?;
+        let indexation_progress = (current_block_number as f64 / dest_block_number as f64) * 100.0;
 
         info!(
             "Dest block: {}, Current block: {}, Indexing progress: {:.2}%",
-            dest_block_number,
-            current_block_number,
-            (current_block_number as f64 / dest_block_number as f64) * 100.0
+            dest_block_number, current_block_number, indexation_progress
         );
+
+        if !is_continous {
+            update_indexer(
+                dynamo_client,
+                ecs_task_id,
+                String::from("running"),
+                Some(starting_block),
+                Some(dest_block_number),
+                Some(format!("{:.2}", indexation_progress)),
+            )
+            .await?;
+        }
 
         // If the current block number is less than or equal to the destination block number
         if current_block_number <= dest_block_number {
@@ -93,8 +105,6 @@ pub async fn process_blocks_continuously(
                 current_block_number += 1;
                 continue;
             }
-
-            create_block(dynamo_client, current_block_number, false).await?;
 
             if let Some(events_only) =
                 get_transfer_events(collection_manager, current_block_number).await?
@@ -116,7 +126,7 @@ pub async fn process_blocks_continuously(
                 .await
                 {
                     Ok(_) => {
-                        update_block(dynamo_client, current_block_number, true).await?;
+                        update_block(dynamo_client, ecs_task_id, current_block_number).await?;
                         info!(
                             "Indexing time: {}ms (block {})",
                             execution_time.elapsed().as_millis(),
@@ -126,20 +136,31 @@ pub async fn process_blocks_continuously(
                     }
                     Err(_err) => {
                         error!("Error processing block: {:?}", current_block_number);
+                        break;
                     }
                 }
             } else {
                 info!("No event to process for block {:?}", current_block_number);
-                update_block(dynamo_client, current_block_number, true).await?;
+                update_block(dynamo_client, ecs_task_id, current_block_number).await?;
                 current_block_number += 1;
             }
+        } else if !is_continous {
+            break;
+        } else {
+            sleep(Duration::from_secs(5)).await;
         }
+    }
 
-        // If END_BLOCK is set, exit the loop, otherwise wait for more blocks
-        match env::var("END_BLOCK") {
-            Ok(_) => break,
-            Err(_) => sleep(Duration::from_secs(5)).await,
-        }
+    if !is_continous {
+        update_indexer(
+            dynamo_client,
+            ecs_task_id,
+            String::from("stopped"),
+            None,
+            None,
+            None,
+        )
+        .await?;
     }
 
     Ok(())

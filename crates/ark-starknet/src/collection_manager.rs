@@ -61,7 +61,7 @@ impl CollectionManager {
                     effective_block_id,
                 )
                 .await
-                .or_else(|_| Err(anyhow!("Failed to get token owner"))),
+                .map_err(|_| anyhow!("Failed to get token owner")),
         }
     }
 

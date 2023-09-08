@@ -1,6 +1,10 @@
 // use serde_json::Value;
 // use starknet::core::utils::starknet_keccak;
 
+use std::env;
+
+use log::info;
+
 #[allow(dead_code)]
 pub async fn upload_image_to_s3(_url: &str) -> Result<String, Box<dyn std::error::Error>> {
     //     let client = reqwest::Client::new();
@@ -29,4 +33,17 @@ pub async fn upload_image_to_s3(_url: &str) -> Result<String, Box<dyn std::error
     //     Ok(s3_res.key.unwrap())
 
     Ok("".to_string())
+}
+
+pub fn get_ecs_task_id() -> String {
+    let container_metadata_uri = env::var("ECS_CONTAINER_METADATA_URI").unwrap_or("".to_string());
+
+    let pattern = regex::Regex::new(r"/v3/([a-f0-9]{32})-").unwrap();
+    let task_id = pattern
+        .captures(container_metadata_uri.as_str())
+        .and_then(|cap| cap.get(1).map(|m| m.as_str()))
+        .unwrap_or("");
+
+    info!("ECS task ID: {:?}", task_id);
+    task_id.to_string()
 }

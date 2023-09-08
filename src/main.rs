@@ -1,8 +1,6 @@
 mod constants;
 mod core;
 mod utils;
-use std::env;
-
 use crate::core::block::process_blocks_continuously;
 use anyhow::Result;
 use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
@@ -13,6 +11,8 @@ use dotenv::dotenv;
 use reqwest::{Client as ReqwestClient, Url};
 use simple_logger::SimpleLogger;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
+use std::env;
+use utils::get_ecs_task_id;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -32,6 +32,8 @@ async fn main() -> Result<()> {
     let kinesis_client = KinesisClient::new(&config);
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
+    let ecs_task_id = get_ecs_task_id();
+    let is_continous = env::var("END_BLOCK").is_ok();
 
     process_blocks_continuously(
         &collection_manager,
@@ -39,6 +41,10 @@ async fn main() -> Result<()> {
         &reqwest_client,
         &dynamo_client,
         &kinesis_client,
+        &ecs_task_id,
+        is_continous,
     )
-    .await
+    .await?;
+
+    Ok(())
 }
