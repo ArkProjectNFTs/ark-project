@@ -27,7 +27,7 @@ pub async fn update_indexer(
         .item("status", AttributeValue::S(status))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
         .item("version", AttributeValue::S(indexer_version))
-        .item("indexer", AttributeValue::S(task_id.to_string()));
+        .item("task_id", AttributeValue::S(task_id.to_string()));
 
     if let Some(value) = from {
         request = request.item("from", AttributeValue::N(value.to_string()));
@@ -60,7 +60,7 @@ pub async fn update_block(dynamo_client: &Client, task_id: &str, block_number: u
         .item("SK", AttributeValue::S(format!("TASK#{}", task_id)))
         .item("is_fetched", AttributeValue::Bool(true))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
-        .item("indexer", AttributeValue::S(task_id.to_string()))
+        .item("task_id", AttributeValue::S(task_id.to_string()))
         .item("version", AttributeValue::S(indexer_version))
         .send()
         .await?;
