@@ -8,6 +8,7 @@ use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
+use log::info;
 use reqwest::{Client as ReqwestClient, Url};
 use simple_logger::SimpleLogger;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
@@ -34,6 +35,11 @@ async fn main() -> Result<()> {
     let reqwest_client = ReqwestClient::new();
     let ecs_task_id = get_ecs_task_id();
     let is_continous = env::var("END_BLOCK").is_ok();
+
+    info!(
+        "\n=== Indexing started ===\n\necs_task_id: {}\nis_continous: {}",
+        ecs_task_id, is_continous
+    );
 
     process_blocks_continuously(
         &collection_manager,
