@@ -88,9 +88,9 @@ pub async fn process_blocks_continuously(
                 dynamo_client,
                 ecs_task_id,
                 String::from("running"),
-                Some(starting_block),
-                Some(dest_block_number),
-                Some(format!("{:.2}", indexation_progress)),
+                starting_block,
+                dest_block_number,
+                indexation_progress as u64,
             )
             .await?;
         }
@@ -156,9 +156,9 @@ pub async fn process_blocks_continuously(
             dynamo_client,
             ecs_task_id,
             String::from("stopped"),
-            None,
-            None,
-            None,
+            starting_block,
+            current_block_number,
+            100,
         )
         .await?;
     }

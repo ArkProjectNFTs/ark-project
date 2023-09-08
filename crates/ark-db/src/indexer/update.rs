@@ -9,9 +9,9 @@ pub async fn update_indexer(
     dynamo_client: &Client,
     task_id: &str,
     status: String,
-    from: Option<u64>,
-    to: Option<u64>,
-    indexation_progress: Option<String>,
+    from: u64,
+    to: u64,
+    indexation_progress: u64,
 ) -> Result<()> {
     let indexer_table_name =
         env::var("ARK_INDEXER_TABLE_NAME").expect("ARK_INDEXER_TABLE_NAME must be set");
@@ -19,7 +19,7 @@ pub async fn update_indexer(
     let now = Utc::now();
     let unix_timestamp = now.timestamp();
 
-    let mut request = dynamo_client
+    dynamo_client
         .put_item()
         .table_name(indexer_table_name)
         .item("PK", AttributeValue::S(String::from("INDEXER")))
@@ -27,21 +27,15 @@ pub async fn update_indexer(
         .item("status", AttributeValue::S(status))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
         .item("version", AttributeValue::S(indexer_version))
-        .item("task_id", AttributeValue::S(task_id.to_string()));
-
-    if let Some(value) = from {
-        request = request.item("from", AttributeValue::N(value.to_string()));
-    }
-
-    if let Some(value) = to {
-        request = request.item("to", AttributeValue::N(value.to_string()));
-    }
-
-    if let Some(value) = indexation_progress {
-        request = request.item("indexation_progress", AttributeValue::N(value.to_string()));
-    }
-
-    request.send().await?;
+        .item("task_id", AttributeValue::S(task_id.to_string()))
+        .item("from", AttributeValue::N(from.to_string()))
+        .item("to", AttributeValue::N(to.to_string()))
+        .item(
+            "indexation_progress",
+            AttributeValue::N(indexation_progress.to_string()),
+        )
+        .send()
+        .await?;
 
     Ok(())
 }
