@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
     let ecs_task_id = get_ecs_task_id();
-    let is_continous = !env::var("END_BLOCK").is_ok();
+    let is_continous = env::var("END_BLOCK").is_err();
 
     info!(
         "\n=== Indexing started ===\n\necs_task_id: {}\nis_continous: {}",
