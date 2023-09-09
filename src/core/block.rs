@@ -48,7 +48,11 @@ async fn get_transfer_events(
             block_events
                 .clone()
                 .into_iter()
-                .filter(|e| e.keys[0] == get_selector_from_name("Transfer").unwrap()) // Assuming Transfer is a valid selector.
+                .filter(|e| {
+                    e.keys.get(0).map_or(false, |key| {
+                        *key == get_selector_from_name("Transfer").unwrap()
+                    })
+                })
                 .collect(),
         ))
     } else {
