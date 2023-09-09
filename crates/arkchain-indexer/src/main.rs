@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
     let ev_broker_registered: FieldElement = selector!("BrokerRegistered");
     let ev_order_listing_added: FieldElement = selector!("OrderListingAdded");
     let ev_order_buy_executing: FieldElement = selector!("OrderBuyExecuting");
-    let ev_order_buy_finalized: FieldElement = selector!("OrderBuyFinalized");
+    let ev_order_buy_finalized: FieldElement = selector!("OrderExecuted");
     let event_keys: &[FieldElement] = &[
         ev_broker_registered,
         ev_order_listing_added,
