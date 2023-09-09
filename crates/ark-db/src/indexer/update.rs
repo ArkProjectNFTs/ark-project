@@ -23,7 +23,10 @@ pub async fn update_indexer(
         .put_item()
         .table_name(indexer_table_name)
         .item("PK", AttributeValue::S(String::from("INDEXER")))
-        .item("SK", AttributeValue::S(format!("TASK#{}", task_id)))
+        .item(
+            "SK",
+            AttributeValue::S(format!("DATE#{unix_timestamp}TASK#{}", task_id)),
+        )
         .item("status", AttributeValue::S(status))
         .item("last_update", AttributeValue::N(unix_timestamp.to_string()))
         .item("version", AttributeValue::S(indexer_version))
