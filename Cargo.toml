@@ -41,7 +41,7 @@ ark-db = { path = "./crates/ark-db" }
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
 ark-stream = { path = "./crates/ark-stream" }
-ark-transfers = { path = "./crates/ark-transfers" }
+ark-transfers-v2 = { path = "./crates/ark-transfers-v2" }
 openssl = { version = "0.10", features = ["vendored"] }
 
 [package.metadata.lambda.deploy]

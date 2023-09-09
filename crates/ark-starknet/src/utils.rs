@@ -15,6 +15,7 @@ pub struct FormattedTokenId {
     pub padded_token_id: String,
 }
 
+#[derive(Debug)]
 pub struct TokenId {
     pub low: FieldElement,
     pub high: FieldElement,

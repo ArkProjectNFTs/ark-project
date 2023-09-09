@@ -5,7 +5,7 @@ use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
 use ark_starknet::collection_manager::CollectionManager;
 use ark_stream::send::send_to_kinesis;
-use ark_transfers::transfer::process_transfers;
+use ark_transfers_v2::transfer::process_transfers;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
 use log::{debug, error, info};
@@ -38,14 +38,19 @@ pub async fn identify_contract_types_from_transfers(
     // Get dynamo table to work with
     let collections_table =
         env::var("ARK_COLLECTIONS_TABLE_NAME").expect("ARK_COLLECTIONS_TABLE_NAME must be set");
-    let kinesis_transfer_stream =
-        env::var("KINESIS_TRANSFER_STREAM_NAME").expect("KINESIS_TRANSFER_STREAM_NAME must be set");
+        
+    // let kinesis_transfer_stream =
+    //     env::var("KINESIS_TRANSFER_STREAM_NAME").expect("KINESIS_TRANSFER_STREAM_NAME must be set");
 
-    let kinesis_collection_stream = env::var("KINESIS_COLLECTION_STREAM_NAME")
-        .expect("KINESIS_COLLECTION_STREAM_NAME must be set");
+    // let kinesis_collection_stream = env::var("KINESIS_COLLECTION_STREAM_NAME")
+    //     .expect("KINESIS_COLLECTION_STREAM_NAME must be set");
 
     // Init start time
     let start_time = Instant::now();
+
+    // let block = get_block_with_txs(client, event.block_number)
+    //     .await
+    //     .unwrap();
 
     for event in events {
         let contract_address = format!("{:#064x}", &event.from_address);
@@ -62,31 +67,22 @@ pub async fn identify_contract_types_from_transfers(
             .await
             .unwrap_or(None);
 
-        let event_json = serde_json::to_string(&event).expect("Event not convertible to JSON");
-
         if let Some(existing_contract_type) = contract_status {
             if existing_contract_type == "unknown" {
                 continue; // If it's unknown, skip this iteration of the loop
             } else if existing_contract_type == "erc721" || existing_contract_type == "erc1155" {
                 // TODO: use a common function
                 if is_dev {
-                    let _ = process_transfers(
-                        collection_manager,
-                        client,
-                        dynamo_client,
-                        &event_json,
-                        existing_contract_type.as_str(),
-                    )
-                    .await;
+                    let _ = process_transfers(&event, existing_contract_type.as_str()).await;
                 } else {
-                    let _ = send_to_kinesis(
-                        kinesis_client,
-                        kinesis_transfer_stream.as_str(),
-                        "transfer",
-                        &event_json,
-                        existing_contract_type.as_str(),
-                    )
-                    .await;
+                    // let _ = send_to_kinesis(
+                    //     kinesis_client,
+                    //     kinesis_transfer_stream.as_str(),
+                    //     "transfer",
+                    //     &event_json,
+                    //     existing_contract_type.as_str(),
+                    // )
+                    // .await;
                 }
 
                 continue; // After sending event, skip this iteration of the loop
@@ -116,15 +112,7 @@ pub async fn identify_contract_types_from_transfers(
                 if contract_type != "unknown" {
                     // TODO: use a common function
                     if is_dev {
-                        match process_transfers(
-                            collection_manager,
-                            client,
-                            dynamo_client,
-                            &event_json,
-                            contract_type.as_str(),
-                        )
-                        .await
-                        {
+                        match process_transfers(&event, contract_type.as_str()).await {
                             Ok(_) => {}
                             Err(e) => {
                                 error!("Failed to process transfer: {:?}", e);
@@ -132,44 +120,44 @@ pub async fn identify_contract_types_from_transfers(
                             }
                         }
 
-                        match update_additional_collection_data(
-                            rpc_client,
-                            client,
-                            dynamo_client,
-                            &contract_address,
-                            block_number,
-                        )
-                        .await
-                        {
-                            Ok(_) => {}
-                            Err(e) => {
-                                error!("Failed to update additional collection data: {:?}", e);
-                                continue;
-                            }
-                        }
+                        // match update_additional_collection_data(
+                        //     rpc_client,
+                        //     client,
+                        //     dynamo_client,
+                        //     &contract_address,
+                        //     block_number,
+                        // )
+                        // .await
+                        // {
+                        //     Ok(_) => {}
+                        //     Err(e) => {
+                        //         error!("Failed to update additional collection data: {:?}", e);
+                        //         continue;
+                        //     }
+                        // }
                     } else {
-                        let mut map = std::collections::HashMap::new();
-                        map.insert("contract_address", Value::String(contract_address));
-                        map.insert("block_number", Value::Number(block_number.into()));
-                        let serialized_map = serde_json::to_string(&map).unwrap();
-                        send_to_kinesis(
-                            kinesis_client,
-                            kinesis_collection_stream.as_str(),
-                            "collection",
-                            &serialized_map,
-                            contract_type.as_str(),
-                        )
-                        .await
-                        .unwrap();
-                        send_to_kinesis(
-                            kinesis_client,
-                            kinesis_transfer_stream.as_str(),
-                            "transfer",
-                            &event_json,
-                            contract_type.as_str(),
-                        )
-                        .await
-                        .unwrap();
+                        // let mut map = std::collections::HashMap::new();
+                        // map.insert("contract_address", Value::String(contract_address));
+                        // map.insert("block_number", Value::Number(block_number.into()));
+                        // let serialized_map = serde_json::to_string(&map).unwrap();
+                        // send_to_kinesis(
+                        //     kinesis_client,
+                        //     kinesis_collection_stream.as_str(),
+                        //     "collection",
+                        //     &serialized_map,
+                        //     contract_type.as_str(),
+                        // )
+                        // .await
+                        // .unwrap();
+                        // send_to_kinesis(
+                        //     kinesis_client,
+                        //     kinesis_transfer_stream.as_str(),
+                        //     "transfer",
+                        //     &event_json,
+                        //     contract_type.as_str(),
+                        // )
+                        // .await
+                        // .unwrap();
                     }
                 }
             }
