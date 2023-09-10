@@ -1,10 +1,11 @@
 use super::contract::identify_contract_types_from_transfers;
 use anyhow::Result;
-use ark_db::indexer::get::get_block;
+use ark_db::indexer::get::{get_block, get_indexer_sk};
 use ark_db::indexer::update::{update_block, update_indexer};
 use ark_starknet::collection_manager::CollectionManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_kinesis::Client as KinesisClient;
+use chrono::Utc;
 use log::{error, info};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, EmittedEvent};
@@ -77,6 +78,15 @@ pub async fn process_blocks_continuously(
     info!("Starting block: {}", starting_block);
     let mut current_block_number: u64 = starting_block;
 
+    let indexer_sk = match get_indexer_sk(dynamo_client, ecs_task_id).await {
+        Ok(indexer_sk) => indexer_sk,
+        Err(_) => {
+            let now = Utc::now();
+            let unix_timestamp = now.timestamp();
+            format!("TASK#{}#{}", unix_timestamp, ecs_task_id)
+        }
+    };
+
     loop {
         let execution_time = Instant::now();
         let dest_block_number = get_destination_block_number(collection_manager).await?;
@@ -91,7 +101,8 @@ pub async fn process_blocks_continuously(
             update_indexer(
                 dynamo_client,
                 ecs_task_id,
-                String::from("running"),
+                indexer_sk.as_str(),
+                "running".to_string(),
                 starting_block,
                 dest_block_number,
                 indexation_progress as u64,
@@ -159,6 +170,7 @@ pub async fn process_blocks_continuously(
         update_indexer(
             dynamo_client,
             ecs_task_id,
+            &indexer_sk,
             String::from("stopped"),
             starting_block,
             current_block_number,

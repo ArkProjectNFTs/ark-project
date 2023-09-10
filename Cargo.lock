@@ -212,6 +212,7 @@ dependencies = [
  "aws-sdk-dynamodb",
  "aws-sdk-kinesis",
  "aws-types",
+ "chrono",
  "clap 4.4.1",
  "dotenv",
  "hex",
