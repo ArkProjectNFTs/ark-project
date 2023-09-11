@@ -62,6 +62,7 @@ pub async fn process_transfers(
         block_number,
     )
     .await;
+
     let token_owner = match collection_manager
         .get_token_owner(event.from_address, token_id_low, token_id_high, None)
         .await

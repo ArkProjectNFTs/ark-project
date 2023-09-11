@@ -1,73 +1,69 @@
-use super::shared_state::EventData;
 use anyhow::{anyhow, Result};
-use ark_starknet::client2::StarknetClient;
-use serde_json::Value;
-use starknet::core::types::EmittedEvent;
-use std::sync::{Arc, Mutex};
+use ark_starknet::utils::{FormattedTokenId, TokenId};
+use starknet::core::types::{EmittedEvent, FieldElement};
 
+#[derive(Debug)]
 pub struct EventManager {
-    client: StarknetClient,
-    shared_state: Arc<Mutex<EventData>>,
+    pub timestamp: u64,
+    pub from_address_field_element: FieldElement,
+    pub from_address: String,
+    pub to_address: String,
+    pub contract_address: String,
+    pub transaction_hash: String,
+    pub token_id: TokenId,
+    pub formated_token_id: FormattedTokenId,
+    pub block_number: u64,
+    pub contract_type: String,
 }
 
 impl EventManager {
-    pub fn new(client: StarknetClient, shared_state: Arc<Mutex<EventData>>) -> Self {
+    pub fn new() -> Self {
         EventManager {
-            client,
-            shared_state,
+            timestamp: 0,
+            from_address: String::new(),
+            to_address: String::new(),
+            contract_address: String::new(),
+            transaction_hash: String::new(),
+            from_address_field_element: FieldElement::ZERO,
+            token_id: TokenId {
+                low: FieldElement::ZERO,
+                high: FieldElement::ZERO,
+            },
+            formated_token_id: FormattedTokenId::default(), // Assuming you have a default implementation
+            block_number: 0,
+            contract_type: String::new(),
         }
     }
 
-    pub fn format_event(&self, event: &EmittedEvent) -> Result<()> {
+    pub fn format_event(
+        &mut self,
+        event: &EmittedEvent,
+        contract_type: &str,
+        timestamp: u64,
+    ) -> Result<()> {
         if event.data.len() < 4 {
             return Err(anyhow!("Invalid event data"));
         }
 
-        let from_address_field_element = event["data"][0]
-            .as_u64()
-            .ok_or(anyhow!("Failed to parse 'from' address"))?;
-        let to_address_field_element = event["data"][1]
-            .as_u64()
-            .ok_or(anyhow!("Failed to parse 'to' address"))?;
-        let token_id_low = event["data"][2]
-            .as_u64()
-            .ok_or(anyhow!("Failed to parse 'token_id_low'"))?;
-        let token_id_high = event["data"][3]
-            .as_u64()
-            .ok_or(anyhow!("Failed to parse 'token_id_high'"))?;
+        self.from_address_field_element = event.data[0];
+        self.from_address = format!("{:#064x}", event.data[0]);
+        self.to_address = format!("{:#064x}", event.data[1]);
+        self.contract_address = format!("{:#064x}", event.from_address);
+        self.transaction_hash = format!("{:#064x}", event.transaction_hash);
 
-        let from_address = format!("{:#064x}", from_address_field_element);
-        let to_address = format!("{:#064x}", to_address_field_element);
-        let contract_address = format!(
-            "{:#064x}",
-            event["from_address"]
-                .as_u64()
-                .ok_or(anyhow!("Failed to parse contract address"))?
-        );
-        let transaction_hash = format!(
-            "{:#064x}",
-            event["transaction_hash"]
-                .as_u64()
-                .ok_or(anyhow!("Failed to parse transaction hash"))?
-        );
-        let block_number = event["block_number"]
-            .as_u64()
-            .ok_or(anyhow!("Failed to parse block number"))?;
-
-        // Update shared state
-        let mut state = self.shared_state.lock().unwrap();
-        *state = EventData {
-            from_address,
-            to_address,
-            contract_address,
-            transaction_hash,
-            token_id_low,
-            token_id_high,
-            block_number,
+        self.token_id = TokenId {
+            low: event.data[2],
+            high: event.data[3],
         };
 
+        self.formated_token_id = self.token_id.format();
+        self.block_number = event.block_number;
+        self.timestamp = timestamp;
+        self.contract_type = contract_type.to_string();
         Ok(())
     }
 
-    // ... Other methods that might require both the StarknetClient and the shared state can be added here.
+    pub fn get_self(&self) -> &Self {
+        self
+    }
 }

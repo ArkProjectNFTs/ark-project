@@ -137,6 +137,7 @@ pub async fn process_blocks_continuously(
                     &events_only,
                     dynamo_client,
                     kinesis_client,
+                    current_block_number,
                 )
                 .await
                 {

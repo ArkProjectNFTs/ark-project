@@ -8,11 +8,23 @@ use std::error::Error;
 
 use super::client::call_contract;
 
+#[derive(Debug)]
 pub struct FormattedTokenId {
     pub low: u128,
     pub high: u128,
     pub token_id: String,
     pub padded_token_id: String,
+}
+
+impl Default for FormattedTokenId {
+    fn default() -> Self {
+        FormattedTokenId {
+            low: 0,
+            high: 0,
+            token_id: "".to_string(),
+            padded_token_id: "".to_string(),
+        }
+    }
 }
 
 #[derive(Debug)]
