@@ -4,14 +4,12 @@ use ark_db::indexer::get::{get_block, get_indexer_sk};
 use ark_db::indexer::update::{update_block, update_indexer};
 use ark_starknet::collection_manager::CollectionManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
-use aws_sdk_kinesis::Client as KinesisClient;
 use chrono::Utc;
 use log::{error, info};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, EmittedEvent};
 use starknet::core::utils::get_selector_from_name;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
+use std::collections::HashMap;
 use std::env;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
@@ -63,10 +61,8 @@ async fn get_transfer_events(
 
 pub async fn process_blocks_continuously(
     collection_manager: &CollectionManager,
-    rpc_client: &JsonRpcClient<HttpTransport>,
     reqwest_client: &ReqwestClient,
     dynamo_client: &DynamoClient,
-    kinesis_client: &KinesisClient,
     ecs_task_id: &str,
     is_continous: bool,
 ) -> Result<()> {
@@ -77,6 +73,7 @@ pub async fn process_blocks_continuously(
 
     info!("Starting block: {}", starting_block);
     let mut current_block_number: u64 = starting_block;
+    let mut contract_cache: HashMap<String, Option<String>> = HashMap::new();
 
     let indexer_sk = match get_indexer_sk(dynamo_client, ecs_task_id).await {
         Ok(indexer_sk) => indexer_sk,
@@ -132,12 +129,11 @@ pub async fn process_blocks_continuously(
 
                 match identify_contract_types_from_transfers(
                     collection_manager,
-                    rpc_client,
                     reqwest_client,
                     &events_only,
                     dynamo_client,
-                    kinesis_client,
                     current_block_number,
+                    &mut contract_cache,
                 )
                 .await
                 {

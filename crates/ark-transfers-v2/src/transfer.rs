@@ -1,32 +1,30 @@
-use anyhow::{anyhow, Result};
-use ark_starknet::utils::TokenId;
-use log::{debug, info, warn};
-use starknet::core::types::{EmittedEvent, FieldElement};
-use std::sync::{Arc, Mutex};
+use anyhow::Result;
+use ark_db::token;
+use starknet::core::types::EmittedEvent;
 
-// use super::token_manager::TokenManager;
-// use super::storage_manager::StorageManager;
-use super::event_manager::EventManager;
+use crate::event_manager::EventManager;
+use crate::storage_manager::storage_manager::DefaultStorage;
+use crate::token_manager::token_manager::TokenManager;
 
 pub async fn process_transfers(
     event: &EmittedEvent,
     contract_type: &str,
     timestamp: u64,
 ) -> Result<()> {
-    let mut event_manager = EventManager::new();
+    let storage_manager = DefaultStorage::new();
+
+    let mut token_manager = TokenManager::new(&storage_manager);
+    let mut event_manager = EventManager::new(&storage_manager);
+
     event_manager.format_event(event, contract_type, timestamp)?;
-    let event_formatted_data = event_manager.get_self();
+    
+    let token_event = event_manager.get_event();
+    token_manager.format_token_from_event(token_event);
+    
+    token_manager.create_token()?;
+    event_manager.create_event()?;
 
-    info!("event_formatted_data: {:?}", event_formatted_data);
-
-    if event_formatted_data.from_address_field_element == FieldElement::ZERO {
-        info!("Mint detected");
-    } else {
-        info!("Transfer detected");
-    }
-
-    // let token_manager = TokenManager::new();
-    // let storage_manager = TokenManager::new();
-
+    token_manager.reset_token();
+    event_manager.reset_event();
     Ok(())
 }

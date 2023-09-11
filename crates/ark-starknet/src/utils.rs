@@ -8,7 +8,7 @@ use std::error::Error;
 
 use super::client::call_contract;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FormattedTokenId {
     pub low: u128,
     pub high: u128,
@@ -27,7 +27,7 @@ impl Default for FormattedTokenId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TokenId {
     pub low: FieldElement,
     pub high: FieldElement,

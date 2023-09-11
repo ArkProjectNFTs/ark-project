@@ -6,7 +6,6 @@ use anyhow::Result;
 use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
-use aws_sdk_kinesis::Client as KinesisClient;
 use dotenv::dotenv;
 use log::info;
 use reqwest::{Client as ReqwestClient, Url};
@@ -30,7 +29,6 @@ async fn main() -> Result<()> {
 
     let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
     let config = aws_config::from_env().region(region_provider).load().await;
-    let kinesis_client = KinesisClient::new(&config);
     let dynamo_client = DynamoClient::new(&config);
     let reqwest_client = ReqwestClient::new();
     let ecs_task_id = get_ecs_task_id();
@@ -43,10 +41,8 @@ async fn main() -> Result<()> {
 
     process_blocks_continuously(
         &collection_manager,
-        &rpc_client,
         &reqwest_client,
         &dynamo_client,
-        &kinesis_client,
         &ecs_task_id,
         is_continous,
     )

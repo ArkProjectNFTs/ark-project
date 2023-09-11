@@ -1,38 +1,27 @@
+use crate::storage_manager::storage_manager::StorageManager;
+use crate::types::EventType;
+use crate::types::TokenEvent;
 use anyhow::{anyhow, Result};
-use ark_starknet::utils::{FormattedTokenId, TokenId};
+use ark_starknet::utils::TokenId;
+use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
 
 #[derive(Debug)]
-pub struct EventManager {
-    pub timestamp: u64,
-    pub from_address_field_element: FieldElement,
-    pub from_address: String,
-    pub to_address: String,
-    pub contract_address: String,
-    pub transaction_hash: String,
-    pub token_id: TokenId,
-    pub formated_token_id: FormattedTokenId,
-    pub block_number: u64,
-    pub contract_type: String,
+pub struct EventManager<'a, T: StorageManager> {
+    storage: &'a T,
+    token_event: TokenEvent,
 }
 
-impl EventManager {
-    pub fn new() -> Self {
+impl<'a, T: StorageManager> EventManager<'a, T> {
+    pub fn new(storage: &'a T) -> Self {
         EventManager {
-            timestamp: 0,
-            from_address: String::new(),
-            to_address: String::new(),
-            contract_address: String::new(),
-            transaction_hash: String::new(),
-            from_address_field_element: FieldElement::ZERO,
-            token_id: TokenId {
-                low: FieldElement::ZERO,
-                high: FieldElement::ZERO,
-            },
-            formated_token_id: FormattedTokenId::default(), // Assuming you have a default implementation
-            block_number: 0,
-            contract_type: String::new(),
+            storage,
+            token_event: TokenEvent::default(),
         }
+    }
+
+    pub fn reset_event(&mut self) {
+        self.token_event = TokenEvent::default();
     }
 
     pub fn format_event(
@@ -45,25 +34,43 @@ impl EventManager {
             return Err(anyhow!("Invalid event data"));
         }
 
-        self.from_address_field_element = event.data[0];
-        self.from_address = format!("{:#064x}", event.data[0]);
-        self.to_address = format!("{:#064x}", event.data[1]);
-        self.contract_address = format!("{:#064x}", event.from_address);
-        self.transaction_hash = format!("{:#064x}", event.transaction_hash);
-
-        self.token_id = TokenId {
+        self.token_event.from_address_field_element = event.data[0];
+        self.token_event.from_address = format!("{:#064x}", event.data[0]);
+        self.token_event.to_address_field_element = event.data[1];
+        self.token_event.to_address = format!("{:#064x}", event.data[1]);
+        self.token_event.contract_address = format!("{:#064x}", event.from_address);
+        self.token_event.transaction_hash = format!("{:#064x}", event.transaction_hash);
+        self.token_event.token_id = TokenId {
             low: event.data[2],
             high: event.data[3],
         };
-
-        self.formated_token_id = self.token_id.format();
-        self.block_number = event.block_number;
-        self.timestamp = timestamp;
-        self.contract_type = contract_type.to_string();
+        self.token_event.formated_token_id = self.token_event.token_id.format();
+        self.token_event.block_number = event.block_number;
+        self.token_event.timestamp = timestamp;
+        self.token_event.contract_type = contract_type.to_string();
+        self.token_event.event_type = self.get_event_type();
         Ok(())
     }
 
-    pub fn get_self(&self) -> &Self {
-        self
+    pub fn get_event(&self) -> &TokenEvent {
+        &self.token_event
+    }
+
+    pub fn get_event_type(&mut self) -> EventType {
+        if self.token_event.from_address_field_element == FieldElement::ZERO {
+            info!("EVENT MANAGER: Mint detected");
+            EventType::Mint
+        } else if self.token_event.to_address_field_element == FieldElement::ZERO {
+            info!("EVENT MANAGER: Burn detected");
+            EventType::Burn
+        } else {
+            info!("EVENT MANAGER: Transfer detected");
+            EventType::Transfer
+        }
+    }
+
+    pub fn create_event(&self) -> Result<()> {
+        self.storage.create_event(&self.token_event);
+        Ok(())
     }
 }
