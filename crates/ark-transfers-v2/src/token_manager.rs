@@ -1,6 +1,6 @@
 pub mod token_manager {
     use crate::storage_manager::storage_manager::StorageManager;
-    use crate::types::{TokenEvent, TokenFromEvent};
+    use crate::types::{TokenEvent, TokenFromEvent, EventType};
     use anyhow::Result;
     
     #[derive(Debug)]
@@ -30,9 +30,16 @@ pub mod token_manager {
                 to_address: event.to_address.clone(),
                 timestamp: event.timestamp,
                 owner: event.to_address.clone(),
-                // TODO add optional fields
-                mint_transaction_hash: None,
-                block_number_minted: None,
+                mint_transaction_hash: if event.event_type == EventType::Mint {
+                    Some(event.transaction_hash.clone())
+                } else {
+                    None
+                },
+                block_number_minted: if event.event_type == EventType::Mint {
+                    Some(event.block_number)
+                } else {
+                    None
+                },
             };
             self.storage.create_token(&token);
         }

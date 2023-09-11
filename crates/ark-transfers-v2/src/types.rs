@@ -59,5 +59,5 @@ pub struct TokenFromEvent {
     pub timestamp: u64,
     pub owner: String,
     pub mint_transaction_hash: Option<String>,
-    pub block_number_minted: Option<u64>, 
+    pub block_number_minted: Option<u64>,
 }
