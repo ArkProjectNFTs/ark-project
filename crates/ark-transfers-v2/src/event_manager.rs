@@ -1,4 +1,4 @@
-use crate::storage_manager::storage_manager::StorageManager;
+use crate::storage_manager::StorageManager;
 use crate::types::EventType;
 use crate::types::TokenEvent;
 use anyhow::{anyhow, Result};

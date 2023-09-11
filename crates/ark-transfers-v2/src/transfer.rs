@@ -1,10 +1,9 @@
 use anyhow::Result;
-use ark_db::token;
 use starknet::core::types::EmittedEvent;
 
 use crate::event_manager::EventManager;
-use crate::storage_manager::storage_manager::DefaultStorage;
-use crate::token_manager::token_manager::TokenManager;
+use crate::storage_manager::DefaultStorage;
+use crate::token_manager::TokenManager;
 
 pub async fn process_transfers(
     event: &EmittedEvent,
