@@ -1,5 +1,5 @@
-use super::client2::StarknetClient;
 use anyhow::{anyhow, Result};
+use ark_starknet::client2::StarknetClient;
 use log::info;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::{BlockId, BlockTag, FieldElement};

@@ -1,10 +1,11 @@
 use crate::constants::BLACKLIST;
-use crate::managers::{event_manager::EventManager, token_manager::TokenManager};
+use crate::managers::{
+    collection_manager::CollectionManager, event_manager::EventManager, token_manager::TokenManager,
+};
 use crate::transfer::process_transfer;
 use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
-use ark_starknet::collection_manager::CollectionManager;
 use ark_storage::storage_manager::StorageManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use log::{debug, error, info};

@@ -1,19 +1,21 @@
 mod block;
 mod constants;
 mod contract;
-mod transfer;
 mod managers;
+mod transfer;
 mod utils;
 
 use anyhow::Result;
-use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
+use ark_starknet::client2::StarknetClient;
 use ark_storage::storage_manager::DefaultStorage;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use block::process_blocks_continuously;
 use dotenv::dotenv;
 use log::info;
-use managers::{event_manager::EventManager, token_manager::TokenManager};
+use managers::{
+    collection_manager::CollectionManager, event_manager::EventManager, token_manager::TokenManager,
+};
 use reqwest::Client as ReqwestClient;
 use std::env;
 use tracing::{span, Level};

@@ -27,6 +27,7 @@ impl<'a, T: StorageManager> TokenManager<'a, T> {
         self.token.from_address = event.from_address.clone();
         self.token.to_address = event.to_address.clone();
         self.token.timestamp = event.timestamp.clone();
+        // TODO update owner here call get_token_owner
         self.token.owner = event.to_address.clone();
         self.token.mint_transaction_hash = if event.event_type == EventType::Mint {
             Some(event.transaction_hash.clone())
@@ -49,11 +50,16 @@ impl<'a, T: StorageManager> TokenManager<'a, T> {
         self.token = TokenFromEvent::default();
     }
 
-    // pub fn update_token_owner(&self, event: &EmittedEvent, new_owner: &str) -> Result<()> {
+    // pub fn get_token_owner(&self) -> TokenFromEvent {
+    //     TODO call contract to get owner
+    // }
+
+    // pub fn update_token_owner(&self) -> Result<()> {
     //     let token = self
     //         .storage
     //         .get_token(event.contract_address.clone(), event.token_id.clone())?;
-    //     self.storage.update_token_owner(&token, new_owner);
+    //     self.storage.update_token_owner(&token);
     //     Ok(())
     // }
+
 }

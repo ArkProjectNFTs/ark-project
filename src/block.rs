@@ -1,9 +1,10 @@
 use crate::contract::identify_contract_types_from_transfers;
-use crate::managers::{event_manager::EventManager, token_manager::TokenManager};
+use crate::managers::{
+    collection_manager::CollectionManager, event_manager::EventManager, token_manager::TokenManager,
+};
 use anyhow::Result;
 use ark_db::indexer::get::{get_block, get_indexer_sk};
 use ark_db::indexer::update::{update_block, update_indexer};
-use ark_starknet::collection_manager::CollectionManager;
 use ark_storage::storage_manager::StorageManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use chrono::Utc;
@@ -39,7 +40,7 @@ async fn get_transfer_events(
     let span = span!(Level::TRACE, "get_transfer_events");
     let _enter = span.enter();
 
-    let events = &collection_manager
+    let events = collection_manager
         .client
         .fetch_events(
             BlockId::Number(block_number),
