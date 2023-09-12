@@ -1,11 +1,10 @@
-use super::contract::identify_contract_types_from_transfers;
+use crate::contract::identify_contract_types_from_transfers;
+use crate::managers::{event_manager::EventManager, token_manager::TokenManager};
 use anyhow::Result;
 use ark_db::indexer::get::{get_block, get_indexer_sk};
 use ark_db::indexer::update::{update_block, update_indexer};
 use ark_starknet::collection_manager::CollectionManager;
-use ark_transfers_v2::{
-    event_manager::EventManager, storage_manager::StorageManager, token_manager::TokenManager,
-};
+use ark_storage::storage_manager::StorageManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use chrono::Utc;
 use log::{error, info};
@@ -94,11 +93,7 @@ pub async fn process_blocks_continuously<'a, T: StorageManager>(
 
     loop {
         // Start a span for the current block
-        let span = span!(
-            Level::TRACE,
-            "Block loop ",
-            block = current_block_number
-        );
+        let span = span!(Level::TRACE, "Block loop ", block = current_block_number);
         let _enter = span.enter();
 
         let execution_time = Instant::now();

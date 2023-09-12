@@ -2,7 +2,7 @@ use anyhow::Result;
 use ark_db::token::update::update_token_listing;
 use ark_db::token_event::create::{create_token_event, TokenEvent};
 use ark_starknet::client2::StarknetClient;
-use ark_starknet::utils::TokenId;
+use ark_storage::types::TokenId;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use dotenv::dotenv;

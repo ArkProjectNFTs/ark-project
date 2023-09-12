@@ -1,12 +1,10 @@
 [workspace]
 members = [
-  "crates/ark-collection-update-lambda",
   "crates/ark-db",
   "crates/ark-metadata",
   "crates/ark-starknet",
   "crates/ark-tables",
-  "crates/ark-transfers",
-  "crates/ark-stream",
+  "crates/ark-storage",
   "crates/arkchain-indexer",
 ]
 
@@ -37,21 +35,11 @@ clap = "4.3.8"
 structopt = { version = "0.3", default-features = false }
 hex = "0.4.3"
 aws-types = "0.56"
-
 num-bigint = { version = "0.4.3", default-features = false }
 log = "0.4"
 simple_logger = "4.2.0"
-ark-collection-update-lambda = { path = "./crates/ark-collection-update-lambda" }
 ark-db = { path = "./crates/ark-db" }
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
-ark-stream = { path = "./crates/ark-stream" }
-ark-transfers-v2 = { path = "./crates/ark-transfers-v2" }
+ark-storage = { path = "./crates/ark-storage" }
 openssl = { version = "0.10", features = ["vendored"] }
-
-[package.metadata.lambda.deploy]
-role = "role-full-arn"       # Function's execution role
-env_file = ".env.production" # File to load environment variables from
-binary_name = "toto"
-name = "toto"
-function_name = "test"

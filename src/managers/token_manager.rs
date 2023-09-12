@@ -1,6 +1,6 @@
-use crate::storage_manager::StorageManager;
-use crate::types::{EventType, TokenEvent, TokenFromEvent};
 use anyhow::Result;
+use ark_storage::storage_manager::StorageManager;
+use ark_storage::types::{EventType, TokenEvent, TokenFromEvent};
 
 #[derive(Debug)]
 pub struct TokenManager<'a, T: StorageManager> {

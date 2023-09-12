@@ -1,21 +1,23 @@
+mod block;
 mod constants;
-mod core;
+mod contract;
+mod transfer;
+mod managers;
 mod utils;
-use crate::core::block::process_blocks_continuously;
+
 use anyhow::Result;
 use ark_starknet::{client2::StarknetClient, collection_manager::CollectionManager};
-use ark_transfers_v2::{
-    event_manager::EventManager, storage_manager::DefaultStorage, token_manager::TokenManager,
-};
+use ark_storage::storage_manager::DefaultStorage;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::Client as DynamoClient;
+use block::process_blocks_continuously;
 use dotenv::dotenv;
 use log::info;
+use managers::{event_manager::EventManager, token_manager::TokenManager};
 use reqwest::Client as ReqwestClient;
 use std::env;
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
 use utils::get_ecs_task_id;
 
 #[tokio::main]

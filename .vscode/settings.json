@@ -1,6 +1,5 @@
 {
   "rust-analyzer.linkedProjects": [
     "./Cargo.toml",
-    "./crates/ark-transfers-v2/Cargo.toml"
   ]
 }

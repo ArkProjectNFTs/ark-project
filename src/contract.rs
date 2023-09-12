@@ -1,12 +1,11 @@
 use crate::constants::BLACKLIST;
+use crate::managers::{event_manager::EventManager, token_manager::TokenManager};
+use crate::transfer::process_transfer;
 use ark_db::collection::create::create_collection;
 use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
 use ark_starknet::collection_manager::CollectionManager;
-use ark_transfers_v2::transfer::process_transfers;
-use ark_transfers_v2::{
-    event_manager::EventManager, storage_manager::StorageManager, token_manager::TokenManager,
-};
+use ark_storage::storage_manager::StorageManager;
 use aws_sdk_dynamodb::Client as DynamoClient;
 use log::{debug, error, info};
 use reqwest::Client as ReqwestClient;
@@ -66,7 +65,7 @@ pub async fn identify_contract_types_from_transfers<'a, T: StorageManager>(
             if existing_contract_type == "unknown" {
                 continue; // If it's unknown, skip this iteration of the loop
             } else if existing_contract_type == "erc721" || existing_contract_type == "erc1155" {
-                match process_transfers(
+                match process_transfer(
                     &event,
                     existing_contract_type.as_str(),
                     timestamp,
@@ -105,7 +104,7 @@ pub async fn identify_contract_types_from_transfers<'a, T: StorageManager>(
                     success, &collections_table
                 );
                 if contract_type != "unknown" {
-                    match process_transfers(
+                    match process_transfer(
                         &event,
                         contract_type.as_str(),
                         timestamp,

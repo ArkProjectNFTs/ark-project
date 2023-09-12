@@ -1,8 +1,6 @@
-use crate::storage_manager::StorageManager;
-use crate::types::EventType;
-use crate::types::TokenEvent;
 use anyhow::{anyhow, Result};
-use ark_starknet::utils::TokenId;
+use ark_storage::storage_manager::StorageManager;
+use ark_storage::types::{EventType, TokenEvent, TokenId};
 use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
 
