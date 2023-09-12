@@ -1,4 +1,3 @@
-
 use crate::types::{TokenEvent, TokenFromEvent};
 
 pub trait StorageManager {

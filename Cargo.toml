@@ -16,7 +16,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+<<<<<<< HEAD
 chrono = "0.4.19"
+=======
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tracing = "0.1"
+tracing-log = "0.1"
+>>>>>>> c74f34f (feat(transfers): update with self for token manager & trace)
 regex = "1.5.4"
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
@@ -30,7 +36,6 @@ aws-sdk-dynamodb = "0.29.0"
 clap = "4.3.8"
 structopt = { version = "0.3", default-features = false }
 hex = "0.4.3"
-aws-sdk-kinesis = "0.29.0"
 aws-types = "0.56"
 
 num-bigint = { version = "0.4.3", default-features = false }

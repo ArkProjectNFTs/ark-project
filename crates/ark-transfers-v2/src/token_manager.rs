@@ -21,26 +21,23 @@ impl<'a, T: StorageManager> TokenManager<'a, T> {
         }
     }
 
-    pub fn format_token_from_event(&self, event: &TokenEvent) {
-        let token = TokenFromEvent {
-            address: event.contract_address.clone(),
-            padded_token_id: event.padded_token_id.clone(),
-            from_address: event.from_address.clone(),
-            to_address: event.to_address.clone(),
-            timestamp: event.timestamp,
-            owner: event.to_address.clone(),
-            mint_transaction_hash: if event.event_type == EventType::Mint {
-                Some(event.transaction_hash.clone())
-            } else {
-                None
-            },
-            block_number_minted: if event.event_type == EventType::Mint {
-                Some(event.block_number)
-            } else {
-                None
-            },
+    pub fn format_token_from_event(&mut self, event: &TokenEvent) {
+        self.token.address = event.contract_address.clone();
+        self.token.padded_token_id = event.padded_token_id.clone();
+        self.token.from_address = event.from_address.clone();
+        self.token.to_address = event.to_address.clone();
+        self.token.timestamp = event.timestamp.clone();
+        self.token.owner = event.to_address.clone();
+        self.token.mint_transaction_hash = if event.event_type == EventType::Mint {
+            Some(event.transaction_hash.clone())
+        } else {
+            None
         };
-        self.storage.create_token(&token);
+        self.token.block_number_minted = if event.event_type == EventType::Mint {
+            Some(event.block_number)
+        } else {
+            None
+        };
     }
 
     pub fn create_token(&self) -> Result<()> {

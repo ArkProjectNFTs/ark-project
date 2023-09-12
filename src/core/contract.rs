@@ -4,8 +4,11 @@ use ark_db::contract::get::get_contract;
 use ark_starknet::client::get_contract_type;
 use ark_starknet::collection_manager::CollectionManager;
 use ark_transfers_v2::transfer::process_transfers;
+use ark_transfers_v2::{
+    event_manager::EventManager, storage_manager::StorageManager, token_manager::TokenManager,
+};
 use aws_sdk_dynamodb::Client as DynamoClient;
-use log::{error, info, debug};
+use log::{debug, error, info};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::EmittedEvent;
 use std::collections::HashMap;
@@ -14,14 +17,17 @@ use std::error::Error;
 use std::time::Instant;
 
 // Identifies contract types based on events from ABIs, checks for their presence in a Redis server, and if not found, calls contract methods to determine the type, stores this information back in Redis, and finally prints the contract type.
-pub async fn identify_contract_types_from_transfers(
+pub async fn identify_contract_types_from_transfers<'a, T: StorageManager>(
     collection_manager: &CollectionManager,
     client: &ReqwestClient,
     events: &[EmittedEvent],
     dynamo_client: &DynamoClient,
     block_number: u64,
     contract_cache: &mut HashMap<String, Option<String>>,
+    token_manager: &mut TokenManager<'a, T>,
+    event_manager: &mut EventManager<'a, T>,
 ) -> Result<(), Box<dyn Error>> {
+    let start_time = Instant::now();
 
     // Get dynamo table to work with
     let collections_table =
@@ -34,11 +40,10 @@ pub async fn identify_contract_types_from_transfers(
         .unwrap();
     let timestamp = collection_manager.client.block_time(block_id).await?;
 
-    info!("timestamp: {}", timestamp);
-
     // // Iterate over events
     for event in events {
         let contract_address = format!("{:#064x}", &event.from_address);
+
         // Filter contract with most transactions from identification
         if BLACKLIST.contains(&contract_address.as_str()) {
             continue;
@@ -48,36 +53,34 @@ pub async fn identify_contract_types_from_transfers(
         let contract_status = if let Some(cached_status) = contract_cache.get(&contract_address) {
             cached_status.clone()
         } else {
-            let start_time = Instant::now();
-
             let result = get_contract(dynamo_client, &contract_address)
                 .await
                 .unwrap_or(None);
-
-            let elapsed_time = start_time.elapsed();
-            info!(
-                "get_contract took {}.{:03} seconds for contract {}",
-                elapsed_time.as_secs(),
-                elapsed_time.subsec_millis(),
-                contract_address
-            );
 
             // Cache the result
             contract_cache.insert(contract_address.clone(), result.clone());
             result
         };
+
         if let Some(existing_contract_type) = contract_status {
             if existing_contract_type == "unknown" {
                 continue; // If it's unknown, skip this iteration of the loop
             } else if existing_contract_type == "erc721" || existing_contract_type == "erc1155" {
-                match process_transfers(&event, existing_contract_type.as_str(), timestamp).await {
+                match process_transfers(
+                    &event,
+                    existing_contract_type.as_str(),
+                    timestamp,
+                    token_manager,
+                    event_manager,
+                )
+                .await
+                {
                     Ok(_) => {}
                     Err(e) => {
                         error!("Failed to process transfer: {:?}", e);
                         continue;
                     }
                 }
-                // After processing the event, skip this iteration of the loop
                 continue;
             }
         }
@@ -102,7 +105,15 @@ pub async fn identify_contract_types_from_transfers(
                     success, &collections_table
                 );
                 if contract_type != "unknown" {
-                    match process_transfers(&event, contract_type.as_str(), timestamp).await {
+                    match process_transfers(
+                        &event,
+                        contract_type.as_str(),
+                        timestamp,
+                        token_manager,
+                        event_manager,
+                    )
+                    .await
+                    {
                         Ok(_) => {}
                         Err(e) => {
                             error!("Failed to process transfer: {:?}", e);
@@ -122,6 +133,14 @@ pub async fn identify_contract_types_from_transfers(
             }
         }
     }
+
+    let elapsed_time = start_time.elapsed();
+    info!(
+        "Event loop took {}.{:03} seconds for block {}",
+        elapsed_time.as_secs(),
+        elapsed_time.subsec_millis(),
+        block_number
+    );
 
     Ok(())
 }
