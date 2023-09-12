@@ -21,6 +21,7 @@ pub struct TokenEvent {
     pub order_hash: Option<String>,
     pub price: Option<String>,
 }
+
 pub async fn create_token_event(
     dynamo_client: &Client,
     token_event: TokenEvent,

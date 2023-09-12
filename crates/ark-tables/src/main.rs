@@ -9,7 +9,7 @@ mod delete;
 mod logger;
 use create::{create_table, TableCreationData};
 use delete::delete_table;
-use log::{debug, error, info, LevelFilter};
+use log::{error, info, LevelFilter};
 use simple_logger::SimpleLogger;
 use tokio::time::{sleep, Duration};
 

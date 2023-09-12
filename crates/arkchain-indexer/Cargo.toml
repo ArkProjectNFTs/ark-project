@@ -25,3 +25,4 @@ aws-sdk-dynamodb = "0.29.0"
 
 ark-starknet = { path = "../ark-starknet" }
 ark-db = { path = "../ark-db" }
+ark-storage = { path = "../ark-storage" }
