@@ -94,7 +94,9 @@ pub async fn update_token_listing(
         .table_name(token_table)
         .key("address", AttributeValue::S(collection_address.clone()))
         .key("token_id", AttributeValue::S(padded_token_id))
-        .update_expression("SET listing_price = :price, listing_status = :status, order_hash = :order_hash")
+        .update_expression(
+            "SET listing_price = :price, listing_status = :status, order_hash = :order_hash",
+        )
         .expression_attribute_values(":status", AttributeValue::S(status))
         .expression_attribute_values(":price", AttributeValue::S(price))
         .expression_attribute_values(":order_hash", AttributeValue::S(order_hash));

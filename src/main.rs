@@ -1,4 +1,3 @@
-mod block;
 mod constants;
 mod contract;
 mod managers;
@@ -7,25 +6,86 @@ mod utils;
 
 use anyhow::Result;
 use ark_starknet::client2::StarknetClient;
-use ark_storage::storage_manager::DefaultStorage;
-use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_dynamodb::Client as DynamoClient;
-use block::process_blocks_continuously;
+
 use dotenv::dotenv;
-use log::info;
-use managers::{
-    collection_manager::CollectionManager, event_manager::EventManager, token_manager::TokenManager,
-};
-use reqwest::Client as ReqwestClient;
+
+use managers::BlockManager;
 use std::env;
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-use utils::get_ecs_task_id;
+
+use starknet::core::types::*;
+use tokio::time::{self, Duration};
+
+mod storage;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
 
+    init_tracing();
+
+    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
+    let sn_client = StarknetClient::new(&rpc_provider.clone())?;
+    let storage = storage::init_default();
+
+    let block_manager = BlockManager::new(&storage, &sn_client);
+
+    let (from_block, to_block) = sn_client
+        .parse_block_range(
+            &env::var("START_BLOCK").expect("START_BLOCK env variable is missing"),
+            &env::var("END_BLOCK").unwrap_or("latest".to_string()),
+        )
+        .expect("Can't parse block range from env");
+
+    log::debug!("Indexing range: {:?} {:?}", from_block, to_block);
+
+    let head_of_chain = to_block == BlockId::Tag(BlockTag::Latest);
+
+    let mut current_u64 = sn_client.block_id_to_u64(&from_block).await?;
+    let mut to_u64 = sn_client.block_id_to_u64(&to_block).await?;
+
+    loop {
+        log::trace!("Indexing block: {} {}", current_u64, to_u64);
+
+        // We've parsed all the block of the range.
+        if current_u64 >= to_u64 {
+            if !head_of_chain {
+                // TODO: can print some stats here if necessary.
+                log::info!("End of indexing block range");
+                return Ok(());
+            }
+
+            // TODO: make this duration configurable (DELAY_HEAD_OF_CHAIN).
+            time::sleep(Duration::from_secs(1)).await;
+
+            // Head of the chain requested -> check the last block and continue
+            // indexing loop.
+            to_u64 = sn_client.block_number().await?;
+            continue;
+        }
+
+        if !block_manager.check_candidate(current_u64) {
+            continue;
+        }
+
+        // 2. get events to index them.
+
+        // let blocks_events = self
+        //     .client
+        //     .fetch_events(BlockId::Number(from_u64), BlockId::Number(latest_u64))
+        //     .await?;
+        // for (block_number, events) in blocks_events {
+        //     self.process_events(block_number, events).await?;
+        // }
+
+        current_u64 += 1;
+    }
+
+    Ok(())
+}
+
+fn init_tracing() {
     // Initialize the LogTracer to convert `log` records to `tracing` events
     tracing_log::LogTracer::init().expect("Setting log tracer failed.");
 
@@ -41,42 +101,4 @@ async fn main() -> Result<()> {
 
     let main_span = span!(Level::TRACE, "main");
     let _main_guard = main_span.enter();
-
-    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let sn_client = StarknetClient::new(&rpc_provider.clone())?;
-    let collection_manager = CollectionManager::new(sn_client);
-
-    // let rpc_client = JsonRpcClient::new(HttpTransport::new(
-    //     Url::parse(rpc_provider.as_str()).unwrap(),
-    // ));
-
-    let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
-    let config = aws_config::from_env().region(region_provider).load().await;
-    let dynamo_client = DynamoClient::new(&config);
-    let reqwest_client = ReqwestClient::new();
-    let ecs_task_id = get_ecs_task_id();
-    let is_continous = env::var("END_BLOCK").is_err();
-
-    let storage_manager = DefaultStorage::new();
-
-    let mut token_manager = TokenManager::new(&storage_manager);
-    let mut event_manager = EventManager::new(&storage_manager);
-
-    info!(
-        "\n=== Indexing started ===\n\necs_task_id: {}\nis_continous: {}",
-        ecs_task_id, is_continous
-    );
-
-    process_blocks_continuously(
-        &collection_manager,
-        &reqwest_client,
-        &dynamo_client,
-        &ecs_task_id,
-        is_continous,
-        &mut token_manager,
-        &mut event_manager,
-    )
-    .await?;
-
-    Ok(())
 }

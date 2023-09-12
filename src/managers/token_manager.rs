@@ -61,5 +61,4 @@ impl<'a, T: StorageManager> TokenManager<'a, T> {
     //     self.storage.update_token_owner(&token);
     //     Ok(())
     // }
-
 }

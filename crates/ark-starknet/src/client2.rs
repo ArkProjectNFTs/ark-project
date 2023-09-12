@@ -7,6 +7,7 @@ use starknet::{
 use std::collections::HashMap;
 use url::Url;
 
+#[derive(Debug)]
 pub struct StarknetClient {
     provider: AnyProvider,
 }
@@ -27,6 +28,14 @@ impl StarknetClient {
             BlockId::Number(n) => Ok(*n),
             _ => Err(anyhow!("BlockID can´t be converted to u64")),
         }
+    }
+
+    ///
+    pub fn parse_block_range(&self, from: &str, to: &str) -> Result<(BlockId, BlockId)> {
+        let from_block = self.parse_block_id(from)?;
+        let to_block = self.parse_block_id(to)?;
+
+        Ok((from_block, to_block))
     }
 
     ///
