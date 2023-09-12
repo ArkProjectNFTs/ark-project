@@ -1,5 +1,6 @@
 use ark_starknet::client2::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
+use starknet::core::types::*;
 
 use std::env;
 
@@ -36,6 +37,22 @@ impl<'a, T: StorageManager> BlockManager<'a, T> {
             client,
             indexer_version: *v,
         }
+    }
+
+    /// Returns the block range to be fetched during this run.
+    pub fn get_block_range(&self) -> (BlockId, BlockId, bool) {
+        let (from_block, to_block) = self.client
+            .parse_block_range(
+                &env::var("START_BLOCK").expect("START_BLOCK env variable is missing"),
+                &env::var("END_BLOCK").unwrap_or("latest".to_string()),
+            )
+            .expect("Can't parse block range from env");
+
+        let is_head_of_chain = to_block == BlockId::Tag(BlockTag::Latest);
+        log::debug!("Indexing range: {:?} {:?} (head of chain: {})",
+                    from_block, to_block, is_head_of_chain);
+
+        (from_block, to_block, is_head_of_chain)
     }
 
     /// Returns true if the given block number must be indexed.

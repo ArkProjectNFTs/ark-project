@@ -30,17 +30,7 @@ async fn main() -> Result<()> {
     let storage = storage::init_default();
 
     let block_manager = BlockManager::new(&storage, &sn_client);
-
-    let (from_block, to_block) = sn_client
-        .parse_block_range(
-            &env::var("START_BLOCK").expect("START_BLOCK env variable is missing"),
-            &env::var("END_BLOCK").unwrap_or("latest".to_string()),
-        )
-        .expect("Can't parse block range from env");
-
-    log::debug!("Indexing range: {:?} {:?}", from_block, to_block);
-
-    let head_of_chain = to_block == BlockId::Tag(BlockTag::Latest);
+    let (from_block, to_block, poll_head_of_chain) = block_manager.get_block_range();
 
     let mut current_u64 = sn_client.block_id_to_u64(&from_block).await?;
     let mut to_u64 = sn_client.block_id_to_u64(&to_block).await?;
@@ -50,7 +40,7 @@ async fn main() -> Result<()> {
 
         // We've parsed all the block of the range.
         if current_u64 >= to_u64 {
-            if !head_of_chain {
+            if !poll_head_of_chain {
                 // TODO: can print some stats here if necessary.
                 log::info!("End of indexing block range");
                 return Ok(());
