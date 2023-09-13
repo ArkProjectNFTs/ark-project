@@ -74,8 +74,8 @@ impl<'a, T: StorageManager> CollectionManager<'a, T> {
                 // Can't find info, try to identify with calls.
                 let contract_type = self.get_contract_type(address).await?;
 
-                log::debug!(
-                    "Contract type [{:#064x}] : {}",
+                log::info!(
+                    "New contract identified [{:#064x}] : {}",
                     address,
                     contract_type.to_string()
                 );

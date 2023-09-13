@@ -68,6 +68,12 @@ impl<'a, T: StorageManager> BlockManager<'a, T> {
             .parse()
             .unwrap_or(false);
 
+        if *do_force {
+            log::debug!("Block #{} forced", block_number);
+            // TODO: self.storage.clean_block(block_number);
+            return true;
+        }
+
         // TODO: self.storage.get_block_info(...);
         let info = BlockInfo {
             indexer_version: 0,
@@ -75,12 +81,6 @@ impl<'a, T: StorageManager> BlockManager<'a, T> {
         };
 
         if info.status == BlockIndexingStatus::None {
-            return true;
-        }
-
-        if *do_force {
-            log::debug!("Block #{} forced", block_number);
-            // TODO: self.storage.clean_block(block_number);
             return true;
         }
 

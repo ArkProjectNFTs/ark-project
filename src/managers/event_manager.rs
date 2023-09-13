@@ -7,6 +7,8 @@ use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::macros::selector;
 
+const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
+
 #[derive(Debug)]
 pub struct EventManager<'a, T: StorageManager> {
     storage: &'a T,
@@ -28,7 +30,7 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
 
     /// Returns the selectors used to filter events.
     pub fn keys_selector(&self) -> Option<Vec<Vec<FieldElement>>> {
-        return Some(vec![vec![selector!("Transfer")]]);
+        return Some(vec![vec![TRANSFER_SELECTOR]]);
     }
 
     /// Formats a token event based on the event content.
