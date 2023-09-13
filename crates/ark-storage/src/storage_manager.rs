@@ -1,11 +1,10 @@
 use crate::types::{BlockIndexing, BlockInfo, ContractInfo, TokenEvent, TokenFromEvent};
 use log;
 
-enum StorageError {
+pub enum StorageError {
     // TODO
 }
-// TODO
-//
+
 pub trait StorageManager {
     fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
 
@@ -30,7 +29,15 @@ pub trait StorageManager {
 
     fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
 
-    fn set_indexer_progress(&self, block_number: u64) -> Result<(), StorageError>;
+    fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError>;
+}
+
+pub struct DefaultStorage;
+
+impl DefaultStorage {
+    pub fn new() -> Self {
+        Self
+    }
 }
 
 impl StorageManager for DefaultStorage {
@@ -94,10 +101,7 @@ impl StorageManager for DefaultStorage {
     }
 
     fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError> {
-        log::debug!(
-            "Setting indexer progress to block #{}",
-            progress.percentage
-        );
+        log::debug!("Setting indexer progress to block #{}", progress.percentage);
         // ... Logic here
         Ok(())
     }
