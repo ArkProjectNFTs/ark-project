@@ -6,10 +6,9 @@ mod utils;
 
 use anyhow::Result;
 use ark_starknet::client2::StarknetClient;
-
 use dotenv::dotenv;
-
-use managers::BlockManager;
+use managers::collection_manager::ContractType;
+use managers::{BlockManager, CollectionManager, EventManager};
 use std::env;
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
@@ -28,8 +27,10 @@ async fn main() -> Result<()> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let sn_client = StarknetClient::new(&rpc_provider.clone())?;
     let storage = storage::init_default();
-
     let block_manager = BlockManager::new(&storage, &sn_client);
+    let event_manager = EventManager::new(&storage, &sn_client);
+    let mut collection_manager = CollectionManager::new(&storage, &sn_client);
+
     let (from_block, to_block, poll_head_of_chain) = block_manager.get_block_range();
 
     let mut current_u64 = sn_client.block_id_to_u64(&from_block).await?;
@@ -38,20 +39,8 @@ async fn main() -> Result<()> {
     loop {
         log::trace!("Indexing block: {} {}", current_u64, to_u64);
 
-        // We've parsed all the block of the range.
-        if current_u64 >= to_u64 {
-            if !poll_head_of_chain {
-                // TODO: can print some stats here if necessary.
-                log::info!("End of indexing block range");
-                return Ok(());
-            }
-
-            // TODO: make this duration configurable (DELAY_HEAD_OF_CHAIN).
-            time::sleep(Duration::from_secs(1)).await;
-
-            // Head of the chain requested -> check the last block and continue
-            // indexing loop.
-            to_u64 = sn_client.block_number().await?;
+        to_u64 = check_range(&sn_client, current_u64, to_u64, poll_head_of_chain).await;
+        if current_u64 > to_u64 {
             continue;
         }
 
@@ -59,20 +48,73 @@ async fn main() -> Result<()> {
             continue;
         }
 
-        // 2. get events to index them.
+        let blocks_events = sn_client
+            .fetch_events(
+                BlockId::Number(current_u64),
+                BlockId::Number(current_u64),
+                event_manager.keys_selector(),
+            )
+            .await?;
 
-        // let blocks_events = self
-        //     .client
-        //     .fetch_events(BlockId::Number(from_u64), BlockId::Number(latest_u64))
-        //     .await?;
-        // for (block_number, events) in blocks_events {
-        //     self.process_events(block_number, events).await?;
-        // }
+        for (_, events) in blocks_events {
+            for e in events {
+                let contract_address = e.from_address;
+
+                let contract_info =
+                    match collection_manager.identify_contract(contract_address).await {
+                        Ok(info) => info,
+                        Err(e) => {
+                            log::error!("Can't identify contract {contract_address}: {:?}", e);
+                            continue;
+                        }
+                    };
+
+                log::debug!(
+                    "Contract type [{:#064x}] : {}",
+                    contract_address,
+                    contract_info.r#type.to_string()
+                );
+
+                if contract_info.r#type == ContractType::Other {
+                    continue;
+                }
+
+                // event_manager.identify_event(e, block_timestamp, contract_info);
+                // token_manager.register_token(...);
+            }
+        }
 
         current_u64 += 1;
     }
+}
 
-    Ok(())
+async fn check_range(
+    client: &StarknetClient,
+    current: u64,
+    to: u64,
+    poll_head_of_chain: bool,
+) -> u64 {
+    if current >= to {
+        if !poll_head_of_chain {
+            // TODO: can print some stats here if necessary.
+            log::info!("End of indexing block range");
+            std::process::exit(0);
+        }
+
+        // TODO: make this duration configurable (DELAY_HEAD_OF_CHAIN).
+        // But we are at HOC, so for now the block interval is 3 min.
+        // However, we want the block as soon as it's mined.
+        time::sleep(Duration::from_secs(1)).await;
+
+        // Head of the chain requested -> check the last block and continue
+        // indexing loop.
+        return client
+            .block_number()
+            .await
+            .expect("Can't fetch last block number");
+    } else {
+        return current;
+    }
 }
 
 fn init_tracing() {

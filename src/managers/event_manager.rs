@@ -1,21 +1,31 @@
 use anyhow::{anyhow, Result};
+use ark_starknet::client2::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenId};
 use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
+use starknet::macros::selector;
 
 #[derive(Debug)]
 pub struct EventManager<'a, T: StorageManager> {
     storage: &'a T,
     token_event: TokenEvent,
+    client: &'a StarknetClient,
 }
 
 impl<'a, T: StorageManager> EventManager<'a, T> {
-    pub fn new(storage: &'a T) -> Self {
+    /// Initializes a new instance.
+    pub fn new(storage: &'a T, client: &'a StarknetClient) -> Self {
         EventManager {
             storage,
             token_event: TokenEvent::default(),
+            client,
         }
+    }
+
+    /// Returns the selectors used to filter events.
+    pub fn keys_selector(&self) -> Option<Vec<Vec<FieldElement>>> {
+        return Some(vec![vec![selector!("Transfer")]]);
     }
 
     pub fn reset_event(&mut self) {
