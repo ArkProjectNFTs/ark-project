@@ -119,6 +119,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
+name = "ark-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ark-db",
+ "ark-metadata",
+ "ark-starknet",
+ "ark-storage",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-types",
+ "chrono",
+ "clap 4.4.2",
+ "dotenv",
+ "hex",
+ "log",
+ "num-bigint",
+ "openssl",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "starknet",
+ "structopt",
+ "tokio",
+ "tracing",
+ "tracing-log",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "ark-db"
 version = "0.1.0"
 dependencies = [
@@ -179,6 +211,7 @@ name = "ark-indexer"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "ark-core",
  "ark-db",
  "ark-metadata",
  "ark-starknet",
