@@ -224,34 +224,38 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
+#[cfg(test)]
+mod tests {
 
-//     use mockall::predicate::*;
-//     use crate::storage_manager::DefaultStorage;
+    use crate::storage_manager::DefaultStorage;
+    use mockall::predicate::*;
 
-//     use super::*;
-//     use ark_starknet::client2::{IStarknetClient, MockIStarknetClient};
-//     use mockito::{mock, Matcher};
-//     use serde_json::json;
+    use super::*;
+    use ark_starknet::client2::{IStarknetClient, MockIStarknetClient};
+    use mockito::{mock, Matcher};
+    use serde_json::json;
 
-//     #[tokio::test]
-//     async fn test_get_contract_property_string() {
+    #[tokio::test]
+    async fn test_get_contract_property_string() {
+        let rpc_url = &"";
+        let mut mock = MockIStarknetClient::new(rpc_url).unwrap();
+        let mut storage_manager = DefaultStorage::new();
+        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock);
 
-//         let rpc_url = &"";
-//         let mut mock = MockIStarknetClient::new(rpc_url).unwrap();
-//         let mut storage_manager = DefaultStorage::new();
-//         let mut metadata_manager = MetadataManager::new(&storage_manager, &mock);
+        let contract_address = FieldElement::ONE;
+        let selector_name = selector!("tokenURI");
 
-//         let contract_address = FieldElement::ONE;
-//         let selector_name = selector!("tokenURI");
+        let test = metadata_manager
+            .get_contract_property_string(
+                contract_address,
+                selector_name,
+                vec![FieldElement::ZERO, FieldElement::ZERO],
+                BlockId::Tag(BlockTag::Latest),
+            )
+            .await;
 
-//         let test = metadata_manager.get_contract_property_string(contract_address, selector_name, vec![FieldElement::ZERO, FieldElement::ZERO], BlockId::Tag(BlockTag::Latest)).await;
-
-//         // mock.expect_block_id_to_u64()
-//         // .times(1)
-//         // .returning(|_| Ok(42));
-
-//     }
-
-// }
+        // mock.expect_block_id_to_u64()
+        // .times(1)
+        // .returning(|_| Ok(42));
+    }
+}
