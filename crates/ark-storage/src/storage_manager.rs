@@ -5,11 +5,6 @@ use crate::types::{
 use log;
 use starknet::core::types::FieldElement;
 
-enum StorageError {
-    // TODO
-}
-// TODO
-//
 pub trait StorageManager {
     fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
 
