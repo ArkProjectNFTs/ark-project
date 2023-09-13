@@ -231,7 +231,6 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_logger",
- "starknet",
  "structopt",
  "tokio",
  "tracing",
