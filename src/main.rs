@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     let sn_client = StarknetClient::new(&rpc_provider.clone())?;
     let storage = storage::init_default();
     let block_manager = BlockManager::new(&storage, &sn_client);
-    let event_manager = EventManager::new(&storage, &sn_client);
+    let mut event_manager = EventManager::new(&storage, &sn_client);
     let mut collection_manager = CollectionManager::new(&storage, &sn_client);
 
     let (from_block, to_block, poll_head_of_chain) = block_manager.get_block_range();
@@ -47,6 +47,8 @@ async fn main() -> Result<()> {
         if !block_manager.check_candidate(current_u64) {
             continue;
         }
+
+        let block_ts = sn_client.block_time(BlockId::Number(current_u64)).await?;
 
         let blocks_events = sn_client
             .fetch_events(
@@ -69,17 +71,28 @@ async fn main() -> Result<()> {
                         }
                     };
 
-                log::debug!(
-                    "Contract type [{:#064x}] : {}",
-                    contract_address,
-                    contract_info.r#type.to_string()
-                );
-
-                if contract_info.r#type == ContractType::Other {
+                let contract_type = contract_info.r#type;
+                if contract_type == ContractType::Other {
                     continue;
                 }
 
-                // event_manager.identify_event(e, block_timestamp, contract_info);
+                log::debug!(
+                    "Contract type [{:#064x}] : {}",
+                    contract_address,
+                    contract_type.to_string()
+                );
+
+                let _token_id = match event_manager
+                    .format_event(&e, contract_type, block_ts)
+                    .await
+                {
+                    Ok(token_id) => token_id,
+                    Err(err) => {
+                        log::error!("Can't format event {:?}\nevent: {:?}", err, e);
+                        continue;
+                    }
+                };
+
                 // token_manager.register_token(...);
             }
         }
