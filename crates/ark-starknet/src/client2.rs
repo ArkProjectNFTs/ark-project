@@ -119,7 +119,8 @@ impl StarknetClient {
         Ok(events)
     }
 
-    ///
+    /// Call a contract trying all the given selectors.
+    /// All selector must accept the same arguments.
     pub async fn call_contract(
         &self,
         contract_address: FieldElement,

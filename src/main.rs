@@ -1,6 +1,7 @@
 mod constants;
 mod contract;
 mod managers;
+mod storage;
 mod transfer;
 mod utils;
 
@@ -8,15 +9,12 @@ use anyhow::Result;
 use ark_starknet::client2::StarknetClient;
 use dotenv::dotenv;
 use managers::collection_manager::ContractType;
-use managers::{BlockManager, CollectionManager, EventManager};
+use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
+use starknet::core::types::*;
 use std::env;
+use tokio::time::{self, Duration};
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
-use starknet::core::types::*;
-use tokio::time::{self, Duration};
-
-mod storage;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -29,6 +27,7 @@ async fn main() -> Result<()> {
     let storage = storage::init_default();
     let block_manager = BlockManager::new(&storage, &sn_client);
     let mut event_manager = EventManager::new(&storage, &sn_client);
+    let mut token_manager = TokenManager::new(&storage, &sn_client);
     let mut collection_manager = CollectionManager::new(&storage, &sn_client);
 
     let (from_block, to_block, poll_head_of_chain) = block_manager.get_block_range();
@@ -76,13 +75,7 @@ async fn main() -> Result<()> {
                     continue;
                 }
 
-                log::debug!(
-                    "Contract type [{:#064x}] : {}",
-                    contract_address,
-                    contract_type.to_string()
-                );
-
-                let _token_id = match event_manager
+                let token_event = match event_manager
                     .format_event(&e, contract_type, block_ts)
                     .await
                 {
@@ -93,7 +86,13 @@ async fn main() -> Result<()> {
                     }
                 };
 
-                // token_manager.register_token(...);
+                match token_manager.format_token(&token_event).await {
+                    Ok(()) => (),
+                    Err(err) => {
+                        log::error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
+                        continue;
+                    }
+                }
             }
         }
 
@@ -126,7 +125,7 @@ async fn check_range(
             .await
             .expect("Can't fetch last block number");
     } else {
-        return current;
+        return to;
     }
 }
 

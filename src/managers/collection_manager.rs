@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
 use ark_starknet::client2::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
-use log::info;
+
 use serde::{Deserialize, Serialize};
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
-use starknet::macros::selector;
+
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -74,6 +74,12 @@ impl<'a, T: StorageManager> CollectionManager<'a, T> {
                 // Can't find info, try to identify with calls.
                 let contract_type = self.get_contract_type(address).await?;
 
+                log::debug!(
+                    "Contract type [{:#064x}] : {}",
+                    address,
+                    contract_type.to_string()
+                );
+
                 let info = ContractInfo {
                     name: String::new(),
                     symbol: String::new(),
@@ -82,59 +88,10 @@ impl<'a, T: StorageManager> CollectionManager<'a, T> {
 
                 self.cache.insert(address, info.clone());
                 // TODO: self.storage.register_contract_info(...);
+
                 Ok(info)
             }
         }
-    }
-
-    pub async fn get_token_owner(
-        &self,
-        contract_address: FieldElement,
-        token_id_low: FieldElement,
-        token_id_high: FieldElement,
-    ) -> Result<Vec<FieldElement>> {
-        let block = BlockId::Tag(BlockTag::Latest);
-
-        match self
-            .client
-            .call_contract(
-                contract_address,
-                selector!("owner_of"),
-                vec![token_id_low, token_id_high],
-                block,
-            )
-            .await
-        {
-            Ok(res) => Ok(res),
-            Err(_) => self
-                .client
-                .call_contract(
-                    contract_address,
-                    selector!("owner_of"),
-                    vec![token_id_low, token_id_high],
-                    block,
-                )
-                .await
-                .map_err(|_| anyhow!("Failed to get token owner")),
-        }
-    }
-
-    async fn call_contract_helper(
-        &self,
-        contract_address: FieldElement,
-        selector_name: &str,
-        token_id_low: FieldElement,
-        token_id_high: FieldElement,
-        block_id: BlockId,
-    ) -> Result<Vec<FieldElement>> {
-        self.client
-            .call_contract(
-                contract_address,
-                get_selector_from_name(selector_name)?,
-                vec![token_id_low, token_id_high],
-                block_id,
-            )
-            .await
     }
 
     pub async fn get_contract_type(&self, contract_address: FieldElement) -> Result<ContractType> {
@@ -182,8 +139,6 @@ impl<'a, T: StorageManager> CollectionManager<'a, T> {
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<String> {
-        info!("Getting contract property: {:?}", selector_name);
-
         let response = self
             .client
             .call_contract(

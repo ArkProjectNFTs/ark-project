@@ -39,7 +39,7 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         event: &EmittedEvent,
         contract_type: ContractType,
         timestamp: u64,
-    ) -> Result<TokenId> {
+    ) -> Result<TokenEvent> {
         self.reset_event();
 
         // As cairo didn't have keys before, we first check if the data
@@ -75,7 +75,7 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         // TODO: self.storage.register_event(self.token_event);
         // TODO: check depending on event type if it's a create/update etc...?
 
-        Ok(token_id)
+        Ok(self.token_event.clone())
     }
 
     pub fn get_event_type(from: FieldElement, to: FieldElement) -> EventType {
