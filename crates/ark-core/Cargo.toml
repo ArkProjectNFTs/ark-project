@@ -1,28 +1,10 @@
-[workspace]
-members = [
-  "crates/ark-db",
-  "crates/ark-metadata",
-  "crates/ark-starknet",
-  "crates/ark-tables",
-  "crates/ark-storage",
-  "crates/ark-core",
-  "crates/arkchain-indexer",
-]
-
 [package]
-name = "ark-indexer"
+name = "ark-core"
 version = "0.1.0"
 edition = "2021"
 
-[workspace.dependencies]
-ark-db = { path = "./crates/ark-db" }
-ark-starknet = { path = "./crates/ark-starknet" }
-ark-metadata = { path = "./crates/ark-metadata" }
-ark-storage = { path = "./crates/ark-storage" }
-async-trait = "0.1.73"
-starknet = "0.5.0"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# CLEAN DEPENDENCIES BASED ON MAIN ONLY.
 [dependencies]
 chrono = "0.4.19"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
@@ -45,8 +27,9 @@ num-bigint = { version = "0.4.3", default-features = false }
 log = "0.4"
 simple_logger = "4.2.0"
 openssl = { version = "0.10", features = ["vendored"] }
+
 ark-db.workspace = true
 ark-starknet.workspace = true
 ark-metadata.workspace = true
 ark-storage.workspace = true
-ark-core = { path = "./crates/ark-core" }
+starknet.workspace = true
