@@ -1,13 +1,13 @@
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use starknet::core::types::*;
 
 use std::env;
 
 #[derive(Debug)]
-pub struct BlockManager<'a, T: StorageManager> {
+pub struct BlockManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
-    client: &'a StarknetClient,
+    client: &'a C,
     indexer_version: u64,
 }
 
@@ -25,8 +25,8 @@ pub struct BlockInfo {
     pub status: BlockIndexingStatus,
 }
 
-impl<'a, T: StorageManager> BlockManager<'a, T> {
-    pub fn new(storage: &'a T, client: &'a StarknetClient) -> Self {
+impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
+    pub fn new(storage: &'a T, client: &'a C) -> Self {
         let v: &u64 = &env::var("INDEXER_VERSION")
             .expect("INDEXER_VERSION env var is missing")
             .parse()

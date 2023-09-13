@@ -19,6 +19,7 @@ ark-db = { path = "./crates/ark-db" }
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
 ark-storage = { path = "./crates/ark-storage" }
+async-trait = "0.1.73"
 
 # CLEAN DEPENDENCIES BASED ON MAIN ONLY.
 [dependencies]

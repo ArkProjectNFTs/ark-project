@@ -1,245 +1,183 @@
-use super::utils::{get_contract_property_string, get_selector_as_string};
 use anyhow::{anyhow, Result};
-use log::info;
-use reqwest::Client as ReqwestClient;
-use serde_json::{json, Value};
-use starknet::core::types::FieldElement;
+use async_trait::async_trait;
+use regex::Regex;
+use starknet::{
+    core::{types::FieldElement, types::*},
+    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider},
+};
 use std::collections::HashMap;
-use std::env;
-use std::time::Instant;
+use url::Url;
 
-pub async fn fetch_block(
-    client: &ReqwestClient,
-    block_number: u64,
-) -> Result<HashMap<String, Value>> {
-    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let payload = json!({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "starknet_getEvents",
-        "params": {
-            "filter": {
-                "from_block": {
-                  "block_number": block_number
-                },
-                "to_block": {
-                  "block_number": block_number
-                },
-                "chunk_size": 1000,
-              }
-        }
-    });
+#[async_trait]
+pub trait StarknetClient {
+    ///
+    fn new(rpc_url: &str) -> Result<StarknetClientHttp>;
 
-    let start_time = Instant::now();
-    let resp = client.post(rpc_provider).json(&payload).send().await?;
-    let block: HashMap<String, Value> = resp.json().await?;
+    ///
+    async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64>;
 
-    let elapsed_time = start_time.elapsed();
-    let elapsed_time_ms = elapsed_time.as_millis();
-    info!(
-        "RPC starknet_getEvents response time: {} ms",
-        elapsed_time_ms
-    );
+    ///
+    fn parse_block_range(&self, from: &str, to: &str) -> Result<(BlockId, BlockId)>;
 
-    Ok(block)
+    ///
+    fn parse_block_id(&self, id: &str) -> Result<BlockId>;
+
+    ///
+    async fn block_time(&self, block: BlockId) -> Result<u64>;
+
+    ///
+    async fn block_number(&self) -> Result<u64>;
+
+    /// On Starknet, a chunk size limits the maximum number of events
+    /// that can be retrieved with one call.
+    /// To ensure all events are fetched, we must ensure all events pages
+    /// are correctly fechted.
+    ///
+    /// TODO: for now this version is ok, but it can be RAM consuming
+    /// as the events are accumulated before this function returns.
+    /// We can think of an other version that returns each page, and let
+    /// the caller process the pages.
+    async fn fetch_events(
+        &self,
+        from_block: BlockId,
+        to_block: BlockId,
+        keys: Option<Vec<Vec<FieldElement>>>,
+    ) -> Result<HashMap<u64, Vec<EmittedEvent>>>;
+
+    /// Call a contract trying all the given selectors.
+    /// All selector must accept the same arguments.
+    async fn call_contract(
+        &self,
+        contract_address: FieldElement,
+        selector: FieldElement,
+        calldata: Vec<FieldElement>,
+        block: BlockId,
+    ) -> Result<Vec<FieldElement>>;
 }
 
-pub async fn get_block_with_txs(client: &ReqwestClient, block_number: u64) -> Result<Value> {
-    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let payload = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getBlockWithTxs",
-        "params":  {
-            "block_id": {
-                "block_number": block_number
-            }
-        }
-    });
-
-    let start_time = Instant::now();
-    let response = client.post(rpc_provider).json(&payload).send().await?;
-    let result: Value = response.json().await?;
-
-    let elapsed_time = start_time.elapsed();
-    let elapsed_time_ms = elapsed_time.as_millis();
-    info!(
-        "RPC starknet_getEvents response time: {} ms",
-        elapsed_time_ms
-    );
-
-    Ok(result.get("result").cloned().unwrap_or(Value::Null))
+#[derive(Debug)]
+pub struct StarknetClientHttp {
+    provider: AnyProvider,
 }
 
-pub async fn call_contract(
-    client: &ReqwestClient,
-    contract_address: &str,
-    selector_name: &str,
-    calldata: Vec<String>,
-    block_number: u64,
-) -> Result<Value> {
-    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let selector_string = selector_name.to_string();
-    let selector = get_selector_as_string(&selector_string);
+#[async_trait]
+impl StarknetClient for StarknetClientHttp {
+    ///
+    fn new(rpc_url: &str) -> Result<StarknetClientHttp> {
+        let rpc_url = Url::parse(rpc_url)?;
+        let provider = AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url)));
 
-    let payload = json!({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "starknet_call",
-        "params": {
-            "request": {
-                "contract_address": contract_address,
-                "entry_point_selector": format!("0x{}", selector),
-                "calldata": calldata,
-                "signature": []
-            },
-            "block_id": {
-                "block_number": block_number
-            }
-        }
-    });
+        Ok(StarknetClientHttp { provider })
+    }
 
-    info!("RPC Payload: {:?} - Selector: {:?}", payload, selector_name);
-
-    let start_time = Instant::now();
-    let response = client.post(rpc_provider).json(&payload).send().await?;
-    let result: Value = response.json().await?;
-
-    info!("RPC Result: {:?}", result);
-
-    let elapsed_time = start_time.elapsed();
-    let elapsed_time_ms = elapsed_time.as_millis();
-    info!(
-        "RPC starknet_getEvents response time: {} ms",
-        elapsed_time_ms
-    );
-
-    if let Some(error) = result.get("error") {
-        let error_code = error["code"].as_u64().unwrap_or(0);
-        let error_message = error["message"].as_str().unwrap_or("");
-        if error_code == 21 && error_message == "Invalid message selector" {
-            return Err(anyhow!("Invalid message selector"));
+    ///
+    async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64> {
+        match id {
+            BlockId::Tag(BlockTag::Latest) => Ok(self.provider.block_number().await?),
+            BlockId::Number(n) => Ok(*n),
+            _ => Err(anyhow!("BlockID can´t be converted to u64")),
         }
     }
 
-    Ok(result.get("result").cloned().unwrap_or(Value::Null))
-}
+    ///
+    fn parse_block_range(&self, from: &str, to: &str) -> Result<(BlockId, BlockId)> {
+        let from_block = self.parse_block_id(from)?;
+        let to_block = self.parse_block_id(to)?;
 
-pub async fn get_latest_block(client: &ReqwestClient) -> Result<u64> {
-    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let payload: Value = json!({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "starknet_blockNumber",
-        "params": {}
-    });
-
-    let start_time = Instant::now();
-    let response = client.post(rpc_provider).json(&payload).send().await?;
-    let result: Value = response.json().await?;
-
-    let elapsed_time = start_time.elapsed();
-    let elapsed_time_ms = elapsed_time.as_millis();
-    info!(
-        "RPC starknet_getEvents response time: {} ms",
-        elapsed_time_ms
-    );
-
-    let block_number = result
-        .get("result")
-        .and_then(Value::as_u64)
-        .ok_or(anyhow!("Failed to parse block number"))?;
-    Ok(block_number)
-}
-
-pub async fn get_contract_type(
-    client: &ReqwestClient,
-    contract_address: &str,
-    block_number: u64,
-) -> String {
-    let token_uri_cairo_0 = get_contract_property_string(
-        client,
-        contract_address,
-        "tokenURI",
-        vec!["0".to_string(), "0".to_string()],
-        block_number,
-    )
-    .await;
-
-    let token_uri = get_contract_property_string(
-        client,
-        contract_address,
-        "token_uri",
-        vec!["0".to_string(), "0".to_string()],
-        block_number,
-    )
-    .await;
-
-    // Get uri
-    let uri_result: String =
-        get_contract_property_string(client, contract_address, "uri", [].to_vec(), block_number)
-            .await;
-
-    // Init contract type
-    let mut contract_type = "unknown".to_string();
-    if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
-        || (token_uri != "undefined" && !token_uri.is_empty())
-    {
-        contract_type = "erc721".to_string()
-    } else if uri_result != "undefined" {
-        contract_type = "erc1155".to_string()
+        Ok((from_block, to_block))
     }
 
-    contract_type
-}
+    ///
+    fn parse_block_id(&self, id: &str) -> Result<BlockId> {
+        let regex_block_number = Regex::new("^[0-9]{1,}$").unwrap();
 
-pub async fn get_token_owner(
-    client: &ReqwestClient,
-    token_id_low: FieldElement,
-    token_id_high: FieldElement,
-    contract_address: &str,
-    block_number: u64,
-) -> String {
-    let token_id_low_hex = format!("{:x}", token_id_low);
-    let token_id_high_hex = format!("{:x}", token_id_high);
+        if id == "latest" {
+            Ok(BlockId::Tag(BlockTag::Latest))
+        } else if id == "pending" {
+            Ok(BlockId::Tag(BlockTag::Pending))
+        } else if regex_block_number.is_match(id) {
+            Ok(BlockId::Number(id.parse::<u64>()?))
+        } else {
+            Ok(BlockId::Hash(FieldElement::from_hex_be(id)?))
+        }
+    }
 
-    match call_contract(
-        client,
-        contract_address,
-        "ownerOf",
-        vec![token_id_low_hex.clone(), token_id_high_hex.clone()],
-        block_number,
-    )
-    .await
-    {
-        Ok(result) => {
-            if let Some(token_owner) = result.get(0) {
-                token_owner.to_string().replace('\"', "")
-            } else {
-                "".to_string()
+    ///
+    async fn block_time(&self, block: BlockId) -> Result<u64> {
+        let block = self.provider.get_block_with_tx_hashes(block).await?;
+        let timestamp = match block {
+            MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
+            MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,
+        };
+
+        Ok(timestamp)
+    }
+
+    ///
+    async fn block_number(&self) -> Result<u64> {
+        Ok(self.provider.block_number().await?)
+    }
+
+    ///
+    async fn fetch_events(
+        &self,
+        from_block: BlockId,
+        to_block: BlockId,
+        keys: Option<Vec<Vec<FieldElement>>>,
+    ) -> Result<HashMap<u64, Vec<EmittedEvent>>> {
+        let mut events: HashMap<u64, Vec<EmittedEvent>> = HashMap::new();
+
+        let filter = EventFilter {
+            from_block: Some(from_block),
+            to_block: Some(to_block),
+            address: None,
+            keys,
+        };
+
+        let chunk_size = 1000;
+        let mut continuation_token: Option<String> = None;
+
+        loop {
+            let event_page = self
+                .provider
+                .get_events(filter.clone(), continuation_token, chunk_size)
+                .await?;
+
+            event_page.events.iter().for_each(|e| {
+                events
+                    .entry(e.block_number)
+                    .and_modify(|v| v.push(e.clone()))
+                    .or_insert(vec![e.clone()]);
+            });
+
+            continuation_token = event_page.continuation_token;
+
+            if continuation_token.is_none() {
+                break;
             }
         }
-        Err(_error) => {
-            match call_contract(
-                client,
-                contract_address,
-                "owner_of",
-                vec![token_id_low_hex, token_id_high_hex],
-                block_number,
+
+        Ok(events)
+    }
+
+    ///
+    async fn call_contract(
+        &self,
+        contract_address: FieldElement,
+        selector: FieldElement,
+        calldata: Vec<FieldElement>,
+        block: BlockId,
+    ) -> Result<Vec<FieldElement>> {
+        Ok(self
+            .provider
+            .call(
+                FunctionCall {
+                    contract_address,
+                    entry_point_selector: selector,
+                    calldata,
+                },
+                block,
             )
-            .await
-            {
-                Ok(result) => {
-                    info!("owner_of result: {:?}", result);
-
-                    if let Some(token_owner) = result.get(0) {
-                        token_owner.to_string().replace('\"', "")
-                    } else {
-                        "".to_string()
-                    }
-                }
-                Err(_error) => "".to_string(),
-            }
-        }
+            .await?)
     }
 }

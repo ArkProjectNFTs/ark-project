@@ -1,6 +1,6 @@
 use crate::ContractType;
 use anyhow::{anyhow, Result};
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenId};
 use log::info;
@@ -10,21 +10,19 @@ use starknet::macros::selector;
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
 
 #[derive(Debug)]
-pub struct EventManager<'a, T: StorageManager> {
+pub struct EventManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
-    // I am not sure we gain a lot by having it here. As a temporary
-    // value will be on the stack, which is way faster that accessing the heap.
+    client: &'a C,
     token_event: TokenEvent,
-    client: &'a StarknetClient,
 }
 
-impl<'a, T: StorageManager> EventManager<'a, T> {
+impl<'a, T: StorageManager, C: StarknetClient> EventManager<'a, T, C> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T, client: &'a StarknetClient) -> Self {
+    pub fn new(storage: &'a T, client: &'a C) -> Self {
         EventManager {
             storage,
-            token_event: TokenEvent::default(),
             client,
+            token_event: TokenEvent::default(),
         }
     }
 

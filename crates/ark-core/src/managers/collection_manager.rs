@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 
 use serde::{Deserialize, Serialize};
@@ -34,16 +34,16 @@ pub struct ContractInfo {
     pub r#type: ContractType,
 }
 
-pub struct CollectionManager<'a, T: StorageManager> {
+pub struct CollectionManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
-    client: &'a StarknetClient,
+    client: &'a C,
     /// A cache with contract address mapped to it's type.
     cache: HashMap<FieldElement, ContractInfo>,
 }
 
-impl<'a, T: StorageManager> CollectionManager<'a, T> {
+impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T, client: &'a StarknetClient) -> Self {
+    pub fn new(storage: &'a T, client: &'a C) -> Self {
         Self {
             storage,
             client,

@@ -1,8 +1,8 @@
 mod managers;
-mod storage;
 
 use anyhow::Result;
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::client::{StarknetClient, StarknetClientHttp};
+use ark_storage::storage_manager::StorageManager;
 use dotenv::dotenv;
 use managers::collection_manager::ContractType;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
@@ -12,14 +12,13 @@ use tokio::time::{self, Duration};
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
-pub async fn indexer_main_loop() -> Result<()> {
+pub async fn indexer_main_loop<T: StorageManager>(storage: T) -> Result<()> {
     dotenv().ok();
 
     init_tracing();
 
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let sn_client = StarknetClient::new(&rpc_provider.clone())?;
-    let storage = storage::init_default();
+    let sn_client = StarknetClientHttp::new(&rpc_provider.clone())?;
     let block_manager = BlockManager::new(&storage, &sn_client);
     let mut event_manager = EventManager::new(&storage, &sn_client);
     let mut token_manager = TokenManager::new(&storage, &sn_client);
@@ -96,7 +95,7 @@ pub async fn indexer_main_loop() -> Result<()> {
 }
 
 async fn check_range(
-    client: &StarknetClient,
+    client: &StarknetClientHttp,
     current: u64,
     to: u64,
     poll_head_of_chain: bool,

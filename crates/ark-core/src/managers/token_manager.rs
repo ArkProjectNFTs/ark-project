@@ -1,22 +1,22 @@
 use anyhow::{anyhow, Result};
-use ark_starknet::client2::StarknetClient;
+use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenFromEvent};
 use starknet::core::types::*;
 use starknet::macros::selector;
 
 #[derive(Debug)]
-pub struct TokenManager<'a, T: StorageManager> {
+pub struct TokenManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
-    client: &'a StarknetClient,
+    client: &'a C,
     // TODO: Same as event manager, we should use the stack instead.
     // check with @kwiss.
     token: TokenFromEvent,
 }
 
-impl<'a, T: StorageManager> TokenManager<'a, T> {
+impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T, client: &'a StarknetClient) -> Self {
+    pub fn new(storage: &'a T, client: &'a C) -> Self {
         Self {
             storage,
             client,
