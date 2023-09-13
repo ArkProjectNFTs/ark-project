@@ -75,7 +75,7 @@ async fn main() -> Result<()> {
                     .format_event(&e, contract_type, block_ts)
                     .await
                 {
-                    Ok(token_id) => token_id,
+                    Ok(te) => te,
                     Err(err) => {
                         log::error!("Can't format event {:?}\nevent: {:?}", err, e);
                         continue;
