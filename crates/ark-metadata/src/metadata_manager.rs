@@ -1,10 +1,9 @@
 use crate::cairo_strings::parse_cairo_long_string;
+use crate::normalize_metadata::normalize_metadata;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
-use log::error;
 use log::info;
-use log::warn;
 use reqwest::Client as ReqwestClient;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
@@ -21,10 +20,10 @@ pub struct MetadataManager<'a, T: StorageManager, C: StarknetClient> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct MetadataAttribute {
-    trait_type: String,
-    value: String,
-    display_type: String,
+pub struct MetadataAttribute {
+    pub trait_type: String,
+    pub value: String,
+    pub display_type: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -33,7 +32,7 @@ pub struct NormalizedMetadata {
     pub external_url: String,
     pub image: String,
     pub name: String,
-    attributes: Vec<MetadataAttribute>,
+    pub attributes: Vec<MetadataAttribute>,
 }
 
 // trait NormalizedMetadata {
@@ -55,6 +54,29 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             starknet_client,
             request_client: ReqwestClient::new(),
         }
+    }
+
+    pub async fn refresh_metadata(
+        &mut self,
+        contract_address: FieldElement,
+        token_id_low: FieldElement,
+        token_id_high: FieldElement,
+        block_id: BlockId,
+    ) -> Result<()> {
+        let token_uri = self
+            .get_token_uri(token_id_low, token_id_high, contract_address)
+            .await?;
+
+        // TODO: check if token_uri is already in db
+
+        // TODO: save token uri in db
+
+        let (raw_metadata, normalized_metadata) =
+            self.fetch_metadata(&token_uri, &token_uri).await?;
+
+        // TODO: save metadata in db
+
+        Ok(())
     }
 
     pub async fn get_token_uri(
@@ -100,29 +122,6 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         }
     }
 
-    pub async fn refresh_metadata(
-        &mut self,
-        contract_address: FieldElement,
-        token_id_low: FieldElement,
-        token_id_high: FieldElement,
-        block_number: BlockId,
-    ) -> Result<()> {
-        let token_uri = self
-            .get_token_uri(token_id_low, token_id_high, contract_address)
-            .await?;
-
-        // TODO: check if token_uri is already in db
-
-        // TODO: save token uri in db
-
-        let (raw_metadata, normalized_metadata) =
-            self.fetch_metadata(&token_uri, &token_uri).await?;
-
-        // TODO: save metadata in db
-
-        Ok(())
-    }
-
     pub async fn fetch_metadata(
         &mut self,
         metadata_uri: &str,
@@ -133,76 +132,20 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         let response = self
             .request_client
             .get(metadata_uri)
-            .timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(3))
             .send()
             .await;
 
         match response {
-            Ok(resp) => {
-                let raw_metadata: Value = resp.json().await?;
-
-                info!("Metadata: {:?}", raw_metadata);
-
-                let empty_vec = Vec::new();
-
-                let attributes = raw_metadata
-                    .get("attributes")
-                    .and_then(|attr| attr.as_array())
-                    .unwrap_or(&empty_vec);
-
-                let normalized_attributes: Vec<MetadataAttribute> = attributes
-                    .iter()
-                    .map(|attribute| MetadataAttribute {
-                        trait_type: attribute
-                            .get("trait_type")
-                            .and_then(|trait_type| trait_type.as_str())
-                            .unwrap_or("")
-                            .to_string(),
-                        value: attribute
-                            .get("value")
-                            .and_then(|value| value.as_str())
-                            .unwrap_or("")
-                            .to_string(),
-                        display_type: attribute
-                            .get("display_type")
-                            .and_then(|display_type| display_type.as_str())
-                            .unwrap_or("")
-                            .to_string(),
-                    })
-                    .collect();
-
-                let normalized_metadata = NormalizedMetadata {
-                    description: raw_metadata
-                        .get("description")
-                        .and_then(|desc| desc.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                    external_url: initial_metadata_uri.to_string(),
-                    image: raw_metadata
-                        .get("image")
-                        .and_then(|img| img.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                    name: raw_metadata
-                        .get("name")
-                        .and_then(|name| name.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                    attributes: normalized_attributes,
-                };
-
-                Ok((raw_metadata, normalized_metadata))
-            }
-            Err(e) => {
-                // Gérer l'erreur, y compris les timeouts
-                if e.is_timeout() {
-                    warn!("Metadata request timeout: {:?}", e);
-                } else {
-                    error!("Metadata request error : {:?}", e);
+            Ok(resp) => match resp.json::<Value>().await {
+                Ok(raw_metadata) => {
+                    let normalized_metadata =
+                        normalize_metadata(initial_metadata_uri.to_string(), raw_metadata.clone())?;
+                    Ok((raw_metadata, normalized_metadata))
                 }
-
-                Err(e.into())
-            }
+                Err(e) => Err(e.into()),
+            },
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -226,20 +169,25 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::storage_manager::DefaultStorage;
-    use mockall::predicate::*;
+    use std::vec;
 
     use super::*;
-    use ark_starknet::client2::{IStarknetClient, MockIStarknetClient};
-    use mockito::{mock, Matcher};
-    use serde_json::json;
+
+    use ark_starknet::client::MockStarknetClient;
+    use ark_storage::storage_manager::DefaultStorage;
+    use mockall::predicate::*;
 
     #[tokio::test]
     async fn test_get_contract_property_string() {
-        let rpc_url = &"";
-        let mut mock = MockIStarknetClient::new(rpc_url).unwrap();
-        let mut storage_manager = DefaultStorage::new();
+        let mut mock = MockStarknetClient::new(&"https://starknode.arkproject.dev").unwrap();
+
+        let empty_array: Vec<FieldElement> = vec![];
+
+        // mock.expect_call_contract()
+        //     .times(1)
+        //     .returning(Ok(empty_array.clone()));
+
+        let storage_manager = DefaultStorage::new();
         let mut metadata_manager = MetadataManager::new(&storage_manager, &mock);
 
         let contract_address = FieldElement::ONE;
@@ -253,6 +201,8 @@ mod tests {
                 BlockId::Tag(BlockTag::Latest),
             )
             .await;
+
+        // println!("test: {:?}", test);
 
         // mock.expect_block_id_to_u64()
         // .times(1)

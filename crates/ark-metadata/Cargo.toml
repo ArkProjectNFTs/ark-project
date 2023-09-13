@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-mockall = "0.11.4"
 reqwest = { version = "0.11", features = ["json", "native-tls-vendored"] }
 dotenv = "0.15.0"
 log = "0.4"
@@ -16,3 +15,7 @@ starknet = "0.5.0"
 tokio = { version = "1", features = ["full"] }
 ark-starknet = { path = "../ark-starknet" }
 ark-storage = { path = "../ark-storage" }
+
+[dev-dependencies]
+ark-starknet = { path = "../ark-starknet", features = ["mock"] }
+mockall = "0.11.4"
