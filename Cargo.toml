@@ -38,4 +38,3 @@ ark-starknet.workspace = true
 ark-metadata.workspace = true
 ark-storage.workspace = true
 ark-indexer.workspace = true
-
