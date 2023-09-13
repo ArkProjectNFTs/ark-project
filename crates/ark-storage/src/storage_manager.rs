@@ -1,12 +1,14 @@
 use crate::types::{BlockInfo, ContractInfo, TokenEvent, TokenFromEvent};
 use log;
 
+// TODO
+// 
 pub trait StorageManager {
+    // Store a new mint in the storage
+    fn register_mint(&self, token: &TokenFromEvent) -> bool;
+
     // Store a new token in the storage
     fn register_token(&self, token: &TokenFromEvent);
-
-    // Update an existing token's owner in the storage
-    fn update_token_owner(&self, token: &TokenFromEvent, new_owner: &str);
 
     // clean block info from storage
     fn clean_block(&self, block_number: u64) -> bool;
@@ -34,25 +36,38 @@ impl DefaultStorage {
 }
 
 impl StorageManager for DefaultStorage {
+    fn register_token(&self, token: &TokenFromEvent) {
+        log::debug!("Registering token {:?}", token);
+        // 3 informations to store:
+        // - token id
+        // - token owner
+        // - contract address
+    }
+
+    fn register_mint(&self, token: &TokenFromEvent) {
+        log::debug!("Registering mint {:?}", token);
+        // Informations to store:
+        // - minted timestamp
+        // - minted block
+        // - minted transaction hash
+        // - minted owner optional
+    }
+
     fn clean_block(&self, block_number: u64) -> bool {
+        // remove all tokens from this block
+        // remove all events from this block
         log::debug!("Cleaning block #{}", block_number);
         true
     }
 
-    fn register_token(&self, token: &TokenFromEvent) {
-        log::debug!("Registering token {:?}", token);
-    }
-
-    fn update_token_owner(&self, token: &TokenFromEvent, new_owner: &str) {
-        log::debug!("Updating token {:?} owner to {}", token, new_owner);
-    }
-
     fn get_block_info(&self, block_number: u64) -> Option<BlockInfo> {
+        // return result with option with none or error with none
         log::debug!("Getting block info for block #{}", block_number);
         None
     }
 
     fn get_contract_info(&self, contract_address: &str) -> Option<ContractInfo> {
+        // result with option with none or error with none
         log::debug!("Getting contract info for contract {}", contract_address);
         None
     }
