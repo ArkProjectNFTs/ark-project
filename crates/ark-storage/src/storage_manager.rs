@@ -27,6 +27,8 @@ pub trait StorageManager {
 
     // register event in storage
     fn register_event(&self, event: TokenEvent) -> Result<(), StorageError>;
+
+    fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
 }
 
 // Default implementation (Logging for this example)
@@ -39,7 +41,7 @@ impl DefaultStorage {
 }
 
 impl StorageManager for DefaultStorage {
-    fn register_token(&self, token: &TokenFromEvent) {
+    fn register_token(&self, token: &TokenFromEvent) -> Result<(), StorageError> {
         log::debug!("Registering token {:?}", token);
         // 3 informations to store:
         // - token id
@@ -47,7 +49,7 @@ impl StorageManager for DefaultStorage {
         // - contract address
     }
 
-    fn register_mint(&self, token: &TokenFromEvent) {
+    fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError> {
         log::debug!("Registering mint {:?}", token);
         // Informations to store:
         // - minted timestamp
@@ -56,7 +58,7 @@ impl StorageManager for DefaultStorage {
         // - minted owner optional
     }
 
-    fn clean_block(&self, block_number: u64) -> bool {
+    fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
         // remove all tokens from this block
         // remove all events from this block
         log::debug!("Cleaning block #{}", block_number);
@@ -75,7 +77,11 @@ impl StorageManager for DefaultStorage {
         None
     }
 
-    fn register_contract_info(&self, contract_address: &str, info: ContractInfo) {
+    fn register_contract_info(
+        &self,
+        contract_address: &str,
+        info: ContractInfo,
+    ) -> Result<(), StorageError> {
         log::debug!(
             "Registering contract info {:?} for contract {}",
             info,
@@ -83,7 +89,11 @@ impl StorageManager for DefaultStorage {
         );
     }
 
-    fn register_event(&self, event: TokenEvent) {
+    fn register_event(&self, event: TokenEvent) -> Result<(), StorageError> {
         log::debug!("Registering event {:?}", event);
+    }
+
+    fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError> {
+        log::debug!("Setting block info {:?} for block #{}", info, block_number);
     }
 }
