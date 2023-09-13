@@ -133,14 +133,20 @@ pub enum IndexerStatus {
     Stopped,
 }
 
+pub struct Range {
+    pub start: u64,
+    pub end: u64,
+}
+
 pub struct BlockIndexing {
-    pub range: u64,
-    pub progress: u64,
+    pub range: Range,
+    pub percentage: u64,
     pub status: IndexerStatus,
     pub indentifier: String,
     pub indexer_version: u64,
 }
 
+#[derive(Debug)]
 pub struct BlockInfo {
     pub indexer_version: u64,
     pub indexer_indentifier: String,

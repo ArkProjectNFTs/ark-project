@@ -7,25 +7,25 @@ enum StorageError {
 // TODO
 //
 pub trait StorageManager {
-    // Store a new mint in the storage
     fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
 
-    // Store a new token in the storage
     fn register_token(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
 
-    // clean block info from storage
     fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
 
-    // get block info from storage
-    fn get_block_info(&self, block_number: u64) -> Option<BlockInfo>;
+    fn get_block_info(&self, block_number: u64) -> Result<Option<BlockInfo>, StorageError>;
 
-    // register block info in storage
-    fn get_contract_info(&self, contract_address: &str) -> Option<ContractInfo>;
+    fn get_contract_info(
+        &self,
+        contract_address: &str,
+    ) -> Result<Option<ContractInfo>, StorageError>;
 
-    // register contract info in storage
-    fn register_contract_info(&self, contract_address: &str, info: ContractInfo);
+    fn register_contract_info(
+        &self,
+        contract_address: &str,
+        info: ContractInfo,
+    ) -> Result<(), StorageError>;
 
-    // register event in storage
     fn register_event(&self, event: TokenEvent) -> Result<(), StorageError>;
 
     fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
@@ -33,50 +33,38 @@ pub trait StorageManager {
     fn set_indexer_progress(&self, block_number: u64) -> Result<(), StorageError>;
 }
 
-// Default implementation (Logging for this example)
-pub struct DefaultStorage;
-
-impl DefaultStorage {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
 impl StorageManager for DefaultStorage {
     fn register_token(&self, token: &TokenFromEvent) -> Result<(), StorageError> {
         log::debug!("Registering token {:?}", token);
-        // 3 informations to store:
-        // - token id
-        // - token owner
-        // - contract address
+        // ... Logic here
+        Ok(())
     }
 
     fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError> {
         log::debug!("Registering mint {:?}", token);
-        // Informations to store:
-        // - minted timestamp
-        // - minted block
-        // - minted transaction hash
-        // - minted owner optional
+        // ... Logic here
+        Ok(())
     }
 
     fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
-        // remove all tokens from this block
-        // remove all events from this block
         log::debug!("Cleaning block #{}", block_number);
-        true
+        // ... Logic here
+        Ok(())
     }
 
-    fn get_block_info(&self, block_number: u64) -> Option<BlockInfo> {
-        // return result with option with none or error with none
+    fn get_block_info(&self, block_number: u64) -> Result<Option<BlockInfo>, StorageError> {
         log::debug!("Getting block info for block #{}", block_number);
-        None
+        // ... Logic here
+        Ok(None)
     }
 
-    fn get_contract_info(&self, contract_address: &str) -> Option<ContractInfo> {
-        // result with option with none or error with none
+    fn get_contract_info(
+        &self,
+        contract_address: &str,
+    ) -> Result<Option<ContractInfo>, StorageError> {
         log::debug!("Getting contract info for contract {}", contract_address);
-        None
+        // ... Logic here
+        Ok(None)
     }
 
     fn register_contract_info(
@@ -89,18 +77,28 @@ impl StorageManager for DefaultStorage {
             info,
             contract_address
         );
+        // ... Logic here
+        Ok(())
     }
 
     fn register_event(&self, event: TokenEvent) -> Result<(), StorageError> {
         log::debug!("Registering event {:?}", event);
+        // ... Logic here
+        Ok(())
     }
 
     fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError> {
-        log::debug!("Setting block info {} for block #{}", info, block_number);
+        log::debug!("Setting block info {:?} for block #{}", info, block_number);
+        // ... Logic here
+        Ok(())
     }
 
-    // range, progress, status {running, stopped}, indentifier, indexer_version
-    fn set_indexer_progress(&self, indexer_progress: BlockIndexing) -> Result<(), StorageError> {
-        log::debug!("Setting indexer progress to block #{}", block_number);
+    fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError> {
+        log::debug!(
+            "Setting indexer progress to block #{}",
+            progress.percentage
+        );
+        // ... Logic here
+        Ok(())
     }
 }
