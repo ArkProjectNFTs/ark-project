@@ -1,4 +1,4 @@
-use crate::types::{BlockInfo, ContractInfo, TokenEvent, TokenFromEvent};
+use crate::types::{BlockIndexing, BlockInfo, ContractInfo, TokenEvent, TokenFromEvent};
 use log;
 
 enum StorageError {
@@ -29,6 +29,8 @@ pub trait StorageManager {
     fn register_event(&self, event: TokenEvent) -> Result<(), StorageError>;
 
     fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
+
+    fn set_indexer_progress(&self, block_number: u64) -> Result<(), StorageError>;
 }
 
 // Default implementation (Logging for this example)
@@ -94,6 +96,11 @@ impl StorageManager for DefaultStorage {
     }
 
     fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError> {
-        log::debug!("Setting block info {:?} for block #{}", info, block_number);
+        log::debug!("Setting block info {} for block #{}", info, block_number);
+    }
+
+    // range, progress, status {running, stopped}, indentifier, indexer_version
+    fn set_indexer_progress(&self, indexer_progress: BlockIndexing) -> Result<(), StorageError> {
+        log::debug!("Setting indexer progress to block #{}", block_number);
     }
 }

@@ -128,8 +128,22 @@ pub enum BlockIndexingStatus {
     Terminated,
 }
 
+pub enum IndexerStatus {
+    Running,
+    Stopped,
+}
+
+pub struct BlockIndexing {
+    pub range: u64,
+    pub progress: u64,
+    pub status: IndexerStatus,
+    pub indentifier: String,
+    pub indexer_version: u64,
+}
+
 pub struct BlockInfo {
     pub indexer_version: u64,
+    pub indexer_indentifier: String,
     pub status: BlockIndexingStatus,
 }
 
