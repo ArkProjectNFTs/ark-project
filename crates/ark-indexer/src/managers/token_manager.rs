@@ -72,6 +72,10 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
             self.storage.register_token(&self.token)?;
         }
 
+        if (event.event_type == EventType::Mint) {
+            // self.storage.register_mint(self.token.clone()).await?;
+        }
+        
         Ok(())
     }
 
