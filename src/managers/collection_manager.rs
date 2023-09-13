@@ -81,7 +81,7 @@ impl<'a, T: StorageManager> CollectionManager<'a, T> {
                 };
 
                 self.cache.insert(address, info.clone());
-
+                // TODO: self.storage.register_contract_info(...);
                 Ok(info)
             }
         }
