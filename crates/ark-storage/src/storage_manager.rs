@@ -1,17 +1,20 @@
 use crate::types::{BlockInfo, ContractInfo, TokenEvent, TokenFromEvent};
 use log;
 
+enum StorageError {
+    // TODO
+}
 // TODO
-// 
+//
 pub trait StorageManager {
     // Store a new mint in the storage
-    fn register_mint(&self, token: &TokenFromEvent) -> bool;
+    fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
 
     // Store a new token in the storage
-    fn register_token(&self, token: &TokenFromEvent);
+    fn register_token(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
 
     // clean block info from storage
-    fn clean_block(&self, block_number: u64) -> bool;
+    fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
 
     // get block info from storage
     fn get_block_info(&self, block_number: u64) -> Option<BlockInfo>;
@@ -23,7 +26,7 @@ pub trait StorageManager {
     fn register_contract_info(&self, contract_address: &str, info: ContractInfo);
 
     // register event in storage
-    fn register_event(&self, event: TokenEvent);
+    fn register_event(&self, event: TokenEvent) -> Result<(), StorageError>;
 }
 
 // Default implementation (Logging for this example)
