@@ -1,5 +1,6 @@
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
+use ark_storage::types::{BlockIndexingStatus, BlockInfo};
 use starknet::core::types::*;
 
 use std::env;
@@ -9,20 +10,6 @@ pub struct BlockManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
     client: &'a C,
     indexer_version: u64,
-}
-
-// TODO: this struct must come from Storage crate.
-#[derive(Debug, PartialEq)]
-pub enum BlockIndexingStatus {
-    None,
-    Processing,
-    Terminated,
-}
-
-// TODO: this struct must come from Storage crate.
-pub struct BlockInfo {
-    pub indexer_version: u64,
-    pub status: BlockIndexingStatus,
 }
 
 impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {

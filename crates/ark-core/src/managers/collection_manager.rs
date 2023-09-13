@@ -1,38 +1,10 @@
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
-
-use serde::{Deserialize, Serialize};
+use ark_storage::types::{ContractInfo, ContractType};
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
-
 use std::collections::HashMap;
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum ContractType {
-    Other,
-    ERC721,
-    ERC1155,
-}
-
-impl ToString for ContractType {
-    fn to_string(&self) -> String {
-        match self {
-            ContractType::Other => "other".to_string(),
-            ContractType::ERC721 => "erc721".to_string(),
-            ContractType::ERC1155 => "erc1155".to_string(),
-        }
-    }
-}
-
-// TODO: this struct must come from Storage crate.
-#[derive(Debug, Clone)]
-pub struct ContractInfo {
-    pub name: String,
-    pub symbol: String,
-    pub r#type: ContractType,
-}
 
 pub struct CollectionManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,

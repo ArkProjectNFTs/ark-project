@@ -294,7 +294,9 @@ dependencies = [
 name = "ark-storage"
 version = "0.1.0"
 dependencies = [
+ "log",
  "num-bigint",
+ "serde",
  "starknet",
 ]
 

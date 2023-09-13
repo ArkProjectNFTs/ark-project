@@ -1,5 +1,6 @@
 use crate::utils::format_token_id;
 use num_bigint::BigUint;
+use serde::{Deserialize, Serialize};
 use starknet::core::types::FieldElement;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -118,4 +119,41 @@ impl TokenId {
             padded_token_id,
         }
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum BlockIndexingStatus {
+    None,
+    Processing,
+    Terminated,
+}
+
+pub struct BlockInfo {
+    pub indexer_version: u64,
+    pub status: BlockIndexingStatus,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum ContractType {
+    Other,
+    ERC721,
+    ERC1155,
+}
+
+impl ToString for ContractType {
+    fn to_string(&self) -> String {
+        match self {
+            ContractType::Other => "other".to_string(),
+            ContractType::ERC721 => "erc721".to_string(),
+            ContractType::ERC1155 => "erc1155".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ContractInfo {
+    pub name: String,
+    pub symbol: String,
+    pub r#type: ContractType,
 }

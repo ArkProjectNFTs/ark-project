@@ -57,10 +57,11 @@ impl<'a, T: StorageManager, C: StarknetClient> EventManager<'a, T, C> {
         let (from, to, token_id) = event_info;
 
         // TODO: why do we need this entry 2 times for the felt and the string?
+        // TODO move that to storage
+        // self.token_event.from_address = format!("{:#064x}", from);
+        // self.token_event.to_address = format!("{:#064x}", to);
         self.token_event.from_address_field_element = from;
-        self.token_event.from_address = format!("{:#064x}", from);
         self.token_event.to_address_field_element = to;
-        self.token_event.to_address = format!("{:#064x}", to);
         self.token_event.contract_address = format!("{:#064x}", event.from_address);
         self.token_event.transaction_hash = format!("{:#064x}", event.transaction_hash);
         self.token_event.token_id = token_id.clone();
