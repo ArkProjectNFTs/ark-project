@@ -20,33 +20,20 @@ pub fn parse_cairo_long_string(long_string: Vec<FieldElement>) -> Result<String>
             None => return Err(anyhow!("No value found")),
         },
         _ => {
-            let first_element = long_string.first().unwrap();
-            let max_array_length = FieldElement::from_dec_str("255").unwrap();
-
-            if first_element <= &max_array_length {
-                // TODO
-
-                // // Take the first_element items from the long_string
-                // let mut short_string = Vec::new();
-                // for i in 1..(first_element.add(FieldElement::ONE)) {
-                //     short_string.push(long_string[i as usize].clone());
-                // }
-
-                return Ok("".to_string());
-            } else {
-                let mut result = String::new();
-                for field_element in long_string {
-                    match parse_cairo_short_string(&field_element) {
-                        Ok(value) => {
-                            result.push_str(&value);
-                        }
-                        Err(_) => {
-                            return Err(anyhow!("Error parsing short string"));
-                        }
+            // let array_length_field_element = long_string.first().unwrap();
+            let mut result = String::new();
+            for i in 1..long_string.len() {
+                let field_element = long_string[i as usize].clone();
+                match parse_cairo_short_string(&field_element) {
+                    Ok(value) => {
+                        result.push_str(&value);
+                    }
+                    Err(_) => {
+                        return Err(anyhow!("Error parsing short string"));
                     }
                 }
-                return Ok(result);
             }
+            Ok(result)
         }
     }
 }
@@ -57,8 +44,9 @@ mod tests {
     use starknet::core::types::FieldElement;
 
     #[test]
-    fn should_parse_field_elements_to_url_without_considering_array_length() {
+    fn should_parse_field_elements_with_array_length() {
         let long_string = vec![
+            FieldElement::from_hex_be("0x4").unwrap(),
             FieldElement::from_hex_be(
                 "0x68747470733a2f2f6170692e627269712e636f6e737472756374696f6e",
             )
@@ -70,14 +58,16 @@ mod tests {
 
         let result = parse_cairo_long_string(long_string);
         assert!(result.is_ok());
-        assert!(
-            result.unwrap() == "https://api.briq.construction/v1/uri/set/starknet-mainnet/.json"
-        );
+
+        let value = result.unwrap();
+        println!("Value: {}", value);
+        assert!(value == "https://api.briq.construction/v1/uri/set/starknet-mainnet/.json");
     }
 
     #[test]
     fn should_parse_one_field_element_per_character_to_url() {
         let long_string = vec![
+            FieldElement::from_hex_be("0x2d").unwrap(),
             FieldElement::from_hex_be("0x68").unwrap(),
             FieldElement::from_hex_be("0x74").unwrap(),
             FieldElement::from_hex_be("0x74").unwrap(),
