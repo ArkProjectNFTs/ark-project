@@ -1,9 +1,5 @@
-mod constants;
-mod contract;
 mod managers;
 mod storage;
-mod transfer;
-mod utils;
 
 use anyhow::Result;
 use ark_starknet::client2::StarknetClient;
