@@ -19,11 +19,18 @@ pub struct MetadataManager<'a, T: StorageManager, C: StarknetClient> {
     request_client: ReqwestClient,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub enum MetadataAttributeValue {
+    Str(String),
+    Int(i64),
+    Float(f64),
+    Value(Value),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct MetadataAttribute {
     pub trait_type: String,
-    pub value: String,
-    pub display_type: String,
+    pub value: MetadataAttributeValue,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -179,13 +186,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_contract_property_string() {
-        let mut mock = MockStarknetClient::new(&"https://starknode.arkproject.dev").unwrap();
+        let mut mock = MockStarknetClient::new();
 
-        let empty_array: Vec<FieldElement> = vec![];
-
-        // mock.expect_call_contract()
-        //     .times(1)
-        //     .returning(Ok(empty_array.clone()));
+        mock.expect_call_contract()
+            .times(1)
+            .returning(|_, _, _, _| Ok(vec![]));
 
         let storage_manager = DefaultStorage::new();
         let mut metadata_manager = MetadataManager::new(&storage_manager, &mock);
@@ -193,7 +198,7 @@ mod tests {
         let contract_address = FieldElement::ONE;
         let selector_name = selector!("tokenURI");
 
-        let test = metadata_manager
+        let value = metadata_manager
             .get_contract_property_string(
                 contract_address,
                 selector_name,
@@ -202,10 +207,5 @@ mod tests {
             )
             .await;
 
-        // println!("test: {:?}", test);
-
-        // mock.expect_block_id_to_u64()
-        // .times(1)
-        // .returning(|_| Ok(42));
     }
 }

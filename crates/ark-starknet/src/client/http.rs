@@ -24,6 +24,14 @@ pub struct StarknetClientHttp {
 #[async_trait]
 impl StarknetClient for StarknetClientHttp {
     ///
+    fn new(rpc_url: &str) -> Result<StarknetClientHttp> {
+        let rpc_url = Url::parse(rpc_url)?;
+        let provider = AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url)));
+
+        Ok(StarknetClientHttp { provider })
+    }
+
+    ///
     async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64> {
         match id {
             BlockId::Tag(BlockTag::Latest) => Ok(self.provider.block_number().await?),
