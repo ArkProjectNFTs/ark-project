@@ -63,6 +63,7 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
             event.contract_address
         );
 
+<<<<<<< HEAD:crates/ark-indexer/src/managers/token_manager.rs
         // TODO: do we need to be atomic for register_token and register_mint?
         // What is the logic if one of the two fails?
 
@@ -74,8 +75,20 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
 
         if (event.event_type == EventType::Mint) {
             // self.storage.register_mint(self.token.clone()).await?;
+=======
+        match self.storage.register_token(&self.token) {
+            Ok(_) => println!("Token registered successfully!"),
+            Err(e) => println!("Error registering token: {:?}", e),
+>>>>>>> a85c0ca (feat(storage): add basic return & usage for storage):crates/ark-core/src/managers/token_manager.rs
         }
-        
+
+        if event.event_type == EventType::Mint {
+            match self.storage.register_mint(&self.token) {
+                Ok(_) => println!("Mint registered successfully!"),
+                Err(e) => println!("Error registering mint: {:?}", e),
+            }
+        }
+
         Ok(())
     }
 

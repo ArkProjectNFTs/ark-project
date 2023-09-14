@@ -25,12 +25,29 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
     }
 
     /// Gets the contract info from local cache, or fetch is from the DB.
+<<<<<<< HEAD:crates/ark-indexer/src/managers/collection_manager.rs
     fn get_cached_or_fetch_info(
         &mut self,
         address: FieldElement,
     ) -> Result<ContractInfo, StorageError> {
         if let Some(info) = self.cache.get(&address) {
             return Ok(info.clone());
+=======
+    fn get_cached_or_fetch_info(&mut self, address: FieldElement) -> Result<ContractInfo> {
+        match self.cache.get(&address) {
+            Some(info) => Ok(info.clone()),
+            None => {
+                log::trace!("Cache miss for contract {address}");
+                match self.storage.get_contract_info(&address) {
+                    Ok(Some(info)) => println!("Retrieved contract info: {:?}", info),
+                    Ok(None) => println!("No info found for contract."),
+                    Err(e) => println!("Error retrieving contract info: {:?}", e),
+                }
+                // If no info available -> return error.
+                // For now, return error to simulate it's not available.
+                Err(anyhow!("Info not found in storage for contract {address}"))
+            }
+>>>>>>> a85c0ca (feat(storage): add basic return & usage for storage):crates/ark-core/src/managers/collection_manager.rs
         }
 
         log::trace!("Cache miss for contract {}", address);
@@ -65,7 +82,14 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
 
                 self.cache.insert(address, info.clone());
 
+<<<<<<< HEAD:crates/ark-indexer/src/managers/collection_manager.rs
                 self.storage.register_contract_info(&address, &info)?;
+=======
+                match self.storage.register_contract_info(&address, &info) {
+                    Ok(_) => println!("Contract info registered successfully!"),
+                    Err(e) => println!("Error registering contract info: {:?}", e),
+                }
+>>>>>>> a85c0ca (feat(storage): add basic return & usage for storage):crates/ark-core/src/managers/collection_manager.rs
 
                 Ok(info)
             }
