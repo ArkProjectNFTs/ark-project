@@ -64,14 +64,14 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         );
 
         match self.storage.register_token(&self.token) {
-            Ok(_) => println!("Token registered successfully!"),
-            Err(e) => println!("Error registering token: {:?}", e),
+            Ok(_) => log::debug!("Token registered successfully!"),
+            Err(e) => log::debug!("Error registering token: {:?}", e),
         }
 
         if event.event_type == EventType::Mint {
             match self.storage.register_mint(&self.token) {
-                Ok(_) => println!("Mint registered successfully!"),
-                Err(e) => println!("Error registering mint: {:?}", e),
+                Ok(_) => log::debug!("Mint registered successfully!"),
+                Err(e) => log::debug!("Error registering mint: {:?}", e),
             }
         }
 

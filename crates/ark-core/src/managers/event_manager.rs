@@ -74,8 +74,8 @@ impl<'a, T: StorageManager, C: StarknetClient> EventManager<'a, T, C> {
         info!("Event identified: {:?}", self.token_event.event_type);
 
         match self.storage.register_event(&self.token_event) {
-            Ok(_) => println!("Event registered successfully!"),
-            Err(e) => println!("Error registering event: {:?}", e),
+            Ok(_) => log::debug!("Event registered successfully!"),
+            Err(e) => log::debug!("Error registering event: {:?}", e),
         }
         // TODO: check depending on event type if it's a create/update etc...?
 

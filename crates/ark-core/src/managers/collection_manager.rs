@@ -64,8 +64,8 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
                 self.cache.insert(address, info.clone());
 
                 match self.storage.register_contract_info(&address, &info) {
-                    Ok(_) => println!("Contract info registered successfully!"),
-                    Err(e) => println!("Error registering contract info: {:?}", e),
+                    Ok(_) => log::debug!("Contract info registered successfully!"),
+                    Err(e) => log::debug!("Error registering contract info: {:?}", e),
                 }
 
                 Ok(info)
