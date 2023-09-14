@@ -101,8 +101,8 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
                 self.storage.register_contract_info(&address, &info)?;
 =======
                 match self.storage.register_contract_info(&address, &info) {
-                    Ok(_) => println!("Contract info registered successfully!"),
-                    Err(e) => println!("Error registering contract info: {:?}", e),
+                    Ok(_) => log::debug!("Contract info registered successfully!"),
+                    Err(e) => log::debug!("Error registering contract info: {:?}", e),
                 }
 >>>>>>> a85c0ca (feat(storage): add basic return & usage for storage):crates/ark-core/src/managers/collection_manager.rs
 

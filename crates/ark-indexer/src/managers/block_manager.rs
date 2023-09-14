@@ -74,19 +74,19 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
         }
 =======
             match self.storage.clean_block(block_number) {
-                Ok(_) => println!("Block cleaned successfully!"),
-                Err(e) => println!("Error cleaning block: {:?}", e),
+                Ok(_) => log::debug!("Block cleaned successfully!"),
+                Err(e) => log::debug!("Error cleaning block: {:?}", e),
             }
             return true;
         }
 
         let info = match self.storage.get_block_info(block_number) {
             Ok(block_info) => {
-                println!("Retrieved block info: {:?}", block_info);
+                log::debug!("Retrieved block info: {:?}", block_info);
                 Some(block_info) // Assign the value of block_info to `info`
             }
             Err(e) => {
-                println!("Error retrieving block info: {:?}", e);
+                log::debug!("Error retrieving block info: {:?}", e);
                 None // Assigns None to `info` in case of error
             }
         };
@@ -100,8 +100,8 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
             if actual_info.indexer_version > self.indexer_version {
                 log::debug!("Block #{} new version", block_number);
                 match self.storage.clean_block(block_number) {
-                    Ok(_) => println!("Block cleaned successfully!"),
-                    Err(e) => println!("Error cleaning block: {:?}", e),
+                    Ok(_) => log::debug!("Block cleaned successfully!"),
+                    Err(e) => log::debug!("Error cleaning block: {:?}", e),
                 }
                 return true;
             }

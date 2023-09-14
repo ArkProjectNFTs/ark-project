@@ -74,8 +74,8 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         self.storage.register_event(&self.token_event)?;
 =======
         match self.storage.register_event(&self.token_event) {
-            Ok(_) => println!("Event registered successfully!"),
-            Err(e) => println!("Error registering event: {:?}", e),
+            Ok(_) => log::debug!("Event registered successfully!"),
+            Err(e) => log::debug!("Error registering event: {:?}", e),
         }
         // TODO: check depending on event type if it's a create/update etc...?
 >>>>>>> a85c0ca (feat(storage): add basic return & usage for storage):crates/ark-core/src/managers/event_manager.rs
