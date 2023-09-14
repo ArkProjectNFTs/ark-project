@@ -1,17 +1,9 @@
 use crate::types::{
-    BlockIndexing, BlockIndexingStatus, BlockInfo, ContractInfo, ContractType, TokenEvent,
-    TokenFromEvent,
+    BlockIndexing, BlockIndexingStatus, BlockInfo, ContractInfo, StorageError,
+    TokenEvent, TokenFromEvent,
 };
 use log;
 use starknet::core::types::FieldElement;
-
-#[derive(Debug)]
-pub enum StorageError {
-    DatabaseError,
-    NotFound,
-    DuplicateToken,
-    InvalidMintData,
-}
 
 pub trait StorageManager {
     fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
@@ -25,7 +17,7 @@ pub trait StorageManager {
     fn get_contract_info(
         &self,
         contract_address: &FieldElement,
-    ) -> Result<Option<ContractInfo>, StorageError>;
+    ) -> Result<ContractInfo, StorageError>;
 
     fn register_contract_info(
         &self,
@@ -84,15 +76,10 @@ impl StorageManager for DefaultStorage {
     fn get_contract_info(
         &self,
         contract_address: &FieldElement,
-    ) -> Result<Option<ContractInfo>, StorageError> {
+    ) -> Result<ContractInfo, StorageError> {
         log::debug!("Getting contract info for contract {}", contract_address);
         // TODO: In future, handle and return potential errors
-        // Err(StorageError::NotFound)
-        Ok(Some(ContractInfo {
-            name: "Dummy".to_string(),
-            symbol: "DUM".to_string(),
-            r#type: ContractType::Other,
-        }))
+        Err(StorageError::NotFound)
     }
 
     fn register_contract_info(

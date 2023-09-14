@@ -3,6 +3,14 @@ use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::FieldElement;
 
+#[derive(Debug)]
+pub enum StorageError {
+    DatabaseError,
+    NotFound,
+    DuplicateToken,
+    InvalidMintData,
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum EventType {
     Mint,
