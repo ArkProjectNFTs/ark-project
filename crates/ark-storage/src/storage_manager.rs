@@ -1,8 +1,16 @@
-use crate::types::{BlockIndexing, BlockInfo, ContractInfo, TokenEvent, TokenFromEvent};
+use crate::types::{
+    BlockIndexing, BlockIndexingStatus, BlockInfo, ContractInfo, ContractType, TokenEvent,
+    TokenFromEvent,
+};
 use log;
+use starknet::core::types::FieldElement;
 
+#[derive(Debug)]
 pub enum StorageError {
-    // TODO
+    DatabaseError,
+    NotFound,
+    DuplicateToken,
+    InvalidMintData,
 }
 
 pub trait StorageManager {
@@ -16,16 +24,16 @@ pub trait StorageManager {
 
     fn get_contract_info(
         &self,
-        contract_address: &str,
+        contract_address: &FieldElement,
     ) -> Result<Option<ContractInfo>, StorageError>;
 
     fn register_contract_info(
         &self,
-        contract_address: &str,
-        info: ContractInfo,
+        contract_address: &FieldElement,
+        info: &ContractInfo,
     ) -> Result<(), StorageError>;
 
-    fn register_event(&self, event: TokenEvent) -> Result<(), StorageError>;
+    fn register_event(&self, event: &TokenEvent) -> Result<(), StorageError>;
 
     fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
 
@@ -43,66 +51,86 @@ impl DefaultStorage {
 impl StorageManager for DefaultStorage {
     fn register_token(&self, token: &TokenFromEvent) -> Result<(), StorageError> {
         log::debug!("Registering token {:?}", token);
-        // ... Logic here
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::DuplicateToken)
         Ok(())
     }
 
     fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError> {
         log::debug!("Registering mint {:?}", token);
-        // ... Logic here
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::InvalidMintData)
         Ok(())
     }
 
     fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
         log::debug!("Cleaning block #{}", block_number);
-        // ... Logic here
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::DatabaseError)
         Ok(())
     }
 
     fn get_block_info(&self, block_number: u64) -> Result<Option<BlockInfo>, StorageError> {
         log::debug!("Getting block info for block #{}", block_number);
-        // ... Logic here
-        Ok(None)
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::NotFound)
+        Ok(Some(BlockInfo {
+            indexer_version: 0,
+            indexer_indentifier: "42".to_string(),
+            status: BlockIndexingStatus::None,
+        }))
     }
 
     fn get_contract_info(
         &self,
-        contract_address: &str,
+        contract_address: &FieldElement,
     ) -> Result<Option<ContractInfo>, StorageError> {
         log::debug!("Getting contract info for contract {}", contract_address);
-        // ... Logic here
-        Ok(None)
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::NotFound)
+        Ok(Some(ContractInfo {
+            name: "Dummy".to_string(),
+            symbol: "DUM".to_string(),
+            r#type: ContractType::Other,
+        }))
     }
 
     fn register_contract_info(
         &self,
-        contract_address: &str,
-        info: ContractInfo,
+        contract_address: &FieldElement,
+        info: &ContractInfo,
     ) -> Result<(), StorageError> {
         log::debug!(
             "Registering contract info {:?} for contract {}",
             info,
             contract_address
         );
-        // ... Logic here
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::DuplicateToken)
         Ok(())
     }
 
-    fn register_event(&self, event: TokenEvent) -> Result<(), StorageError> {
+    fn register_event(&self, event: &TokenEvent) -> Result<(), StorageError> {
         log::debug!("Registering event {:?}", event);
-        // ... Logic here
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::DatabaseError)
         Ok(())
     }
 
     fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError> {
         log::debug!("Setting block info {:?} for block #{}", info, block_number);
-        // ... Logic here
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::DatabaseError)
         Ok(())
     }
 
-    fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError> {
-        log::debug!("Setting indexer progress to block #{}", progress.percentage);
-        // ... Logic here
+    fn set_indexer_progress(&self, indexer_progress: BlockIndexing) -> Result<(), StorageError> {
+        log::debug!(
+            "Setting indexer progress to block #{}",
+            indexer_progress.percentage
+        );
+        // TODO: In future, handle and return potential errors
+        // Err(StorageError::DatabaseError)
         Ok(())
     }
 }

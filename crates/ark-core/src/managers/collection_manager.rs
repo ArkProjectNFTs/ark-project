@@ -29,7 +29,11 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
             Some(info) => Ok(info.clone()),
             None => {
                 log::trace!("Cache miss for contract {address}");
-                // TODO: self.storage.get_contract_info();
+                match self.storage.get_contract_info(&address) {
+                    Ok(Some(info)) => println!("Retrieved contract info: {:?}", info),
+                    Ok(None) => println!("No info found for contract."),
+                    Err(e) => println!("Error retrieving contract info: {:?}", e),
+                }
                 // If no info available -> return error.
                 // For now, return error to simulate it's not available.
                 Err(anyhow!("Info not found in storage for contract {address}"))
@@ -59,7 +63,11 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
                 };
 
                 self.cache.insert(address, info.clone());
-                // TODO: self.storage.register_contract_info(...);
+
+                match self.storage.register_contract_info(&address, &info) {
+                    Ok(_) => println!("Contract info registered successfully!"),
+                    Err(e) => println!("Error registering contract info: {:?}", e),
+                }
 
                 Ok(info)
             }

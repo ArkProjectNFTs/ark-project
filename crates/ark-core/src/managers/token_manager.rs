@@ -63,12 +63,18 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
             event.contract_address
         );
 
-        // TODO: self.storage.register_token(self.token.clone()).await?;
-
-        if (event.event_type == EventType::Mint) {
-            // self.storage.register_mint(self.token.clone()).await?;
+        match self.storage.register_token(&self.token) {
+            Ok(_) => println!("Token registered successfully!"),
+            Err(e) => println!("Error registering token: {:?}", e),
         }
-        
+
+        if event.event_type == EventType::Mint {
+            match self.storage.register_mint(&self.token) {
+                Ok(_) => println!("Mint registered successfully!"),
+                Err(e) => println!("Error registering mint: {:?}", e),
+            }
+        }
+
         Ok(())
     }
 

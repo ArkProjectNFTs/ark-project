@@ -73,7 +73,10 @@ impl<'a, T: StorageManager, C: StarknetClient> EventManager<'a, T, C> {
 
         info!("Event identified: {:?}", self.token_event.event_type);
 
-        // TODO: self.storage.register_event(self.token_event);
+        match self.storage.register_event(&self.token_event) {
+            Ok(_) => println!("Event registered successfully!"),
+            Err(e) => println!("Error registering event: {:?}", e),
+        }
         // TODO: check depending on event type if it's a create/update etc...?
 
         Ok(self.token_event.clone())
