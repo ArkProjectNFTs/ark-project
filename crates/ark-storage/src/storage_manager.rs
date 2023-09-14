@@ -12,7 +12,7 @@ pub trait StorageManager {
 
     fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
 
-    fn get_block_info(&self, block_number: u64) -> Result<Option<BlockInfo>, StorageError>;
+    fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError>;
 
     fn get_contract_info(
         &self,
@@ -62,15 +62,15 @@ impl StorageManager for DefaultStorage {
         Ok(())
     }
 
-    fn get_block_info(&self, block_number: u64) -> Result<Option<BlockInfo>, StorageError> {
+    fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError> {
         log::debug!("Getting block info for block #{}", block_number);
         // TODO: In future, handle and return potential errors
         // Err(StorageError::NotFound)
-        Ok(Some(BlockInfo {
+        Ok(BlockInfo {
             indexer_version: 0,
             indexer_indentifier: "42".to_string(),
             status: BlockIndexingStatus::None,
-        }))
+        })
     }
 
     fn get_contract_info(

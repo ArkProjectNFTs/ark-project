@@ -64,13 +64,9 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
         }
 
         let info = match self.storage.get_block_info(block_number) {
-            Ok(Some(block_info)) => {
+            Ok(block_info) => {
                 println!("Retrieved block info: {:?}", block_info);
                 Some(block_info) // Assign the value of block_info to `info`
-            }
-            Ok(None) => {
-                println!("No info found for block.");
-                None // Assigns None to `info`
             }
             Err(e) => {
                 println!("Error retrieving block info: {:?}", e);
