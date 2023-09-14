@@ -26,6 +26,7 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
 
     /// Gets the contract info from local cache, or fetch is from the DB.
 <<<<<<< HEAD:crates/ark-indexer/src/managers/collection_manager.rs
+<<<<<<< HEAD:crates/ark-indexer/src/managers/collection_manager.rs
     fn get_cached_or_fetch_info(
         &mut self,
         address: FieldElement,
@@ -56,8 +57,22 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
 
         self.cache.insert(address, info.clone()); // Adding to the cache
 
+=======
+    fn get_cached_or_fetch_info(&mut self, address: FieldElement) -> Result<ContractInfo, StorageError> {
+        if let Some(info) = self.cache.get(&address) {
+            return Ok(info.clone());
+        }
+    
+        log::trace!("Cache miss for contract {}", address);
+        
+        let info = self.storage.get_contract_info(&address)?;
+        
+        self.cache.insert(address, info.clone()); // Adding to the cache
+    
+>>>>>>> f4b9237 (feat(storage): fix error handling):crates/ark-core/src/managers/collection_manager.rs
         Ok(info)
     }
+    
 
     /// Identifies a contract from it's address only.
     pub async fn identify_contract(&mut self, address: FieldElement) -> Result<ContractInfo> {
