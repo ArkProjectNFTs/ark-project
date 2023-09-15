@@ -1,4 +1,5 @@
-use crate::metadata::cairo_string_parser::parse_cairo_long_string;
+
+use crate::cairo_string_parser::parse_cairo_long_string;
 use crate::metadata::metadata_models::NormalizedMetadata;
 use crate::metadata::normalization::normalize_metadata;
 
@@ -188,7 +189,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_contract_property_string() {
         // SETUP: Mocking and Initializing
-        let mut mock_client = MockStarknetClient::new();
+        let mut mock_client = MockStarknetClient::default();
 
         let contract_address = FieldElement::ONE;
         let selector_name = selector!("tokenURI");

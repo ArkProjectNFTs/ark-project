@@ -28,7 +28,7 @@ impl StarknetClient for StarknetClientHttp {
         let rpc_url = Url::parse(rpc_url)?;
         let provider = AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url)));
 
-        Ok(StarknetClientHttp { provider })
+        Ok(Self { provider })
     }
 
     ///
