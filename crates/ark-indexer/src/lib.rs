@@ -20,7 +20,7 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
     let sn_client = StarknetClientHttp::new(&rpc_provider.clone())?;
     let block_manager = BlockManager::new(&storage, &sn_client);
-    let mut event_manager = EventManager::new(&storage, &sn_client);
+    let mut event_manager = EventManager::new(&storage);
     let mut token_manager = TokenManager::new(&storage, &sn_client);
     let mut collection_manager = CollectionManager::new(&storage, &sn_client);
 
@@ -114,12 +114,12 @@ async fn check_range(
 
         // Head of the chain requested -> check the last block and continue
         // indexing loop.
-        return client
+        client
             .block_number()
             .await
-            .expect("Can't fetch last block number");
+            .expect("Can't fetch last block number")
     } else {
-        return to;
+        to
     }
 }
 

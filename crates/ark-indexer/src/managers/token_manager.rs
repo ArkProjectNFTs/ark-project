@@ -32,7 +32,7 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         self.token.padded_token_id = event.padded_token_id.clone();
         self.token.from_address = event.from_address.clone();
         self.token.to_address = event.to_address.clone();
-        self.token.timestamp = event.timestamp.clone();
+        self.token.timestamp = event.timestamp;
         self.token.mint_transaction_hash = if event.event_type == EventType::Mint {
             Some(event.transaction_hash.clone())
         } else {
@@ -50,8 +50,8 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)
                     .expect("Contract address bad format"),
-                FieldElement::from(event.token_id.low),
-                FieldElement::from(event.token_id.high),
+                event.token_id.low,
+                event.token_id.high,
             )
             .await?[0];
 
@@ -63,15 +63,24 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
             event.contract_address
         );
 
+        // TODO: do we need to be atomic for register_token and register_mint?
+        // What is the logic if one of the two fails?
+
         match self.storage.register_token(&self.token) {
             Ok(_) => log::debug!("Token registered successfully!"),
-            Err(e) => log::debug!("Error registering token: {:?}", e),
-        }
+            Err(e) => {
+                log::debug!("Error registering token: {:?}", e);
+                return Err(anyhow!("Error registering token"));
+            }
+        };
 
         if event.event_type == EventType::Mint {
             match self.storage.register_mint(&self.token) {
                 Ok(_) => log::debug!("Mint registered successfully!"),
-                Err(e) => log::debug!("Error registering mint: {:?}", e),
+                Err(e) => {
+                    log::debug!("Error registering mint: {:?}", e);
+                    return Err(anyhow!("Error registering token"));
+                }
             }
         }
 

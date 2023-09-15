@@ -3,15 +3,10 @@
 //! Can be run with `cargo run --example nft_indexer`.
 //!
 use anyhow::Result;
-use ark_rs::{
-    nft_indexer,
-    nft_storage::{DefaultStorage, StorageManager},
-    starknet::client::StarknetClientHttp
-};
+use ark_rs::{nft_indexer, nft_storage::DefaultStorage};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-
     // Initialized any storage implementing the StorageManager trait.
     let storage = DefaultStorage::new();
 

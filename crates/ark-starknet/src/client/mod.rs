@@ -1,19 +1,18 @@
 pub mod http;
 pub use http::StarknetClientHttp;
 
-use anyhow::{Result};
+use anyhow::Result;
 use async_trait::async_trait;
-use starknet::{
-    core::{types::FieldElement, types::*},
-};
+use starknet::core::{types::FieldElement, types::*};
 use std::collections::HashMap;
+use std::marker::Sized;
 
 /// Starknet client interface with required methods
 /// for arkproject capabilities only.
 #[async_trait]
 pub trait StarknetClient {
     ///
-    fn new(rpc_url: &str) -> Result<StarknetClientHttp>;
+    fn new(rpc_url: &str) -> Result<Self> where Self: Sized;
 
     ///
     async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64>;

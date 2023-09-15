@@ -1,6 +1,5 @@
 use crate::ContractType;
 use anyhow::{anyhow, Result};
-use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenId};
 use log::info;
@@ -10,25 +9,23 @@ use starknet::macros::selector;
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
 
 #[derive(Debug)]
-pub struct EventManager<'a, T: StorageManager, C: StarknetClient> {
+pub struct EventManager<'a, T: StorageManager> {
     storage: &'a T,
-    client: &'a C,
     token_event: TokenEvent,
 }
 
-impl<'a, T: StorageManager, C: StarknetClient> EventManager<'a, T, C> {
+impl<'a, T: StorageManager> EventManager<'a, T> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T, client: &'a C) -> Self {
+    pub fn new(storage: &'a T) -> Self {
         EventManager {
             storage,
-            client,
             token_event: TokenEvent::default(),
         }
     }
 
     /// Returns the selectors used to filter events.
     pub fn keys_selector(&self) -> Option<Vec<Vec<FieldElement>>> {
-        return Some(vec![vec![TRANSFER_SELECTOR]]);
+        Some(vec![vec![TRANSFER_SELECTOR]])
     }
 
     /// Formats a token event based on the event content.
@@ -75,9 +72,11 @@ impl<'a, T: StorageManager, C: StarknetClient> EventManager<'a, T, C> {
 
         match self.storage.register_event(&self.token_event) {
             Ok(_) => log::debug!("Event registered successfully!"),
-            Err(e) => log::debug!("Error registering event: {:?}", e),
-        }
-        // TODO: check depending on event type if it's a create/update etc...?
+            Err(e) => {
+                log::debug!("Error registering event: {:?}", e);
+                return Err(anyhow!("Error registering event"));
+            }
+        };
 
         Ok(self.token_event.clone())
     }
