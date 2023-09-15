@@ -1,6 +1,6 @@
 use crate::types::{
-    BlockIndexing, BlockIndexingStatus, BlockInfo, ContractInfo, StorageError,
-    TokenEvent, TokenFromEvent,
+    BlockIndexing, BlockIndexingStatus, BlockInfo, ContractInfo, StorageError, TokenEvent,
+    TokenFromEvent,
 };
 use log;
 use starknet::core::types::FieldElement;
@@ -37,6 +37,12 @@ pub struct DefaultStorage;
 impl DefaultStorage {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for DefaultStorage {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

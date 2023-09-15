@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::StorageError;
@@ -25,20 +25,22 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
     }
 
     /// Gets the contract info from local cache, or fetch is from the DB.
-    fn get_cached_or_fetch_info(&mut self, address: FieldElement) -> Result<ContractInfo, StorageError> {
+    fn get_cached_or_fetch_info(
+        &mut self,
+        address: FieldElement,
+    ) -> Result<ContractInfo, StorageError> {
         if let Some(info) = self.cache.get(&address) {
             return Ok(info.clone());
         }
-    
+
         log::trace!("Cache miss for contract {}", address);
-        
+
         let info = self.storage.get_contract_info(&address)?;
-        
+
         self.cache.insert(address, info.clone()); // Adding to the cache
-    
+
         Ok(info)
     }
-    
 
     /// Identifies a contract from it's address only.
     pub async fn identify_contract(&mut self, address: FieldElement) -> Result<ContractInfo> {
