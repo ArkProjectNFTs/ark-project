@@ -12,7 +12,7 @@ use tokio::time::{self, Duration};
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
-pub async fn indexer_main_loop<T: StorageManager>(storage: T) -> Result<()> {
+pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
     dotenv().ok();
 
     init_tracing();
