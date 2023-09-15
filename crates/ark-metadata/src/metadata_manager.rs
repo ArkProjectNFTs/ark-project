@@ -1,12 +1,11 @@
-
 use crate::cairo_string_parser::parse_cairo_long_string;
-use crate::metadata::NormalizedMetadata;
 use crate::metadata::normalization::normalize_metadata;
 
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
-use log::{info, debug};
+use ark_storage::types::{NormalizedMetadata, TokenId, TokenMetadata};
+use log::{debug, error, info};
 use reqwest::Client as ReqwestClient;
 use serde_json::Value;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
@@ -19,6 +18,13 @@ pub struct MetadataManager<'a, T: StorageManager, C: StarknetClient> {
     request_client: ReqwestClient,
 }
 
+#[derive(Debug)]
+pub enum MetadataError {
+    DatabaseError,
+    ParsingError,
+    RequestError,
+}
+
 impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
     pub fn new(storage: &'a T, starknet_client: &'a C) -> Self {
         MetadataManager {
@@ -28,30 +34,56 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         }
     }
 
+    /// Refreshes the metadata for a given token.
+    ///
+    /// - `contract_address`: The address of the contract.
+    /// - `token_id_low`: The low end of the token ID range.
+    /// - `token_id_high`: The high end of the token ID range.
+    /// - `block_id`: The ID of the block.
+    ///
+    /// Returns an `Err` variant of `MetadataError` if there's a problem in parsing the token URI, fetching metadata, or database interaction.
     pub async fn refresh_metadata_for_token(
         &mut self,
         contract_address: FieldElement,
         token_id_low: FieldElement,
         token_id_high: FieldElement,
-        block_id: BlockId,
-    ) -> Result<()> {
+    ) -> Result<(), MetadataError> {
         let token_uri = self
             .get_token_uri(token_id_low, token_id_high, contract_address)
-            .await?;
+            .await
+            .map_err(|_| MetadataError::ParsingError)?;
 
-        // TODO: check if token_uri is already in db
+        let has_token_metadata = self
+            .storage
+            .has_token_metadata(
+                contract_address,
+                TokenId {
+                    low: token_id_low,
+                    high: token_id_high,
+                },
+            )
+            .map_err(|_| MetadataError::DatabaseError)?;
 
-        // TODO: save token uri in db
+        if has_token_metadata {
+            return Ok(());
+        }
 
-        let (raw_metadata, normalized_metadata) =
-            self.fetch_metadata(&token_uri, &token_uri).await?;
+        let (raw_metadata, normalized_metadata) = self
+            .fetch_metadata(&token_uri, &token_uri)
+            .await
+            .map_err(|_| MetadataError::RequestError)?;
 
-        // TODO: save metadata in db
+        self.storage
+            .register_token_metadata(TokenMetadata {
+                normalized_metadata,
+                raw_metadata,
+            })
+            .map_err(|_e| MetadataError::DatabaseError)?;
 
         Ok(())
     }
 
-    pub async fn refresh_metadata_for_token_collection()-> Result<()> {
+    pub async fn refresh_metadata_for_token_collection() -> Result<()> {
         Ok(())
     }
 
@@ -61,41 +93,53 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         token_id_high: FieldElement,
         contract_address: FieldElement,
     ) -> Result<String> {
-        debug!("get_token_id: [{:?}, {:?}]", token_id_low, token_id_high);
-        match self
-            .get_contract_property_string(
-                contract_address,
+        let token_uri_cairo0 = self
+            .fetch_token_uri(
                 selector!("tokenURI"),
-                vec![token_id_low.clone(), token_id_high.clone()],
-                BlockId::Tag(BlockTag::Latest),
+                token_id_low.clone(),
+                token_id_high.clone(),
+                contract_address.clone(),
             )
-            .await
-        {
-            Ok(token_uri_cairo0) => {
-                if token_uri_cairo0 != "undefined" && !token_uri_cairo0.is_empty() {
-                    return Err(anyhow!("Token URI not found"));
-                }
+            .await?;
 
-                match self
-                    .get_contract_property_string(
-                        contract_address,
-                        selector!("token_uri"),
-                        vec![token_id_low.clone(), token_id_high.clone()],
-                        BlockId::Tag(BlockTag::Latest),
-                    )
-                    .await
-                {
-                    Ok(token_uri_cairo1) => {
-                        if token_uri_cairo1 != "undefined" && !token_uri_cairo1.is_empty() {
-                            return Ok(token_uri_cairo1);
-                        }
-                        return Err(anyhow!("Token URI not found"));
-                    }
-                    Err(_) => Err(anyhow!("Token URI not found")),
-                }
-            }
-            Err(_) => Err(anyhow!("Token URI not found")),
+        if self.is_valid_uri(&token_uri_cairo0) {
+            return Err(anyhow!("Token URI not found"));
         }
+
+        let token_uri_cairo1 = self
+            .fetch_token_uri(
+                selector!("token_uri"),
+                token_id_low,
+                token_id_high,
+                contract_address,
+            )
+            .await?;
+
+        if self.is_valid_uri(&token_uri_cairo1) {
+            return Ok(token_uri_cairo1);
+        } else {
+            return Err(anyhow!("Token URI not found"));
+        }
+    }
+
+    async fn fetch_token_uri(
+        &mut self,
+        selector: FieldElement,
+        token_id_low: FieldElement,
+        token_id_high: FieldElement,
+        contract_address: FieldElement,
+    ) -> Result<String> {
+        self.get_contract_property_string(
+            contract_address,
+            selector,
+            vec![token_id_low, token_id_high],
+            BlockId::Tag(BlockTag::Latest),
+        )
+        .await
+    }
+
+    fn is_valid_uri(&self, uri: &String) -> bool {
+        uri != "undefined" && !uri.is_empty()
     }
 
     async fn fetch_metadata(
@@ -110,17 +154,14 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             .get(metadata_uri)
             .timeout(Duration::from_secs(3))
             .send()
-            .await;
+            .await?;
 
-        match response {
-            Ok(resp) => match resp.json::<Value>().await {
-                Ok(raw_metadata) => {
-                    let normalized_metadata =
-                        normalize_metadata(initial_metadata_uri.to_string(), raw_metadata.clone())?;
-                    Ok((raw_metadata, normalized_metadata))
-                }
-                Err(e) => Err(e.into()),
-            },
+        match response.json::<Value>().await {
+            Ok(raw_metadata) => {
+                let normalized_metadata =
+                    normalize_metadata(initial_metadata_uri.to_string(), raw_metadata.clone())?;
+                Ok((raw_metadata, normalized_metadata))
+            }
             Err(e) => Err(e.into()),
         }
     }
@@ -182,7 +223,6 @@ mod tests {
     //             FieldElement::from_hex_be("0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905").unwrap())
     //         .await;
 
-        
     //     assert!(result.is_ok());
     // }
 

@@ -1,8 +1,7 @@
 use anyhow::{anyhow, Ok, Result};
+use ark_storage::types::{NormalizedMetadata, MetadataAttribute, MetadataAttributeValue};
 use log::warn;
 use serde_json::Value;
-
-use super::{NormalizedMetadata, MetadataAttribute, MetadataAttributeValue};
 
 // fn normalize_metadata_attributes_with_eip721_standard(
 //     metadata_uri: String,
@@ -154,9 +153,10 @@ pub fn normalize_metadata(
 
 #[cfg(test)]
 mod tests {
-    use crate::metadata::{normalization::{
+    use crate::metadata::normalization::{
             normalize_metadata, normalize_metadata_attributes_with_opensea_standard,
-        }, MetadataAttributeValue};
+        };
+    use ark_storage::types::MetadataAttributeValue;
     use serde_json::json;
 
     #[test]
