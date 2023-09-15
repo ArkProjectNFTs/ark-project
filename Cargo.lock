@@ -145,6 +145,7 @@ dependencies = [
  "ark-metadata",
  "ark-starknet",
  "ark-storage",
+ "mockall",
  "tokio",
 ]
 
@@ -165,6 +166,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "mockall",
  "regex",
  "starknet",
  "url",

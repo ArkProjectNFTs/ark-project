@@ -2,8 +2,7 @@
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-#[cfg(any(test, feature = "mock"))]
-use mockall::automock;
+
 use regex::Regex;
 use starknet::{
     core::{types::FieldElement, types::*},

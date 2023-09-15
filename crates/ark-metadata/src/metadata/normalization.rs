@@ -2,7 +2,7 @@ use anyhow::{anyhow, Ok, Result};
 use log::warn;
 use serde_json::Value;
 
-use super::metadata_models::{NormalizedMetadata, MetadataAttribute, MetadataAttributeValue};
+use super::{NormalizedMetadata, MetadataAttribute, MetadataAttributeValue};
 
 // fn normalize_metadata_attributes_with_eip721_standard(
 //     metadata_uri: String,
@@ -156,7 +156,7 @@ pub fn normalize_metadata(
 mod tests {
     use crate::metadata::{normalization::{
             normalize_metadata, normalize_metadata_attributes_with_opensea_standard,
-        }, metadata_models::MetadataAttributeValue};
+        }, MetadataAttributeValue};
     use serde_json::json;
 
     #[test]

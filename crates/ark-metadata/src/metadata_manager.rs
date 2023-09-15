@@ -1,6 +1,6 @@
 
 use crate::cairo_string_parser::parse_cairo_long_string;
-use crate::metadata::metadata_models::NormalizedMetadata;
+use crate::metadata::NormalizedMetadata;
 use crate::metadata::normalization::normalize_metadata;
 
 use anyhow::{anyhow, Result};
