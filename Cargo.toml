@@ -2,6 +2,7 @@
 name = "ark-rs"
 version = "0.1.0"
 edition = "2021"
+resolver = "2"
 authors = ["Screenshot Labs", "Starknet community"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -18,6 +19,7 @@ members = [
   "crates/ark-starknet",
   "crates/ark-storage",
   "crates/ark-indexer",
+  "crates/ark-prisma-cli",
 ]
 
 [workspace.dependencies]
