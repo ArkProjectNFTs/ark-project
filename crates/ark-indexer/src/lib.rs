@@ -18,7 +18,7 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
     init_tracing();
 
     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let sn_client = StarknetClientHttp::new(&rpc_provider.clone())?;
+    let sn_client = StarknetClientHttp::init(&rpc_provider.clone())?;
     let block_manager = BlockManager::new(&storage, &sn_client);
     let mut event_manager = EventManager::new(&storage);
     let mut token_manager = TokenManager::new(&storage, &sn_client);

@@ -2,7 +2,7 @@ use anyhow::{anyhow, Ok, Result};
 use log::warn;
 use serde_json::Value;
 
-use crate::metadata_manager::{MetadataAttribute, MetadataAttributeValue, NormalizedMetadata};
+use super::metadata_models::{NormalizedMetadata, MetadataAttribute, MetadataAttributeValue};
 
 // fn normalize_metadata_attributes_with_eip721_standard(
 //     metadata_uri: String,
@@ -35,13 +35,13 @@ use crate::metadata_manager::{MetadataAttribute, MetadataAttributeValue, Normali
 //     }
 // }
 
-struct CommonMetadataProperties {
+struct BaseMetadataProperties {
     description: String,
     image: String,
     name: String,
 }
 
-fn extract_common_metadata(metadata: &Value) -> CommonMetadataProperties {
+fn extract_properties(metadata: &Value) -> BaseMetadataProperties {
     let description = match metadata.get("description") {
         Some(description) => description.as_str().unwrap().to_string(),
         None => String::from(""),
@@ -57,7 +57,7 @@ fn extract_common_metadata(metadata: &Value) -> CommonMetadataProperties {
         None => String::from(""),
     };
 
-    return CommonMetadataProperties {
+    return BaseMetadataProperties {
         description,
         image,
         name,
@@ -77,11 +77,11 @@ pub fn normalize_metadata_attributes_with_opensea_standard(
             };
 
             for attribute in items {
-                let trait_type =  attribute
-                .get("trait_type")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
+                let trait_type = attribute
+                    .get("trait_type")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
 
                 match attribute.get("value") {
                     Some(attribute_value) => match attribute_value {
@@ -107,9 +107,7 @@ pub fn normalize_metadata_attributes_with_opensea_standard(
                         _ => {
                             attributes.push(MetadataAttribute {
                                 trait_type: String::from(trait_type),
-                                value: MetadataAttributeValue::Value(
-                                    attribute_value.clone(),
-                                ),
+                                value: MetadataAttributeValue::Value(attribute_value.clone()),
                             });
                         }
                     },
@@ -123,7 +121,7 @@ pub fn normalize_metadata_attributes_with_opensea_standard(
         None => Vec::new(),
     };
 
-    let common_properties = extract_common_metadata(raw_metadata);
+    let common_properties = extract_properties(raw_metadata);
     let external_url = match raw_metadata.get("external_url") {
         Some(value) => value.as_str().unwrap().to_string(),
         None => metadata_uri,
@@ -142,7 +140,6 @@ pub fn normalize_metadata(
     initial_metadata_uri: String,
     raw_metadata: Value,
 ) -> Result<NormalizedMetadata> {
-  
     match raw_metadata.get("attributes") {
         Some(_attributes) => {
             let normalized_metadata = normalize_metadata_attributes_with_opensea_standard(
@@ -151,22 +148,51 @@ pub fn normalize_metadata(
             )?;
             return Ok(normalized_metadata);
         }
-        None => {
-            Err(anyhow!("Error with the metadata object"))
-        },
+        None => Err(anyhow!("Error with the metadata object")),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        metadata_manager::MetadataAttributeValue,
-        normalize_metadata::{
+    use crate::metadata::{normalization::{
             normalize_metadata, normalize_metadata_attributes_with_opensea_standard,
-        },
-    };
+        }, metadata_models::MetadataAttributeValue};
     use serde_json::json;
 
+    #[test]
+    fn should_use_metadata_uri_when_external_url_is_missing() {
+        let starknet_id_raw_metadata = json!({
+            "name": "test",
+            "description": "test description",
+            "image": "test image",
+            "attributes": [{"trait_type": "Base", "value": "Starfish"}]
+        });
+
+        let metadata_uri = String::from("https://starknet.id/api/identicons/1");
+        let result = normalize_metadata_attributes_with_opensea_standard(
+            metadata_uri.clone(),
+            &starknet_id_raw_metadata,
+        );
+        assert!(result.is_ok());
+        let normalized_metadata = result.unwrap();
+        assert_eq!(normalized_metadata.external_url, metadata_uri);
+    }
+
+    #[test]
+    fn should_return_error_when_attributes_missing() {
+        let metadata = json!({
+            "name": "test",
+            "description": "test description",
+            "image": "test image"
+        });
+
+        let metadata_uri = String::from("https://starknet.id/api/identicons/1");
+        let result = normalize_metadata(metadata_uri, metadata);
+        assert!(result.is_err());
+    }
+
+
+    
     #[test]
     fn should_normalize_metadata() {
         let description = "This token represents an identity on StarkNet.";
@@ -179,21 +205,13 @@ mod tests {
         assert!(result.is_ok());
 
         let normalized_metadata = result.unwrap();
-
-        println!("\n\n==> normalized_metadata: {:?}", normalized_metadata);
-
         assert!(normalized_metadata.external_url == metadata_uri);
         assert!(normalized_metadata.description == description);
         assert!(normalized_metadata.image == image);
         assert!(normalized_metadata.name == name);
 
         let first_attribute = normalized_metadata.attributes.first().unwrap();
-
         assert!(first_attribute.trait_type == "Subdomain");
-
-        // println!("\n\n==> Value: {}", first_attribute.value);
-        println!("==> Value: {:?}", first_attribute.value);
-
     }
 
     #[test]

@@ -1,12 +1,20 @@
 use anyhow::{anyhow, Result};
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 
-pub fn parse_cairo_long_string(long_string: Vec<FieldElement>) -> Result<String> {
-    match long_string.len() {
+/// Parse a Cairo "long string" represented as a Vec of FieldElements into a Rust String.
+///
+/// # Arguments
+/// * `field_elements`: A vector of FieldElements representing the Cairo long string.
+///
+/// # Returns
+/// * A `Result` which is either the parsed Rust string or an error.
+pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<String> {
+    match field_elements.len() {
         0 => {
             return Err(anyhow!("No value found"));
         }
-        1 => match long_string.first() {
+         // If the long_string contains only one FieldElement, try to parse it using the short string parser.
+        1 => match field_elements.first() {
             Some(first_string_field_element) => {
                 match parse_cairo_short_string(first_string_field_element) {
                     Ok(value) => {
@@ -19,11 +27,12 @@ pub fn parse_cairo_long_string(long_string: Vec<FieldElement>) -> Result<String>
             }
             None => return Err(anyhow!("No value found")),
         },
+         // If the long_string has more than one FieldElement, parse each FieldElement sequentially
+        // and concatenate their results.
         _ => {
-            // let array_length_field_element = long_string.first().unwrap();
             let mut result = String::new();
-            for i in 1..long_string.len() {
-                let field_element = long_string[i as usize].clone();
+            for i in 1..field_elements.len() {
+                let field_element = field_elements[i as usize].clone();
                 match parse_cairo_short_string(&field_element) {
                     Ok(value) => {
                         result.push_str(&value);
@@ -42,6 +51,27 @@ pub fn parse_cairo_long_string(long_string: Vec<FieldElement>) -> Result<String>
 mod tests {
     use super::parse_cairo_long_string;
     use starknet::core::types::FieldElement;
+
+    #[test]
+    fn should_return_error_for_empty_vector() {
+        let long_string = vec![];
+
+        let result = parse_cairo_long_string(long_string);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "No value found");
+    }
+
+    // This test is hypothetical and may not fit exactly as-is depending on the implementation of `parse_cairo_short_string`
+    #[test]
+    fn should_handle_generic_error_from_parse_cairo_short_string() {
+        let long_string = vec![
+            // some value that causes `parse_cairo_short_string` to error out
+        ];
+
+        let result = parse_cairo_long_string(long_string);
+        assert!(result.is_err());
+        // Check the error message or type here
+    }
 
     #[test]
     fn should_parse_field_elements_with_array_length() {
