@@ -1,5 +1,5 @@
 [package]
-name = "arkchain-indexer"
+name = "ark-chain"
 version = "0.1.0"
 edition = "2021"
 
@@ -23,6 +23,5 @@ dotenv = "0.15.0"
 aws-config = "0.56.0"
 aws-sdk-dynamodb = "0.29.0"
 
-ark-starknet = { path = "../ark-starknet" }
-ark-db = { path = "../ark-db" }
+ark-starknet.workspace = true
 ark-storage = { path = "../ark-storage" }
