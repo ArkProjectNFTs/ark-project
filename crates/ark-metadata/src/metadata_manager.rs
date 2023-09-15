@@ -25,6 +25,11 @@ pub enum MetadataError {
     RequestError,
 }
 
+struct MetadataImage {
+    file_type: String,
+    content_length: u64,
+}
+
 impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
     pub fn new(storage: &'a T, starknet_client: &'a C) -> Self {
         MetadataManager {
@@ -40,6 +45,7 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
     /// - `token_id_low`: The low end of the token ID range.
     /// - `token_id_high`: The high end of the token ID range.
     /// - `block_id`: The ID of the block.
+    /// - `force_refresh`: Whether to force a refresh of the metadata.
     ///
     /// Returns an `Err` variant of `MetadataError` if there's a problem in parsing the token URI, fetching metadata, or database interaction.
     pub async fn refresh_metadata_for_token(
@@ -47,31 +53,42 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         contract_address: FieldElement,
         token_id_low: FieldElement,
         token_id_high: FieldElement,
+        force_refresh: Option<bool>,
+        cache_image: Option<bool>,
     ) -> Result<(), MetadataError> {
         let token_uri = self
             .get_token_uri(token_id_low, token_id_high, contract_address)
             .await
             .map_err(|_| MetadataError::ParsingError)?;
 
-        let has_token_metadata = self
-            .storage
-            .has_token_metadata(
-                contract_address,
-                TokenId {
-                    low: token_id_low,
-                    high: token_id_high,
-                },
-            )
-            .map_err(|_| MetadataError::DatabaseError)?;
+        if force_refresh.unwrap_or(false) {
+            let has_token_metadata = self
+                .storage
+                .has_token_metadata(
+                    contract_address,
+                    TokenId {
+                        low: token_id_low,
+                        high: token_id_high,
+                    },
+                )
+                .map_err(|_| MetadataError::DatabaseError)?;
 
-        if has_token_metadata {
-            return Ok(());
+            if has_token_metadata {
+                return Ok(());
+            }
         }
 
         let (raw_metadata, normalized_metadata) = self
             .fetch_metadata(&token_uri, &token_uri)
             .await
             .map_err(|_| MetadataError::RequestError)?;
+
+        let _ = self
+            .fetch_token_image(
+                normalized_metadata.image.as_str(),
+                cache_image.unwrap_or(false),
+            )
+            .await;
 
         self.storage
             .register_token_metadata(TokenMetadata {
@@ -140,6 +157,38 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
 
     fn is_valid_uri(&self, uri: &String) -> bool {
         uri != "undefined" && !uri.is_empty()
+    }
+
+    async fn fetch_token_image(&mut self, url: &str, cache_image: bool) -> Result<MetadataImage> {
+        if !cache_image {
+            let response = reqwest::Client::new().head(url).send().await?;
+
+            let content_type = match response.headers().get(reqwest::header::CONTENT_TYPE) {
+                Some(content_type) => match content_type.to_str() {
+                    Ok(value) => value.to_string(),
+                    Err(_) => String::from(""),
+                },
+                None => String::from(""),
+            };
+
+            let content_length = match response.headers().get(reqwest::header::CONTENT_LENGTH) {
+                Some(content_length) => match content_length.to_str() {
+                    Ok(value) => value.parse::<u64>().unwrap_or(0),
+                    Err(_) => 0,
+                },
+                None => 0,
+            };
+
+            return Ok(MetadataImage {
+                content_length,
+                file_type: content_type,
+            });
+        }
+
+        Ok(MetadataImage {
+            content_length: 0,
+            file_type: String::from(""),
+        })
     }
 
     async fn fetch_metadata(
