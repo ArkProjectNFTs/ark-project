@@ -15,10 +15,6 @@ async fn fetch_token_image(url: &str, cache_image: bool) -> Result<MetadataImage
     if !cache_image {
         let response = Client::new().head(url).send().await?;
 
-
-
-        response.headers().
-
         let content_type = match response.headers().get(reqwest::header::CONTENT_TYPE) {
             Some(content_type) => match content_type.to_str() {
                 Ok(value) => value.to_string(),
