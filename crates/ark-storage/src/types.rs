@@ -2,6 +2,7 @@ use crate::utils::format_token_id;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::FieldElement;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum StorageError {
@@ -10,6 +11,19 @@ pub enum StorageError {
     DuplicateToken,
     InvalidMintData,
 }
+
+impl fmt::Display for StorageError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            StorageError::DatabaseError => write!(f, "Database error occurred"),
+            StorageError::NotFound => write!(f, "Item not found in storage"),
+            StorageError::DuplicateToken => write!(f, "Token already exists in storage"),
+            StorageError::InvalidMintData => write!(f, "Provided mint data is invalid"),
+        }
+    }
+}
+
+impl std::error::Error for StorageError {}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum EventType {

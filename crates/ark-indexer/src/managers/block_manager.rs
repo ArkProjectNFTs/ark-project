@@ -50,22 +50,16 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
     /// Returns true if the given block number must be indexed.
     /// False otherwise.
     pub fn check_candidate(&self, block_number: u64) -> bool {
+        // If we are indexing the head of the chain, we don't need to check
         let do_force: &bool = &env::var("FORCE_MODE")
             .unwrap_or("false".to_string())
             .parse()
             .unwrap_or(false);
 
         if *do_force {
-            match self.storage.clean_block(block_number) {
-                Ok(_) => log::debug!("Block cleaned successfully!"),
-                Err(e) => {
-                    log::debug!("Error cleaning block: {:?}", e);
-                    return false;
-                }
-            }
-            return true;
+            return self.storage.clean_block(block_number).is_ok();
         }
-
+        
         match self.storage.get_block_info(block_number) {
             Ok(info) => {
                 if self.indexer_version > info.indexer_version {
@@ -74,13 +68,8 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
                     false
                 }
             }
-            Err(e) => match e {
-                StorageError::NotFound => true,
-                _ => {
-                    log::warn!("Can't get block {block_number} info, skipping it.");
-                    false
-                }
-            },
+            Err(StorageError::NotFound) => true,
+            Err(_) => false,
         }
     }
 }

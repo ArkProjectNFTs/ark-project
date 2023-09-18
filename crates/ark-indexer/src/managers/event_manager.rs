@@ -70,13 +70,7 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
 
         info!("Event identified: {:?}", self.token_event.event_type);
 
-        match self.storage.register_event(&self.token_event) {
-            Ok(_) => log::debug!("Event registered successfully!"),
-            Err(e) => {
-                log::debug!("Error registering event: {:?}", e);
-                return Err(anyhow!("Error registering event"));
-            }
-        };
+        self.storage.register_event(&self.token_event)?;
 
         Ok(self.token_event.clone())
     }

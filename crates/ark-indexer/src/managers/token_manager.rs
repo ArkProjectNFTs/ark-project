@@ -66,22 +66,10 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         // TODO: do we need to be atomic for register_token and register_mint?
         // What is the logic if one of the two fails?
 
-        match self.storage.register_token(&self.token) {
-            Ok(_) => log::debug!("Token registered successfully!"),
-            Err(e) => {
-                log::debug!("Error registering token: {:?}", e);
-                return Err(anyhow!("Error registering token"));
-            }
-        };
-
         if event.event_type == EventType::Mint {
-            match self.storage.register_mint(&self.token) {
-                Ok(_) => log::debug!("Mint registered successfully!"),
-                Err(e) => {
-                    log::debug!("Error registering mint: {:?}", e);
-                    return Err(anyhow!("Error registering token"));
-                }
-            }
+            self.storage.register_mint(&self.token)?;
+        } else {
+            self.storage.register_token(&self.token)?;
         }
 
         Ok(())
