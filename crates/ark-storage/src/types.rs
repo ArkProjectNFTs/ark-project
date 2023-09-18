@@ -25,14 +25,6 @@ impl fmt::Display for StorageError {
 
 impl std::error::Error for StorageError {}
 
-#[derive(Debug)]
-pub enum StorageError {
-    DatabaseError,
-    NotFound,
-    DuplicateToken,
-    InvalidMintData,
-}
-
 #[derive(Debug, PartialEq, Clone)]
 pub enum EventType {
     Mint,

@@ -57,7 +57,6 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
             .unwrap_or(false);
 
         if *do_force {
-<<<<<<< HEAD:crates/ark-indexer/src/managers/block_manager.rs
             return self.storage.clean_block(block_number).is_ok();
         }
         
@@ -72,45 +71,5 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
             Err(StorageError::NotFound) => true,
             Err(_) => false,
         }
-=======
-            match self.storage.clean_block(block_number) {
-                Ok(_) => log::debug!("Block cleaned successfully!"),
-                Err(e) => log::debug!("Error cleaning block: {:?}", e),
-            }
-            return true;
-        }
-
-        let info = match self.storage.get_block_info(block_number) {
-            Ok(block_info) => {
-                log::debug!("Retrieved block info: {:?}", block_info);
-                Some(block_info) // Assign the value of block_info to `info`
-            }
-            Err(e) => {
-                log::debug!("Error retrieving block info: {:?}", e);
-                None // Assigns None to `info` in case of error
-            }
-        };
-
-        // Use the retrieved info to determine some actions
-        if let Some(actual_info) = info {
-            if actual_info.status == BlockIndexingStatus::None {
-                return true;
-            }
-
-            if actual_info.indexer_version > self.indexer_version {
-                log::debug!("Block #{} new version", block_number);
-                match self.storage.clean_block(block_number) {
-                    Ok(_) => log::debug!("Block cleaned successfully!"),
-                    Err(e) => log::debug!("Error cleaning block: {:?}", e),
-                }
-                return true;
-            }
-        } else {
-            log::debug!("Info is not available for the block.");
-        }
-
-        // If no conditions are met, return false or whatever default you want
-        false
->>>>>>> a85c0ca (feat(storage): add basic return & usage for storage):crates/ark-core/src/managers/block_manager.rs
     }
 }
