@@ -1,16 +1,13 @@
 use crate::cairo_string_parser::parse_cairo_long_string;
-use crate::metadata::normalization::normalize_metadata;
+use crate::metadata::{get_token_metadata, MetadataImage};
 
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::{NormalizedMetadata, TokenId, TokenMetadata};
-use log::{debug, error, info};
+use ark_storage::types::TokenId;
 use reqwest::Client as ReqwestClient;
-use serde_json::Value;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
-use std::time::Duration;
 
 pub struct MetadataManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
@@ -23,11 +20,6 @@ pub enum MetadataError {
     DatabaseError,
     ParsingError,
     RequestError,
-}
-
-struct MetadataImage {
-    file_type: String,
-    content_length: u64,
 }
 
 impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
@@ -61,7 +53,7 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             .await
             .map_err(|_| MetadataError::ParsingError)?;
 
-        if force_refresh.unwrap_or(false) {
+        if !force_refresh.unwrap_or(false) {
             let has_token_metadata = self
                 .storage
                 .has_token_metadata(
@@ -78,29 +70,21 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             }
         }
 
-        let (raw_metadata, normalized_metadata) = self
-            .fetch_metadata(&token_uri, &token_uri)
+        let token_metadata = get_token_metadata(token_uri.as_str())
             .await
             .map_err(|_| MetadataError::RequestError)?;
 
-        let _ = self
-            .fetch_token_image(
-                normalized_metadata.image.as_str(),
-                cache_image.unwrap_or(false),
-            )
-            .await;
+        // if token_metadata.image.is_some() {
+        //     let url = token_metadata.image.clone().unwrap();
+        //     let _ = self
+        //         .fetch_token_image(url.as_str(), cache_image.unwrap_or(false))
+        //         .await;
+        // }
 
         self.storage
-            .register_token_metadata(TokenMetadata {
-                normalized_metadata,
-                raw_metadata,
-            })
+            .register_token_metadata(token_metadata)
             .map_err(|_e| MetadataError::DatabaseError)?;
 
-        Ok(())
-    }
-
-    pub async fn refresh_metadata_for_token_collection() -> Result<()> {
         Ok(())
     }
 
@@ -189,30 +173,6 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             content_length: 0,
             file_type: String::from(""),
         })
-    }
-
-    async fn fetch_metadata(
-        &mut self,
-        metadata_uri: &str,
-        initial_metadata_uri: &str,
-    ) -> Result<(Value, NormalizedMetadata)> {
-        info!("Fetching metadata: {}", metadata_uri);
-
-        let response = self
-            .request_client
-            .get(metadata_uri)
-            .timeout(Duration::from_secs(3))
-            .send()
-            .await?;
-
-        match response.json::<Value>().await {
-            Ok(raw_metadata) => {
-                let normalized_metadata =
-                    normalize_metadata(initial_metadata_uri.to_string(), raw_metadata.clone())?;
-                Ok((raw_metadata, normalized_metadata))
-            }
-            Err(e) => Err(e.into()),
-        }
     }
 
     async fn get_contract_property_string(

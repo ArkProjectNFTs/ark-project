@@ -1,9 +1,4 @@
-use std::fmt::Display;
-
 use anyhow::Result;
-use ark_metadata::metadata_manager::{self, MetadataManager};
-use ark_starknet::client::StarknetClient;
-use ark_storage::DefaultStorage;
 use reqwest::Client;
 
 struct MetadataImage {

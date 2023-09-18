@@ -1,0 +1,102 @@
+use std::env;
+
+use anyhow::Result;
+use ark_storage::types::TokenMetadata;
+use reqwest::Client;
+use urlencoding;
+use base64::{engine::general_purpose, Engine as _};
+
+#[derive(Debug, PartialEq)]
+pub enum MetadataType<'a> {
+    Http(&'a str),
+    Ipfs(&'a str),
+    OnChain(&'a str),
+}
+
+pub struct MetadataImage {
+    pub file_type: String,
+    pub content_length: u64,
+}
+
+pub async fn get_token_metadata(uri: &str) -> Result<TokenMetadata> {
+    let client = Client::new();
+
+    let metadata_type = get_metadata_type(uri);
+
+    match metadata_type {
+        MetadataType::Ipfs(uri) => Ok(get_ipfs_metadata(uri, &client).await?),
+        MetadataType::Http(uri) => Ok(get_http_metadata(uri, &client).await?),
+        MetadataType::OnChain(uri) => Ok(get_onchain_metadata(uri)?),
+    }
+}
+
+pub fn get_metadata_type(uri: &str) -> MetadataType<'_> {
+    if uri.starts_with("ipfs://") {
+        MetadataType::Ipfs(uri)
+    } else if uri.starts_with("http://") || uri.starts_with("https://") {
+        MetadataType::Http(uri)
+    } else {
+        MetadataType::OnChain(uri)
+    }
+}
+
+async fn get_ipfs_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> {
+    let mut ipfs_url = env::var("IPFS_GATEWAY_URI")?;
+    let ipfs_hash = uri.trim_start_matches("ipfs://");
+    ipfs_url.push_str(ipfs_hash);
+    let req = client.get(ipfs_url);
+    let resp = req.send().await?;
+    let metadata = resp.json::<TokenMetadata>().await?;
+    Ok(metadata)
+}
+
+async fn get_http_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> {
+    let resp = client.get(uri).send().await?;
+    let metadata: TokenMetadata = resp.json().await?;
+    Ok(metadata)
+}
+
+fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
+    // Try to split from the comma as it is the standard with on chain metadata
+    let url_encoded = urlencoding::decode(uri).map(|s| String::from(s.as_ref()));
+    let uri_string = match url_encoded {
+        Ok(encoded) => encoded,
+        Err(_) => String::from(uri),
+    };
+
+    match uri_string.split_once(',') {
+        Some(("data:application/json;base64", uri)) => {
+            // If it is base64 encoded, decode it, parse and return
+            let decoded = general_purpose::STANDARD.decode(uri)?;
+            let decoded = std::str::from_utf8(&decoded)?;
+            let metadata: TokenMetadata = serde_json::from_str(decoded)?;
+            Ok(metadata)
+        }
+        Some(("data:application/json", uri)) => {
+            // If it is plain json, parse it and return
+            //println!("Handling {:?}", uri);
+            let metadata: TokenMetadata = serde_json::from_str(uri)?;
+            Ok(metadata)
+        }
+        _ => match serde_json::from_str(uri) {
+            // If it is only the URI without the data format information, try to format it
+            // and if it fails, return empty metadata
+            Ok(v) => Ok(v),
+            Err(_) => Ok(TokenMetadata::default()),
+        },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[tokio::test]
+    async fn test_get_metadata_type() {
+        let metadata_type = get_metadata_type("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5");
+        assert!(metadata_type == MetadataType::Ipfs("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5"));
+
+        let metadata_type = get_metadata_type("https://everai.xyz/metadata/1");
+        assert!(metadata_type == MetadataType::Http("https://everai.xyz/metadata/1"));
+    }
+}
