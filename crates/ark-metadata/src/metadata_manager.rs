@@ -5,6 +5,7 @@ use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::TokenId;
+use log::{error, info};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
@@ -94,6 +95,9 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         token_id_high: FieldElement,
         contract_address: FieldElement,
     ) -> Result<String> {
+
+        info!("get_token_uri");
+
         let token_uri_cairo0 = self
             .fetch_token_uri(
                 selector!("tokenURI"),
@@ -104,6 +108,7 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             .await?;
 
         if self.is_valid_uri(&token_uri_cairo0) {
+            error!("Token URI found");
             return Err(anyhow!("Token URI not found"));
         }
 
@@ -119,6 +124,7 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         if self.is_valid_uri(&token_uri_cairo1) {
             return Ok(token_uri_cairo1);
         } else {
+            error!("Token URI not found");
             return Err(anyhow!("Token URI not found"));
         }
     }
@@ -182,13 +188,19 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<String> {
+
+        info!("get_contract_property_string");
+
         match self
             .starknet_client
             .call_contract(contract_address, selector, calldata, block)
             .await
         {
             Ok(value) => parse_cairo_long_string(value),
-            Err(_) => Err(anyhow!("Error calling contract")),
+            Err(_) => {
+                error!("Error calling contract");
+                Err(anyhow!("Error calling contract"))
+            }
         }
     }
 }

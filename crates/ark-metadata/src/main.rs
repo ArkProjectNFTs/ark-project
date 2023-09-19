@@ -1,50 +1,45 @@
 use anyhow::Result;
-use reqwest::Client;
-
-struct MetadataImage {
-    file_type: String,
-    content_length: u64,
-}
-
-async fn fetch_token_image(url: &str, cache_image: bool) -> Result<MetadataImage> {
-    if !cache_image {
-        let response = Client::new().head(url).send().await?;
-
-        let content_type = match response.headers().get(reqwest::header::CONTENT_TYPE) {
-            Some(content_type) => match content_type.to_str() {
-                Ok(value) => value.to_string(),
-                Err(_) => String::from(""),
-            },
-            None => String::from(""),
-        };
-
-        let content_length = match response.headers().get(reqwest::header::CONTENT_LENGTH) {
-            Some(content_length) => match content_length.to_str() {
-                Ok(value) => value.parse::<u64>().unwrap_or(0),
-                Err(_) => 0,
-            },
-            None => 0,
-        };
-
-        return Ok(MetadataImage {
-            content_length,
-            file_type: content_type,
-        });
-    }
-
-    Ok(MetadataImage {
-        content_length: 0,
-        file_type: String::from(""),
-    })
-}
+use ark_metadata::metadata_manager::MetadataManager;
+use ark_starknet::client::{StarknetClient, StarknetClientHttp};
+use ark_storage::DefaultStorage;
+use starknet::core::types::FieldElement;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let value = fetch_token_image("https://unframed.co/_next/image?url=https%3A%2F%2Fstatic.argent.net%2Fmoments%2Fimages%2F3a59cd48-c085-43a5-a6c4-5682f179596c.png&w=750&q=75", false).await;
 
-    match value {
-        Ok(value) => println!("value: {} type:{}", value.content_length, value.file_type),
-        Err(err) => println!("err: {:?}", err),
+    let storage = DefaultStorage::new();
+
+    let starknet_client =
+        StarknetClientHttp::new("https://starknode.thearkproject.dev/mainnet").unwrap();
+    let mut metadata_manager = MetadataManager::new(&storage, &starknet_client);
+
+    let contract_address = FieldElement::from_hex_be(
+        &"0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
+    )
+    .unwrap();
+    let token_id_low = FieldElement::from_dec_str("1").unwrap();
+    let token_id_high = FieldElement::from_dec_str("0").unwrap();
+    let force_refresh = Some(true);
+    let cache_image = Some(false);
+
+    // contract_address: FieldElement,
+    // token_id_low: FieldElement,
+    // token_id_high: FieldElement,
+    // force_refresh: Option<bool>,
+    // cache_image: Option<bool>,
+
+    match metadata_manager
+        .refresh_metadata_for_token(
+            contract_address,
+            token_id_low,
+            token_id_high,
+            force_refresh,
+            cache_image,
+        )
+        .await
+    {
+        Ok(_) => println!("Success!"),
+        Err(e) => println!("Error: {:?}", e),
     }
 
     Ok(())
