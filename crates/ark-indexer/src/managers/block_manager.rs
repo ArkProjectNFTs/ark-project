@@ -49,7 +49,7 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
 
     /// Returns true if the given block number must be indexed.
     /// False otherwise.
-    pub fn check_candidate(&self, block_number: u64) -> bool {
+    pub async fn check_candidate(&self, block_number: u64) -> bool {
         // If we are indexing the head of the chain, we don't need to check
         let do_force: &bool = &env::var("FORCE_MODE")
             .unwrap_or("false".to_string())
@@ -57,13 +57,13 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
             .unwrap_or(false);
 
         if *do_force {
-            return self.storage.clean_block(block_number).is_ok();
+            return self.storage.clean_block(block_number).await.is_ok();
         }
-
-        match self.storage.get_block_info(block_number) {
+        
+        match self.storage.get_block_info(block_number).await {
             Ok(info) => {
                 if self.indexer_version > info.indexer_version {
-                    self.storage.clean_block(block_number).is_ok()
+                    self.storage.clean_block(block_number).await.is_ok()
                 } else {
                     false
                 }

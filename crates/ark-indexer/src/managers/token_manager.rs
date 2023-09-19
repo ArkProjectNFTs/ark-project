@@ -29,16 +29,24 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         self.reset_token();
 
         self.token.address = event.contract_address.clone();
-        self.token.padded_token_id = event.padded_token_id.clone();
-        self.token.from_address = event.from_address.clone();
-        self.token.to_address = event.to_address.clone();
-        self.token.timestamp = event.timestamp;
+        self.token.token_id = event.token_id.clone();
+        self.token.formated_token_id = event.formated_token_id.clone();
+        self.token.mint_address = if event.event_type == EventType::Mint {
+            Some(event.to_address_field_element.clone())
+        } else {
+            None
+        };
+        self.token.mint_timestamp = if event.event_type == EventType::Mint {
+            Some(event.timestamp.clone())
+        } else {
+            None
+        };
         self.token.mint_transaction_hash = if event.event_type == EventType::Mint {
             Some(event.transaction_hash.clone())
         } else {
             None
         };
-        self.token.block_number_minted = if event.event_type == EventType::Mint {
+        self.token.mint_block_number = if event.event_type == EventType::Mint {
             Some(event.block_number)
         } else {
             None
@@ -67,9 +75,9 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         // What is the logic if one of the two fails?
 
         if event.event_type == EventType::Mint {
-            self.storage.register_mint(&self.token)?;
+            self.storage.register_mint(&self.token).await?;
         } else {
-            self.storage.register_token(&self.token)?;
+            self.storage.register_token(&self.token).await?;
         }
 
         Ok(())
