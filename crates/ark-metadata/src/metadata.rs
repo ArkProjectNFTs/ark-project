@@ -18,11 +18,8 @@ pub struct MetadataImage {
     pub content_length: u64,
 }
 
-pub async fn get_token_metadata(uri: &str) -> Result<TokenMetadata> {
-    let client = Client::new();
-
+pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
-
     match metadata_type {
         MetadataType::Ipfs(uri) => Ok(get_ipfs_metadata(uri, &client).await?),
         MetadataType::Http(uri) => Ok(get_http_metadata(uri, &client).await?),
@@ -44,9 +41,9 @@ async fn get_ipfs_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> 
     let mut ipfs_url = env::var("IPFS_GATEWAY_URI")?;
     let ipfs_hash = uri.trim_start_matches("ipfs://");
     ipfs_url.push_str(ipfs_hash);
-    let req = client.get(ipfs_url);
-    let resp = req.send().await?;
-    let metadata = resp.json::<TokenMetadata>().await?;
+    let request = client.get(ipfs_url);
+    let response = request.send().await?;
+    let metadata = response.json::<TokenMetadata>().await?;
     Ok(metadata)
 }
 
@@ -87,12 +84,44 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
     }
 }
 
+async fn fetch_token_image(url: &str, client: &Client, cache_image: bool) -> Result<MetadataImage> {
+    if !cache_image {
+        let response = client.head(url).send().await?;
+
+        let content_type = match response.headers().get(reqwest::header::CONTENT_TYPE) {
+            Some(content_type) => match content_type.to_str() {
+                Ok(value) => value.to_string(),
+                Err(_) => String::from(""),
+            },
+            None => String::from(""),
+        };
+
+        let content_length = match response.headers().get(reqwest::header::CONTENT_LENGTH) {
+            Some(content_length) => match content_length.to_str() {
+                Ok(value) => value.parse::<u64>().unwrap_or(0),
+                Err(_) => 0,
+            },
+            None => 0,
+        };
+
+        return Ok(MetadataImage {
+            content_length,
+            file_type: content_type,
+        });
+    }
+
+    Ok(MetadataImage {
+        content_length: 0,
+        file_type: String::from(""),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     
     #[tokio::test]
-    async fn test_get_metadata_type() {
+    async fn test_determining_metadata_type() {
         let metadata_type = get_metadata_type("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5");
         assert!(metadata_type == MetadataType::Ipfs("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5"));
 

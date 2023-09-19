@@ -189,6 +189,7 @@ name = "ark-storage"
 version = "0.1.0"
 dependencies = [
  "log",
+ "mockall",
  "num-bigint",
  "serde",
  "serde_json",

@@ -4,7 +4,10 @@ use crate::types::{
 };
 use log;
 use starknet::core::types::FieldElement;
+#[cfg(any(test, feature = "mock"))]
+use mockall::automock;
 
+#[cfg_attr(any(test, feature = "mock"), automock)]
 pub trait StorageManager {
     fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
 

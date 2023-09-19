@@ -1,5 +1,5 @@
 use crate::cairo_string_parser::parse_cairo_long_string;
-use crate::metadata::{get_token_metadata, MetadataImage};
+use crate::metadata::get_token_metadata;
 
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
@@ -10,12 +10,15 @@ use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 
+/// `MetadataManager` is responsible for managing metadata information related to tokens.
+/// It works with the underlying storage and Starknet client to fetch and update token metadata.
 pub struct MetadataManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
     starknet_client: &'a C,
     request_client: ReqwestClient,
 }
 
+/// Represents possible errors that can arise while working with metadata in the manager.
 #[derive(Debug)]
 pub enum MetadataError {
     DatabaseError,
@@ -24,6 +27,7 @@ pub enum MetadataError {
 }
 
 impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
+    /// Creates a new instance of `MetadataManager` with the given storage, Starknet client, and a new request client.
     pub fn new(storage: &'a T, starknet_client: &'a C) -> Self {
         MetadataManager {
             storage,
@@ -33,15 +37,17 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
     }
 
     /// Refreshes the metadata for a given token.
-    ///
+    /// ...
+    /// # Parameters
     /// - `contract_address`: The address of the contract.
     /// - `token_id_low`: The low end of the token ID range.
     /// - `token_id_high`: The high end of the token ID range.
-    /// - `block_id`: The ID of the block.
     /// - `force_refresh`: Whether to force a refresh of the metadata.
-    ///
-    /// Returns an `Err` variant of `MetadataError` if there's a problem in parsing the token URI, fetching metadata, or database interaction.
-    pub async fn refresh_metadata_for_token(
+    /// ...
+    /// # Returns
+    /// - `Ok(())` if the metadata is successfully refreshed.
+    /// - `Err` variant of `MetadataError` if there's an issue during the refresh process.
+    pub async fn refresh_token_metadata(
         &mut self,
         contract_address: FieldElement,
         token_id_low: FieldElement,
@@ -71,7 +77,7 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             }
         }
 
-        let token_metadata = get_token_metadata(token_uri.as_str())
+        let token_metadata = get_token_metadata(&self.request_client, token_uri.as_str())
             .await
             .map_err(|_| MetadataError::RequestError)?;
 
@@ -89,13 +95,15 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         Ok(())
     }
 
+    /// Retrieves the URI for a token based on its ID and the contract address.
+    /// The function first checks the `tokenURI` selector and then the `token_uri` selector.
+    /// If both checks fail, an error is returned indicating the token URI was not found.
     async fn get_token_uri(
         &mut self,
         token_id_low: FieldElement,
         token_id_high: FieldElement,
         contract_address: FieldElement,
     ) -> Result<String> {
-
         info!("get_token_uri");
 
         let token_uri_cairo0 = self
@@ -128,6 +136,8 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         }
     }
 
+    /// Fetches the token URI by interacting with the Starknet contract.
+    /// This function calls the contract with the provided selector to obtain the URI.
     async fn fetch_token_uri(
         &mut self,
         selector: FieldElement,
@@ -144,42 +154,14 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         .await
     }
 
+    /// Checks if the given URI is valid.
+    /// A URI is considered invalid if it's "undefined" or empty.
     fn is_valid_uri(&self, uri: &String) -> bool {
         uri != "undefined" && !uri.is_empty()
     }
 
-    async fn fetch_token_image(&mut self, url: &str, cache_image: bool) -> Result<MetadataImage> {
-        if !cache_image {
-            let response = reqwest::Client::new().head(url).send().await?;
-
-            let content_type = match response.headers().get(reqwest::header::CONTENT_TYPE) {
-                Some(content_type) => match content_type.to_str() {
-                    Ok(value) => value.to_string(),
-                    Err(_) => String::from(""),
-                },
-                None => String::from(""),
-            };
-
-            let content_length = match response.headers().get(reqwest::header::CONTENT_LENGTH) {
-                Some(content_length) => match content_length.to_str() {
-                    Ok(value) => value.parse::<u64>().unwrap_or(0),
-                    Err(_) => 0,
-                },
-                None => 0,
-            };
-
-            return Ok(MetadataImage {
-                content_length,
-                file_type: content_type,
-            });
-        }
-
-        Ok(MetadataImage {
-            content_length: 0,
-            file_type: String::from(""),
-        })
-    }
-
+    /// Gets a property string value from a Starknet contract.
+    /// This function calls the contract and parses the returned value as a string.
     async fn get_contract_property_string(
         &mut self,
         contract_address: FieldElement,
@@ -187,7 +169,6 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<String> {
-
         info!("get_contract_property_string");
 
         match self
@@ -212,39 +193,87 @@ mod tests {
 
     use ark_starknet::client::MockStarknetClient;
     use ark_storage::storage_manager::DefaultStorage;
+    use ark_storage::storage_manager::MockStorageManager;
     use mockall::predicate::*;
 
-    // #[tokio::test]
-    // async fn test_get_token_uri() {
-    //     // SETUP: Mocking and Initializing
-    //     let mut mock_client = MockStarknetClient::new();
-    //     let storage_manager = DefaultStorage::new();
+    #[tokio::test]
+    async fn test_refresh_token_metadata() {
+        // SETUP: Mocking and Initializing
+        let mut mock_client = MockStarknetClient::default();
+        let mut mock_storage = MockStorageManager::default();
+        
+        let token_id = TokenId {
+            low: FieldElement::ZERO,
+            high: FieldElement::ONE,
+        };
 
-    //     mock_client
-    //     .expect_call_contract()
-    //     .times(1)
-    //     .returning(|_, _, _, _| {
-    //         Ok(vec![
-    //             FieldElement::from_dec_str(&"4").unwrap(),
-    //             FieldElement::from_hex_be("0x68").unwrap(),
-    //             FieldElement::from_hex_be("0x74").unwrap(),
-    //             FieldElement::from_hex_be("0x74").unwrap(),
-    //             FieldElement::from_hex_be("0x70").unwrap(),
-    //         ])
-    //     });
+        // Mock expected calls
+        mock_client
+            .expect_call_contract() // mocking the call inside `get_token_uri`
+            .times(1)
+            .returning(|_, _, _, _| {
+                Ok(vec![
+                    FieldElement::from_dec_str(&"4").unwrap(),
+                    FieldElement::from_hex_be("0x68").unwrap(),
+                    FieldElement::from_hex_be("0x74").unwrap(),
+                    FieldElement::from_hex_be("0x74").unwrap(),
+                    FieldElement::from_hex_be("0x70").unwrap(),
+                ])
+            });
 
-    //     let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client);
+        mock_storage
+            .expect_has_token_metadata()
+            .times(1)
+            .returning(move |_, _| Ok(false));
 
-    //     // EXECUTION: Call the function under test
-    //     let result = metadata_manager
-    //         .get_token_uri(
-    //             FieldElement::ZERO,
-    //             FieldElement::ONE,
-    //             FieldElement::from_hex_be("0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905").unwrap())
-    //         .await;
+        mock_storage
+            .expect_register_token_metadata()
+            .times(1)
+            .returning(|_| Ok(()));
 
-    //     assert!(result.is_ok());
-    // }
+        let contract_address = FieldElement::from_hex_be("0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905").unwrap();
+        let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client);
+
+        // EXECUTION: Call the function under test
+        let result = metadata_manager
+            .refresh_token_metadata(contract_address.clone(), token_id.low.clone(), token_id.high.clone(), Some(false), Some(false))
+            .await;
+
+        // ASSERTION: Verify the outcome
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_get_token_uri() {
+        // SETUP: Mocking and Initializing
+        let mut mock_client = MockStarknetClient::default();
+        let storage_manager = DefaultStorage::new();
+
+        mock_client
+        .expect_call_contract()
+        .times(1)
+        .returning(|_, _, _, _| {
+            Ok(vec![
+                FieldElement::from_dec_str(&"4").unwrap(),
+                FieldElement::from_hex_be("0x68").unwrap(),
+                FieldElement::from_hex_be("0x74").unwrap(),
+                FieldElement::from_hex_be("0x74").unwrap(),
+                FieldElement::from_hex_be("0x70").unwrap(),
+            ])
+        });
+
+        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client);
+
+        // EXECUTION: Call the function under test
+        let result = metadata_manager
+            .get_token_uri(
+                FieldElement::ZERO,
+                FieldElement::ONE,
+                FieldElement::from_hex_be("0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905").unwrap())
+            .await;
+
+        assert!(result.is_ok());
+    }
 
     #[tokio::test]
     async fn test_get_contract_property_string() {

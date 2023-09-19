@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     // cache_image: Option<bool>,
 
     match metadata_manager
-        .refresh_metadata_for_token(
+        .refresh_token_metadata(
             contract_address,
             token_id_low,
             token_id_high,
