@@ -37,7 +37,7 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
             continue;
         }
 
-        if !block_manager.check_candidate(current_u64) {
+        if !block_manager.check_candidate(current_u64).await {
             continue;
         }
 
@@ -55,7 +55,7 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
             for e in events {
                 let contract_address = e.from_address;
 
-                let contract_info =
+                let contract_type =
                     match collection_manager.identify_contract(contract_address).await {
                         Ok(info) => info,
                         Err(e) => {
@@ -64,7 +64,6 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
                         }
                     };
 
-                let contract_type = contract_info.r#type;
                 if contract_type == ContractType::Other {
                     continue;
                 }

@@ -34,6 +34,17 @@ pub enum EventType {
     Uninitialized,
 }
 
+impl fmt::Display for EventType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            EventType::Mint => write!(f, "mint"),
+            EventType::Burn => write!(f, "burn"),
+            EventType::Transfer => write!(f, "transfer"),
+            EventType::Uninitialized => write!(f, "uninitialized"),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct TokenEvent {
     pub timestamp: u64,
@@ -47,7 +58,6 @@ pub struct TokenEvent {
     pub formated_token_id: FormattedTokenId,
     pub block_number: u64,
     pub contract_type: String,
-    pub padded_token_id: String,
     pub event_type: EventType,
 }
 
@@ -66,7 +76,6 @@ impl Default for TokenEvent {
                 high: FieldElement::ZERO,
             },
             formated_token_id: FormattedTokenId::default(),
-            padded_token_id: FormattedTokenId::default().padded_token_id,
             block_number: 0,
             contract_type: String::new(),
             event_type: EventType::Uninitialized,
@@ -75,16 +84,34 @@ impl Default for TokenEvent {
 }
 
 // Token struct based on the informations we get from an event
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct TokenFromEvent {
     pub address: String,
-    pub padded_token_id: String,
-    pub from_address: String,
-    pub to_address: String,
-    pub timestamp: u64,
+    pub token_id: TokenId,
+    pub formated_token_id: FormattedTokenId,
     pub owner: String,
+    pub mint_address: Option<FieldElement>,
+    pub mint_timestamp: Option<u64>,
     pub mint_transaction_hash: Option<String>,
-    pub block_number_minted: Option<u64>,
+    pub mint_block_number: Option<u64>,
+}
+
+impl Default for TokenFromEvent {
+    fn default() -> Self {
+        TokenFromEvent {
+            address: String::new(),
+            token_id: TokenId {
+                low: FieldElement::ZERO,
+                high: FieldElement::ZERO,
+            },
+            formated_token_id: FormattedTokenId::default(),
+            owner: String::new(),
+            mint_address: None,
+            mint_timestamp: None,
+            mint_transaction_hash: None,
+            mint_block_number: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
