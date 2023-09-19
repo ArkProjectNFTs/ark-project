@@ -108,8 +108,7 @@ impl<'a, T: StorageManager, C: StarknetClient> MetadataManager<'a, T, C> {
             .await?;
 
         if self.is_valid_uri(&token_uri_cairo0) {
-            error!("Token URI found");
-            return Err(anyhow!("Token URI not found"));
+            return Ok(token_uri_cairo0);
         }
 
         let token_uri_cairo1 = self
