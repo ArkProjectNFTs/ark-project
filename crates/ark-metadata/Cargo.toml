@@ -17,6 +17,9 @@ ark-starknet.workspace = true
 ark-storage.workspace = true
 urlencoding = "2.1.2"
 base64 = "0.21.0"
+aws-config = "0.56.1"
+aws-sdk-s3 = "0.30.0"
+async-trait.workspace = true
 
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }

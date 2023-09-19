@@ -1,10 +1,13 @@
-use std::env;
+use std::{env, time::Duration};
 
 use anyhow::Result;
 use ark_storage::types::TokenMetadata;
+use base64::{engine::general_purpose, Engine as _};
 use reqwest::Client;
 use urlencoding;
-use base64::{engine::general_purpose, Engine as _};
+
+use crate::file_manager::{FileManager, FileInfo};
+
 
 #[derive(Debug, PartialEq)]
 pub enum MetadataType<'a> {
@@ -20,6 +23,7 @@ pub struct MetadataImage {
 
 pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
+    println!("Metadata type: {:?}", metadata_type);
     match metadata_type {
         MetadataType::Ipfs(uri) => Ok(get_ipfs_metadata(uri, &client).await?),
         MetadataType::Http(uri) => Ok(get_http_metadata(uri, &client).await?),
@@ -38,10 +42,13 @@ pub fn get_metadata_type(uri: &str) -> MetadataType<'_> {
 }
 
 async fn get_ipfs_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> {
-    let mut ipfs_url = env::var("IPFS_GATEWAY_URI")?;
+    let mut ipfs_url = env::var("IPFS_GATEWAY_URI").expect("IPFS_GATEWAY_URI must be set");
     let ipfs_hash = uri.trim_start_matches("ipfs://");
     ipfs_url.push_str(ipfs_hash);
-    let request = client.get(ipfs_url);
+
+    println!("Fetching metadata from {}", ipfs_url);
+
+    let request = client.get(ipfs_url).timeout(Duration::from_secs(3));
     let response = request.send().await?;
     let metadata = response.json::<TokenMetadata>().await?;
     Ok(metadata)
@@ -84,46 +91,18 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
     }
 }
 
-async fn fetch_token_image(url: &str, client: &Client, cache_image: bool) -> Result<MetadataImage> {
-    if !cache_image {
-        let response = client.head(url).send().await?;
-
-        let content_type = match response.headers().get(reqwest::header::CONTENT_TYPE) {
-            Some(content_type) => match content_type.to_str() {
-                Ok(value) => value.to_string(),
-                Err(_) => String::from(""),
-            },
-            None => String::from(""),
-        };
-
-        let content_length = match response.headers().get(reqwest::header::CONTENT_LENGTH) {
-            Some(content_length) => match content_length.to_str() {
-                Ok(value) => value.parse::<u64>().unwrap_or(0),
-                Err(_) => 0,
-            },
-            None => 0,
-        };
-
-        return Ok(MetadataImage {
-            content_length,
-            file_type: content_type,
-        });
-    }
-
-    Ok(MetadataImage {
-        content_length: 0,
-        file_type: String::from(""),
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_determining_metadata_type() {
-        let metadata_type = get_metadata_type("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5");
-        assert!(metadata_type == MetadataType::Ipfs("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5"));
+        let metadata_type =
+            get_metadata_type("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5");
+        assert!(
+            metadata_type
+                == MetadataType::Ipfs("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5")
+        );
 
         let metadata_type = get_metadata_type("https://everai.xyz/metadata/1");
         assert!(metadata_type == MetadataType::Http("https://everai.xyz/metadata/1"));

@@ -34,7 +34,7 @@ pub trait StorageManager {
 
     fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError>;
 
-    fn register_token_metadata(&self, token_metadata: TokenMetadata) -> Result<(), StorageError>;
+    fn register_token_metadata(&self, contract_address: &FieldElement, token_id: TokenId, token_metadata: TokenMetadata) -> Result<(), StorageError>;
 
     fn has_token_metadata(&self, contract_address: FieldElement, token_id: TokenId) -> Result<bool, StorageError>;
 }
@@ -134,7 +134,7 @@ impl StorageManager for DefaultStorage {
         Ok(())
     }
 
-    fn register_token_metadata(&self, token_metadata: TokenMetadata) -> Result<(), StorageError> {
+    fn register_token_metadata(&self, contract_address: &FieldElement, token_id: TokenId, token_metadata: TokenMetadata) -> Result<(), StorageError> {
         log::debug!("Registering token metadata");
         // TODO: In future, handle and return potential errors
         // Err(StorageError::DatabaseError)
