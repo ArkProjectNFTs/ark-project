@@ -11,7 +11,7 @@ async fn main() -> Result<()> {
     dotenv().ok();
 
     let storage = DefaultStorage::new();
-    let file_manager = LocalFileManager::new();
+    let file_manager = LocalFileManager::default();
 
     let starknet_client =
         StarknetClientHttp::new("https://starknode.thearkproject.dev/mainnet").unwrap();
@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
     let token_id_low = FieldElement::from_dec_str("1").unwrap();
     let token_id_high = FieldElement::from_dec_str("0").unwrap();
     let force_refresh = Some(true);
-    let cache_image = Some(false);
+    let cache_image = Some(true);
 
     match metadata_manager
         .refresh_token_metadata(

@@ -1,3 +1,5 @@
+use std::env;
+
 use crate::cairo_string_parser::parse_cairo_long_string;
 use crate::file_manager::{FileInfo, FileManager};
 use crate::metadata::{get_token_metadata, MetadataImage};
@@ -86,7 +88,13 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             .map_err(|_| MetadataError::RequestTokenUriError)?;
 
         if token_metadata.image.is_some() {
-            let url = token_metadata.image.clone().unwrap();
+            let ipfs_url = env::var("IPFS_GATEWAY_URI").expect("IPFS_GATEWAY_URI must be set");
+
+            let url = token_metadata
+                .image
+                .clone()
+                .unwrap()
+                .replace("ipfs://", ipfs_url.as_str());
             let image_name = url.split("/").last().unwrap();
 
             self.fetch_token_image(url.as_str(), image_name, cache_image.unwrap_or(false))
@@ -95,7 +103,14 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         }
 
         self.storage
-            .register_token_metadata(&contract_address, TokenId { low: token_id_low, high: token_id_high }, token_metadata)
+            .register_token_metadata(
+                &contract_address,
+                TokenId {
+                    low: token_id_low,
+                    high: token_id_high,
+                },
+                token_metadata,
+            )
             .map_err(|_e| MetadataError::DatabaseError)?;
 
         Ok(())
@@ -127,7 +142,12 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
                 file_type: content_type,
             });
         } else {
+            println!("Fetching image... {}", url);
+
             let response = reqwest::get(url).await?;
+
+            println!("LA");
+
             let bytes = response.bytes().await?;
 
             self.file_manager
@@ -136,7 +156,6 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
                     content: bytes.to_vec(),
                 })
                 .await?;
-
         }
 
         Ok(MetadataImage {
@@ -282,7 +301,7 @@ mod tests {
         mock_storage
             .expect_register_token_metadata()
             .times(1)
-            .returning(|_,_,_| Ok(()));
+            .returning(|_, _, _| Ok(()));
 
         let contract_address = FieldElement::from_hex_be(
             "0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",

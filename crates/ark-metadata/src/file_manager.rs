@@ -1,9 +1,10 @@
-use std::fs::File;
+use std::fs::{File, create_dir_all};
 use std::io::prelude::*;
 use std::path::Path;
-use anyhow::Result;
+
+use anyhow::{Result, Context};
 use async_trait::async_trait;
-use aws_sdk_s3 as s3;
+use log::info;
 
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;
@@ -19,25 +20,27 @@ pub trait FileManager {
     async fn save(&self, file: &FileInfo) -> Result<()>;
 }
 
+#[derive(Default)]
 pub struct LocalFileManager;
-
-impl LocalFileManager {
-    pub fn new() -> Self {
-        Self
-    }
-}
 
 #[async_trait]
 impl FileManager for LocalFileManager {
-
     async fn save(&self, file: &FileInfo) -> Result<()> {
-        let path = Path::new("./images/").join(&file.name);
-        let mut dest_file = File::create(&path)?;
+        // Construct the path
+        let path = Path::new("./tmp").join(&file.name);
+
+        // Ensure directory exists
+        create_dir_all(path.parent().unwrap())
+            .context("Failed to create directory")?;
+
+        // Create and write to the file
+        let mut dest_file = File::create(&path)
+            .context("Failed to create file")?;
+
+        dest_file.write_all(&file.content)
+            .context("Failed to write to file")?;
     
-        // Écrire le contenu dans le fichier
-        dest_file.write_all(&file.content)?;
-    
-        println!("Saving {} to local disk...", file.name);
+        info!("File saved: {}", file.name);
         Ok(())
     }
 }

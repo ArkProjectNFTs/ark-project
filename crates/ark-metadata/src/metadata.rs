@@ -6,9 +6,6 @@ use base64::{engine::general_purpose, Engine as _};
 use reqwest::Client;
 use urlencoding;
 
-use crate::file_manager::{FileManager, FileInfo};
-
-
 #[derive(Debug, PartialEq)]
 pub enum MetadataType<'a> {
     Http(&'a str),
@@ -24,11 +21,14 @@ pub struct MetadataImage {
 pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
     println!("Metadata type: {:?}", metadata_type);
-    match metadata_type {
-        MetadataType::Ipfs(uri) => Ok(get_ipfs_metadata(uri, &client).await?),
-        MetadataType::Http(uri) => Ok(get_http_metadata(uri, &client).await?),
-        MetadataType::OnChain(uri) => Ok(get_onchain_metadata(uri)?),
-    }
+
+    let metadata = match metadata_type {
+        MetadataType::Ipfs(uri) => get_ipfs_metadata(uri, &client).await?,
+        MetadataType::Http(uri) => get_http_metadata(uri, &client).await?,
+        MetadataType::OnChain(uri) => get_onchain_metadata(uri)?,
+    };
+
+    Ok(metadata)
 }
 
 pub fn get_metadata_type(uri: &str) -> MetadataType<'_> {
