@@ -145,9 +145,9 @@ impl StorageManager for DefaultStorage {
 
     fn register_token_metadata(
         &self,
-        contract_address: &FieldElement,
-        token_id: TokenId,
-        token_metadata: TokenMetadata,
+        _contract_address: &FieldElement,
+        _token_id: TokenId,
+        _token_metadata: TokenMetadata,
     ) -> Result<(), StorageError> {
         log::debug!("Registering token metadata");
         // TODO: In future, handle and return potential errors
@@ -157,8 +157,8 @@ impl StorageManager for DefaultStorage {
 
     fn has_token_metadata(
         &self,
-        contract_address: FieldElement,
-        token_id: TokenId,
+        _contract_address: FieldElement,
+        _token_id: TokenId,
     ) -> Result<bool, StorageError> {
         log::debug!("Checking if token metadata exists");
         Ok(false)

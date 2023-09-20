@@ -25,9 +25,8 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
         // and concatenate their results.
         _ => {
             let mut result = String::new();
-            for i in 1..field_elements.len() {
-                let field_element = field_elements[i];
-                match parse_cairo_short_string(&field_element) {
+            for field_element in &field_elements[1..] {
+                match parse_cairo_short_string(field_element) {
                     Ok(value) => {
                         result.push_str(&value);
                     }
