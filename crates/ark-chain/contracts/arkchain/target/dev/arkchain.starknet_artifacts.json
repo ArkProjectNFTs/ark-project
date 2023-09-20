@@ -1,0 +1,1 @@
+{"version":1,"contracts":[{"id":"r7aolg10a93vg","package_name":"arkchain","contract_name":"orderbook","artifacts":{"sierra":"arkchain_orderbook.sierra.json","casm":"arkchain_orderbook.casm.json"}}]}
