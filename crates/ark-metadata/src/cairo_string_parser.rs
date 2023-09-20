@@ -61,18 +61,6 @@ mod tests {
         assert_eq!(result.unwrap_err().to_string(), "No value found");
     }
 
-    // This test is hypothetical and may not fit exactly as-is depending on the implementation of `parse_cairo_short_string`
-    #[test]
-    fn should_handle_generic_error_from_parse_cairo_short_string() {
-        let long_string = vec![
-            // some value that causes `parse_cairo_short_string` to error out
-        ];
-
-        let result = parse_cairo_long_string(long_string);
-        assert!(result.is_err());
-        // Check the error message or type here
-    }
-
     #[test]
     fn should_parse_field_elements_with_array_length() {
         let long_string = vec![
@@ -228,8 +216,6 @@ mod tests {
         assert!(result.is_ok());
 
         let value = result.unwrap();
-        println!("Value: {}", value); // Print the value using Display formatter
-
         assert!(value == "ipfs://bafybeieocsz5txpxgp7zrx7fexrdneyj4kzq2v4x5g3asx45m65cx7rgxu/0");
     }
 }
