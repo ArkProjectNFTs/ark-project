@@ -13,21 +13,13 @@ pub enum MetadataType<'a> {
     OnChain(&'a str),
 }
 
-pub struct MetadataImage {
-    pub file_type: String,
-    pub content_length: u64,
-}
-
 pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
-    println!("Metadata type: {:?}", metadata_type);
-
     let metadata = match metadata_type {
         MetadataType::Ipfs(uri) => get_ipfs_metadata(uri, &client).await?,
         MetadataType::Http(uri) => get_http_metadata(uri, &client).await?,
         MetadataType::OnChain(uri) => get_onchain_metadata(uri)?,
     };
-
     Ok(metadata)
 }
 
@@ -45,9 +37,6 @@ async fn get_ipfs_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> 
     let mut ipfs_url = env::var("IPFS_GATEWAY_URI").expect("IPFS_GATEWAY_URI must be set");
     let ipfs_hash = uri.trim_start_matches("ipfs://");
     ipfs_url.push_str(ipfs_hash);
-
-    println!("Fetching metadata from {}", ipfs_url);
-
     let request = client.get(ipfs_url).timeout(Duration::from_secs(3));
     let response = request.send().await?;
     let metadata = response.json::<TokenMetadata>().await?;

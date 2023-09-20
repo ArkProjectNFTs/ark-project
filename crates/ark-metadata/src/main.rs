@@ -1,13 +1,12 @@
 use anyhow::Result;
-use ark_metadata::{metadata_manager::MetadataManager, file_manager::LocalFileManager};
+use ark_metadata::{file_manager::LocalFileManager, metadata_manager::MetadataManager};
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use ark_storage::DefaultStorage;
-use starknet::core::types::FieldElement;
 use dotenv::dotenv;
+use starknet::core::types::FieldElement;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-
     dotenv().ok();
 
     let storage = DefaultStorage::new();

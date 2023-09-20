@@ -1,4 +1,7 @@
 /target
-tmp/
+
+crates/ark-metadata/**/tmp/
+crates/ark-metadata/images/**/*
+
 .env
 .aws

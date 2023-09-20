@@ -1,17 +1,17 @@
-use std::env;
-
-use crate::cairo_string_parser::parse_cairo_long_string;
-use crate::file_manager::{FileInfo, FileManager};
-use crate::metadata::{get_token_metadata, MetadataImage};
-
+use crate::{
+    cairo_string_parser::parse_cairo_long_string,
+    file_manager::{FileInfo, FileManager},
+    metadata::get_token_metadata,
+    utils::extract_metadata_from_headers,
+};
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
-use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::TokenId;
-use log::{error, info};
+use ark_storage::{storage_manager::StorageManager, types::TokenId};
+use log::{debug, error, info};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
+use std::env;
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -22,6 +22,12 @@ pub struct MetadataManager<'a, T: StorageManager, C: StarknetClient, F: FileMana
     file_manager: &'a F,
 }
 
+pub struct MetadataImage {
+    pub file_type: String,
+    pub content_length: u64,
+    pub is_cache_updated: bool,
+}
+
 /// Represents possible errors that can arise while working with metadata in the manager.
 #[derive(Debug)]
 pub enum MetadataError {
@@ -29,6 +35,7 @@ pub enum MetadataError {
     ParsingError,
     RequestTokenUriError,
     RequestImageError,
+    EnvVarMissingError,
 }
 
 impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C, F> {
@@ -88,18 +95,30 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             .map_err(|_| MetadataError::RequestTokenUriError)?;
 
         if token_metadata.image.is_some() {
-            let ipfs_url = env::var("IPFS_GATEWAY_URI").expect("IPFS_GATEWAY_URI must be set");
+            let ipfs_url =
+                env::var("IPFS_GATEWAY_URI").map_err(|_| MetadataError::EnvVarMissingError)?;
 
             let url = token_metadata
                 .image
-                .clone()
-                .unwrap()
-                .replace("ipfs://", ipfs_url.as_str());
-            let image_name = url.split("/").last().unwrap();
+                .as_ref()
+                .map(|s| s.replace("ipfs://", &ipfs_url))
+                .unwrap_or_default();
 
-            self.fetch_token_image(url.as_str(), image_name, cache_image.unwrap_or(false))
-                .await
-                .map_err(|_| MetadataError::RequestImageError)?;
+            let image_name = url.rsplit('/').next().unwrap_or_default();
+            let image_ext = image_name.rsplit('.').next().unwrap_or_default();
+
+            self.fetch_token_image(
+                url.as_str(),
+                image_ext,
+                cache_image.unwrap_or(false),
+                contract_address.clone(),
+                TokenId {
+                    low: token_id_low,
+                    high: token_id_high,
+                },
+            )
+            .await
+            .map_err(|_| MetadataError::RequestImageError)?;
         }
 
         self.storage
@@ -119,49 +138,41 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
     pub async fn fetch_token_image(
         &mut self,
         url: &str,
-        name: &str,
+        file_ext: &str,
         cache_image: bool,
+        contract_address: FieldElement,
+        token_id: TokenId,
     ) -> Result<MetadataImage> {
         if !cache_image {
             let response = self.request_client.head(url).send().await?;
-            let headers = response.headers();
-            let content_type = headers
-                .get(reqwest::header::CONTENT_TYPE)
-                .and_then(|value| value.to_str().ok())
-                .unwrap_or("")
-                .to_string();
-
-            let content_length = headers
-                .get(reqwest::header::CONTENT_LENGTH)
-                .and_then(|value| value.to_str().ok())
-                .and_then(|value| value.parse::<u64>().ok())
-                .unwrap_or(0);
+            let (content_type, content_length) = extract_metadata_from_headers(response.headers())?;
 
             return Ok(MetadataImage {
-                content_length,
                 file_type: content_type,
+                content_length,
+                is_cache_updated: false,
             });
         } else {
-            println!("Fetching image... {}", url);
-
+            debug!("Fetching image... {}", url);
             let response = reqwest::get(url).await?;
-
-            println!("LA");
-
+            let headers = response.headers().clone();
             let bytes = response.bytes().await?;
+            let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
 
             self.file_manager
                 .save(&FileInfo {
-                    name: name.to_string(),
+                    name: format!("{}.{}", token_id.format().token_id, file_ext),
                     content: bytes.to_vec(),
+                    dir_path: Some(String::from(format!("{:#064x}", contract_address))),
                 })
                 .await?;
-        }
 
-        Ok(MetadataImage {
-            content_length: 0,
-            file_type: String::from(""),
-        })
+            Ok(MetadataImage {
+                file_type: content_type,
+                content_length,
+                is_cache_updated: true,
+            })
+        }
     }
 
     /// Retrieves the URI for a token based on its ID and the contract address.
@@ -173,8 +184,6 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         token_id_high: FieldElement,
         contract_address: FieldElement,
     ) -> Result<String> {
-        info!("get_token_uri");
-
         let token_uri_cairo0 = self
             .fetch_token_uri(
                 selector!("tokenURI"),
@@ -225,7 +234,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
 
     /// Checks if the given URI is valid.
     /// A URI is considered invalid if it's "undefined" or empty.
-    fn is_valid_uri(&self, uri: &String) -> bool {
+    fn is_valid_uri(&self, uri: &str) -> bool {
         uri != "undefined" && !uri.is_empty()
     }
 
@@ -256,23 +265,163 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
-
-    use crate::file_manager::MockFileManager;
-
     use super::*;
+    use crate::file_manager::MockFileManager;
 
     use ark_starknet::client::MockStarknetClient;
     use ark_storage::storage_manager::DefaultStorage;
     use ark_storage::storage_manager::MockStorageManager;
     use mockall::predicate::*;
+    use reqwest::header::HeaderMap;
+    use std::vec;
+
+    // #[tokio::test]
+    // async fn test_fetch_token_image_no_cache() {
+    //     let mock_storage = MockStorageManager::default();
+    //     let mock_client = MockStarknetClient::default();
+    //     let mock_file = MockFileManager::default();
+
+    //     let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file);
+
+    //     let test_url = "http://example.com/test.png";
+
+    //     // Mock the HTTP HEAD request to fetch metadata.
+    //     let mock_request_client = reqwest::Client::default();
+    //     mock_request_client
+    //         .expect_head()
+    //         .with(eq(test_url))
+    //         .returning(|_| {
+    //             let mut headers = HeaderMap::new();
+    //             headers.insert("Content-Type", "image/png".parse().unwrap());
+    //             headers.insert("Content-Length", "12345".parse().unwrap());
+    //             Ok(reqwest::Response::builder()
+    //                 .status(StatusCode::OK)
+    //                 .headers(headers)
+    //                 .body("".into())
+    //                 .unwrap())
+    //         });
+
+    //     let result = metadata_manager
+    //         .fetch_token_image(
+    //             test_url,
+    //             "png",
+    //             false,
+    //             FieldElement::ZERO,
+    //             TokenId::default(),
+    //         )
+    //         .await;
+
+    //     assert!(result.is_ok());
+    //     let metadata_image = result.unwrap();
+    //     assert_eq!(metadata_image.file_type, "image/png");
+    //     assert_eq!(metadata_image.content_length, 12345u64);
+    //     assert_eq!(metadata_image.is_cache_updated, false);
+    // }
+
+    // #[tokio::test]
+    // async fn test_fetch_token_image_cache_success() {
+    //     let mock_storage = MockStorageManager::default();
+    //     let mock_client = MockStarknetClient::default();
+    //     let mut mock_file = MockFileManager::default();
+
+    //     let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file);
+
+    //     let test_url = "http://example.com/test.png";
+    //     let test_body = "test_image_content";
+
+    //     mock_file.expect_save().returning(|_| Ok(()));
+
+    //     let mock_request_client = reqwest::Client::default();
+    //     mock_request_client
+    //         .expect_get()
+    //         .with(eq(test_url))
+    //         .returning(|_| {
+    //             let mut headers = HeaderMap::new();
+    //             headers.insert("Content-Type", "image/png".parse().unwrap());
+    //             headers.insert("Content-Length", "12345".parse().unwrap());
+    //             Ok(reqwest::Response::builder()
+    //                 .status(StatusCode::OK)
+    //                 .headers(headers)
+    //                 .body(test_body.into())
+    //                 .unwrap())
+    //         });
+
+    //     let result = metadata_manager
+    //         .fetch_token_image(
+    //             test_url,
+    //             "png",
+    //             true,
+    //             FieldElement::ZERO,
+    //             TokenId::default(),
+    //         )
+    //         .await;
+
+    //     assert!(result.is_ok());
+    //     let metadata_image = result.unwrap();
+    //     assert_eq!(metadata_image.file_type, "image/png");
+    //     assert_eq!(metadata_image.content_length, 12345u64);
+    //     assert_eq!(metadata_image.is_cache_updated, true);
+    // }
+
+    // #[tokio::test]
+    // async fn test_fetch_token_image_cache_fail() {
+    //     let mock_storage = MockStorageManager::default();
+    //     let mock_client = MockStarknetClient::default();
+    //     let mock_file = MockFileManager::default();
+
+    //     let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file);
+
+    //     let test_url = "http://example.com/test.png";
+
+    //     let mock_request_client = reqwest::Client::default();
+    //     mock_request_client
+    //         .expect_get()
+    //         .with(eq(test_url))
+    //         .returning(|_| {
+    //             Err(reqwest::Error::new(
+    //                 reqwest::ErrorKind::Request,
+    //                 "Test Error",
+    //             ))
+    //         });
+
+    //     let result = metadata_manager
+    //         .fetch_token_image(
+    //             test_url,
+    //             "png",
+    //             true,
+    //             FieldElement::ZERO,
+    //             TokenId::default(),
+    //         )
+    //         .await;
+
+    //     assert!(result.is_err());
+    // }
+
+    #[test]
+    fn test_extract_metadata_from_headers() {
+        // Create a mock HeaderMap with some sample headers
+        let mut headers = HeaderMap::new();
+        headers.insert("Content-Type", "image/png".parse().unwrap());
+        headers.insert("Content-Length", "12345".parse().unwrap());
+
+        // Call the function under test
+        let data = extract_metadata_from_headers(&headers);
+
+        // Assert that the returned values match the headers we set
+        assert!(data.is_ok());
+
+        let (content_type, content_length) = data.unwrap();
+
+        assert_eq!(content_type, "image/png");
+        assert_eq!(content_length, 12345u64);
+    }
 
     #[tokio::test]
     async fn test_refresh_token_metadata() {
         // SETUP: Mocking and Initializing
         let mut mock_client = MockStarknetClient::default();
         let mut mock_storage = MockStorageManager::default();
-        let mut mock_file = MockFileManager::default();
+        let mock_file = MockFileManager::default();
 
         let token_id = TokenId {
             low: FieldElement::ZERO,
@@ -329,7 +478,7 @@ mod tests {
         // SETUP: Mocking and Initializing
         let mut mock_client = MockStarknetClient::default();
         let storage_manager = DefaultStorage::new();
-        let mut mock_file = MockFileManager::default();
+        let mock_file = MockFileManager::default();
 
         mock_client
             .expect_call_contract()
@@ -365,7 +514,7 @@ mod tests {
     async fn test_get_contract_property_string() {
         // SETUP: Mocking and Initializing
         let mut mock_client = MockStarknetClient::default();
-        let mut mock_file = MockFileManager::default();
+        let mock_file = MockFileManager::default();
 
         let contract_address = FieldElement::ONE;
         let selector_name = selector!("tokenURI");
