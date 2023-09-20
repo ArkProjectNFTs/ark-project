@@ -7,7 +7,7 @@ use crate::{
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_storage::{storage_manager::StorageManager, types::TokenId};
-use log::{debug, error, info};
+use log::{debug, error};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
@@ -63,26 +63,19 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
     pub async fn refresh_token_metadata(
         &mut self,
         contract_address: FieldElement,
-        token_id_low: FieldElement,
-        token_id_high: FieldElement,
+        token_id: TokenId,
         force_refresh: Option<bool>,
         cache_image: Option<bool>,
     ) -> Result<(), MetadataError> {
         let token_uri = self
-            .get_token_uri(token_id_low, token_id_high, contract_address)
+            .get_token_uri(token_id.low, token_id.high, contract_address)
             .await
             .map_err(|_| MetadataError::ParsingError)?;
 
         if !force_refresh.unwrap_or(false) {
             let has_token_metadata = self
                 .storage
-                .has_token_metadata(
-                    contract_address,
-                    TokenId {
-                        low: token_id_low,
-                        high: token_id_high,
-                    },
-                )
+                .has_token_metadata(contract_address, token_id.clone())
                 .map_err(|_| MetadataError::DatabaseError)?;
 
             if has_token_metadata {
@@ -112,24 +105,14 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
                 image_ext,
                 cache_image.unwrap_or(false),
                 contract_address,
-                TokenId {
-                    low: token_id_low,
-                    high: token_id_high,
-                },
+                token_id.clone(),
             )
             .await
             .map_err(|_| MetadataError::RequestImageError)?;
         }
 
         self.storage
-            .register_token_metadata(
-                &contract_address,
-                TokenId {
-                    low: token_id_low,
-                    high: token_id_high,
-                },
-                token_metadata,
-            )
+            .register_token_metadata(&contract_address, token_id.clone(), token_metadata)
             .map_err(|_e| MetadataError::DatabaseError)?;
 
         Ok(())
@@ -185,24 +168,24 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         contract_address: FieldElement,
     ) -> Result<String> {
         let token_uri_cairo0 = self
-            .fetch_token_uri(
-                selector!("tokenURI"),
-                token_id_low,
-                token_id_high,
-                contract_address,
-            )
-            .await?;
+        .get_contract_property_string(
+            contract_address,
+            selector!("tokenURI"),
+            vec![token_id_low, token_id_high],
+            BlockId::Tag(BlockTag::Latest),
+        )
+        .await?;
 
         if self.is_valid_uri(&token_uri_cairo0) {
             return Ok(token_uri_cairo0);
         }
 
         let token_uri_cairo1 = self
-            .fetch_token_uri(
-                selector!("token_uri"),
-                token_id_low,
-                token_id_high,
+            .get_contract_property_string(
                 contract_address,
+                selector!("token_uri"),
+                vec![token_id_low, token_id_high],
+                BlockId::Tag(BlockTag::Latest),
             )
             .await?;
 
@@ -212,24 +195,6 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             error!("Token URI not found");
             Err(anyhow!("Token URI not found"))
         }
-    }
-
-    /// Fetches the token URI by interacting with the Starknet contract.
-    /// This function calls the contract with the provided selector to obtain the URI.
-    async fn fetch_token_uri(
-        &mut self,
-        selector: FieldElement,
-        token_id_low: FieldElement,
-        token_id_high: FieldElement,
-        contract_address: FieldElement,
-    ) -> Result<String> {
-        self.get_contract_property_string(
-            contract_address,
-            selector,
-            vec![token_id_low, token_id_high],
-            BlockId::Tag(BlockTag::Latest),
-        )
-        .await
     }
 
     /// Checks if the given URI is valid.
@@ -247,19 +212,13 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<String> {
-        info!("get_contract_property_string");
-
-        match self
+        let value = self
             .starknet_client
             .call_contract(contract_address, selector, calldata, block)
             .await
-        {
-            Ok(value) => parse_cairo_long_string(value),
-            Err(_) => {
-                error!("Error calling contract");
-                Err(anyhow!("Error calling contract"))
-            }
-        }
+            .map_err(|_| anyhow!("Error calling contract"))?;
+
+        parse_cairo_long_string(value).map_err(|_| anyhow!("Error parsing string"))
     }
 }
 
@@ -338,13 +297,7 @@ mod tests {
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
-            .refresh_token_metadata(
-                contract_address,
-                token_id.low,
-                token_id.high,
-                Some(false),
-                Some(false),
-            )
+            .refresh_token_metadata(contract_address, token_id, Some(false), Some(false))
             .await;
 
         // ASSERTION: Verify the outcome
