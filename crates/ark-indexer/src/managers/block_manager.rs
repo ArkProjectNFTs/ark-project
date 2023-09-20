@@ -59,7 +59,7 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
         if *do_force {
             return self.storage.clean_block(block_number).is_ok();
         }
-        
+
         match self.storage.get_block_info(block_number) {
             Ok(info) => {
                 if self.indexer_version > info.indexer_version {
