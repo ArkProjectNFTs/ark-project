@@ -1,10 +1,10 @@
 pub mod http;
 pub use http::StarknetClientHttp;
 
-#[cfg(any(test, feature = "mock"))]
-use mockall::automock;
 use anyhow::Result;
 use async_trait::async_trait;
+#[cfg(any(test, feature = "mock"))]
+use mockall::automock;
 use starknet::core::{types::FieldElement, types::*};
 use std::collections::HashMap;
 use std::marker::Sized;

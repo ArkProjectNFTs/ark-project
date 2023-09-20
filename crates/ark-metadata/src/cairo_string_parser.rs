@@ -10,19 +10,13 @@ use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 /// * A `Result` which is either the parsed Rust string or an error.
 pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<String> {
     match field_elements.len() {
-        0 => {
-            Err(anyhow!("No value found"))
-        }
+        0 => Err(anyhow!("No value found")),
         // If the long_string contains only one FieldElement, try to parse it using the short string parser.
         1 => match field_elements.first() {
             Some(first_string_field_element) => {
                 match parse_cairo_short_string(first_string_field_element) {
-                    Ok(value) => {
-                        Ok(value)
-                    }
-                    Err(_) => {
-                        Err(anyhow!("Error parsing short string"))
-                    }
+                    Ok(value) => Ok(value),
+                    Err(_) => Err(anyhow!("Error parsing short string")),
                 }
             }
             None => Err(anyhow!("No value found")),

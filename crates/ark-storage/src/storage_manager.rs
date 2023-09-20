@@ -1,11 +1,11 @@
 use crate::types::{
     BlockIndexing, BlockIndexingStatus, BlockInfo, ContractInfo, StorageError, TokenEvent,
-    TokenFromEvent, TokenMetadata, TokenId,
+    TokenFromEvent, TokenId, TokenMetadata,
 };
 use log;
-use starknet::core::types::FieldElement;
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;
+use starknet::core::types::FieldElement;
 
 #[cfg_attr(any(test, feature = "mock"), automock)]
 pub trait StorageManager {
@@ -34,9 +34,18 @@ pub trait StorageManager {
 
     fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError>;
 
-    fn register_token_metadata(&self, contract_address: &FieldElement, token_id: TokenId, token_metadata: TokenMetadata) -> Result<(), StorageError>;
+    fn register_token_metadata(
+        &self,
+        contract_address: &FieldElement,
+        token_id: TokenId,
+        token_metadata: TokenMetadata,
+    ) -> Result<(), StorageError>;
 
-    fn has_token_metadata(&self, contract_address: FieldElement, token_id: TokenId) -> Result<bool, StorageError>;
+    fn has_token_metadata(
+        &self,
+        contract_address: FieldElement,
+        token_id: TokenId,
+    ) -> Result<bool, StorageError>;
 }
 
 pub struct DefaultStorage;
@@ -134,14 +143,23 @@ impl StorageManager for DefaultStorage {
         Ok(())
     }
 
-    fn register_token_metadata(&self, contract_address: &FieldElement, token_id: TokenId, token_metadata: TokenMetadata) -> Result<(), StorageError> {
+    fn register_token_metadata(
+        &self,
+        contract_address: &FieldElement,
+        token_id: TokenId,
+        token_metadata: TokenMetadata,
+    ) -> Result<(), StorageError> {
         log::debug!("Registering token metadata");
         // TODO: In future, handle and return potential errors
         // Err(StorageError::DatabaseError)
         Ok(())
     }
 
-    fn has_token_metadata(&self, contract_address: FieldElement, token_id: TokenId) -> Result<bool, StorageError> {
+    fn has_token_metadata(
+        &self,
+        contract_address: FieldElement,
+        token_id: TokenId,
+    ) -> Result<bool, StorageError> {
         log::debug!("Checking if token metadata exists");
         Ok(false)
     }

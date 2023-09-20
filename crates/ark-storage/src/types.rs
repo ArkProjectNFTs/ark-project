@@ -1,7 +1,7 @@
 use crate::utils::format_token_id;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, Number};
+use serde_json::{Number, Value};
 use starknet::core::types::FieldElement;
 use std::fmt;
 
@@ -176,7 +176,6 @@ pub struct BlockInfo {
     pub status: BlockIndexingStatus,
 }
 
-
 #[derive(Debug, Deserialize, Serialize)]
 pub enum DisplayType {
     Number,
@@ -202,7 +201,6 @@ pub struct Attribute {
     pub trait_type: Option<String>,
     pub value: AttributeValue,
 }
-
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct TokenMetadata {

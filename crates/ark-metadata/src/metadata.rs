@@ -5,7 +5,6 @@ use ark_storage::types::TokenMetadata;
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Client;
 
-
 #[derive(Debug, PartialEq)]
 pub enum MetadataType<'a> {
     Http(&'a str),
