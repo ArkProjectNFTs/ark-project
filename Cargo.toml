@@ -19,6 +19,7 @@ members = [
   "crates/ark-storage",
   "crates/ark-indexer",
   "crates/ark-chain/solis",
+  "crates/ark-chain/indexer",
 ]
 
 [workspace.dependencies]
