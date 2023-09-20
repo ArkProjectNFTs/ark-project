@@ -13,7 +13,7 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
         0 => {
             return Err(anyhow!("No value found"));
         }
-         // If the long_string contains only one FieldElement, try to parse it using the short string parser.
+        // If the long_string contains only one FieldElement, try to parse it using the short string parser.
         1 => match field_elements.first() {
             Some(first_string_field_element) => {
                 match parse_cairo_short_string(first_string_field_element) {
@@ -27,7 +27,7 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
             }
             None => return Err(anyhow!("No value found")),
         },
-         // If the long_string has more than one FieldElement, parse each FieldElement sequentially
+        // If the long_string has more than one FieldElement, parse each FieldElement sequentially
         // and concatenate their results.
         _ => {
             let mut result = String::new();
