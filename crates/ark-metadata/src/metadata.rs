@@ -85,10 +85,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_determining_metadata_type() {
-        let metadata_type = get_metadata_type("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5");
+        let metadata_type =
+            get_metadata_type("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5");
         assert!(
             metadata_type
-                == MetadataType::Ipfs("ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5".to_string())
+                == MetadataType::Ipfs(
+                    "ipfs://QmZkPTq6AGnsoCkYiDPCFMaAjHpZAfHipyJeAdwtJh1fP5".to_string()
+                )
         );
 
         let metadata_type = get_metadata_type("https://everai.xyz/metadata/1");

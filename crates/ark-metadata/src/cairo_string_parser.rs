@@ -55,9 +55,7 @@ mod tests {
 
     #[test]
     fn should_handle_single_field_element() {
-        let long_string = vec![
-            FieldElement::from_hex_be("0x68").unwrap(),
-        ];
+        let long_string = vec![FieldElement::from_hex_be("0x68").unwrap()];
         let result = parse_cairo_long_string(long_string);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "h");
