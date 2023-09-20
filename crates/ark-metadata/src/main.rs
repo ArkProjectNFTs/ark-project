@@ -10,14 +10,14 @@ async fn main() -> Result<()> {
     dotenv().ok();
 
     let storage = DefaultStorage::new();
-    let file_manager = LocalFileManager::default();
+    let file_manager = LocalFileManager;
 
     let starknet_client =
         StarknetClientHttp::new("https://starknode.thearkproject.dev/mainnet").unwrap();
     let mut metadata_manager = MetadataManager::new(&storage, &starknet_client, &file_manager);
 
     let contract_address = FieldElement::from_hex_be(
-        &"0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
+        "0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
     )
     .unwrap();
     let token_id_low = FieldElement::from_dec_str("1").unwrap();

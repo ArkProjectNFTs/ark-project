@@ -111,7 +111,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
                 url.as_str(),
                 image_ext,
                 cache_image.unwrap_or(false),
-                contract_address.clone(),
+                contract_address,
                 TokenId {
                     low: token_id_low,
                     high: token_id_high,
@@ -147,11 +147,11 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             let response = self.request_client.head(url).send().await?;
             let (content_type, content_length) = extract_metadata_from_headers(response.headers())?;
 
-            return Ok(MetadataImage {
+            Ok(MetadataImage {
                 file_type: content_type,
                 content_length,
                 is_cache_updated: false,
-            });
+            })
         } else {
             debug!("Fetching image... {}", url);
             let response = reqwest::get(url).await?;
@@ -163,7 +163,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
                 .save(&FileInfo {
                     name: format!("{}.{}", token_id.format().token_id, file_ext),
                     content: bytes.to_vec(),
-                    dir_path: Some(String::from(format!("{:#064x}", contract_address))),
+                    dir_path: Some(format!("{:#064x}", contract_address)),
                 })
                 .await?;
 
@@ -187,9 +187,9 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         let token_uri_cairo0 = self
             .fetch_token_uri(
                 selector!("tokenURI"),
-                token_id_low.clone(),
-                token_id_high.clone(),
-                contract_address.clone(),
+                token_id_low,
+                token_id_high,
+                contract_address,
             )
             .await?;
 
@@ -207,10 +207,10 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             .await?;
 
         if self.is_valid_uri(&token_uri_cairo1) {
-            return Ok(token_uri_cairo1);
+            Ok(token_uri_cairo1)
         } else {
             error!("Token URI not found");
-            return Err(anyhow!("Token URI not found"));
+            Err(anyhow!("Token URI not found"))
         }
     }
 
@@ -312,7 +312,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _, _| {
                 Ok(vec![
-                    FieldElement::from_dec_str(&"4").unwrap(),
+                    FieldElement::from_dec_str("4").unwrap(),
                     FieldElement::from_hex_be("0x68").unwrap(),
                     FieldElement::from_hex_be("0x74").unwrap(),
                     FieldElement::from_hex_be("0x74").unwrap(),
@@ -339,9 +339,9 @@ mod tests {
         // EXECUTION: Call the function under test
         let result = metadata_manager
             .refresh_token_metadata(
-                contract_address.clone(),
-                token_id.low.clone(),
-                token_id.high.clone(),
+                contract_address,
+                token_id.low,
+                token_id.high,
                 Some(false),
                 Some(false),
             )
@@ -363,7 +363,7 @@ mod tests {
             .times(1)
             .returning(|_, _, _, _| {
                 Ok(vec![
-                    FieldElement::from_dec_str(&"4").unwrap(),
+                    FieldElement::from_dec_str("4").unwrap(),
                     FieldElement::from_hex_be("0x68").unwrap(),
                     FieldElement::from_hex_be("0x74").unwrap(),
                     FieldElement::from_hex_be("0x74").unwrap(),
@@ -402,14 +402,14 @@ mod tests {
             .expect_call_contract()
             .times(1)
             .with(
-                eq(contract_address.clone()),
-                eq(selector_name.clone()),
+                eq(contract_address),
+                eq(selector_name),
                 eq(vec![FieldElement::ZERO, FieldElement::ZERO]),
                 eq(BlockId::Tag(BlockTag::Latest)),
             )
             .returning(|_, _, _, _| {
                 Ok(vec![
-                    FieldElement::from_dec_str(&"4").unwrap(),
+                    FieldElement::from_dec_str("4").unwrap(),
                     FieldElement::from_hex_be("0x68").unwrap(),
                     FieldElement::from_hex_be("0x74").unwrap(),
                     FieldElement::from_hex_be("0x74").unwrap(),

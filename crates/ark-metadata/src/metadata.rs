@@ -4,7 +4,7 @@ use anyhow::Result;
 use ark_storage::types::TokenMetadata;
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Client;
-use urlencoding;
+
 
 #[derive(Debug, PartialEq)]
 pub enum MetadataType<'a> {
@@ -16,8 +16,8 @@ pub enum MetadataType<'a> {
 pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
     let metadata = match metadata_type {
-        MetadataType::Ipfs(uri) => get_ipfs_metadata(uri, &client).await?,
-        MetadataType::Http(uri) => get_http_metadata(uri, &client).await?,
+        MetadataType::Ipfs(uri) => get_ipfs_metadata(uri, client).await?,
+        MetadataType::Http(uri) => get_http_metadata(uri, client).await?,
         MetadataType::OnChain(uri) => get_onchain_metadata(uri)?,
     };
     Ok(metadata)

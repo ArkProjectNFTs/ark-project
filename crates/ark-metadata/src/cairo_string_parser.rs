@@ -11,28 +11,28 @@ use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
 pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<String> {
     match field_elements.len() {
         0 => {
-            return Err(anyhow!("No value found"));
+            Err(anyhow!("No value found"))
         }
         // If the long_string contains only one FieldElement, try to parse it using the short string parser.
         1 => match field_elements.first() {
             Some(first_string_field_element) => {
                 match parse_cairo_short_string(first_string_field_element) {
                     Ok(value) => {
-                        return Ok(value);
+                        Ok(value)
                     }
                     Err(_) => {
-                        return Err(anyhow!("Error parsing short string"));
+                        Err(anyhow!("Error parsing short string"))
                     }
                 }
             }
-            None => return Err(anyhow!("No value found")),
+            None => Err(anyhow!("No value found")),
         },
         // If the long_string has more than one FieldElement, parse each FieldElement sequentially
         // and concatenate their results.
         _ => {
             let mut result = String::new();
             for i in 1..field_elements.len() {
-                let field_element = field_elements[i as usize].clone();
+                let field_element = field_elements[i];
                 match parse_cairo_short_string(&field_element) {
                     Ok(value) => {
                         result.push_str(&value);
