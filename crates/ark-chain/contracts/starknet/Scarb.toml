@@ -1,5 +1,5 @@
 [package]
-name = "arkchain"
+name = "ark_operator"
 version = "0.1.0"
 
 [dependencies]
