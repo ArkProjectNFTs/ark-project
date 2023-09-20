@@ -55,7 +55,6 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
     /// - `contract_address`: The address of the contract.
     /// - `token_id_low`: The low end of the token ID range.
     /// - `token_id_high`: The high end of the token ID range.
-    /// - `force_refresh`: Whether to force a refresh of the metadata.
     /// ...
     /// # Returns
     /// - `Ok(())` if the metadata is successfully refreshed.
@@ -64,24 +63,12 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         &mut self,
         contract_address: FieldElement,
         token_id: TokenId,
-        force_refresh: Option<bool>,
         cache_image: Option<bool>,
     ) -> Result<(), MetadataError> {
         let token_uri = self
             .get_token_uri(token_id.low, token_id.high, contract_address)
             .await
             .map_err(|_| MetadataError::ParsingError)?;
-
-        if !force_refresh.unwrap_or(false) {
-            let has_token_metadata = self
-                .storage
-                .has_token_metadata(contract_address, token_id.clone())
-                .map_err(|_| MetadataError::DatabaseError)?;
-
-            if has_token_metadata {
-                return Ok(());
-            }
-        }
 
         let token_metadata = get_token_metadata(&self.request_client, token_uri.as_str())
             .await
@@ -168,13 +155,13 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         contract_address: FieldElement,
     ) -> Result<String> {
         let token_uri_cairo0 = self
-        .get_contract_property_string(
-            contract_address,
-            selector!("tokenURI"),
-            vec![token_id_low, token_id_high],
-            BlockId::Tag(BlockTag::Latest),
-        )
-        .await?;
+            .get_contract_property_string(
+                contract_address,
+                selector!("tokenURI"),
+                vec![token_id_low, token_id_high],
+                BlockId::Tag(BlockTag::Latest),
+            )
+            .await?;
 
         if self.is_valid_uri(&token_uri_cairo0) {
             return Ok(token_uri_cairo0);
@@ -229,7 +216,6 @@ mod tests {
 
     use ark_starknet::client::MockStarknetClient;
     use ark_storage::storage_manager::DefaultStorage;
-    use ark_storage::storage_manager::MockStorageManager;
     use mockall::predicate::*;
     use reqwest::header::HeaderMap;
     use std::vec;
@@ -251,57 +237,6 @@ mod tests {
 
         assert_eq!(content_type, "image/png");
         assert_eq!(content_length, 12345u64);
-    }
-
-    #[tokio::test]
-    async fn test_refresh_token_metadata() {
-        // SETUP: Mocking and Initializing
-        let mut mock_client = MockStarknetClient::default();
-        let mut mock_storage = MockStorageManager::default();
-        let mock_file = MockFileManager::default();
-
-        let token_id = TokenId {
-            low: FieldElement::ZERO,
-            high: FieldElement::ONE,
-        };
-
-        // Mock expected calls
-        mock_client
-            .expect_call_contract() // mocking the call inside `get_token_uri`
-            .times(1)
-            .returning(|_, _, _, _| {
-                Ok(vec![
-                    FieldElement::from_dec_str("4").unwrap(),
-                    FieldElement::from_hex_be("0x68").unwrap(),
-                    FieldElement::from_hex_be("0x74").unwrap(),
-                    FieldElement::from_hex_be("0x74").unwrap(),
-                    FieldElement::from_hex_be("0x70").unwrap(),
-                ])
-            });
-
-        mock_storage
-            .expect_has_token_metadata()
-            .times(1)
-            .returning(move |_, _| Ok(false));
-
-        mock_storage
-            .expect_register_token_metadata()
-            .times(1)
-            .returning(|_, _, _| Ok(()));
-
-        let contract_address = FieldElement::from_hex_be(
-            "0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
-        )
-        .unwrap();
-        let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file);
-
-        // EXECUTION: Call the function under test
-        let result = metadata_manager
-            .refresh_token_metadata(contract_address, token_id, Some(false), Some(false))
-            .await;
-
-        // ASSERTION: Verify the outcome
-        assert!(result.is_ok());
     }
 
     #[tokio::test]
