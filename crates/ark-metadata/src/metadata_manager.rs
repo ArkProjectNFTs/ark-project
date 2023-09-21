@@ -269,11 +269,11 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     use crate::file_manager::MockFileManager;
-    use mockall::predicate::*;
     use ark_starknet::client::MockStarknetClient;
     use ark_storage::storage_manager::{DefaultStorage, MockStorageManager};
+    use mockall::predicate::*;
     use reqwest::header::HeaderMap;
     use std::vec;
 
