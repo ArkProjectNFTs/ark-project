@@ -11,7 +11,6 @@ use log::{debug, error};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
-use std::env;
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -26,6 +25,13 @@ pub struct MetadataImage {
     pub file_type: String,
     pub content_length: u64,
     pub is_cache_updated: bool,
+}
+
+#[derive(Copy, Clone)]
+pub enum CacheOption {
+    Cache,
+    NoCache,
+    Default,
 }
 
 /// Represents possible errors that can arise while working with metadata in the manager.
@@ -49,21 +55,25 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         }
     }
 
-    /// Refreshes the metadata for a given token.
-    /// ...
+    /// Refreshes the metadata for a specific token within a given collection.
+    ///
+    /// This function retrieves the URI for the token, fetches its metadata, and updates the stored
+    /// metadata in the database. If the metadata includes an image URI, this function also handles
+    /// the fetching and optional caching of the image.
+    ///
     /// # Parameters
-    /// - `contract_address`: The address of the contract.
-    /// - `token_id_low`: The low end of the token ID range.
-    /// - `token_id_high`: The high end of the token ID range.
-    /// ...
+    /// - `contract_address`: The address of the contract representing the token collection.
+    /// - `token_id`: The ID of the token whose metadata needs to be refreshed.
+    /// - `cache`: Specifies whether the token's image should be cached.
+    ///
     /// # Returns
-    /// - `Ok(())` if the metadata is successfully refreshed.
-    /// - `Err` variant of `MetadataError` if there's an issue during the refresh process.
+    /// - A `Result` indicating the success or failure of the metadata refresh operation.
     pub async fn refresh_token_metadata(
         &mut self,
         contract_address: FieldElement,
         token_id: TokenId,
-        cache_image: Option<bool>,
+        cache: CacheOption,
+        ipfs_gateway_uri: &str,
     ) -> Result<(), MetadataError> {
         let token_uri = self
             .get_token_uri(token_id.low, token_id.high, contract_address)
@@ -75,9 +85,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             .map_err(|_| MetadataError::RequestTokenUriError)?;
 
         if token_metadata.image.is_some() {
-            let ipfs_url =
-                env::var("IPFS_GATEWAY_URI").map_err(|_| MetadataError::EnvVarMissingError)?;
-
+            let ipfs_url = ipfs_gateway_uri.to_string();
             let url = token_metadata
                 .image
                 .as_ref()
@@ -90,7 +98,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             self.fetch_token_image(
                 url.as_str(),
                 image_ext,
-                cache_image.unwrap_or(false),
+                cache,
                 contract_address,
                 token_id.clone(),
             )
@@ -105,43 +113,92 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         Ok(())
     }
 
+    /// Refreshes the metadata for all tokens in a given collection.
+    ///
+    /// This function retrieves a list of token IDs within a collection that
+    /// lack metadata and then individually refreshes the metadata for each token.
+    ///
+    /// # Parameters
+    /// - `contract_address`: The address of the contract representing the token collection.
+    /// - `cache`: Specifies whether the token's image should be cached.
+    ///
+    /// # Returns
+    /// - A `Result` indicating the success or failure of the metadata refresh operation.
+    pub async fn refresh_collection_token_metadata(
+        &mut self,
+        contract_address: FieldElement,
+        cache: CacheOption,
+        ipfs_gateway_uri: &str,
+    ) -> Result<(), MetadataError> {
+        let token_ids = self
+            .storage
+            .find_token_ids_without_metadata_in_collection(contract_address)
+            .map_err(|_| MetadataError::DatabaseError)?;
+
+        for token_id in token_ids {
+            self.refresh_token_metadata(contract_address, token_id, cache, ipfs_gateway_uri)
+                .await?;
+        }
+
+        Ok(())
+    }
+
+    /// Fetches the image for a given token and optionally caches it.
+    ///
+    /// Depending on the provided `CacheOption`, this function might directly fetch
+    /// the image's metadata without actually fetching the image, or it might fetch and cache the image.
+    ///
+    /// # Parameters
+    /// - `url`: The URL from which the token image can be fetched.
+    /// - `file_ext`: The file extension of the token image (e.g., "jpg", "png").
+    /// - `cache`: Specifies whether the token's image should be cached.
+    /// - `contract_address`: The address of the contract representing the token collection.
+    /// - `token_id`: The ID of the token whose image is to be fetched.
+    ///
+    /// # Returns
+    /// - A `Result` containing `MetadataImage` which provides details about the fetched image,
+    ///   or an error if the image fetch operation fails.
     pub async fn fetch_token_image(
         &mut self,
         url: &str,
         file_ext: &str,
-        cache_image: bool,
+        cache: CacheOption,
         contract_address: FieldElement,
         token_id: TokenId,
     ) -> Result<MetadataImage> {
-        if !cache_image {
-            let response = self.request_client.head(url).send().await?;
-            let (content_type, content_length) = extract_metadata_from_headers(response.headers())?;
+        match cache {
+            CacheOption::NoCache => {
+                let response = self.request_client.head(url).send().await?;
+                let (content_type, content_length) =
+                    extract_metadata_from_headers(response.headers())?;
 
-            Ok(MetadataImage {
-                file_type: content_type,
-                content_length,
-                is_cache_updated: false,
-            })
-        } else {
-            debug!("Fetching image... {}", url);
-            let response = reqwest::get(url).await?;
-            let headers = response.headers().clone();
-            let bytes = response.bytes().await?;
-            let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
-
-            self.file_manager
-                .save(&FileInfo {
-                    name: format!("{}.{}", token_id.format().token_id, file_ext),
-                    content: bytes.to_vec(),
-                    dir_path: Some(format!("{:#064x}", contract_address)),
+                Ok(MetadataImage {
+                    file_type: content_type,
+                    content_length,
+                    is_cache_updated: false,
                 })
-                .await?;
+            }
+            __ => {
+                debug!("Fetching image... {}", url);
+                let response = reqwest::get(url).await?;
+                let headers = response.headers().clone();
+                let bytes = response.bytes().await?;
+                let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
 
-            Ok(MetadataImage {
-                file_type: content_type,
-                content_length,
-                is_cache_updated: true,
-            })
+                self.file_manager
+                    .save(&FileInfo {
+                        name: format!("{}.{}", token_id.format().token_id, file_ext),
+                        content: bytes.to_vec(),
+                        dir_path: Some(format!("{:#064x}", contract_address)),
+                    })
+                    .await?;
+
+                Ok(MetadataImage {
+                    file_type: content_type,
+                    content_length,
+                    is_cache_updated: true,
+                })
+            }
         }
     }
 

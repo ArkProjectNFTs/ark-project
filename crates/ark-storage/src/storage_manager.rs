@@ -46,6 +46,11 @@ pub trait StorageManager {
         contract_address: FieldElement,
         token_id: TokenId,
     ) -> Result<bool, StorageError>;
+
+    fn find_token_ids_without_metadata_in_collection(
+        &self,
+        contract_address: FieldElement,
+    ) -> Result<Vec<TokenId>, StorageError>;
 }
 
 pub struct DefaultStorage;
@@ -162,5 +167,12 @@ impl StorageManager for DefaultStorage {
     ) -> Result<bool, StorageError> {
         log::debug!("Checking if token metadata exists");
         Ok(false)
+    }
+
+    fn find_token_ids_without_metadata_in_collection(
+        &self,
+        contract_address: FieldElement,
+    ) -> Result<Vec<TokenId>, StorageError> {
+        todo!()
     }
 }
