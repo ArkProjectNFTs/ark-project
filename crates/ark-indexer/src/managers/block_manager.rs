@@ -144,7 +144,7 @@ mod tests {
                 if block_number == 1 {
                     Ok(BlockInfo {
                         indexer_version: 0,
-                        status: BlockIndexingStatus::None, // Adjust as needed
+                        status: BlockIndexingStatus::None,
                         indexer_indentifier: String::from("123"),
                     })
                 } else {
