@@ -31,8 +31,10 @@ pub struct KatanaArgs {
     #[arg(long)]
     #[arg(value_name = "PATH")]
     #[arg(help = "Dump the state of chain on exit to the given file.")]
-    #[arg(long_help = "Dump the state of chain on exit to the given file. If the value is a \
-                       directory, the state will be written to `<PATH>/state.bin`.")]
+    #[arg(
+        long_help = "Dump the state of chain on exit to the given file. If the value is a \
+                       directory, the state will be written to `<PATH>/state.bin`."
+    )]
     pub dump_state: Option<PathBuf>,
 
     #[arg(long)]
@@ -55,9 +57,11 @@ pub struct KatanaArgs {
     #[arg(long)]
     #[arg(value_name = "PATH")]
     #[arg(help = "Configure the messaging with an other chain.")]
-    #[arg(long_help = "Configure the messaging to allow Katana listening/sending messages on a \
+    #[arg(
+        long_help = "Configure the messaging to allow Katana listening/sending messages on a \
                        settlement chain that can be Ethereum or an other Starknet sequencer. \
-                       The configuration file details and examples can be found here: TODO.")]
+                       The configuration file details and examples can be found here: TODO."
+    )]
     pub messaging: Option<PathBuf>,
 
     #[command(flatten)]
@@ -140,7 +144,11 @@ impl KatanaArgs {
             fork_block_number: self.fork_block_number,
             env: Environment {
                 chain_id: self.starknet.environment.chain_id.clone(),
-                gas_price: self.starknet.environment.gas_price.unwrap_or(DEFAULT_GAS_PRICE),
+                gas_price: self
+                    .starknet
+                    .environment
+                    .gas_price
+                    .unwrap_or(DEFAULT_GAS_PRICE),
                 invoke_max_steps: self
                     .starknet
                     .environment
@@ -163,7 +171,9 @@ fn parse_seed(seed: &str) -> [u8; 32] {
         unsafe { *(seed[..32].as_ptr() as *const [u8; 32]) }
     } else {
         let mut actual_seed = [0u8; 32];
-        seed.iter().enumerate().for_each(|(i, b)| actual_seed[i] = *b);
+        seed.iter()
+            .enumerate()
+            .for_each(|(i, b)| actual_seed[i] = *b);
         actual_seed
     }
 }
@@ -178,8 +188,14 @@ mod test {
         let block_context = args.starknet_config().block_context();
         assert_eq!(block_context.gas_price, DEFAULT_GAS_PRICE);
         assert_eq!(block_context.chain_id.0, "KATANA".to_string());
-        assert_eq!(block_context.validate_max_n_steps, DEFAULT_VALIDATE_MAX_STEPS);
-        assert_eq!(block_context.invoke_tx_max_n_steps, DEFAULT_INVOKE_MAX_STEPS);
+        assert_eq!(
+            block_context.validate_max_n_steps,
+            DEFAULT_VALIDATE_MAX_STEPS
+        );
+        assert_eq!(
+            block_context.invoke_tx_max_n_steps,
+            DEFAULT_INVOKE_MAX_STEPS
+        );
     }
 
     #[test]

@@ -26,7 +26,7 @@ const EVENT_SELECTORS: &[FieldElement; 4] = &[
     EV_ORDER_BUY_FINALIZED,
 ];
 
-type IndexerResult<T> = Result<T, IndexerError>;
+pub type IndexerResult<T> = Result<T, IndexerError>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum IndexerError {

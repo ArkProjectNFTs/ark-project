@@ -269,18 +269,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-rs"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "ark-indexer",
- "ark-metadata",
- "ark-starknet",
- "ark-storage",
- "tokio",
-]
-
-[[package]]
 name = "ark-secp256k1"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -376,6 +364,23 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "arkproject"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ark-indexer",
+ "ark-metadata",
+ "ark-starknet",
+ "ark-storage",
+ "arkchain-indexer",
+ "async-trait",
+ "futures",
+ "log",
+ "starknet 0.5.0",
+ "tokio",
 ]
 
 [[package]]

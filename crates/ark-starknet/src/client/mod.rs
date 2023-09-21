@@ -12,7 +12,9 @@ use std::marker::Sized;
 #[async_trait]
 pub trait StarknetClient {
     ///
-    fn new(rpc_url: &str) -> Result<Self> where Self: Sized;
+    fn new(rpc_url: &str) -> Result<Self>
+    where
+        Self: Sized;
 
     ///
     async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64>;

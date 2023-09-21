@@ -11,3 +11,8 @@ pub mod nft_indexer {
 pub mod nft_storage {
     pub use ark_storage::*;
 }
+
+// TODO: need to rework the organization of those crates.
+pub mod arkchain {
+    pub use arkchain_indexer::*;
+}

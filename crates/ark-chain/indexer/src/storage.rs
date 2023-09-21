@@ -2,7 +2,7 @@ use ark_starknet::CairoU256;
 use async_trait::async_trait;
 use starknet::core::types::FieldElement;
 
-type StorageResult<T> = Result<T, StorageError>;
+pub type StorageResult<T> = Result<T, StorageError>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum StorageError {
@@ -31,6 +31,7 @@ pub trait ArkchainStorage {
     async fn set_order_finalized(&self, order: OrderFinalizedData) -> StorageResult<()>;
 }
 
+#[derive(Debug)]
 pub struct BrokerData {
     pub name: FieldElement,
     pub chain_id: FieldElement,
@@ -38,6 +39,7 @@ pub struct BrokerData {
     pub public_key: FieldElement,
 }
 
+#[derive(Debug)]
 pub struct OrderListingData {
     pub order_hash: FieldElement,
     pub broker_name: FieldElement,
@@ -49,6 +51,7 @@ pub struct OrderListingData {
     pub price: CairoU256,
 }
 
+#[derive(Debug)]
 pub struct OrderBuyExecutingData {
     pub order_hash: FieldElement,
     pub broker_name: FieldElement,
@@ -57,6 +60,7 @@ pub struct OrderBuyExecutingData {
     pub buyer: FieldElement,
 }
 
+#[derive(Debug)]
 pub struct OrderFinalizedData {
     pub order_hash: FieldElement,
     pub timestamp: u64,

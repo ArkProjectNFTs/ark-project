@@ -1,8 +1,8 @@
+use std::fs;
 use std::process::exit;
 use std::sync::Arc;
-use std::{fs};
 
-use clap::{Parser};
+use clap::Parser;
 use console::Style;
 use katana_core::sequencer::{KatanaSequencer, Sequencer};
 use katana_rpc::{spawn, KatanaApi, NodeHandle, StarknetApi};
@@ -110,4 +110,3 @@ pub async fn shutdown_handler(sequencer: Arc<impl Sequencer>, config: KatanaArgs
         }
     };
 }
-
