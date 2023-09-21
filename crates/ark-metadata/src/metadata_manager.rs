@@ -172,7 +172,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     is_cache_updated: false,
                 })
             }
-            __ => {
+            _ => {
                 debug!("Fetching image... {}", url);
                 let response = reqwest::get(url).await?;
                 let headers = response.headers().clone();
