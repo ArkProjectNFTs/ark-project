@@ -6,6 +6,7 @@ use starknet::core::types::FieldElement;
 
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;
+use starknet::core::types::FieldElement;
 
 #[async_trait]
 #[cfg_attr(any(test, feature = "mock"), automock)]

@@ -8,8 +8,6 @@ use mockall::automock;
 use starknet::core::{types::FieldElement, types::*};
 use std::collections::HashMap;
 use std::marker::Sized;
-#[cfg(any(test, feature = "mock"))]
-use mockall::automock;
 
 /// Starknet client interface with required methods
 /// for arkproject capabilities only.

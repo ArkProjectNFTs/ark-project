@@ -108,7 +108,8 @@ mod tests {
         let mut mock_client = MockStarknetClient::default();
         let mock_storage = MockStorageManager::default();
 
-        mock_client.expect_parse_block_range()
+        mock_client
+            .expect_parse_block_range()
             .returning(|_, _| Ok((BlockId::Number(1), BlockId::Tag(BlockTag::Latest))));
 
         let manager = BlockManager {
@@ -137,7 +138,8 @@ mod tests {
 
         mock_storage.expect_clean_block().returning(|_| Ok(()));
 
-        mock_storage.expect_get_block_info()
+        mock_storage
+            .expect_get_block_info()
             .returning(|block_number| {
                 if block_number == 1 {
                     Ok(BlockInfo {
