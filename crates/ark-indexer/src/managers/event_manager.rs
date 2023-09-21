@@ -185,17 +185,6 @@ mod tests {
         manager.token_event.block_number = 12345;
         manager.reset_event();
 
-        assert_eq!(
-            manager.token_event.block_number,
-            TokenEvent::default().block_number
-        );
-        assert_eq!(
-            manager.token_event.contract_address,
-            TokenEvent::default().contract_address
-        );
-        assert_eq!(
-            manager.token_event.contract_type,
-            TokenEvent::default().contract_type
-        );
+        assert_eq!(manager.token_event, TokenEvent::default());
     }
 }

@@ -50,7 +50,7 @@ impl fmt::Display for EventType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TokenEvent {
     pub timestamp: u64,
     pub from_address_field_element: FieldElement,
@@ -121,7 +121,7 @@ impl Default for TokenFromEvent {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FormattedTokenId {
     pub low: u128,
     pub high: u128,
@@ -140,7 +140,7 @@ impl Default for FormattedTokenId {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TokenId {
     pub low: FieldElement,
     pub high: FieldElement,
