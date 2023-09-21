@@ -143,6 +143,7 @@ dependencies = [
  "ark-storage",
  "dotenv",
  "log",
+ "mockall",
  "starknet",
  "tokio",
  "tracing",
@@ -212,7 +213,10 @@ dependencies = [
  "anyhow",
  "async-trait",
  "mockall",
+<<<<<<< HEAD
  "num-bigint",
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
  "regex",
  "starknet",
  "url",
@@ -1398,6 +1402,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "derive_more"
 version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1421,12 +1426,15 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
 name = "difflib"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6184e33543162437515c2e2b48714794e37845ec9851711914eec9d308f6ebe8"
 
 [[package]]
+<<<<<<< HEAD
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1436,6 +1444,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1825,6 +1835,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c2141d6d6c8512188a7891b4b01590a45f6dac67afb4f255c4124dbb86d4eaa"
 
 [[package]]
+<<<<<<< HEAD
 name = "frunk"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1877,6 +1888,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
 name = "funty"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2876,6 +2889,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "mobc"
 version = "0.7.3"
 source = "git+https://github.com/prisma/mobc?tag=1.0.6#80462c4870a2bf6aab49da15c88c021bae531da8"
@@ -2894,6 +2908,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
 name = "mockall"
 version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2921,6 +2937,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "mongodb"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3131,6 +3148,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
 name = "native-tls"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3149,6 +3168,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "nibble_vec"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3168,6 +3188,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
 name = "normalize-line-endings"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3695,7 +3717,11 @@ checksum = "59230a63c37f3e18569bdb90e4a89cbf5bf8b06fea0b84e65ea10cc4df47addd"
 dependencies = [
  "difflib",
  "float-cmp",
+<<<<<<< HEAD
  "itertools 0.10.5",
+=======
+ "itertools",
+>>>>>>> e5e074f (feat: add indexer tests)
  "normalize-line-endings",
  "predicates-core",
  "regex",
@@ -3718,12 +3744,15 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "pretty-hex"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6fa0831dd7cc608c38a5e323422a0077678fa5744aa2be4ad91c4ece8eec8d5"
 
 [[package]]
+=======
+>>>>>>> e5e074f (feat: add indexer tests)
 name = "primitive-types"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
