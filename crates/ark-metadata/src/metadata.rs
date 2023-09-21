@@ -1,9 +1,10 @@
 use std::{env, time::Duration};
 
 use anyhow::Result;
-use ark_storage::types::TokenMetadata;
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Client;
+
+use crate::storage::TokenMetadata;
 
 #[derive(Debug, PartialEq)]
 pub enum MetadataType {

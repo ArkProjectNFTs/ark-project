@@ -2,11 +2,10 @@ use crate::{
     cairo_string_parser::parse_cairo_long_string,
     file_manager::{FileInfo, FileManager},
     metadata::get_token_metadata,
-    utils::extract_metadata_from_headers,
+    utils::extract_metadata_from_headers, storage::Storage,
 };
 use anyhow::{anyhow, Result};
-use ark_starknet::client::StarknetClient;
-use ark_storage::{storage_manager::StorageManager, types::TokenId};
+use ark_starknet::{client::StarknetClient, CairoU256};
 use log::{debug, error};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
@@ -14,7 +13,7 @@ use starknet::macros::selector;
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
-pub struct MetadataManager<'a, T: StorageManager, C: StarknetClient, F: FileManager> {
+pub struct MetadataManager<'a, T: Storage, C: StarknetClient, F: FileManager> {
     storage: &'a T,
     starknet_client: &'a C,
     request_client: ReqwestClient,
@@ -44,7 +43,7 @@ pub enum MetadataError {
     EnvVarMissingError,
 }
 
-impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C, F> {
+impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C, F> {
     /// Creates a new instance of `MetadataManager` with the given storage, Starknet client, and a new request client.
     pub fn new(storage: &'a T, starknet_client: &'a C, file_manager: &'a F) -> Self {
         MetadataManager {
@@ -71,12 +70,12 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
     pub async fn refresh_token_metadata(
         &mut self,
         contract_address: FieldElement,
-        token_id: TokenId,
+        token_id: CairoU256,
         cache: CacheOption,
         ipfs_gateway_uri: &str,
     ) -> Result<(), MetadataError> {
         let token_uri = self
-            .get_token_uri(token_id.low, token_id.high, contract_address)
+            .get_token_uri(&token_id, contract_address)
             .await
             .map_err(|_| MetadataError::ParsingError)?;
 
@@ -100,14 +99,14 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
                 image_ext,
                 cache,
                 contract_address,
-                token_id.clone(),
+                &token_id
             )
             .await
             .map_err(|_| MetadataError::RequestImageError)?;
         }
 
         self.storage
-            .register_token_metadata(&contract_address, token_id.clone(), token_metadata)
+            .register_token_metadata(&contract_address, token_id, token_metadata)
             .map_err(|_e| MetadataError::DatabaseError)?;
 
         Ok(())
@@ -164,7 +163,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
         file_ext: &str,
         cache: CacheOption,
         contract_address: FieldElement,
-        token_id: TokenId,
+        token_id: &CairoU256,
     ) -> Result<MetadataImage> {
         match cache {
             CacheOption::NoCache => {
@@ -187,7 +186,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
 
                 self.file_manager
                     .save(&FileInfo {
-                        name: format!("{}.{}", token_id.format().token_id, file_ext),
+                        name: format!("{}.{}", token_id.to_hex(), file_ext),
                         content: bytes.to_vec(),
                         dir_path: Some(format!("{:#064x}", contract_address)),
                     })
@@ -207,15 +206,14 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
     /// If both checks fail, an error is returned indicating the token URI was not found.
     async fn get_token_uri(
         &mut self,
-        token_id_low: FieldElement,
-        token_id_high: FieldElement,
+        token_id: &CairoU256,
         contract_address: FieldElement,
     ) -> Result<String> {
         let token_uri_cairo0 = self
             .get_contract_property_string(
                 contract_address,
                 selector!("tokenURI"),
-                vec![token_id_low, token_id_high],
+                vec![token_id.low.into(), token_id.high.into()],
                 BlockId::Tag(BlockTag::Latest),
             )
             .await?;
@@ -228,7 +226,7 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
             .get_contract_property_string(
                 contract_address,
                 selector!("token_uri"),
-                vec![token_id_low, token_id_high],
+                vec![token_id.low.into(), token_id.high.into()],
                 BlockId::Tag(BlockTag::Latest),
             )
             .await?;
@@ -270,9 +268,8 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
 mod tests {
     use super::*;
 
-    use crate::file_manager::MockFileManager;
+    use crate::{file_manager::MockFileManager, storage::MockStorage};
     use ark_starknet::client::MockStarknetClient;
-    use ark_storage::storage_manager::{DefaultStorage, MockStorageManager};
     use mockall::predicate::*;
     use reqwest::header::HeaderMap;
     use std::vec;
@@ -300,7 +297,7 @@ mod tests {
     async fn test_get_token_uri() {
         // SETUP: Mocking and Initializing
         let mut mock_client = MockStarknetClient::default();
-        let storage_manager = DefaultStorage::new();
+        let storage_manager = MockStorage::default();
         let mock_file = MockFileManager::default();
 
         mock_client
@@ -321,8 +318,7 @@ mod tests {
         // EXECUTION: Call the function under test
         let result = metadata_manager
             .get_token_uri(
-                FieldElement::ZERO,
-                FieldElement::ONE,
+                &CairoU256 { low: 0, high: 1 },
                 FieldElement::from_hex_be(
                     "0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
                 )
@@ -337,7 +333,7 @@ mod tests {
     async fn test_refresh_collection_token_metadata() {
         // SETUP: Mocking and Initializing
         let mut mock_client = MockStarknetClient::default();
-        let mut mock_storage = MockStorageManager::default();
+        let mut mock_storage = MockStorage::default();
         let mock_file = MockFileManager::default();
 
         let contract_address = FieldElement::ONE;
@@ -349,9 +345,9 @@ mod tests {
             .times(1)
             .with(eq(contract_address))
             .returning(|_| {
-                Ok(vec![TokenId {
-                    low: FieldElement::ONE,
-                    high: FieldElement::ZERO,
+                Ok(vec![CairoU256 {
+                    low: 1,
+                    high: 0,
                 }])
             });
 
@@ -418,7 +414,7 @@ mod tests {
                 ])
             });
 
-        let storage_manager = DefaultStorage::new();
+        let storage_manager = MockStorage::default();
         let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client, &mock_file);
 
         // EXECUTION: Call the function under test

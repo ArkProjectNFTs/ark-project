@@ -124,7 +124,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "ark-starknet",
- "ark-storage",
  "async-trait",
  "aws-config",
  "aws-sdk-s3",
@@ -150,7 +149,9 @@ dependencies = [
  "ark-metadata",
  "ark-starknet",
  "ark-storage",
+ "async-trait",
  "mockall",
+ "starknet",
  "tokio",
 ]
 
@@ -172,6 +173,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "mockall",
+ "num-bigint",
  "regex",
  "starknet",
  "url",
