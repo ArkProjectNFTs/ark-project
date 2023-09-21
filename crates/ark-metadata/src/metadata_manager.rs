@@ -269,11 +269,11 @@ impl<'a, T: StorageManager, C: StarknetClient, F: FileManager> MetadataManager<'
 #[cfg(test)]
 mod tests {
     use super::*;
+    
     use crate::file_manager::MockFileManager;
-
-    use ark_starknet::client::MockStarknetClient;
-    use ark_storage::storage_manager::DefaultStorage;
     use mockall::predicate::*;
+    use ark_starknet::client::MockStarknetClient;
+    use ark_storage::storage_manager::{DefaultStorage, MockStorageManager};
     use reqwest::header::HeaderMap;
     use std::vec;
 
@@ -327,6 +327,62 @@ mod tests {
                     "0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
                 )
                 .unwrap(),
+            )
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_refresh_collection_token_metadata() {
+        // SETUP: Mocking and Initializing
+        let mut mock_client = MockStarknetClient::default();
+        let mut mock_storage = MockStorageManager::default();
+        let mock_file = MockFileManager::default();
+
+        let contract_address = FieldElement::ONE;
+        let ipfs_gateway_uri = "https://ipfs.example.com";
+
+        // Mocking expected behaviors
+        mock_storage
+            .expect_find_token_ids_without_metadata_in_collection()
+            .times(1)
+            .with(eq(contract_address))
+            .returning(|_| {
+                Ok(vec![TokenId {
+                    low: FieldElement::ONE,
+                    high: FieldElement::ZERO,
+                }])
+            });
+
+        mock_client
+            .expect_call_contract()
+            .times(1)
+            .with(always(), always(), always(), always())
+            .returning(|_, _, _, _| {
+                Ok(vec![
+                    FieldElement::from_dec_str("4").unwrap(),
+                    FieldElement::from_hex_be("0x68").unwrap(),
+                    FieldElement::from_hex_be("0x74").unwrap(),
+                    FieldElement::from_hex_be("0x74").unwrap(),
+                    FieldElement::from_hex_be("0x70").unwrap(),
+                ])
+            });
+
+        mock_storage
+            .expect_register_token_metadata()
+            .times(1)
+            .with(always(), always(), always())
+            .returning(|_, _, _| Ok(()));
+
+        let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file);
+
+        // EXECUTION: Call the function under test
+        let result = metadata_manager
+            .refresh_collection_token_metadata(
+                contract_address,
+                CacheOption::NoCache,
+                ipfs_gateway_uri,
             )
             .await;
 
