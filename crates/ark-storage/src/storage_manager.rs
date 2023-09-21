@@ -1,6 +1,6 @@
 use crate::types::{
     BlockIndexing, BlockIndexingStatus, BlockInfo, ContractInfo, StorageError, TokenEvent,
-    TokenFromEvent
+    TokenFromEvent,
 };
 use log;
 #[cfg(any(test, feature = "mock"))]

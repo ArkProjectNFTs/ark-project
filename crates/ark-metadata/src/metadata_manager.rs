@@ -2,7 +2,8 @@ use crate::{
     cairo_string_parser::parse_cairo_long_string,
     file_manager::{FileInfo, FileManager},
     metadata::get_token_metadata,
-    utils::extract_metadata_from_headers, storage::Storage,
+    storage::Storage,
+    utils::extract_metadata_from_headers,
 };
 use anyhow::{anyhow, Result};
 use ark_starknet::{client::StarknetClient, CairoU256};
@@ -94,15 +95,9 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             let image_name = url.rsplit('/').next().unwrap_or_default();
             let image_ext = image_name.rsplit('.').next().unwrap_or_default();
 
-            self.fetch_token_image(
-                url.as_str(),
-                image_ext,
-                cache,
-                contract_address,
-                &token_id
-            )
-            .await
-            .map_err(|_| MetadataError::RequestImageError)?;
+            self.fetch_token_image(url.as_str(), image_ext, cache, contract_address, &token_id)
+                .await
+                .map_err(|_| MetadataError::RequestImageError)?;
         }
 
         self.storage
@@ -344,12 +339,7 @@ mod tests {
             .expect_find_token_ids_without_metadata_in_collection()
             .times(1)
             .with(eq(contract_address))
-            .returning(|_| {
-                Ok(vec![CairoU256 {
-                    low: 1,
-                    high: 0,
-                }])
-            });
+            .returning(|_| Ok(vec![CairoU256 { low: 1, high: 0 }]));
 
         mock_client
             .expect_call_contract()
