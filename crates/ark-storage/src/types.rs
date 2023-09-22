@@ -13,7 +13,8 @@ pub enum StorageError {
 }
 
 impl fmt::Display for StorageError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { // Note the lifetime parameter <'_>
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Note the lifetime parameter <'_>
         match self {
             StorageError::DatabaseError => write!(f, "Database error occurred"),
             StorageError::NotFound => write!(f, "Item not found in storage"),

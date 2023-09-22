@@ -1,9 +1,8 @@
 use crate::{
     cairo_string_parser::parse_cairo_long_string,
     file_manager::{FileInfo, FileManager},
-    metadata::get_token_metadata,
     storage::Storage,
-    utils::extract_metadata_from_headers,
+    utils::{extract_metadata_from_headers, get_token_metadata},
 };
 use anyhow::{anyhow, Result};
 use ark_starknet::{client::StarknetClient, CairoU256};
