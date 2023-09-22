@@ -38,4 +38,8 @@ ark-starknet.workspace = true
 ark-metadata.workspace = true
 ark-storage.workspace = true
 ark-indexer.workspace = true
+starknet.workspace = true
+async-trait.workspace = true
 
+[dev-dependencies]
+mockall = "0.11.4"

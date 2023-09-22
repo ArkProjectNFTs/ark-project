@@ -11,3 +11,7 @@ pub mod nft_indexer {
 pub mod nft_storage {
     pub use ark_storage::*;
 }
+
+pub mod nft_metadata {
+    pub use ark_metadata::*;
+}
