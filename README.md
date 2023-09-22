@@ -32,7 +32,7 @@ to then identify the contract and tokens associated to the event.
 The `indexer` crate provide a `main_loop` with this logic, for an efficient
 indexation per blocks.
 
-### - Metadata
+### - [Metadata](/crates/ark-metadata/README.md)
 
 Even if the metadata are not at the core of the indexing process, they are
 vital for any NFT ecosystem.
