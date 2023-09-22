@@ -1,20 +1,19 @@
 # ark_metadata
 
-```ark_metadata``` is a Starknet library for NFT metadata management. Efficiently refresh specific tokens or capture an entire collection with this streamlined solution.
+`ark_metadata` is a Starknet library dedicated to NFT metadata management. Efficiently refresh specific token metadata or capture all the metadata for an entire collection with this streamlined solution.
 
-## 📜 Features
+## Features
 ### MetadataManager
 
-  - Use ```refresh_token_metadata()``` to metadata for a specific token, and caches images if available.
+- `refresh_token_metadata()`: Refresh metadata for a specific token, and caches images if available.
+- `refresh_collection_token_metadata()`: Refresh metadata for all tokens in a collection.
 
-- Use ```refresh_collection_token_metadata()``` to metadata for all tokens in a collection.
+## Getting Started
 
+To integrate `ark_metadata`, include ```ark-rs``` in your `Cargo.toml`.
+*Check out the provided example to see its usage in various scenarios.*
 
-## 🚀 Getting Started
-
-To integrate `ark_metadata`, include it in your `Cargo.toml`. Check out the example provided to see its usage in various scenarios.
-
-For `MetadataManager::new()`, you'll need:
+To instantiate a new `MetadataManager`, you'll need some implementations:
 
 - **Storage**: Implements the data access layer.
 - **StarknetClient**: Facilitates interactions with Starknet and contract calls.
@@ -22,11 +21,12 @@ For `MetadataManager::new()`, you'll need:
   - **LocalFileManager**: For local file storage.
   - **AWSFileManager**: For AWS S3 cloud storage.
 
+## Dependencies
 
-## 🔗 Dependencies
+- `ReqwestClient`: Used for making HTTP requests, crucial for fetching metadata from URIs.
 
-- ```ReqwestClient```: Used for making HTTP requests, essential for fetching metadata from URIs.
+## Testing
 
-## 🧪 Testing
-
- ```cargo test --workspace```
+Run tests with: 
+```bash
+cargo test --workspace
