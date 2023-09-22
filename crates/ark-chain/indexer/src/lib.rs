@@ -74,7 +74,7 @@ impl<S: ArkchainStorage> ArkchainIndexer<S> {
             debug!("Block # {:?}", block_number);
 
             for ev in events {
-                if ev.data.len() < 1 || ev.keys.len() < 1 {
+                if ev.data.is_empty() || ev.keys.is_empty() {
                     // Skip events with no data / no keys as all events has
                     // them for now.
                     continue;
