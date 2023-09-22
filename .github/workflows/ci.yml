@@ -10,13 +10,25 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.date.outputs.date }}
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
   check:
+    needs: setup
     name: Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+
+      - name: Cache cargo dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -31,30 +43,32 @@ jobs:
           command: check
 
   test:
+    needs: check
     name: Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - name: Cache cargo dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
-          command: cargo test --workspace
+          command: test
+          args: --workspace
 
   lints:
+    if: github.event_name == 'pull_request'
     name: Lints
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+
+      - name: Cache cargo dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1

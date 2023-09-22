@@ -12,7 +12,10 @@ pub mod nft_storage {
     pub use ark_storage::*;
 }
 
-// TODO: need to rework the organization of those crates.
+pub mod nft_metadata {
+    pub use ark_metadata::*;
+}
+
 pub mod arkchain {
     pub use arkchain_indexer::*;
 }

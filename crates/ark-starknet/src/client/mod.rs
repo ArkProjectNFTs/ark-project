@@ -3,12 +3,15 @@ pub use http::StarknetClientHttp;
 
 use anyhow::Result;
 use async_trait::async_trait;
+#[cfg(any(test, feature = "mock"))]
+use mockall::automock;
 use starknet::core::{types::FieldElement, types::*};
 use std::collections::HashMap;
 use std::marker::Sized;
 
 /// Starknet client interface with required methods
 /// for arkproject capabilities only.
+#[cfg_attr(any(test, feature = "mock"), automock)]
 #[async_trait]
 pub trait StarknetClient {
     ///

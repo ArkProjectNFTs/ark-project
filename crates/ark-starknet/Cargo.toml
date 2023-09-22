@@ -7,6 +7,10 @@ edition = "2021"
 anyhow.workspace = true
 async-trait.workspace = true
 starknet.workspace = true
-
 url = "2.3.1"
 regex = "1.9.1"
+mockall = "0.11.2"
+num-bigint = { version = "0.4.3", default-features = false }
+
+[features]
+mock = []
