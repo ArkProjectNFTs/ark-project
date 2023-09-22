@@ -1,17 +1,9 @@
-use std::{env, time::Duration};
+use crate::types::{MetadataType, TokenMetadata};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Client;
-
-use crate::storage::TokenMetadata;
-
-#[derive(Debug, PartialEq)]
-pub enum MetadataType {
-    Http(String),
-    Ipfs(String),
-    OnChain(String),
-}
+use std::{env, time::Duration};
 
 pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);

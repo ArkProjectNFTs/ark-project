@@ -1,7 +1,6 @@
 use crate::utils::format_token_id;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use starknet::core::types::FieldElement;
 use std::fmt;
 
@@ -14,7 +13,7 @@ pub enum StorageError {
 }
 
 impl fmt::Display for StorageError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { // Note the lifetime parameter <'_>
         match self {
             StorageError::DatabaseError => write!(f, "Database error occurred"),
             StorageError::NotFound => write!(f, "Item not found in storage"),
@@ -174,29 +173,6 @@ pub struct BlockInfo {
     pub indexer_version: u64,
     pub indexer_indentifier: String,
     pub status: BlockIndexingStatus,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct NormalizedMetadata {
-    pub description: String,
-    pub external_url: String,
-    pub image: String,
-    pub name: String,
-    pub attributes: Vec<MetadataAttribute>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct MetadataAttribute {
-    pub trait_type: String,
-    pub value: MetadataAttributeValue,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub enum MetadataAttributeValue {
-    Str(String),
-    Int(i64),
-    Float(f64),
-    Value(Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
