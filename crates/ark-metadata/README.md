@@ -1,4 +1,4 @@
-# 🖼️ ark_metadata
+# ark_metadata 🖼️
 
 `ark_metadata` is a library designed to fetch all NFT metadata on Starknet. It allows for efficient refreshing of specific token metadata or capturing metadata for an entire collection in a streamlined manner.
 
