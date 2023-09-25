@@ -7,6 +7,7 @@ use starknet::core::types::{BlockId, FieldElement};
 use starknet::macros::selector;
 
 use ark_starknet::{
+    format::felt_to_hex_str,
     client::{StarknetClient, StarknetClientHttp},
     CairoU256,
 };
@@ -111,10 +112,6 @@ impl<S: ArkchainStorage> ArkchainIndexer<S> {
 
         Ok(())
     }
-}
-
-fn felt_to_hex_str(f: &FieldElement) -> String {
-    format!("{:#064x}", f)
 }
 
 fn get_broker_data(keys: &[FieldElement], data: &[FieldElement]) -> Option<BrokerData> {
