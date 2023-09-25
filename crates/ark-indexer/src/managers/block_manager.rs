@@ -1,10 +1,7 @@
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
-use futures::future::ready;
 use starknet::core::types::*;
-use std::boxed::Box;
-use std::pin::Pin;
 
 use std::env;
 
@@ -141,16 +138,16 @@ mod tests {
 
         mock_storage
             .expect_clean_block()
-            .returning(|_| Box::pin(ready(Ok(()))));
+            .returning(|_| Box::pin(futures::future::ready(Ok(()))));
 
         mock_storage
             .expect_get_block_info()
             .returning(|block_number| {
-                Box::pin(ready(if block_number == 1 {
+                Box::pin(futures::future::ready(if block_number == 1 {
                     Ok(BlockInfo {
                         indexer_version: 0,
                         status: BlockIndexingStatus::None,
-                        indexer_identifier: String::from("123"), // Fix the typo here
+                        indexer_identifier: String::from("123"),
                     })
                 } else {
                     Err(StorageError::NotFound)
