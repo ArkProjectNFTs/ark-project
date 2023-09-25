@@ -10,7 +10,7 @@ use std::collections::HashMap;
 pub struct CollectionManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
     client: &'a C,
-    /// A cache with contract address mapped to it's type.
+    /// A cache with contract address mapped to its type.
     cache: HashMap<FieldElement, ContractType>,
 }
 
@@ -42,13 +42,12 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
         Ok(contract_type)
     }
 
-    /// Identifies a contract from it's address only.
+    /// Identifies a contract from its address only.
     pub async fn identify_contract(
         &mut self,
         address: FieldElement,
         block_number: u64,
     ) -> Result<ContractType> {
-        // The cache is more efficient that formatting to check the BLACKLIST.
         match self.get_cached_or_fetch_info(address).await {
             Ok(contract_type) => Ok(contract_type),
             Err(_) => {
