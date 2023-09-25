@@ -57,7 +57,7 @@ impl StorageManager for DefaultStorage {
                             token::owner::set(token.owner.clone()),
                             token::mint_address::set(Some(format!(
                                 "{:#064x}",
-                                token.mint_address.clone().unwrap()
+                                token.mint_address.unwrap()
                             ))),
                             token::mint_timestamp::set(Some(
                                 token.mint_timestamp.unwrap().try_into().unwrap(),
@@ -91,7 +91,7 @@ impl StorageManager for DefaultStorage {
                         vec![
                             token::mint_address::set(Some(format!(
                                 "{:#064x}",
-                                token.mint_address.clone().unwrap()
+                                token.mint_address.unwrap()
                             ))),
                             token::mint_timestamp::set(Some(
                                 token.mint_timestamp.unwrap().try_into().unwrap(),

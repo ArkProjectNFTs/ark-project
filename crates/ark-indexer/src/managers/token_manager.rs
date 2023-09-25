@@ -30,12 +30,12 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         self.token.token_id = event.token_id.clone();
         self.token.formated_token_id = event.formated_token_id.clone();
         self.token.mint_address = if event.event_type == EventType::Mint {
-            Some(event.to_address_field_element.clone())
+            Some(event.to_address_field_element)
         } else {
             None
         };
         self.token.mint_timestamp = if event.event_type == EventType::Mint {
-            Some(event.timestamp.clone())
+            Some(event.timestamp)
         } else {
             None
         };

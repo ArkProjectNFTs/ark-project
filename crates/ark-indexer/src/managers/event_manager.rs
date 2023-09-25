@@ -89,8 +89,8 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         bytes.extend_from_slice(&self.token_event.token_id.high.to_bytes_be());
         bytes.extend_from_slice(&self.token_event.from_address_field_element.to_bytes_be());
         bytes.extend_from_slice(&self.token_event.to_address_field_element.to_bytes_be());
-        bytes.extend_from_slice(&self.token_event.contract_address.as_bytes());
-        bytes.extend_from_slice(&self.token_event.transaction_hash.as_bytes());
+        bytes.extend_from_slice(self.token_event.contract_address.as_bytes());
+        bytes.extend_from_slice(self.token_event.transaction_hash.as_bytes());
         bytes.extend_from_slice(&self.token_event.block_number.to_le_bytes());
         starknet_keccak(&bytes)
     }
