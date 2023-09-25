@@ -2,11 +2,12 @@ use crate::types::{
     BlockIndexing, BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent,
 };
 use async_trait::async_trait;
-#[cfg(any(test, feature = "mock"))]
-use mockall::automock;
-use starknet::core::types::FieldElement;
 use starknet::core::types::FieldElement;
 
+#[cfg(any(test, feature = "mock"))]
+use mockall::automock;
+
+#[async_trait]
 #[cfg_attr(any(test, feature = "mock"), automock)]
 pub trait StorageManager {
     async fn register_mint(
