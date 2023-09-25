@@ -3,7 +3,7 @@ mod managers;
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::ContractType;
+use ark_storage::types::{BlockIndexingStatus, ContractType};
 use dotenv::dotenv;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
@@ -41,6 +41,11 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
             continue;
         }
 
+        // Set block as pending
+        block_manager
+            .set_block_info(current_u64, BlockIndexingStatus::Processing)
+            .await?;
+
         let block_ts = sn_client.block_time(BlockId::Number(current_u64)).await?;
 
         let blocks_events = sn_client
@@ -56,10 +61,14 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
                 let contract_address = e.from_address;
 
                 let contract_type =
-                    match collection_manager.identify_contract(contract_address).await {
+                    match collection_manager.identify_contract(contract_address, current_u64).await {
                         Ok(info) => info,
                         Err(e) => {
-                            log::error!("Can't identify contract {contract_address}: {:?}", e);
+                            log::error!(
+                                "Error while identifying contract {}: {:?}",
+                                contract_address,
+                                e
+                            );
                             continue;
                         }
                     };
@@ -69,12 +78,12 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
                 }
 
                 let token_event = match event_manager
-                    .format_event(&e, contract_type, block_ts)
+                    .format_and_register_event(&e, contract_type, block_ts)
                     .await
                 {
                     Ok(te) => te,
                     Err(err) => {
-                        log::error!("Can't format event {:?}\nevent: {:?}", err, e);
+                        log::error!("Error while registering event {:?}\n{:?}", err, e);
                         continue;
                     }
                 };
@@ -89,6 +98,10 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
             }
         }
 
+        block_manager
+            .set_block_info(current_u64, BlockIndexingStatus::Terminated)
+            .await?;
+        // set block as indexed here
         current_u64 += 1;
     }
 }

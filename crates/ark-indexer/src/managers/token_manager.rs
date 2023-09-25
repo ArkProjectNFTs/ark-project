@@ -9,8 +9,6 @@ use starknet::macros::selector;
 pub struct TokenManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
     client: &'a C,
-    // TODO: Same as event manager, we should use the stack instead.
-    // check with @kwiss.
     token: TokenFromEvent,
 }
 
@@ -52,8 +50,6 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
             None
         };
 
-        // TODO: @kwiss, do we want a default value in case we can't get the token owner?
-        // or do we want to return an error and abort before saving in the storage?
         let token_owner = self
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)
@@ -65,25 +61,16 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
 
         self.token.owner = format!("{:#064x}", token_owner);
 
-        log::trace!(
-            "Registering token: {} {}",
-            event.token_id.format().token_id,
-            event.contract_address
-        );
-
-        // TODO: do we need to be atomic for register_token and register_mint?
-        // What is the logic if one of the two fails?
-
         if event.event_type == EventType::Mint {
-            self.storage.register_mint(&self.token).await?;
+            self.storage.register_mint(&self.token, event.block_number).await?;
         } else {
-            self.storage.register_token(&self.token).await?;
+            self.storage.register_token(&self.token, event.block_number).await?;
         }
 
         Ok(())
     }
 
-    ///
+    /// Resets the token registry.
     pub fn reset_token(&mut self) {
         self.token = TokenFromEvent::default();
     }

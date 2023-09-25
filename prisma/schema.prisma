@@ -11,41 +11,51 @@ generator client {
 }
 
 model Token {
-    id                    String  @id @default(cuid())
-    address               String
-    token_id              String
-    padded_token_id       String
-    owner                 String
-    mint_address          String?
-    mint_timestamp        Int?
-    mint_transaction_hash String?
-    mint_block_number   Int?
+    id                      String  @id @default(cuid())
+    address                 String
+    token_id                String
+    padded_token_id         String
+    owner                   String
+    mint_address            String?
+    mint_timestamp          Int?
+    mint_transaction_hash   String?
+    mint_block_number       Int?
+    indexer_version         String?
+    indexed_at_block_number Int
+
+    @@unique([address, token_id])
 }
 
 model Event {
-    id               String @id @default(cuid())
-    timestamp        Int
-    from_address     String
-    to_address       String
-    contract_address String
-    transaction_hash String
-    token_id         String
-    padded_token_id  String
-    block_number     Int
-    contract_type    String
-    event_type       String
+    id                      String @id @default(cuid())
+    event_id                String @unique
+    timestamp               Int
+    from_address            String
+    to_address              String
+    contract_address        String
+    transaction_hash        String
+    token_id                String
+    padded_token_id         String
+    block_number            Int
+    contract_type           String
+    event_type              String
+    indexer_version         String?
+    indexed_at_block_number Int
 }
 
 model Collection {
-    id               String @id @default(cuid())
-    contract_address String
-    type             String
+    id                      String @id @default(cuid())
+    contract_address        String @unique
+    type                    String
+    indexer_version         String?
+    indexed_at_block_number Int
 }
 
 model Block {
-    id                  String @id @default(cuid())
-    number              Int
-    indexer_version     String
-    indexer_indentifier String
-    status              String
+    id                      String @id @default(cuid())
+    number                  Int    @unique
+    indexer_version         String
+    indexer_identifier      String
+    status                  String
+    indexed_at_block_number Int
 }

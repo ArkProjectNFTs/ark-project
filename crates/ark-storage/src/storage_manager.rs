@@ -9,13 +9,23 @@ use starknet::core::types::FieldElement;
 
 #[cfg_attr(any(test, feature = "mock"), automock)]
 pub trait StorageManager {
-    async fn register_mint(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
+    async fn register_mint(
+        &self,
+        token: &TokenFromEvent,
+        block_number: u64,
+    ) -> Result<(), StorageError>;
 
-    async fn register_token(&self, token: &TokenFromEvent) -> Result<(), StorageError>;
+    async fn register_token(
+        &self,
+        token: &TokenFromEvent,
+        block_number: u64,
+    ) -> Result<(), StorageError>;
 
-    async fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
-
-    async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError>;
+    async fn register_event(
+        &self,
+        event: &TokenEvent,
+        block_number: u64,
+    ) -> Result<(), StorageError>;
 
     async fn get_contract_type(
         &self,
@@ -26,11 +36,14 @@ pub trait StorageManager {
         &self,
         contract_address: &FieldElement,
         contract_type: &ContractType,
+        block_number: u64,
     ) -> Result<(), StorageError>;
 
-    async fn register_event(&self, event: &TokenEvent) -> Result<(), StorageError>;
-
     async fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
+
+    async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError>;
+
+    async fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
 
     async fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError>;
 }
