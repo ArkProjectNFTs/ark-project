@@ -62,9 +62,13 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         self.token.owner = format!("{:#064x}", token_owner);
 
         if event.event_type == EventType::Mint {
-            self.storage.register_mint(&self.token, event.block_number).await?;
+            self.storage
+                .register_mint(&self.token, event.block_number)
+                .await?;
         } else {
-            self.storage.register_token(&self.token, event.block_number).await?;
+            self.storage
+                .register_token(&self.token, event.block_number)
+                .await?;
         }
 
         Ok(())
