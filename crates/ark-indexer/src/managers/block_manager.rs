@@ -1,7 +1,10 @@
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
+use futures::future::ready;
 use starknet::core::types::*;
+use std::boxed::Box;
+use std::pin::Pin;
 
 use std::env;
 
@@ -131,25 +134,27 @@ mod tests {
         env::remove_var("END_BLOCK");
     }
 
-    #[test]
-    fn test_check_candidate() {
+    #[tokio::test]
+    async fn test_check_candidate() {
         let mock_client = MockStarknetClient::default();
         let mut mock_storage = MockStorageManager::default();
 
-        mock_storage.expect_clean_block().returning(|_| Ok(()));
+        mock_storage
+            .expect_clean_block()
+            .returning(|_| Box::pin(ready(Ok(()))));
 
         mock_storage
             .expect_get_block_info()
             .returning(|block_number| {
-                if block_number == 1 {
+                Box::pin(ready(if block_number == 1 {
                     Ok(BlockInfo {
                         indexer_version: 0,
                         status: BlockIndexingStatus::None,
-                        indexer_indentifier: String::from("123"),
+                        indexer_identifier: String::from("123"), // Fix the typo here
                     })
                 } else {
                     Err(StorageError::NotFound)
-                }
+                }))
             });
 
         let manager = BlockManager {
@@ -160,8 +165,8 @@ mod tests {
 
         env::set_var("FORCE_MODE", "false");
 
-        assert!(manager.check_candidate(1));
-        assert!(manager.check_candidate(2));
+        assert!(manager.check_candidate(1).await);
+        assert!(manager.check_candidate(2).await);
 
         // Cleanup environment variable after the test
         env::remove_var("FORCE_MODE");

@@ -142,6 +142,7 @@ dependencies = [
  "ark-starknet",
  "ark-storage",
  "dotenv",
+ "futures",
  "log",
  "mockall",
  "starknet",
