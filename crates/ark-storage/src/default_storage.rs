@@ -22,8 +22,7 @@ impl DefaultStorage {
     }
 }
 
-// TODO - add indexer version
-// TODO - add contract informations
+// TODO - add indexer version check with @remi
 // TODO - add tests
 
 #[async_trait]
@@ -285,13 +284,17 @@ impl StorageManager for DefaultStorage {
         let result = self
             .prisma_client
             .block()
-            .create(
-                block_number as i32,
-                info.indexer_version.to_string(),
-                info.indexer_identifier,
-                info.status.to_string(),
-                block_number as i32,
-                vec![],
+            .upsert(
+                block::number::equals(block_number as i32),
+                block::create(
+                    block_number as i32,
+                    info.indexer_version.to_string(),
+                    info.indexer_identifier,
+                    info.status.to_string(),
+                    block_number as i32,
+                    vec![],
+                ),
+                vec![block::status::set(info.status.to_string())],
             )
             .exec()
             .await;

@@ -30,7 +30,7 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
     let mut to_u64 = sn_client.block_id_to_u64(&to_block).await?;
 
     loop {
-        log::trace!("Indexing block: {} {}", current_u64, to_u64);
+        log::trace!("Indexing block range: {} {}", current_u64, to_u64);
 
         to_u64 = check_range(&sn_client, current_u64, to_u64, poll_head_of_chain).await;
         if current_u64 > to_u64 {
@@ -38,6 +38,7 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
         }
 
         if !block_manager.check_candidate(current_u64).await {
+            current_u64 += 1;
             continue;
         }
 
