@@ -62,7 +62,7 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
 
         match self.storage.get_block_info(block_number).await {
             Ok(info) => {
-                log::debug!("Block {} already indexed", block_number );
+                log::debug!("Block {} already indexed", block_number);
                 if self.indexer_version > info.indexer_version {
                     self.storage.clean_block(block_number).await.is_ok()
                 } else {

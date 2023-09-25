@@ -61,18 +61,20 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
             for e in events {
                 let contract_address = e.from_address;
 
-                let contract_type =
-                    match collection_manager.identify_contract(contract_address, current_u64).await {
-                        Ok(info) => info,
-                        Err(e) => {
-                            log::error!(
-                                "Error while identifying contract {}: {:?}",
-                                contract_address,
-                                e
-                            );
-                            continue;
-                        }
-                    };
+                let contract_type = match collection_manager
+                    .identify_contract(contract_address, current_u64)
+                    .await
+                {
+                    Ok(info) => info,
+                    Err(e) => {
+                        log::error!(
+                            "Error while identifying contract {}: {:?}",
+                            contract_address,
+                            e
+                        );
+                        continue;
+                    }
+                };
 
                 if contract_type == ContractType::Other {
                     continue;
