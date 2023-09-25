@@ -54,6 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Prisma generate
+        uses: actions-rs/cargo@v1
         with:
           command: prisma
           args: generate
@@ -90,6 +91,7 @@ jobs:
           args: --all -- --check
 
       - name: Prisma generate
+        uses: actions-rs/cargo@v1
         with:
           command: prisma
           args: generate
