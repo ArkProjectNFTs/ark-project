@@ -4,6 +4,7 @@ use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenId};
 use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
+use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
 
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
@@ -28,10 +29,9 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         Some(vec![vec![TRANSFER_SELECTOR]])
     }
 
-    /// Formats a token event based on the event content.
-    /// Returns the token_id if the event were identified,
-    /// an Err otherwise.
-    pub async fn format_event(
+    /// Formats & register a token event based on the event content.
+    /// Returns the token_id if the event were identified.
+    pub async fn format_and_register_event(
         &mut self,
         event: &EmittedEvent,
         contract_type: ContractType,
@@ -47,8 +47,7 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         } else if let Some(k_info) = Self::get_event_info_from_felts(&event.keys[1..]) {
             k_info
         } else {
-            log::warn!("Can't find event data into this event");
-            return Err(anyhow!("Can't format event"));
+            return Err(anyhow!("Can't find event data into this event"));
         };
 
         let (from, to, token_id) = event_info;
@@ -63,10 +62,12 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         self.token_event.timestamp = timestamp;
         self.token_event.contract_type = contract_type.to_string();
         self.token_event.event_type = Self::get_event_type(from, to);
+        self.token_event.event_id = self.get_event_id_as_field_element();
 
         info!("Event identified: {:?}", self.token_event.event_type);
-
-        self.storage.register_event(&self.token_event).await?;
+        self.storage
+            .register_event(&self.token_event, event.block_number)
+            .await?;
 
         Ok(self.token_event.clone())
     }
@@ -79,6 +80,19 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         } else {
             EventType::Transfer
         }
+    }
+
+    /// Returns the event id as a field element.
+    pub fn get_event_id_as_field_element(&self) -> FieldElement {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&self.token_event.token_id.low.to_bytes_be());
+        bytes.extend_from_slice(&self.token_event.token_id.high.to_bytes_be());
+        bytes.extend_from_slice(&self.token_event.from_address_field_element.to_bytes_be());
+        bytes.extend_from_slice(&self.token_event.to_address_field_element.to_bytes_be());
+        bytes.extend_from_slice(&self.token_event.contract_address.as_bytes());
+        bytes.extend_from_slice(&self.token_event.transaction_hash.as_bytes());
+        bytes.extend_from_slice(&self.token_event.block_number.to_le_bytes());
+        starknet_keccak(&bytes)
     }
 
     /// Returns the event info from vector of felts.

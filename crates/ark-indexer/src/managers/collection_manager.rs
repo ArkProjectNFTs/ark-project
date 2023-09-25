@@ -43,7 +43,11 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
     }
 
     /// Identifies a contract from it's address only.
-    pub async fn identify_contract(&mut self, address: FieldElement) -> Result<ContractType> {
+    pub async fn identify_contract(
+        &mut self,
+        address: FieldElement,
+        block_number: u64,
+    ) -> Result<ContractType> {
         // The cache is more efficient that formatting to check the BLACKLIST.
         match self.get_cached_or_fetch_info(address).await {
             Ok(contract_type) => Ok(contract_type),
@@ -60,7 +64,7 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
                 self.cache.insert(address, contract_type.clone());
 
                 self.storage
-                    .register_contract_info(&address, &contract_type)
+                    .register_contract_info(&address, &contract_type, block_number)
                     .await?;
 
                 Ok(contract_type)

@@ -3,13 +3,16 @@ use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::FieldElement;
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub enum StorageError {
     DatabaseError,
     NotFound,
+    InvalidStatus,
     DuplicateToken,
     InvalidMintData,
+    AlreadyExists,
 }
 
 impl fmt::Display for StorageError {
@@ -18,8 +21,10 @@ impl fmt::Display for StorageError {
         match self {
             StorageError::DatabaseError => write!(f, "Database error occurred"),
             StorageError::NotFound => write!(f, "Item not found in storage"),
+            StorageError::InvalidStatus => write!(f, "Invalid status"),
             StorageError::DuplicateToken => write!(f, "Token already exists in storage"),
             StorageError::InvalidMintData => write!(f, "Provided mint data is invalid"),
+            StorageError::AlreadyExists => write!(f, "Item already exists in storage"),
         }
     }
 }
@@ -59,6 +64,7 @@ pub struct TokenEvent {
     pub block_number: u64,
     pub contract_type: String,
     pub event_type: EventType,
+    pub event_id: FieldElement,
 }
 
 impl Default for TokenEvent {
@@ -79,6 +85,7 @@ impl Default for TokenEvent {
             block_number: 0,
             contract_type: String::new(),
             event_type: EventType::Uninitialized,
+            event_id: FieldElement::ZERO,
         }
     }
 }
@@ -178,6 +185,29 @@ pub enum BlockIndexingStatus {
     Terminated,
 }
 
+impl ToString for BlockIndexingStatus {
+    fn to_string(&self) -> String {
+        match self {
+            BlockIndexingStatus::None => "None".to_string(),
+            BlockIndexingStatus::Processing => "Processing".to_string(),
+            BlockIndexingStatus::Terminated => "Terminated".to_string(),
+        }
+    }
+}
+
+impl FromStr for BlockIndexingStatus {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(BlockIndexingStatus::None),
+            "Processing" => Ok(BlockIndexingStatus::Processing),
+            "Terminated" => Ok(BlockIndexingStatus::Terminated),
+            _ => Err(()),
+        }
+    }
+}
+
 pub enum IndexerStatus {
     Running,
     Stopped,
@@ -199,7 +229,7 @@ pub struct BlockIndexing {
 #[derive(Debug)]
 pub struct BlockInfo {
     pub indexer_version: u64,
-    pub indexer_indentifier: String,
+    pub indexer_identifier: String,
     pub status: BlockIndexingStatus,
 }
 
@@ -221,9 +251,14 @@ impl ToString for ContractType {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct ContractInfo {
-    pub name: String,
-    pub symbol: String,
-    pub r#type: ContractType,
+impl FromStr for ContractType {
+    type Err = (); // You can use a more descriptive error type if needed
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "erc721" => Ok(ContractType::ERC721),
+            "erc1155" => Ok(ContractType::ERC1155),
+            _ => Ok(ContractType::Other),
+        }
+    }
 }

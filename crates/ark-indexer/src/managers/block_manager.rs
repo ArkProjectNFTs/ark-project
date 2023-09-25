@@ -1,6 +1,6 @@
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::StorageError;
+use ark_storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use starknet::core::types::*;
 
 use std::env;
@@ -59,7 +59,7 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
         if *do_force {
             return self.storage.clean_block(block_number).await.is_ok();
         }
-        
+
         match self.storage.get_block_info(block_number).await {
             Ok(info) => {
                 if self.indexer_version > info.indexer_version {
@@ -70,6 +70,28 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
             }
             Err(StorageError::NotFound) => true,
             Err(_) => false,
+        }
+    }
+
+    pub async fn set_block_info(
+        &self,
+        block_number: u64,
+        status: BlockIndexingStatus,
+    ) -> Result<(), StorageError> {
+        match self
+            .storage
+            .set_block_info(
+                block_number,
+                BlockInfo {
+                    indexer_version: self.indexer_version,
+                    indexer_identifier: env::var("INDEXER_IDENTIFIER").unwrap_or("".to_string()),
+                    status,
+                },
+            )
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
         }
     }
 }
