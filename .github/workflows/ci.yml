@@ -53,6 +53,11 @@ jobs:
       - name: Cache cargo dependencies
         uses: Swatinem/rust-cache@v2
 
+      - name: Prisma generate
+        with:
+          command: prisma
+          args: generate
+
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
@@ -83,6 +88,11 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
+
+      - name: Prisma generate
+        with:
+          command: prisma
+          args: generate
 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
