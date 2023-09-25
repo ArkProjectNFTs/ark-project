@@ -112,3 +112,52 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use ark_starknet::client::MockStarknetClient;
+    use ark_storage::storage_manager::MockStorageManager;
+
+    use super::*;
+
+    #[test]
+    fn test_reset_token() {
+        let mock_storage = MockStorageManager::default();
+        let mock_client = MockStarknetClient::default();
+
+        let mut token_manager = TokenManager::new(&mock_storage, &mock_client);
+
+        // Modify some values
+        token_manager.token.owner = String::from("some_owner");
+
+        token_manager.reset_token();
+
+        assert_eq!(token_manager.token, TokenFromEvent::default());
+    }
+
+    #[tokio::test]
+    async fn test_get_token_owner() {
+        let mock_storage = MockStorageManager::default();
+        let mut mock_client = MockStarknetClient::default();
+
+        let contract_address = FieldElement::from_dec_str("12345").unwrap();
+        let token_id_low = FieldElement::from_dec_str("23456").unwrap();
+        let token_id_high = FieldElement::from_dec_str("34567").unwrap();
+
+        mock_client
+            .expect_call_contract()
+            .returning(|_, _, _, _| Ok(vec![FieldElement::from_dec_str("1").unwrap()]));
+
+        let token_manager = TokenManager::new(&mock_storage, &mock_client);
+
+        let result = token_manager
+            .get_token_owner(contract_address, token_id_low, token_id_high)
+            .await;
+
+        assert!(result.is_ok());
+        let owners = result.unwrap();
+
+        assert_eq!(owners.len(), 1);
+        assert_eq!(owners[0], FieldElement::from_dec_str("1").unwrap());
+    }
+}

@@ -121,3 +121,70 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         self.token_event = TokenEvent::default();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_storage::storage_manager::MockStorageManager;
+
+    #[test]
+    fn test_keys_selector() {
+        let mock_storage = MockStorageManager::default();
+        let event_manager = EventManager::new(&mock_storage);
+
+        let selectors = event_manager.keys_selector().unwrap();
+        assert_eq!(selectors[0][0], TRANSFER_SELECTOR);
+    }
+
+    #[test]
+    fn test_get_event_type() {
+        let mint_event = EventManager::<MockStorageManager>::get_event_type(
+            FieldElement::ZERO,
+            FieldElement::from_dec_str("1").unwrap(),
+        );
+        assert_eq!(mint_event, EventType::Mint);
+
+        let burn_event = EventManager::<MockStorageManager>::get_event_type(
+            FieldElement::from_dec_str("1").unwrap(),
+            FieldElement::ZERO,
+        );
+        assert_eq!(burn_event, EventType::Burn);
+
+        let transfer_event = EventManager::<MockStorageManager>::get_event_type(
+            FieldElement::from_dec_str("1").unwrap(),
+            FieldElement::from_dec_str("2").unwrap(),
+        );
+        assert_eq!(transfer_event, EventType::Transfer);
+    }
+
+    #[test]
+    fn test_get_event_info_from_felts() {
+        let felts = vec![
+            FieldElement::from_dec_str("1").unwrap(),
+            FieldElement::from_dec_str("2").unwrap(),
+            FieldElement::from_dec_str("3").unwrap(),
+            FieldElement::from_dec_str("4").unwrap(),
+        ];
+
+        let result = EventManager::<MockStorageManager>::get_event_info_from_felts(&felts);
+
+        assert!(result.is_some());
+        let (field1, field2, token_id) = result.unwrap();
+
+        assert_eq!(field1, FieldElement::from_dec_str("1").unwrap());
+        assert_eq!(field2, FieldElement::from_dec_str("2").unwrap());
+        assert_eq!(token_id.low, FieldElement::from_dec_str("3").unwrap());
+        assert_eq!(token_id.high, FieldElement::from_dec_str("4").unwrap());
+    }
+
+    #[test]
+    fn test_reset_event() {
+        let mock_storage = MockStorageManager::new();
+        let mut manager = EventManager::new(&mock_storage);
+
+        manager.token_event.block_number = 12345;
+        manager.reset_event();
+
+        assert_eq!(manager.token_event, TokenEvent::default());
+    }
+}
