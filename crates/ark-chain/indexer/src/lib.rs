@@ -7,8 +7,8 @@ use starknet::core::types::{BlockId, FieldElement};
 use starknet::macros::selector;
 
 use ark_starknet::{
-    format::felt_to_hex_str,
     client::{StarknetClient, StarknetClientHttp},
+    format::felt_to_hex_str,
     CairoU256,
 };
 
