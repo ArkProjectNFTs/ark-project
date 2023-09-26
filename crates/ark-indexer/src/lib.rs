@@ -39,7 +39,6 @@ pub struct ArkIndexer<'a, T: StorageManager> {
     indexer_identifier: String,
     from_block: BlockId,
     to_block: BlockId,
-    is_head_of_chain: bool,
 }
 
 pub struct ArkIndexerArgs {
@@ -57,7 +56,6 @@ impl<'a, T: StorageManager> ArkIndexer<'a, T> {
         let event_manager = EventManager::new(storage);
         let collection_manager = CollectionManager::new(storage);
         let token_manager = TokenManager::new(storage);
-        let is_head_of_chain = args.to_block == BlockId::Tag(BlockTag::Latest);
 
         Self {
             sn_client,
@@ -69,7 +67,6 @@ impl<'a, T: StorageManager> ArkIndexer<'a, T> {
             indexer_identifier: args.indexer_identifier,
             to_block: args.to_block,
             from_block: args.from_block,
-            is_head_of_chain,
         }
     }
 
@@ -159,27 +156,6 @@ impl<'a, T: StorageManager> ArkIndexer<'a, T> {
 
         Ok(())
     }
-
-    // /// Returns the block range to be fetched during this run.
-    // fn get_block_range(&self) -> (BlockId, BlockId, bool) {
-    //     let (from_block, to_block) = self
-    //         .sn_client
-    //         .parse_block_range(
-    //             &env::var("START_BLOCK").expect("START_BLOCK env variable is missing"),
-    //             &env::var("END_BLOCK").unwrap_or("latest".to_string()),
-    //         )
-    //         .expect("Can't parse block range from env");
-
-    //     let is_head_of_chain = to_block == BlockId::Tag(BlockTag::Latest);
-    //     log::debug!(
-    //         "Indexing range: {:?} {:?} (head of chain: {})",
-    //         from_block,
-    //         to_block,
-    //         is_head_of_chain
-    //     );
-
-    //     (from_block, to_block, is_head_of_chain)
-    // }
 
     /// Returns true if the given block number must be indexed.
     /// False otherwise.
