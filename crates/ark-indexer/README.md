@@ -24,7 +24,7 @@ ark-rs = "0.1.0"
 
 ## Quick Start
 
-Add imports 
+Import Necessary Modules:
 
 ```rust
 use ark_rs::{
@@ -59,16 +59,16 @@ let indexer = ArkIndexer::new(storage, client, observer, indexer_args);
 ### Run the indexer
 
 ```rust
-indexer.run();
+indexer.run(/* parameters */);
 ```
 
 #### Parameters
 
-**start_block**: Specifies the starting block for indexing. In the example, it is provided as BlockId::Number(START_BLOCK). The START_BLOCK is a placeholder and needs to be replaced with the actual starting block number.
+**from_block**: Specifies the starting block for indexing.
 
-**end_block**: Specifies the end block for indexing. In the example, it's given as BlockId::Number(END_BLOCK). The END_BLOCK is a placeholder and should be replaced with the actual ending block number.
+**to_block**: Specifies the end block for indexing.
 
-**force_mode**: A mode (represented by the placeholder FORCE_MODE) which is likely a boolean or an enumeration. Its specific behavior isn't detailed in the README, but usually "force" modes in software are used to override certain default behaviors or checks.
+**force_mode**: A binary flag that dictates whether to forcibly re-index. By default, previously indexed blocks are cached and not processed again.
 
 
 ## Tests

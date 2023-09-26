@@ -25,12 +25,9 @@ access/store NFTs data.
 This is what `storage` crate provides. You can find a basic storage implementation based on SQL-Lite,
 but you may write your own by simply implementing `StorageManager` trait.
 
-### - Indexer
+### - [Indexer](/crates/ark-indexer/README.md)
 
-The index logic is usually the same for all NFTs. Gathering the events first,
-to then identify the contract and tokens associated to the event.
-The `indexer` crate provide a `main_loop` with this logic, for an efficient
-indexation per blocks.
+The indexer crate standardizes NFT indexing by first aggregating blockchain events, then associating them with the relevant contracts and tokens. It facilitates tasks within a defined block range, optimizing the indexing process.
 
 ### - [Metadata](/crates/ark-metadata/README.md)
 
