@@ -53,7 +53,6 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
                 .await?;
         }
         Ok(())
-
     }
 
     /// Resets the token registry.
