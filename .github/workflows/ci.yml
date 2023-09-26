@@ -18,7 +18,7 @@ jobs:
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-        
+
   check:
     needs: setup
     name: Check
@@ -34,7 +34,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-          
+
       - name: Prisma generate
         uses: actions-rs/cargo@v1
         with:
@@ -49,18 +49,23 @@ jobs:
   codecoverage:
     if: github.event_name == 'pull_request'
     needs: check
-    name: Test
+    name: Coverage
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
       - name: Cache cargo dependencies
         uses: Swatinem/rust-cache@v2
+      - name: Prisma generate
+        uses: actions-rs/cargo@v1
+        with:
+          command: prisma
+          args: generate
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
-          version: '0.15.0'
-          args: '-- --test-threads 1'
+          version: "0.15.0"
+          args: "-- --test-threads 1"
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
         with:
