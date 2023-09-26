@@ -42,7 +42,7 @@ jobs:
   codecoverage:
     if: github.event_name == 'pull_request'
     needs: check
-    name: Test
+    name: Code coverage
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
