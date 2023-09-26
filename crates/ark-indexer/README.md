@@ -57,11 +57,10 @@ let observer = Arc::new(DefaultIndexerObserver::default());
 ### Create an instance of the ArkIndexer:
 
 ```rust
-let indexer_args = ArkIndexerArgs {
+ArkIndexer::new(storage, client, observer, ArkIndexerArgs {
     indexer_version: 1,
     indexer_identifier: String::from("main"),
-};
-let indexer = ArkIndexer::new(storage, client, observer, indexer_args);
+});
 ```
 
 ### Run the indexer
@@ -70,14 +69,11 @@ let indexer = ArkIndexer::new(storage, client, observer, indexer_args);
 indexer.run(/* parameters */);
 ```
 
-
-| Parameter   | Description                                                                                       |
-|-------------|---------------------------------------------------------------------------------------------------|
-| `from_block`| Specifies the starting block for indexing.                                                        |
-| `to_block`  | Specifies the end block for indexing.                                                             |
-| `force_mode`| A binary flag for forceful re-indexing. By default, cached blocks are skipped from re-processing. |
-
-
+| Parameter    | Description                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------- |
+| `from_block` | Specifies the starting block for indexing.                                                        |
+| `to_block`   | Specifies the end block for indexing.                                                             |
+| `force_mode` | A binary flag for forceful re-indexing. By default, cached blocks are skipped from re-processing. |
 
 ## Tests
 
@@ -89,4 +85,4 @@ cargo test
 
 ## License
 
-MIT License 
+MIT License
