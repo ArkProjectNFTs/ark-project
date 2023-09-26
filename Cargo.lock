@@ -111,6 +111,7 @@ dependencies = [
  "ark-storage",
  "dotenv",
  "log",
+ "mockall",
  "starknet",
  "tokio",
  "tracing",

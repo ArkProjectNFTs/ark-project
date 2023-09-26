@@ -194,7 +194,7 @@ impl ToString for ContractType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ContractInfo {
     pub name: String,
     pub symbol: String,

@@ -3,25 +3,28 @@
 //! Can be run with `cargo run --example nft_indexer`.
 //!
 use anyhow::Result;
-use ark_rs::{nft_indexer, nft_storage::DefaultStorage};
+use ark_rs::nft_indexer::{ArkIndexer, ArkIndexerArgs};
+use ark_rs::nft_storage::DefaultStorage;
+use starknet::core::types::BlockId;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialized any storage implementing the StorageManager trait.
     let storage = DefaultStorage::new();
 
-    // TODO: the node URL can be passed here, we don't
-    // have to rely on env variables in deeper libraries.
-    // It will be harder to maintain and extend.
-
-    // The main functions should load env variables. Libraries
-    // should accept configuration parameters instead.
-    // IndexerConfig or something like this, with all we need
-    // to initialize internal stuff like Starknet client and
-    // the block ranges.
-
-    // Start the indexer using the storage.
-    nft_indexer::main_loop(storage).await?;
+    ArkIndexer::new(
+        &storage,
+        ArkIndexerArgs {
+            rpc_provider: String::from(
+                "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            ),
+            indexer_version: 1,
+            indexer_identifier: String::from("main"),
+            from_block: BlockId::Number(5000),
+            to_block: BlockId::Number(6000),
+        },
+    )
+    .run()
+    .await?;
 
     Ok(())
 }

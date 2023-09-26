@@ -1,31 +1,33 @@
 use anyhow::{anyhow, Result};
-use ark_starknet::client::StarknetClient;
+use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenFromEvent};
 use starknet::core::types::*;
 use starknet::macros::selector;
 
 #[derive(Debug)]
-pub struct TokenManager<'a, T: StorageManager, C: StarknetClient> {
+pub struct TokenManager<'a, T: StorageManager> {
     storage: &'a T,
-    client: &'a C,
     // TODO: Same as event manager, we should use the stack instead.
     // check with @kwiss.
     token: TokenFromEvent,
 }
 
-impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
+impl<'a, T: StorageManager> TokenManager<'a, T> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T, client: &'a C) -> Self {
+    pub fn new(storage: &'a T) -> Self {
         Self {
             storage,
-            client,
             token: TokenFromEvent::default(),
         }
     }
 
     /// Formats a token registry from the token event data.
-    pub async fn format_token(&mut self, event: &TokenEvent) -> Result<()> {
+    pub async fn format_token(
+        &mut self,
+        client: &StarknetClientHttp,
+        event: &TokenEvent,
+    ) -> Result<()> {
         self.reset_token();
 
         self.token.address = event.contract_address.clone();
@@ -48,6 +50,7 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
         // or do we want to return an error and abort before saving in the storage?
         let token_owner = self
             .get_token_owner(
+                client,
                 FieldElement::from_hex_be(&event.contract_address)
                     .expect("Contract address bad format"),
                 event.token_id.low,
@@ -83,14 +86,14 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
     /// Retrieves the token owner for the last block.
     pub async fn get_token_owner(
         &self,
+        client: &StarknetClientHttp,
         contract_address: FieldElement,
         token_id_low: FieldElement,
         token_id_high: FieldElement,
     ) -> Result<Vec<FieldElement>> {
         let block = BlockId::Tag(BlockTag::Latest);
 
-        match self
-            .client
+        match client
             .call_contract(
                 contract_address,
                 selector!("owner_of"),
@@ -100,8 +103,7 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
             .await
         {
             Ok(res) => Ok(res),
-            Err(_) => self
-                .client
+            Err(_) => client
                 .call_contract(
                     contract_address,
                     selector!("ownerOf"),
