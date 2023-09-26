@@ -59,14 +59,17 @@ let indexer = ArkIndexer::new(storage, client, observer, indexer_args);
 ### Run the indexer
 
 ```rust
-indexer.run(BlockId::Number(START_BLOCK), BlockId::Number(END_BLOCK), FORCE_MODE).await?;
+indexer.run();
 ```
+
+#### Parameters
 
 **start_block**: Specifies the starting block for indexing. In the example, it is provided as BlockId::Number(START_BLOCK). The START_BLOCK is a placeholder and needs to be replaced with the actual starting block number.
 
 **end_block**: Specifies the end block for indexing. In the example, it's given as BlockId::Number(END_BLOCK). The END_BLOCK is a placeholder and should be replaced with the actual ending block number.
 
 **force_mode**: A mode (represented by the placeholder FORCE_MODE) which is likely a boolean or an enumeration. Its specific behavior isn't detailed in the README, but usually "force" modes in software are used to override certain default behaviors or checks.
+
 
 ## Tests
 
