@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::{anyhow, Result};
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use ark_storage::storage_manager::StorageManager;
@@ -6,16 +8,14 @@ use starknet::core::types::*;
 use starknet::macros::selector;
 
 #[derive(Debug)]
-pub struct TokenManager<'a, T: StorageManager> {
-    storage: &'a T,
-    // TODO: Same as event manager, we should use the stack instead.
-    // check with @kwiss.
+pub struct TokenManager<T: StorageManager> {
+    storage: Arc<T>,
     token: TokenFromEvent,
 }
 
-impl<'a, T: StorageManager> TokenManager<'a, T> {
+impl<T: StorageManager> TokenManager<T> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T) -> Self {
+    pub fn new(storage: Arc<T>) -> Self {
         Self {
             storage,
             token: TokenFromEvent::default(),

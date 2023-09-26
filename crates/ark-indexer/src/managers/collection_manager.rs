@@ -1,21 +1,21 @@
 use anyhow::Result;
-use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::StorageError;
 use ark_storage::types::{ContractInfo, ContractType};
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
+use std::sync::Arc;
 
-pub struct CollectionManager<'a, T: StorageManager> {
-    storage: &'a T,
+pub struct CollectionManager<T: StorageManager> {
+    storage: Arc<T>,
     /// A cache with contract address mapped to it's type.
     cache: HashMap<FieldElement, ContractInfo>,
 }
 
-impl<'a, T: StorageManager> CollectionManager<'a, T> {
+impl<T: StorageManager> CollectionManager<T> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T) -> Self {
+    pub fn new(storage: Arc<T>) -> Self {
         Self {
             storage,
             cache: HashMap::new(),
@@ -168,7 +168,7 @@ mod tests {
     use ark_starknet::client::MockStarknetClient;
     use ark_storage::storage_manager::MockStorageManager;
     use mockall::predicate::*;
-    
+
     #[tokio::test]
     async fn test_identify_contract_cached() {
         let storage = MockStorageManager::default();
@@ -187,7 +187,7 @@ mod tests {
             .times(1)
             .returning(move |_| Ok(info.clone()));
 
-        let mut manager = CollectionManager::new(&storage);
+        let manager = CollectionManager::<MockStorageManager>::new(Arc::new(storage));
         let result = manager.identify_contract(&client, FieldElement::ONE).await;
 
         assert_eq!(result.unwrap(), info);
