@@ -4,18 +4,14 @@ pub mod starknet {
     pub use ark_starknet::*;
 }
 
-pub mod nft_indexer {
-    pub use ark_indexer::*;
-}
-
-pub mod nft_storage {
-    pub use ark_storage::*;
-}
-
-pub mod nft_metadata {
+pub mod metadata {
     pub use ark_metadata::*;
 }
 
-pub mod arkchain {
-    pub use arkchain_indexer::*;
+pub mod pontos {
+    pub use pontos::*;
+}
+
+pub mod diri {
+    pub use diri::*;
 }

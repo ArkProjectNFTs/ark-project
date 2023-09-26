@@ -1,10 +1,14 @@
-//! How to use arkchain indexer library.
+//! How to use Diri library.
 //!
-//! Can be run with `cargo run --example arkchain_indexer`.
+//! Can be run with `cargo run --example diri`.
 //!
 use anyhow::Result;
 use arkproject::{
-    arkchain::{storage::*, ArkchainIndexer},
+    diri::{
+        emitter::EventHandler,
+        storage::*,
+        Diri
+    },
     starknet::client::{StarknetClient, StarknetClientHttp},
 };
 use async_trait::async_trait;
@@ -15,11 +19,12 @@ use std::sync::Arc;
 async fn main() -> Result<()> {
     let client = StarknetClientHttp::new("http://127.0.0.1:7070").unwrap();
     let storage = DefaultStorage {};
+    let handler = DefaultEventHandler {};
 
     // Here, we can define any logic we want to index blocks range etc..
     // We can then use the same reference across threads to work with only one
     // ArkchainIndexer instance.
-    let indexer = Arc::new(ArkchainIndexer::new(Arc::new(client), Arc::new(storage)));
+    let indexer = Arc::new(Diri::new(Arc::new(client), Arc::new(storage), Arc::new(handler)));
 
     let mut handles = vec![];
 
@@ -43,11 +48,38 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-// Default storate that logs stuff.
+// Default event hanlder.
+struct DefaultEventHandler;
+
+#[async_trait]
+impl EventHandler for DefaultEventHandler {
+    async fn on_block_processed(&self, block_number: u64) {
+        println!("event: block processed {:?}", block_number);        
+    }
+
+    async fn on_broker_registered(&self, broker: BrokerData) {
+        // do nothing.
+    }
+
+    async fn on_order_listing_added(&self, order: OrderListingData) {
+        println!("event: order listing added {:?}", order);
+    }
+
+    async fn on_order_buy_executed(&self, order: OrderBuyExecutingData) {
+        println!("event: order buy executed {:?}", order);
+    }
+
+    async fn on_order_finalized(&self, order: OrderFinalizedData) {
+        println!("event: order finalized {:?}", order);
+    }
+}
+
+
+// Default storage that logs stuff, implementing the Storage trait.
 struct DefaultStorage;
 
 #[async_trait]
-impl ArkchainStorage for DefaultStorage {
+impl Storage for DefaultStorage {
     async fn register_broker(&self, broker: BrokerData) -> StorageResult<()> {
         println!("\n*** register broker\n{:?}", broker);
         Ok(())

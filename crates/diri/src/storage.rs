@@ -13,7 +13,7 @@ pub enum StorageError {
 }
 
 #[async_trait]
-pub trait ArkchainStorage {
+pub trait Storage {
     /// Registers a broker.
     async fn register_broker(&self, broker: BrokerData) -> StorageResult<()>;
 
@@ -31,7 +31,7 @@ pub trait ArkchainStorage {
     async fn set_order_finalized(&self, order: OrderFinalizedData) -> StorageResult<()>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrokerData {
     pub name: FieldElement,
     pub chain_id: FieldElement,
@@ -39,7 +39,7 @@ pub struct BrokerData {
     pub public_key: FieldElement,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OrderListingData {
     pub order_hash: FieldElement,
     pub broker_name: FieldElement,
@@ -51,7 +51,7 @@ pub struct OrderListingData {
     pub price: CairoU256,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OrderBuyExecutingData {
     pub order_hash: FieldElement,
     pub broker_name: FieldElement,
@@ -60,7 +60,7 @@ pub struct OrderBuyExecutingData {
     pub buyer: FieldElement,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OrderFinalizedData {
     pub order_hash: FieldElement,
     pub timestamp: u64,

@@ -1,5 +1,5 @@
 [package]
-name = "ark-indexer"
+name = "pontos"
 version = "0.1.0"
 edition = "2021"
 
@@ -15,10 +15,8 @@ anyhow.workspace = true
 tokio.workspace = true
 ark-starknet.workspace = true
 ark-metadata.workspace = true
-ark-storage.workspace = true
 starknet.workspace = true
 
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }
-ark-storage = { path = "../ark-storage", features = ["mock"] }
 mockall = "0.11.4"

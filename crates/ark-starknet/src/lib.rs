@@ -3,7 +3,7 @@ pub mod format;
 
 use num_bigint::BigUint;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CairoU256 {
     pub low: u128,
     pub high: u128,

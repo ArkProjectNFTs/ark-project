@@ -1,18 +1,18 @@
 pub mod storage;
+use storage::*;
+
+pub mod event_handler;
+use event_handler::EventHandler;
 
 use std::sync::Arc;
-
 use log::{debug, trace};
 use starknet::core::types::{BlockId, FieldElement};
 use starknet::macros::selector;
-
 use ark_starknet::{
     client::{StarknetClient, StarknetClientHttp},
     format::felt_to_hex_str,
     CairoU256,
 };
-
-use storage::*;
 
 // Those events must match the one implemented in the Orderbook (on the arkchain).
 const EV_BROKER_REGISTERED: FieldElement = selector!("BrokerRegistered");
@@ -45,17 +45,19 @@ impl From<StorageError> for IndexerError {
     }
 }
 
-pub struct ArkchainIndexer<S: ArkchainStorage> {
+pub struct Diri<S: Storage, E: EventHandler> {
     client: Arc<StarknetClientHttp>,
     storage: Arc<S>,
+    event_handler: Arc<E>,
 }
 
-impl<S: ArkchainStorage> ArkchainIndexer<S> {
+impl<S: Storage, E: EventHandler> Diri<S, E> {
     ///
-    pub fn new(client: Arc<StarknetClientHttp>, storage: Arc<S>) -> Self {
-        ArkchainIndexer {
+    pub fn new(client: Arc<StarknetClientHttp>, storage: Arc<S>, event_handler: Arc<E>) -> Self {
+        Diri {
             client: Arc::clone(&client),
             storage: Arc::clone(&storage),
+            event_handler: Arc::clone(&event_handler),
         }
     }
 
@@ -87,27 +89,33 @@ impl<S: ArkchainStorage> ArkchainIndexer<S> {
                 if e_selector == EV_BROKER_REGISTERED {
                     debug!("Broker register event");
                     if let Some(d) = get_broker_data(&ev.keys, &ev.data) {
-                        self.storage.register_broker(d).await?;
+                        self.storage.register_broker(d.clone()).await?;
+                        self.event_handler.on_broker_registered(d).await;
                     }
                 } else if e_selector == EV_ORDER_LISTING_ADDED {
                     debug!("Add order listing event");
                     if let Some(d) = get_order_listing_data(&ev.keys, &ev.data) {
-                        self.storage.add_listing_order(d).await?;
+                        self.storage.add_listing_order(d.clone()).await?;
+                        self.event_handler.on_order_listing_added(d).await;
                     }
                 } else if e_selector == EV_ORDER_BUY_EXECUTING {
                     debug!("Order buy executing");
                     if let Some(d) = get_order_buy_data(&ev.keys, &ev.data) {
-                        self.storage.set_order_buy_executing(d).await?;
+                        self.storage.set_order_buy_executing(d.clone()).await?;
+                        self.event_handler.on_order_buy_executed(d).await;
                     }
                 } else if e_selector == EV_ORDER_BUY_FINALIZED {
                     debug!("Order finalized");
                     if let Some(d) = get_order_finalized_data(&ev.keys, &ev.data) {
-                        self.storage.set_order_finalized(d).await?;
+                        self.storage.set_order_finalized(d.clone()).await?;
+                        self.event_handler.on_order_finalized(d).await;
                     }
                 } else {
                     unreachable!();
                 }
             }
+
+            self.event_handler.on_block_processed(block_number).await;
         }
 
         Ok(())

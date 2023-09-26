@@ -1,7 +1,7 @@
 # ark-rs 🦀
 
 ## Overview
-Rust library related to the ArkProject.
+Rust libraries and binaries related to the ArkProject.
 
 This library aims at providing the building block
 and functionalities for the Starknet community in
