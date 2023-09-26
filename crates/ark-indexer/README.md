@@ -62,13 +62,13 @@ let indexer = ArkIndexer::new(storage, client, observer, indexer_args);
 indexer.run(/* parameters */);
 ```
 
-#### Parameters
 
-**from_block**: Specifies the starting block for indexing.
+| Parameter   | Description                                                                                       |
+|-------------|---------------------------------------------------------------------------------------------------|
+| `from_block`| Specifies the starting block for indexing.                                                        |
+| `to_block`  | Specifies the end block for indexing.                                                             |
+| `force_mode`| A binary flag for forceful re-indexing. By default, cached blocks are skipped from re-processing. |
 
-**to_block**: Specifies the end block for indexing.
-
-**force_mode**: A binary flag that dictates whether to forcibly re-index. By default, previously indexed blocks are cached and not processed again.
 
 
 ## Tests
