@@ -23,7 +23,7 @@ impl<T: StorageManager, C: StarknetClient> EventManager<T, C> {
         EventManager {
             storage,
             token_event: TokenEvent::default(),
-            client
+            client,
         }
     }
 
@@ -146,7 +146,7 @@ mod tests {
 
     // #[tokio::test]
     // async fn test_format_event_successfully() {
-    
+
     //     let client = Arc::new(MockStarknetClient::default());
     //     let storage = Arc::new(MockStorageManager::default());
     //     let mut manager = EventManager::new(Arc::clone(&storage), Arc::clone(&client));

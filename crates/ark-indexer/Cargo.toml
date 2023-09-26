@@ -16,6 +16,7 @@ ark-starknet.workspace = true
 ark-metadata.workspace = true
 ark-storage.workspace = true
 starknet.workspace = true
+async-trait.workspace = true
 
 [dev-dependencies]
 ark-storage = { path = "../ark-storage", features = ["mock"] }

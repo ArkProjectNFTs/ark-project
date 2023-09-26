@@ -109,6 +109,7 @@ dependencies = [
  "ark-metadata",
  "ark-starknet",
  "ark-storage",
+ "async-trait",
  "dotenv",
  "log",
  "mockall",

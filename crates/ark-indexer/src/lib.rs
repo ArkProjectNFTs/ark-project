@@ -4,6 +4,7 @@ use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::ContractType;
 use ark_storage::types::StorageError;
+use async_trait::async_trait;
 use managers::{CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::sync::Arc;
@@ -29,12 +30,28 @@ fn init_tracing() {
     let _main_guard = main_span.enter();
 }
 
-pub struct ArkIndexer<T: StorageManager, C: StarknetClient> {
-    client: Arc<C>,
-    storage: Arc<T>,
-    event_manager: EventManager<T, C>,
-    collection_manager: CollectionManager<T, C>,
-    token_manager: TokenManager<T, C>,
+#[async_trait]
+pub trait IndexerObserver {
+    fn notify_status(&self, progression: u64, status: String);
+}
+
+#[derive(Default)]
+pub struct DefaultIndexerObserver {}
+
+#[async_trait]
+impl IndexerObserver for DefaultIndexerObserver {
+    fn notify_status(&self, progression: u64, status: String) {
+        println!("Progression changed: {}", progression);
+    }
+}
+
+pub struct ArkIndexer<A: StorageManager, B: StarknetClient, C: IndexerObserver> {
+    client: Arc<B>,
+    storage: Arc<A>,
+    observer: Arc<C>,
+    event_manager: EventManager<A, B>,
+    collection_manager: CollectionManager<A, B>,
+    token_manager: TokenManager<A, B>,
     indexer_version: u64,
     indexer_identifier: String,
 }
@@ -44,11 +61,12 @@ pub struct ArkIndexerArgs {
     pub indexer_identifier: String,
 }
 
-impl<T: StorageManager, C: StarknetClient> ArkIndexer<T, C> {
-    pub fn new(storage: Arc<T>, client: Arc<C>, args: ArkIndexerArgs) -> Self {
+impl<A: StorageManager, B: StarknetClient, C: IndexerObserver> ArkIndexer<A, B, C> {
+    pub fn new(storage: Arc<A>, client: Arc<B>, observer: Arc<C>, args: ArkIndexerArgs) -> Self {
         Self {
             client: Arc::clone(&client),
             storage: Arc::clone(&storage),
+            observer: Arc::clone(&observer),
             event_manager: EventManager::new(Arc::clone(&storage), Arc::clone(&client)),
             collection_manager: CollectionManager::new(Arc::clone(&storage), Arc::clone(&client)),
             token_manager: TokenManager::new(Arc::clone(&storage), Arc::clone(&client)),
@@ -58,7 +76,7 @@ impl<T: StorageManager, C: StarknetClient> ArkIndexer<T, C> {
     }
 
     pub async fn run(
-        &mut self,
+        &self,
         from_block: BlockId,
         to_block: BlockId,
         force_mode: bool,
@@ -68,7 +86,8 @@ impl<T: StorageManager, C: StarknetClient> ArkIndexer<T, C> {
         let mut to_u64 = self.client.block_id_to_u64(&to_block).await?;
 
         while current_u64 <= to_u64 {
-            log::trace!("Indexing block: {} {}", current_u64, to_u64);
+            let _ = self.observer.notify_status(current_u64, String::from("running"));
+
             to_u64 = self
                 .check_range(current_u64, to_u64, is_head_of_chain)
                 .await;
@@ -83,7 +102,7 @@ impl<T: StorageManager, C: StarknetClient> ArkIndexer<T, C> {
         Ok(())
     }
 
-    async fn process_block(&mut self, block_number: u64) -> Result<()> {
+    async fn process_block(&self, block_number: u64) -> Result<()> {
         let block_ts = self
             .client
             .block_time(BlockId::Number(block_number))
@@ -106,7 +125,7 @@ impl<T: StorageManager, C: StarknetClient> ArkIndexer<T, C> {
         Ok(())
     }
 
-    async fn process_event(&mut self, event: &EmittedEvent, block_ts: u64) -> Result<()> {
+    async fn process_event(&self, event: &EmittedEvent, block_ts: u64) -> Result<()> {
         let contract_address = event.from_address;
         let contract_info = self
             .collection_manager
