@@ -15,7 +15,7 @@ Ensure you have the latest stable version of Rust installed.
 
 ## **Installation**
 
-Embed `ArkIndexer` into your Rust project by updating your `Cargo.toml`:
+Embed `ark-rs` into your Rust project by updating your `Cargo.toml`:
 
 ```toml
 [dependencies]
