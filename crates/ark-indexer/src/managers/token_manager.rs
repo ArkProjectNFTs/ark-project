@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
-use ark_starknet::client::{StarknetClient, StarknetClientHttp};
+use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenFromEvent};
 use starknet::core::types::*;
