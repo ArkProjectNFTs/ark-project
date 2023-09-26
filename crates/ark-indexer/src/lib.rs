@@ -91,7 +91,7 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
                     }
                 };
 
-                match token_manager.format_token(&token_event).await {
+                match token_manager.format_and_register_token(&token_event).await {
                     Ok(()) => (),
                     Err(err) => {
                         log::error!("Can't format token {:?}\ntevent: {:?}", err, token_event);

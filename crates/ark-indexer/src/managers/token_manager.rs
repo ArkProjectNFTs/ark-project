@@ -23,33 +23,12 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
     }
 
     /// Formats a token registry from the token event data.
-    pub async fn format_token(&mut self, event: &TokenEvent) -> Result<()> {
+    pub async fn format_and_register_token(&mut self, event: &TokenEvent) -> Result<()> {
         self.reset_token();
 
         self.token.address = event.contract_address.clone();
         self.token.token_id = event.token_id.clone();
         self.token.formated_token_id = event.formated_token_id.clone();
-        self.token.mint_address = if event.event_type == EventType::Mint {
-            Some(event.to_address_field_element)
-        } else {
-            None
-        };
-        self.token.mint_timestamp = if event.event_type == EventType::Mint {
-            Some(event.timestamp)
-        } else {
-            None
-        };
-        self.token.mint_transaction_hash = if event.event_type == EventType::Mint {
-            Some(event.transaction_hash.clone())
-        } else {
-            None
-        };
-        self.token.mint_block_number = if event.event_type == EventType::Mint {
-            Some(event.block_number)
-        } else {
-            None
-        };
-
         let token_owner = self
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)
@@ -58,10 +37,13 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
                 event.token_id.high,
             )
             .await?[0];
-
         self.token.owner = format!("{:#064x}", token_owner);
 
         if event.event_type == EventType::Mint {
+            self.token.mint_address = Some(event.to_address_field_element);
+            self.token.mint_timestamp = Some(event.timestamp);
+            self.token.mint_transaction_hash = Some(event.transaction_hash.clone());
+            self.token.mint_block_number = Some(event.block_number);
             self.storage
                 .register_mint(&self.token, event.block_number)
                 .await?;
@@ -70,8 +52,8 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
                 .register_token(&self.token, event.block_number)
                 .await?;
         }
-
         Ok(())
+
     }
 
     /// Resets the token registry.
