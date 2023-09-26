@@ -8,26 +8,24 @@ use starknet::core::types::*;
 use starknet::macros::selector;
 
 #[derive(Debug)]
-pub struct TokenManager<T: StorageManager> {
+pub struct TokenManager<T: StorageManager, C: StarknetClient> {
     storage: Arc<T>,
     token: TokenFromEvent,
+    client: Arc<C>,
 }
 
-impl<T: StorageManager> TokenManager<T> {
+impl<T: StorageManager, C: StarknetClient> TokenManager<T, C> {
     /// Initializes a new instance.
-    pub fn new(storage: Arc<T>) -> Self {
+    pub fn new(storage: Arc<T>, client: Arc<C>) -> Self {
         Self {
             storage,
             token: TokenFromEvent::default(),
+            client,
         }
     }
 
     /// Formats a token registry from the token event data.
-    pub async fn format_token(
-        &mut self,
-        client: &StarknetClientHttp,
-        event: &TokenEvent,
-    ) -> Result<()> {
+    pub async fn format_token(&mut self, event: &TokenEvent) -> Result<()> {
         self.reset_token();
 
         self.token.address = event.contract_address.clone();
@@ -50,7 +48,6 @@ impl<T: StorageManager> TokenManager<T> {
         // or do we want to return an error and abort before saving in the storage?
         let token_owner = self
             .get_token_owner(
-                client,
                 FieldElement::from_hex_be(&event.contract_address)
                     .expect("Contract address bad format"),
                 event.token_id.low,
@@ -86,14 +83,14 @@ impl<T: StorageManager> TokenManager<T> {
     /// Retrieves the token owner for the last block.
     pub async fn get_token_owner(
         &self,
-        client: &StarknetClientHttp,
         contract_address: FieldElement,
         token_id_low: FieldElement,
         token_id_high: FieldElement,
     ) -> Result<Vec<FieldElement>> {
         let block = BlockId::Tag(BlockTag::Latest);
 
-        match client
+        match self
+            .client
             .call_contract(
                 contract_address,
                 selector!("owner_of"),
@@ -103,7 +100,8 @@ impl<T: StorageManager> TokenManager<T> {
             .await
         {
             Ok(res) => Ok(res),
-            Err(_) => client
+            Err(_) => self
+                .client
                 .call_contract(
                     contract_address,
                     selector!("ownerOf"),

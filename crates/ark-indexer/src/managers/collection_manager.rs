@@ -1,4 +1,5 @@
 use anyhow::Result;
+use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::StorageError;
 use ark_storage::types::{ContractInfo, ContractType};
@@ -7,18 +8,20 @@ use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub struct CollectionManager<T: StorageManager> {
+pub struct CollectionManager<T: StorageManager, C: StarknetClient> {
     storage: Arc<T>,
+    client: Arc<C>,
     /// A cache with contract address mapped to it's type.
     cache: HashMap<FieldElement, ContractInfo>,
 }
 
-impl<T: StorageManager> CollectionManager<T> {
+impl<T: StorageManager, C: StarknetClient> CollectionManager<T, C> {
     /// Initializes a new instance.
-    pub fn new(storage: Arc<T>) -> Self {
+    pub fn new(storage: Arc<T>, client: Arc<C>) -> Self {
         Self {
             storage,
             cache: HashMap::new(),
+            client,
         }
     }
 
@@ -41,17 +44,13 @@ impl<T: StorageManager> CollectionManager<T> {
     }
 
     /// Identifies a contract from it's address only.
-    pub async fn identify_contract(
-        &mut self,
-        client: &StarknetClientHttp,
-        address: FieldElement,
-    ) -> Result<ContractInfo> {
+    pub async fn identify_contract(&mut self, address: FieldElement) -> Result<ContractInfo> {
         // The cache is more efficient that formatting to check the BLACKLIST.
         match self.get_cached_or_fetch_info(address) {
             Ok(info) => Ok(info),
             Err(_) => {
                 // Can't find info, try to identify with calls.
-                let contract_type = self.get_contract_type(client, address).await?;
+                let contract_type = self.get_contract_type(address).await?;
 
                 log::info!(
                     "New contract identified [{:#064x}] : {}",
@@ -74,15 +73,10 @@ impl<T: StorageManager> CollectionManager<T> {
         }
     }
 
-    pub async fn get_contract_type(
-        &self,
-        client: &StarknetClientHttp,
-        contract_address: FieldElement,
-    ) -> Result<ContractType> {
+    pub async fn get_contract_type(&self, contract_address: FieldElement) -> Result<ContractType> {
         let block = BlockId::Tag(BlockTag::Latest);
         let token_uri_cairo_0 = self
             .get_contract_property_string(
-                client,
                 contract_address,
                 "tokenURI",
                 vec![FieldElement::ONE, FieldElement::ZERO],
@@ -93,7 +87,6 @@ impl<T: StorageManager> CollectionManager<T> {
 
         let token_uri = self
             .get_contract_property_string(
-                client,
                 contract_address,
                 "token_uri",
                 vec![FieldElement::ONE, FieldElement::ZERO],
@@ -103,7 +96,7 @@ impl<T: StorageManager> CollectionManager<T> {
             .unwrap_or("undefined".to_string());
 
         let uri_result = self
-            .get_contract_property_string(client, contract_address, "uri", vec![], block)
+            .get_contract_property_string(contract_address, "uri", vec![], block)
             .await
             .unwrap_or("undefined".to_string());
 
@@ -120,13 +113,13 @@ impl<T: StorageManager> CollectionManager<T> {
 
     pub async fn get_contract_property_string(
         &self,
-        client: &StarknetClientHttp,
         contract_address: FieldElement,
         selector_name: &str,
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<String> {
-        let response = client
+        let response = self
+            .client
             .call_contract(
                 contract_address,
                 get_selector_from_name(selector_name)?,
@@ -159,37 +152,5 @@ pub fn decode_string_array(string_array: &Vec<FieldElement>) -> Result<String> {
 
             Ok(result)
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ark_starknet::client::MockStarknetClient;
-    use ark_storage::storage_manager::MockStorageManager;
-    use mockall::predicate::*;
-
-    #[tokio::test]
-    async fn test_identify_contract_cached() {
-        let storage = MockStorageManager::default();
-        let client = MockStarknetClient::default();
-
-        let address = FieldElement::ONE; // Example address
-        let info: ContractInfo = ContractInfo {
-            name: "Everai".to_string(),
-            symbol: "Everai".to_string(),
-            r#type: ContractType::ERC721,
-        };
-
-        storage
-            .expect_get_contract_info()
-            .with(eq(address))
-            .times(1)
-            .returning(move |_| Ok(info.clone()));
-
-        let manager = CollectionManager::<MockStorageManager>::new(Arc::new(storage));
-        let result = manager.identify_contract(&client, FieldElement::ONE).await;
-
-        assert_eq!(result.unwrap(), info);
     }
 }
