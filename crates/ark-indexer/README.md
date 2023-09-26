@@ -22,6 +22,14 @@ Add the following to your `Cargo.toml`:
 ark-rs = "0.1.0"
 ```
 
+### Example
+
+ℹ️ **For the best demonstration on how to launch the indexer, please refer to the sample file located at [examples/nft_indexer.rs](/examples/nft_indexer.rs) in the repository.**
+
+```bash
+cargo run --example nft_indexer
+```
+
 ## Quick Start
 
 Import Necessary Modules:
