@@ -15,3 +15,7 @@ pub mod nft_storage {
 pub mod nft_metadata {
     pub use ark_metadata::*;
 }
+
+pub mod arkchain {
+    pub use arkchain_indexer::*;
+}

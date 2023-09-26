@@ -1,4 +1,5 @@
 pub mod client;
+pub mod format;
 
 use num_bigint::BigUint;
 

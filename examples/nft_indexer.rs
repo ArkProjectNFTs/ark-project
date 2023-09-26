@@ -3,9 +3,7 @@
 //! Can be run with `cargo run --example nft_indexer`.
 //!
 use anyhow::Result;
-use ark_rs::nft_storage::DefaultStorage;
-// use ark_storage::DefaultStorage;
-// use ark_indexer;
+use arkproject::nft_storage::DefaultStorage;
 
 #[tokio::main]
 async fn main() -> Result<()> {

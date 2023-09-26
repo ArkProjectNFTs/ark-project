@@ -1,5 +1,5 @@
 [package]
-name = "ark-rs"
+name = "arkproject"
 version = "0.1.0"
 edition = "2021"
 resolver = "2"
@@ -19,6 +19,8 @@ members = [
   "crates/ark-starknet",
   "crates/ark-storage",
   "crates/ark-indexer",
+  "crates/ark-chain/solis",
+  "crates/ark-chain/indexer",
   "crates/ark-prisma-cli",
 ]
 
@@ -27,21 +29,33 @@ ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
 ark-storage = { path = "./crates/ark-storage" }
 ark-indexer = { path = "./crates/ark-indexer" }
+arkchain-indexer = { path = "./crates/ark-chain/indexer" }
 async-trait = "0.1.73"
 starknet = "0.5.0"
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
+log = "0.4.17"
 
 # Thoses dependencies are used by the examples + the lib.rs.
 [dependencies]
+futures = "0.3.28"
+async-trait.workspace = true
+log.workspace = true
 anyhow.workspace = true
 tokio.workspace = true
 ark-starknet.workspace = true
 ark-metadata.workspace = true
 ark-storage.workspace = true
 ark-indexer.workspace = true
+arkchain-indexer.workspace = true
 starknet.workspace = true
-async-trait.workspace = true
+
+[patch."https://github.com/starkware-libs/blockifier"]
+blockifier = { git = "https://github.com/dojoengine/blockifier", rev = "c794d1b" }
+
+[patch.crates-io]
+cairo-felt = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "262b7eb4b11ab165a2a936a5f914e78aa732d4a2" }
+cairo-vm = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "262b7eb4b11ab165a2a936a5f914e78aa732d4a2" }
 
 [dev-dependencies]
 mockall = "0.11.4"
