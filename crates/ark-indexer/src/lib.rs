@@ -86,7 +86,9 @@ impl<A: StorageManager, B: StarknetClient, C: IndexerObserver> ArkIndexer<A, B, 
         let mut to_u64 = self.client.block_id_to_u64(&to_block).await?;
 
         while current_u64 <= to_u64 {
-            let _ = self.observer.notify_status(current_u64, String::from("running"));
+            let _ = self
+                .observer
+                .notify_status(current_u64, String::from("running"));
 
             to_u64 = self
                 .check_range(current_u64, to_u64, is_head_of_chain)
