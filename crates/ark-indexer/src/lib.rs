@@ -3,7 +3,7 @@ mod managers;
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::ContractType;
+use ark_storage::types::{BlockIndexingStatus, ContractType};
 use dotenv::dotenv;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
@@ -30,16 +30,22 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
     let mut to_u64 = sn_client.block_id_to_u64(&to_block).await?;
 
     loop {
-        log::trace!("Indexing block: {} {}", current_u64, to_u64);
+        log::trace!("Indexing block range: {} {}", current_u64, to_u64);
 
         to_u64 = check_range(&sn_client, current_u64, to_u64, poll_head_of_chain).await;
         if current_u64 > to_u64 {
             continue;
         }
 
-        if !block_manager.check_candidate(current_u64) {
+        if !block_manager.check_candidate(current_u64).await {
+            current_u64 += 1;
             continue;
         }
+
+        // Set block as pending
+        block_manager
+            .set_block_info(current_u64, BlockIndexingStatus::Processing)
+            .await?;
 
         let block_ts = sn_client.block_time(BlockId::Number(current_u64)).await?;
 
@@ -55,32 +61,37 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
             for e in events {
                 let contract_address = e.from_address;
 
-                let contract_info =
-                    match collection_manager.identify_contract(contract_address).await {
-                        Ok(info) => info,
-                        Err(e) => {
-                            log::error!("Can't identify contract {contract_address}: {:?}", e);
-                            continue;
-                        }
-                    };
+                let contract_type = match collection_manager
+                    .identify_contract(contract_address, current_u64)
+                    .await
+                {
+                    Ok(info) => info,
+                    Err(e) => {
+                        log::error!(
+                            "Error while identifying contract {}: {:?}",
+                            contract_address,
+                            e
+                        );
+                        continue;
+                    }
+                };
 
-                let contract_type = contract_info.r#type;
                 if contract_type == ContractType::Other {
                     continue;
                 }
 
                 let token_event = match event_manager
-                    .format_event(&e, contract_type, block_ts)
+                    .format_and_register_event(&e, contract_type, block_ts)
                     .await
                 {
                     Ok(te) => te,
                     Err(err) => {
-                        log::error!("Can't format event {:?}\nevent: {:?}", err, e);
+                        log::error!("Error while registering event {:?}\n{:?}", err, e);
                         continue;
                     }
                 };
 
-                match token_manager.format_token(&token_event).await {
+                match token_manager.format_and_register_token(&token_event).await {
                     Ok(()) => (),
                     Err(err) => {
                         log::error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
@@ -90,6 +101,10 @@ pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
             }
         }
 
+        block_manager
+            .set_block_info(current_u64, BlockIndexingStatus::Terminated)
+            .await?;
+        // set block as indexed here
         current_u64 += 1;
     }
 }

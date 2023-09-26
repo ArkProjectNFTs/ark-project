@@ -9,8 +9,6 @@ use starknet::macros::selector;
 pub struct TokenManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
     client: &'a C,
-    // TODO: Same as event manager, we should use the stack instead.
-    // check with @kwiss.
     token: TokenFromEvent,
 }
 
@@ -25,27 +23,12 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
     }
 
     /// Formats a token registry from the token event data.
-    pub async fn format_token(&mut self, event: &TokenEvent) -> Result<()> {
+    pub async fn format_and_register_token(&mut self, event: &TokenEvent) -> Result<()> {
         self.reset_token();
 
         self.token.address = event.contract_address.clone();
-        self.token.padded_token_id = event.padded_token_id.clone();
-        self.token.from_address = event.from_address.clone();
-        self.token.to_address = event.to_address.clone();
-        self.token.timestamp = event.timestamp;
-        self.token.mint_transaction_hash = if event.event_type == EventType::Mint {
-            Some(event.transaction_hash.clone())
-        } else {
-            None
-        };
-        self.token.block_number_minted = if event.event_type == EventType::Mint {
-            Some(event.block_number)
-        } else {
-            None
-        };
-
-        // TODO: @kwiss, do we want a default value in case we can't get the token owner?
-        // or do we want to return an error and abort before saving in the storage?
+        self.token.token_id = event.token_id.clone();
+        self.token.formated_token_id = event.formated_token_id.clone();
         let token_owner = self
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)
@@ -54,28 +37,25 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
                 event.token_id.high,
             )
             .await?[0];
-
         self.token.owner = format!("{:#064x}", token_owner);
 
-        log::trace!(
-            "Registering token: {} {}",
-            event.token_id.format().token_id,
-            event.contract_address
-        );
-
-        // TODO: do we need to be atomic for register_token and register_mint?
-        // What is the logic if one of the two fails?
-
         if event.event_type == EventType::Mint {
-            self.storage.register_mint(&self.token)?;
+            self.token.mint_address = Some(event.to_address_field_element);
+            self.token.mint_timestamp = Some(event.timestamp);
+            self.token.mint_transaction_hash = Some(event.transaction_hash.clone());
+            self.token.mint_block_number = Some(event.block_number);
+            self.storage
+                .register_mint(&self.token, event.block_number)
+                .await?;
         } else {
-            self.storage.register_token(&self.token)?;
+            self.storage
+                .register_token(&self.token, event.block_number)
+                .await?;
         }
-
         Ok(())
     }
 
-    ///
+    /// Resets the token registry.
     pub fn reset_token(&mut self) {
         self.token = TokenFromEvent::default();
     }
@@ -111,5 +91,54 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
                 .await
                 .map_err(|_| anyhow!("Failed to get token owner from chain")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ark_starknet::client::MockStarknetClient;
+    use ark_storage::storage_manager::MockStorageManager;
+
+    use super::*;
+
+    #[test]
+    fn test_reset_token() {
+        let mock_storage = MockStorageManager::default();
+        let mock_client = MockStarknetClient::default();
+
+        let mut token_manager = TokenManager::new(&mock_storage, &mock_client);
+
+        // Modify some values
+        token_manager.token.owner = String::from("some_owner");
+
+        token_manager.reset_token();
+
+        assert_eq!(token_manager.token, TokenFromEvent::default());
+    }
+
+    #[tokio::test]
+    async fn test_get_token_owner() {
+        let mock_storage = MockStorageManager::default();
+        let mut mock_client = MockStarknetClient::default();
+
+        let contract_address = FieldElement::from_dec_str("12345").unwrap();
+        let token_id_low = FieldElement::from_dec_str("23456").unwrap();
+        let token_id_high = FieldElement::from_dec_str("34567").unwrap();
+
+        mock_client
+            .expect_call_contract()
+            .returning(|_, _, _, _| Ok(vec![FieldElement::from_dec_str("1").unwrap()]));
+
+        let token_manager = TokenManager::new(&mock_storage, &mock_client);
+
+        let result = token_manager
+            .get_token_owner(contract_address, token_id_low, token_id_high)
+            .await;
+
+        assert!(result.is_ok());
+        let owners = result.unwrap();
+
+        assert_eq!(owners.len(), 1);
+        assert_eq!(owners[0], FieldElement::from_dec_str("1").unwrap());
     }
 }

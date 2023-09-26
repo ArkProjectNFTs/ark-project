@@ -3,12 +3,12 @@
 //! Can be run with `cargo run --example nft_indexer`.
 //!
 use anyhow::Result;
-use arkproject::{nft_indexer, nft_storage::DefaultStorage};
+use arkproject::nft_storage::DefaultStorage;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialized any storage implementing the StorageManager trait.
-    let storage = DefaultStorage::new();
+    let storage = DefaultStorage::new().await?;
 
     // TODO: the node URL can be passed here, we don't
     // have to rely on env variables in deeper libraries.
@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
     // the block ranges.
 
     // Start the indexer using the storage.
-    nft_indexer::main_loop(storage).await?;
+    ark_indexer::main_loop(storage).await?;
 
     Ok(())
 }

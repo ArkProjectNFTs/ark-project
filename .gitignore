@@ -5,3 +5,7 @@ crates/ark-metadata/images/**/*
 
 .env
 .aws
+
+# Prisma
+crates/ark-storage/src/prisma.rs
+*/dev.db
