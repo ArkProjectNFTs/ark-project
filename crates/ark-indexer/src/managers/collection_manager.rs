@@ -1,8 +1,8 @@
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use ark_storage::storage_manager::StorageManager;
+use ark_storage::types::ContractType;
 use ark_storage::types::StorageError;
-use ark_storage::types::{ContractInfo, ContractType};
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
@@ -10,8 +10,8 @@ use std::collections::HashMap;
 pub struct CollectionManager<'a, T: StorageManager, C: StarknetClient> {
     storage: &'a T,
     client: &'a C,
-    /// A cache with contract address mapped to it's type.
-    cache: HashMap<FieldElement, ContractInfo>,
+    /// A cache with contract address mapped to its type.
+    cache: HashMap<FieldElement, ContractType>,
 }
 
 impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
@@ -25,28 +25,31 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
     }
 
     /// Gets the contract info from local cache, or fetch is from the DB.
-    fn get_cached_or_fetch_info(
+    async fn get_cached_or_fetch_info(
         &mut self,
         address: FieldElement,
-    ) -> Result<ContractInfo, StorageError> {
-        if let Some(info) = self.cache.get(&address) {
-            return Ok(info.clone());
+    ) -> Result<ContractType, StorageError> {
+        if let Some(contract_type) = self.cache.get(&address) {
+            return Ok(contract_type.clone());
         }
 
         log::trace!("Cache miss for contract {}", address);
 
-        let info = self.storage.get_contract_info(&address)?;
+        let contract_type = self.storage.get_contract_type(&address).await?;
 
-        self.cache.insert(address, info.clone()); // Adding to the cache
+        self.cache.insert(address, contract_type.clone()); // Adding to the cache
 
-        Ok(info)
+        Ok(contract_type)
     }
 
-    /// Identifies a contract from it's address only.
-    pub async fn identify_contract(&mut self, address: FieldElement) -> Result<ContractInfo> {
-        // The cache is more efficient that formatting to check the BLACKLIST.
-        match self.get_cached_or_fetch_info(address) {
-            Ok(info) => Ok(info),
+    /// Identifies a contract from its address only.
+    pub async fn identify_contract(
+        &mut self,
+        address: FieldElement,
+        block_number: u64,
+    ) -> Result<ContractType> {
+        match self.get_cached_or_fetch_info(address).await {
+            Ok(contract_type) => Ok(contract_type),
             Err(_) => {
                 // Can't find info, try to identify with calls.
                 let contract_type = self.get_contract_type(address).await?;
@@ -57,17 +60,13 @@ impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
                     contract_type.to_string()
                 );
 
-                let info = ContractInfo {
-                    name: String::new(),
-                    symbol: String::new(),
-                    r#type: contract_type,
-                };
+                self.cache.insert(address, contract_type.clone());
 
-                self.cache.insert(address, info.clone());
+                self.storage
+                    .register_contract_info(&address, &contract_type, block_number)
+                    .await?;
 
-                self.storage.register_contract_info(&address, &info)?;
-
-                Ok(info)
+                Ok(contract_type)
             }
         }
     }

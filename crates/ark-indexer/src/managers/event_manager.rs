@@ -4,6 +4,7 @@ use ark_storage::storage_manager::StorageManager;
 use ark_storage::types::{EventType, TokenEvent, TokenId};
 use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
+use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
 
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
@@ -28,10 +29,9 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         Some(vec![vec![TRANSFER_SELECTOR]])
     }
 
-    /// Formats a token event based on the event content.
-    /// Returns the token_id if the event were identified,
-    /// an Err otherwise.
-    pub async fn format_event(
+    /// Formats & register a token event based on the event content.
+    /// Returns the token_id if the event were identified.
+    pub async fn format_and_register_event(
         &mut self,
         event: &EmittedEvent,
         contract_type: ContractType,
@@ -47,16 +47,11 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         } else if let Some(k_info) = Self::get_event_info_from_felts(&event.keys[1..]) {
             k_info
         } else {
-            log::warn!("Can't find event data into this event");
-            return Err(anyhow!("Can't format event"));
+            return Err(anyhow!("Can't find event data into this event"));
         };
 
         let (from, to, token_id) = event_info;
 
-        // TODO: why do we need this entry 2 times for the felt and the string?
-        // TODO move that to storage
-        // self.token_event.from_address = format!("{:#064x}", from);
-        // self.token_event.to_address = format!("{:#064x}", to);
         self.token_event.from_address_field_element = from;
         self.token_event.to_address_field_element = to;
         self.token_event.contract_address = format!("{:#064x}", event.from_address);
@@ -67,10 +62,12 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         self.token_event.timestamp = timestamp;
         self.token_event.contract_type = contract_type.to_string();
         self.token_event.event_type = Self::get_event_type(from, to);
+        self.token_event.event_id = self.get_event_id_as_field_element();
 
         info!("Event identified: {:?}", self.token_event.event_type);
-
-        self.storage.register_event(&self.token_event)?;
+        self.storage
+            .register_event(&self.token_event, event.block_number)
+            .await?;
 
         Ok(self.token_event.clone())
     }
@@ -83,6 +80,19 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
         } else {
             EventType::Transfer
         }
+    }
+
+    /// Returns the event id as a field element.
+    pub fn get_event_id_as_field_element(&self) -> FieldElement {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&self.token_event.token_id.low.to_bytes_be());
+        bytes.extend_from_slice(&self.token_event.token_id.high.to_bytes_be());
+        bytes.extend_from_slice(&self.token_event.from_address_field_element.to_bytes_be());
+        bytes.extend_from_slice(&self.token_event.to_address_field_element.to_bytes_be());
+        bytes.extend_from_slice(self.token_event.contract_address.as_bytes());
+        bytes.extend_from_slice(self.token_event.transaction_hash.as_bytes());
+        bytes.extend_from_slice(&self.token_event.block_number.to_le_bytes());
+        starknet_keccak(&bytes)
     }
 
     /// Returns the event info from vector of felts.
@@ -109,5 +119,72 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
 
     fn reset_event(&mut self) {
         self.token_event = TokenEvent::default();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_storage::storage_manager::MockStorageManager;
+
+    #[test]
+    fn test_keys_selector() {
+        let mock_storage = MockStorageManager::default();
+        let event_manager = EventManager::new(&mock_storage);
+
+        let selectors = event_manager.keys_selector().unwrap();
+        assert_eq!(selectors[0][0], TRANSFER_SELECTOR);
+    }
+
+    #[test]
+    fn test_get_event_type() {
+        let mint_event = EventManager::<MockStorageManager>::get_event_type(
+            FieldElement::ZERO,
+            FieldElement::from_dec_str("1").unwrap(),
+        );
+        assert_eq!(mint_event, EventType::Mint);
+
+        let burn_event = EventManager::<MockStorageManager>::get_event_type(
+            FieldElement::from_dec_str("1").unwrap(),
+            FieldElement::ZERO,
+        );
+        assert_eq!(burn_event, EventType::Burn);
+
+        let transfer_event = EventManager::<MockStorageManager>::get_event_type(
+            FieldElement::from_dec_str("1").unwrap(),
+            FieldElement::from_dec_str("2").unwrap(),
+        );
+        assert_eq!(transfer_event, EventType::Transfer);
+    }
+
+    #[test]
+    fn test_get_event_info_from_felts() {
+        let felts = vec![
+            FieldElement::from_dec_str("1").unwrap(),
+            FieldElement::from_dec_str("2").unwrap(),
+            FieldElement::from_dec_str("3").unwrap(),
+            FieldElement::from_dec_str("4").unwrap(),
+        ];
+
+        let result = EventManager::<MockStorageManager>::get_event_info_from_felts(&felts);
+
+        assert!(result.is_some());
+        let (field1, field2, token_id) = result.unwrap();
+
+        assert_eq!(field1, FieldElement::from_dec_str("1").unwrap());
+        assert_eq!(field2, FieldElement::from_dec_str("2").unwrap());
+        assert_eq!(token_id.low, FieldElement::from_dec_str("3").unwrap());
+        assert_eq!(token_id.high, FieldElement::from_dec_str("4").unwrap());
+    }
+
+    #[test]
+    fn test_reset_event() {
+        let mock_storage = MockStorageManager::new();
+        let mut manager = EventManager::new(&mock_storage);
+
+        manager.token_event.block_number = 12345;
+        manager.reset_event();
+
+        assert_eq!(manager.token_event, TokenEvent::default());
     }
 }
