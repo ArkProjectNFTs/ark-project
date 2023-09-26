@@ -1,6 +1,6 @@
+use crate::storage::storage_manager::StorageManager;
+use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use ark_starknet::client::StarknetClient;
-use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use starknet::core::types::*;
 
 use std::env;
@@ -95,11 +95,11 @@ impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
 
 #[cfg(test)]
 mod tests {
-    use ark_starknet::client::MockStarknetClient;
-    use ark_storage::{
+    use crate::storage::{
         storage_manager::MockStorageManager,
         types::{BlockIndexingStatus, BlockInfo},
     };
+    use ark_starknet::client::MockStarknetClient;
 
     use super::*;
 

@@ -4,15 +4,15 @@ use storage::*;
 pub mod event_handler;
 use event_handler::EventHandler;
 
-use std::sync::Arc;
-use log::{debug, trace};
-use starknet::core::types::{BlockId, FieldElement};
-use starknet::macros::selector;
 use ark_starknet::{
     client::{StarknetClient, StarknetClientHttp},
     format::felt_to_hex_str,
     CairoU256,
 };
+use log::{debug, trace};
+use starknet::core::types::{BlockId, FieldElement};
+use starknet::macros::selector;
+use std::sync::Arc;
 
 // Those events must match the one implemented in the Orderbook (on the arkchain).
 const EV_BROKER_REGISTERED: FieldElement = selector!("BrokerRegistered");

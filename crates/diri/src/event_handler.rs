@@ -1,6 +1,6 @@
 //! Trait related to any events that Diri can emit to be handled.
-use async_trait::async_trait;
 use super::storage::*;
+use async_trait::async_trait;
 
 /// A trait to be implemented in order to handle
 /// events emitted by diri, in an external code.

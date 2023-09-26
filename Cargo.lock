@@ -660,7 +660,7 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "regex",
- "sha2",
+ "sha2 0.10.8",
  "time",
  "tracing",
 ]
@@ -694,7 +694,7 @@ dependencies = [
  "md-5",
  "pin-project-lite",
  "sha1",
- "sha2",
+ "sha2 0.10.8",
  "tracing",
 ]
 
@@ -1153,7 +1153,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5353f36341f7451062466f0b755b96ac3a9547e4d7f6b70d603fc721a7d7896"
 dependencies = [
- "sha2",
+ "sha2 0.10.8",
  "tinyvec",
 ]
 
@@ -1896,7 +1896,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "sha2",
+ "sha2 0.10.8",
  "sha3",
  "starknet-crypto 0.5.1",
  "thiserror-no-std",
@@ -2081,7 +2081,7 @@ dependencies = [
  "hmac",
  "k256",
  "serde",
- "sha2",
+ "sha2 0.10.8",
  "thiserror",
 ]
 
@@ -2097,7 +2097,7 @@ dependencies = [
  "once_cell",
  "pbkdf2 0.12.2",
  "rand 0.8.5",
- "sha2",
+ "sha2 0.10.8",
  "thiserror",
 ]
 
@@ -2116,7 +2116,7 @@ dependencies = [
  "ripemd",
  "serde",
  "serde_derive",
- "sha2",
+ "sha2 0.10.8",
  "sha3",
  "thiserror",
 ]
@@ -2555,6 +2555,17 @@ name = "data-encoding"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2e66c9d817f1720209181c316d28635c050fa304f9c79e47a520882661b7308"
+
+[[package]]
+name = "datamodel-renderer"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "base64 0.13.1",
+ "once_cell",
+ "psl",
+ "regex",
+]
 
 [[package]]
 name = "deno_task_shell"
@@ -3087,7 +3098,7 @@ dependencies = [
  "scrypt",
  "serde",
  "serde_json",
- "sha2",
+ "sha2 0.10.8",
  "sha3",
  "thiserror",
  "uuid 0.8.2",
@@ -3351,7 +3362,7 @@ dependencies = [
  "eth-keystore",
  "ethers-core",
  "rand 0.8.5",
- "sha2",
+ "sha2 0.10.8",
  "thiserror",
  "tracing",
 ]
@@ -5022,6 +5033,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "introspection-connector"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "enumflags2",
+ "psl",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "user-facing-errors",
+]
+
+[[package]]
 name = "io-close"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5110,6 +5136,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a38fc24e30fd564ce974c02bf1d337caddff65be6cc4735a1f7eab22a7440f04"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "json-rpc-api-build"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "backtrace",
+ "heck 0.3.3",
+ "serde",
+ "toml 0.5.11",
+]
+
+[[package]]
+name = "jsonrpc-core"
+version = "17.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4467ab6dfa369b69e52bd0692e480c4d117410538526a57a304a0f2250fd95e"
+dependencies = [
+ "futures",
+ "futures-executor",
+ "futures-util",
+ "log",
+ "serde",
+ "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -5234,7 +5286,7 @@ dependencies = [
  "ecdsa",
  "elliptic-curve",
  "once_cell",
- "sha2",
+ "sha2 0.10.8",
  "signature",
 ]
 
@@ -5721,6 +5773,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "migration-connector"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "chrono",
+ "enumflags2",
+ "introspection-connector",
+ "psl",
+ "sha2 0.9.9",
+ "tracing",
+ "tracing-error",
+ "user-facing-errors",
+]
+
+[[package]]
+name = "migration-core"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "enumflags2",
+ "json-rpc-api-build",
+ "jsonrpc-core",
+ "migration-connector",
+ "mongodb-migration-connector",
+ "psl",
+ "serde",
+ "serde_json",
+ "sql-migration-connector",
+ "tokio",
+ "tracing",
+ "tracing-futures",
+ "tracing-subscriber",
+ "url",
+ "user-facing-errors",
+]
+
+[[package]]
 name = "mimalloc"
 version = "0.1.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5864,7 +5955,7 @@ dependencies = [
  "serde_bytes",
  "serde_with 1.14.0",
  "sha-1 0.10.1",
- "sha2",
+ "sha2 0.10.8",
  "socket2 0.4.9",
  "stringprep",
  "strsim",
@@ -5889,6 +5980,47 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "thiserror",
+]
+
+[[package]]
+name = "mongodb-introspection-connector"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "async-trait",
+ "convert_case 0.5.0",
+ "datamodel-renderer",
+ "enumflags2",
+ "futures",
+ "indoc 1.0.9",
+ "introspection-connector",
+ "mongodb",
+ "mongodb-client",
+ "mongodb-schema-describer",
+ "once_cell",
+ "psl",
+ "regex",
+ "serde_json",
+ "thiserror",
+ "user-facing-errors",
+]
+
+[[package]]
+name = "mongodb-migration-connector"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "enumflags2",
+ "futures",
+ "migration-connector",
+ "mongodb",
+ "mongodb-client",
+ "mongodb-introspection-connector",
+ "mongodb-schema-describer",
+ "psl",
+ "serde_json",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -5922,6 +6054,16 @@ dependencies = [
  "tracing-futures",
  "user-facing-errors",
  "uuid 1.4.1",
+]
+
+[[package]]
+name = "mongodb-schema-describer"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "futures",
+ "mongodb",
+ "serde",
 ]
 
 [[package]]
@@ -5984,7 +6126,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha1",
- "sha2",
+ "sha2 0.10.8",
  "smallvec",
  "subprocess",
  "thiserror",
@@ -6559,7 +6701,7 @@ dependencies = [
  "digest 0.10.7",
  "hmac",
  "password-hash",
- "sha2",
+ "sha2 0.10.8",
 ]
 
 [[package]]
@@ -6635,7 +6777,7 @@ checksum = "1df74e9e7ec4053ceb980e7c0c8bd3594e977fde1af91daba9c928e8e8c6708d"
 dependencies = [
  "once_cell",
  "pest",
- "sha2",
+ "sha2 0.10.8",
 ]
 
 [[package]]
@@ -6780,10 +6922,15 @@ dependencies = [
  "anyhow",
  "ark-metadata",
  "ark-starknet",
+ "async-trait",
  "dotenv",
  "futures",
  "log",
  "mockall",
+ "num-bigint",
+ "prisma-client-rust",
+ "serde",
+ "serde_json",
  "starknet 0.5.0",
  "tokio",
  "tracing",
@@ -6821,7 +6968,7 @@ dependencies = [
  "md-5",
  "memchr",
  "rand 0.8.5",
- "sha2",
+ "sha2 0.10.8",
  "stringprep",
 ]
 
@@ -6923,6 +7070,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "prisma-client-rust"
+version = "0.6.8"
+source = "git+https://github.com/Brendonovich/prisma-client-rust?tag=0.6.9#895aac7b33c6b516bc7bee80819db8c3348e674d"
+dependencies = [
+ "base64 0.13.1",
+ "bigdecimal",
+ "chrono",
+ "diagnostics",
+ "dml",
+ "dmmf",
+ "dotenv",
+ "futures",
+ "indexmap 1.9.3",
+ "migration-core",
+ "paste",
+ "prisma-client-rust-macros",
+ "prisma-models",
+ "psl",
+ "query-connector",
+ "query-core",
+ "schema",
+ "serde",
+ "serde-value",
+ "serde_json",
+ "thiserror",
+ "user-facing-errors",
+ "uuid 1.4.1",
+]
+
+[[package]]
 name = "prisma-client-rust-cli"
 version = "0.6.8"
 source = "git+https://github.com/Brendonovich/prisma-client-rust?tag=0.6.9#895aac7b33c6b516bc7bee80819db8c3348e674d"
@@ -6940,6 +7117,17 @@ dependencies = [
  "serde_path_to_error",
  "syn 1.0.109",
  "thiserror",
+]
+
+[[package]]
+name = "prisma-client-rust-macros"
+version = "0.6.8"
+source = "git+https://github.com/Brendonovich/prisma-client-rust?tag=0.6.9#895aac7b33c6b516bc7bee80819db8c3348e674d"
+dependencies = [
+ "convert_case 0.6.0",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -8066,7 +8254,7 @@ dependencies = [
  "hmac",
  "pbkdf2 0.11.0",
  "salsa20",
- "sha2",
+ "sha2 0.10.8",
 ]
 
 [[package]]
@@ -8366,6 +8554,19 @@ checksum = "ae1a47186c03a32177042e55dbc5fd5aee900b8e0069a8d70fba96a9375cd012"
 
 [[package]]
 name = "sha2"
+version = "0.9.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d58a1e1bf39749807d89cf2d98ac2dfa0ff1cb3faa38fbb64dd88ac8013d800"
+dependencies = [
+ "block-buffer 0.9.0",
+ "cfg-if",
+ "cpufeatures",
+ "digest 0.9.0",
+ "opaque-debug",
+]
+
+[[package]]
+name = "sha2"
 version = "0.10.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "793db75ad2bcafc3ffa7c68b215fee268f537982cd901d132f89c6343f3a3dc8"
@@ -8629,6 +8830,62 @@ dependencies = [
 ]
 
 [[package]]
+name = "sql-ddl"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+
+[[package]]
+name = "sql-introspection-connector"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bigdecimal",
+ "datamodel-renderer",
+ "enumflags2",
+ "introspection-connector",
+ "once_cell",
+ "psl",
+ "quaint",
+ "regex",
+ "serde",
+ "serde_json",
+ "sql-schema-describer",
+ "thiserror",
+ "tracing",
+ "tracing-futures",
+ "user-facing-errors",
+]
+
+[[package]]
+name = "sql-migration-connector"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "chrono",
+ "connection-string 0.1.14",
+ "either",
+ "enumflags2",
+ "indoc 1.0.9",
+ "migration-connector",
+ "once_cell",
+ "psl",
+ "quaint",
+ "regex",
+ "serde_json",
+ "sql-ddl",
+ "sql-introspection-connector",
+ "sql-schema-describer",
+ "tokio",
+ "tracing",
+ "tracing-futures",
+ "url",
+ "user-facing-errors",
+ "uuid 1.4.1",
+]
+
+[[package]]
 name = "sql-query-connector"
 version = "0.1.0"
 source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
@@ -8657,6 +8914,26 @@ dependencies = [
  "tracing-opentelemetry",
  "user-facing-errors",
  "uuid 1.4.1",
+]
+
+[[package]]
+name = "sql-schema-describer"
+version = "0.1.0"
+source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
+dependencies = [
+ "async-trait",
+ "bigdecimal",
+ "enumflags2",
+ "indexmap 1.9.3",
+ "indoc 1.0.9",
+ "once_cell",
+ "psl",
+ "quaint",
+ "regex",
+ "serde",
+ "tracing",
+ "tracing-error",
+ "tracing-futures",
 ]
 
 [[package]]
@@ -8808,7 +9085,7 @@ dependencies = [
  "num-integer",
  "num-traits 0.2.16",
  "rfc6979",
- "sha2",
+ "sha2 0.10.8",
  "starknet-crypto-codegen",
  "starknet-curve 0.3.0",
  "starknet-ff",
@@ -8828,7 +9105,7 @@ dependencies = [
  "num-integer",
  "num-traits 0.2.16",
  "rfc6979",
- "sha2",
+ "sha2 0.10.8",
  "starknet-crypto-codegen",
  "starknet-curve 0.4.0",
  "starknet-ff",
@@ -9085,7 +9362,7 @@ dependencies = [
  "semver 1.0.19",
  "serde",
  "serde_json",
- "sha2",
+ "sha2 0.10.8",
  "thiserror",
  "url",
  "zip",
@@ -9644,6 +9921,16 @@ checksum = "0955b8137a1df6f1a2e9a37d8a6656291ff0297c1a97c24e0d8425fe2312f79a"
 dependencies = [
  "once_cell",
  "valuable",
+]
+
+[[package]]
+name = "tracing-error"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d686ec1c0f384b1277f097b2f279a2ecc11afe8c133c1aabf036a27cb4cd206e"
+dependencies = [
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

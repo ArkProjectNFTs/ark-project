@@ -1,13 +1,14 @@
-mod managers;
+pub mod managers;
+pub mod storage;
 
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
-use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::{BlockIndexingStatus, ContractType};
 use dotenv::dotenv;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::env;
+use storage::storage_manager::StorageManager;
+use storage::types::{BlockIndexingStatus, ContractType};
 use tokio::time::{self, Duration};
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};

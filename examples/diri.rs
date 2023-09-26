@@ -4,11 +4,7 @@
 //!
 use anyhow::Result;
 use arkproject::{
-    diri::{
-        emitter::EventHandler,
-        storage::*,
-        Diri
-    },
+    diri::{event_handler::EventHandler, storage::*, Diri},
     starknet::client::{StarknetClient, StarknetClientHttp},
 };
 use async_trait::async_trait;
@@ -24,7 +20,11 @@ async fn main() -> Result<()> {
     // Here, we can define any logic we want to index blocks range etc..
     // We can then use the same reference across threads to work with only one
     // ArkchainIndexer instance.
-    let indexer = Arc::new(Diri::new(Arc::new(client), Arc::new(storage), Arc::new(handler)));
+    let indexer = Arc::new(Diri::new(
+        Arc::new(client),
+        Arc::new(storage),
+        Arc::new(handler),
+    ));
 
     let mut handles = vec![];
 
@@ -54,10 +54,10 @@ struct DefaultEventHandler;
 #[async_trait]
 impl EventHandler for DefaultEventHandler {
     async fn on_block_processed(&self, block_number: u64) {
-        println!("event: block processed {:?}", block_number);        
+        println!("event: block processed {:?}", block_number);
     }
 
-    async fn on_broker_registered(&self, broker: BrokerData) {
+    async fn on_broker_registered(&self, _broker: BrokerData) {
         // do nothing.
     }
 
@@ -73,7 +73,6 @@ impl EventHandler for DefaultEventHandler {
         println!("event: order finalized {:?}", order);
     }
 }
-
 
 // Default storage that logs stuff, implementing the Storage trait.
 struct DefaultStorage;

@@ -1,6 +1,6 @@
-use crate::prisma::PrismaClient;
-use crate::prisma::{block, collection, event, token};
-use crate::types::{
+use crate::storage::prisma::PrismaClient;
+use crate::storage::prisma::{block, collection, event, token};
+use crate::storage::types::{
     BlockIndexing, BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent,
 };
 use crate::StorageManager;

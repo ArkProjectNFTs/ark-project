@@ -1,7 +1,7 @@
+use crate::storage::storage_manager::StorageManager;
+use crate::storage::types::{EventType, TokenEvent, TokenId};
 use crate::ContractType;
 use anyhow::{anyhow, Result};
-use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::{EventType, TokenEvent, TokenId};
 use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::core::utils::starknet_keccak;
@@ -125,7 +125,7 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_storage::storage_manager::MockStorageManager;
+    use crate::storage::storage_manager::MockStorageManager;
 
     #[test]
     fn test_keys_selector() {

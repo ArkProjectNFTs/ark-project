@@ -1,4 +1,4 @@
-use crate::utils::format_token_id;
+use crate::storage::utils::format_token_id;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::FieldElement;
@@ -40,7 +40,7 @@ pub enum EventType {
 }
 
 impl fmt::Display for EventType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             EventType::Mint => write!(f, "mint"),
             EventType::Burn => write!(f, "burn"),

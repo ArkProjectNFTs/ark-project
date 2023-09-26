@@ -1,8 +1,8 @@
+use crate::storage::storage_manager::StorageManager;
+use crate::storage::types::ContractType;
+use crate::storage::types::StorageError;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
-use ark_storage::storage_manager::StorageManager;
-use ark_storage::types::ContractType;
-use ark_storage::types::StorageError;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;

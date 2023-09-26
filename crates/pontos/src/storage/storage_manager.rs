@@ -1,4 +1,4 @@
-use crate::types::{
+use crate::storage::types::{
     BlockIndexing, BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent,
 };
 use async_trait::async_trait;
