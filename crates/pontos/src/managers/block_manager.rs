@@ -95,10 +95,12 @@ mod tests {
 
         let manager = BlockManager {
             storage: Arc::new(mock_storage),
-            indexer_version: 1,
         };
 
-        assert!(manager.check_candidate(1, false).await);
-        assert!(manager.check_candidate(2, false).await);
+        // New version, should update.
+        assert!(manager.check_candidate(1, 2, false).await);
+
+        // Force but same version, should update.
+        assert!(manager.check_candidate(2, 0, true).await);
     }
 }
