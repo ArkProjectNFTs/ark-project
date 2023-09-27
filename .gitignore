@@ -7,5 +7,4 @@ crates/ark-metadata/images/**/*
 .aws
 
 # Prisma
-crates/pontos/src/storage/prisma.rs
 */dev.db

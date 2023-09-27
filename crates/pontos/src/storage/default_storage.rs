@@ -24,7 +24,6 @@ impl DefaultStorage {
 
 // TODO - add indexer version check with @remi
 // TODO - add tests
-
 #[async_trait]
 impl StorageManager for DefaultStorage {
     async fn register_mint(

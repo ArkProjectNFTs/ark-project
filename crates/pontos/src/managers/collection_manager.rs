@@ -6,17 +6,18 @@ use ark_starknet::client::StarknetClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
+use std::sync::Arc;
 
-pub struct CollectionManager<'a, T: StorageManager, C: StarknetClient> {
-    storage: &'a T,
-    client: &'a C,
+pub struct CollectionManager<S: StorageManager, C: StarknetClient> {
+    storage: Arc<S>,
+    client: Arc<C>,
     /// A cache with contract address mapped to its type.
     cache: HashMap<FieldElement, ContractType>,
 }
 
-impl<'a, T: StorageManager, C: StarknetClient> CollectionManager<'a, T, C> {
+impl<S: StorageManager, C: StarknetClient> CollectionManager<S, C> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T, client: &'a C) -> Self {
+    pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
         Self {
             storage,
             client,
