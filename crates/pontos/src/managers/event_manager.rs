@@ -13,7 +13,6 @@ const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
 #[derive(Debug)]
 pub struct EventManager<S: StorageManager> {
     storage: Arc<S>,
-    token_event: TokenEvent,
 }
 
 impl<S: StorageManager> EventManager<S> {
@@ -21,7 +20,6 @@ impl<S: StorageManager> EventManager<S> {
     pub fn new(storage: Arc<S>) -> Self {
         EventManager {
             storage: Arc::clone(&storage),
-            token_event: TokenEvent::default(),
         }
     }
 

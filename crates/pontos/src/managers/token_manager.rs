@@ -23,11 +23,13 @@ impl<S: StorageManager, C: StarknetClient> TokenManager<S, C> {
 
     /// Formats a token registry from the token event data.
     pub async fn format_and_register_token(&self, event: &TokenEvent) -> Result<()> {
-        let mut token = TokenFromEvent::default();
+        let mut token = TokenFromEvent {
+            address: event.contract_address.clone(),
+            token_id: event.token_id.clone(),
+            formated_token_id: event.formated_token_id.clone(),
+            ..Default::default()
+        };
 
-        token.address = event.contract_address.clone();
-        token.token_id = event.token_id.clone();
-        token.formated_token_id = event.formated_token_id.clone();
         let token_owner = self
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)

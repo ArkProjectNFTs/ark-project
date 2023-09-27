@@ -1,18 +1,16 @@
+pub mod event_handler;
 pub mod managers;
 pub mod storage;
-pub mod event_handler;
 
 use anyhow::Result;
-use ark_starknet::client::{StarknetClient, StarknetClientHttp};
-use dotenv::dotenv;
+use ark_starknet::client::StarknetClient;
 use event_handler::EventHandler;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
-use std::env;
 use std::sync::Arc;
 use storage::storage_manager::StorageManager;
-use storage::types::{StorageError, BlockIndexingStatus, ContractType};
-use tokio::sync::{RwLock as AsyncRwLock};
+use storage::types::{BlockIndexingStatus, ContractType, StorageError};
+use tokio::sync::RwLock as AsyncRwLock;
 use tokio::time::{self, Duration};
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
@@ -47,10 +45,9 @@ pub struct PontosConfig {
 
 pub struct Pontos<S: StorageManager, C: StarknetClient, E: EventHandler> {
     client: Arc<C>,
-    storage: Arc<S>,
     event_handler: Arc<E>,
     config: PontosConfig,
-    block_manager: Arc<BlockManager<S, C>>,
+    block_manager: Arc<BlockManager<S>>,
     event_manager: Arc<EventManager<S>>,
     token_manager: Arc<TokenManager<S, C>>,
     collection_manager: Arc<AsyncRwLock<CollectionManager<S, C>>>,
@@ -58,21 +55,28 @@ pub struct Pontos<S: StorageManager, C: StarknetClient, E: EventHandler> {
 
 impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
     ///
-    pub fn new(client: Arc<C>, storage: Arc<S>, event_handler: Arc<E>, config: PontosConfig) -> Self {
+    pub fn new(
+        client: Arc<C>,
+        storage: Arc<S>,
+        event_handler: Arc<E>,
+        config: PontosConfig,
+    ) -> Self {
         init_tracing();
 
         Pontos {
             config,
             client: Arc::clone(&client),
-            storage: Arc::clone(&storage),
             event_handler: Arc::clone(&event_handler),
-            block_manager: Arc::new(BlockManager::new(Arc::clone(&storage), Arc::clone(&client))),
+            block_manager: Arc::new(BlockManager::new(Arc::clone(&storage))),
             event_manager: Arc::new(EventManager::new(Arc::clone(&storage))),
             token_manager: Arc::new(TokenManager::new(Arc::clone(&storage), Arc::clone(&client))),
             // Collection manager has internal cache, so some functions are using `&mut self`.
             // For this reason, we must protect the write operations in order to share
             // the cache with any possible thread using `index_block_range` of this instance.
-            collection_manager: Arc::new(AsyncRwLock::new(CollectionManager::new(Arc::clone(&storage), Arc::clone(&client)))),
+            collection_manager: Arc::new(AsyncRwLock::new(CollectionManager::new(
+                Arc::clone(&storage),
+                Arc::clone(&client),
+            ))),
         }
     }
 
@@ -98,12 +102,18 @@ impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
         loop {
             log::trace!("Indexing block range: {} {}", current_u64, to_u64);
 
-            to_u64 = self.check_range(current_u64, to_u64, is_head_of_chain).await;
+            to_u64 = self
+                .check_range(current_u64, to_u64, is_head_of_chain)
+                .await;
             if current_u64 > to_u64 {
                 continue;
             }
 
-            if !self.block_manager.check_candidate(current_u64, self.config.indexer_version, do_force).await {
+            if !self
+                .block_manager
+                .check_candidate(current_u64, self.config.indexer_version, do_force)
+                .await
+            {
                 current_u64 += 1;
                 continue;
             }
@@ -114,12 +124,14 @@ impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
                     current_u64,
                     self.config.indexer_version,
                     &self.config.indexer_identifier,
-                    BlockIndexingStatus::Processing)
+                    BlockIndexingStatus::Processing,
+                )
                 .await?;
 
             let block_ts = self.client.block_time(BlockId::Number(current_u64)).await?;
 
-            let blocks_events = self.client
+            let blocks_events = self
+                .client
                 .fetch_events(
                     BlockId::Number(current_u64),
                     BlockId::Number(current_u64),
@@ -131,7 +143,8 @@ impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
                 for e in events {
                     let contract_address = e.from_address;
 
-                    let contract_type = match self.collection_manager
+                    let contract_type = match self
+                        .collection_manager
                         .write()
                         .await
                         .identify_contract(contract_address, current_u64)
@@ -152,7 +165,8 @@ impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
                         continue;
                     }
 
-                    let token_event = match self.event_manager
+                    let token_event = match self
+                        .event_manager
                         .format_and_register_event(&e, contract_type, block_ts)
                         .await
                     {
@@ -163,7 +177,11 @@ impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
                         }
                     };
 
-                    match self.token_manager.format_and_register_token(&token_event).await {
+                    match self
+                        .token_manager
+                        .format_and_register_token(&token_event)
+                        .await
+                    {
                         Ok(()) => (),
                         Err(err) => {
                             log::error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
@@ -178,19 +196,23 @@ impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
                     current_u64,
                     self.config.indexer_version,
                     &self.config.indexer_identifier,
-                    BlockIndexingStatus::Terminated)
+                    BlockIndexingStatus::Terminated,
+                )
                 .await?;
+
+            self.event_handler
+                .on_block_processed(
+                    current_u64,
+                    self.config.indexer_version,
+                    &self.config.indexer_identifier,
+                )
+                .await;
 
             current_u64 += 1;
         }
     }
 
-    async fn check_range(
-        &self,
-        current: u64,
-        to: u64,
-        is_head_of_chain: bool,
-    ) -> u64 {
+    async fn check_range(&self, current: u64, to: u64, is_head_of_chain: bool) -> u64 {
         if current >= to {
             if !is_head_of_chain {
                 // TODO: can print some stats here if necessary.

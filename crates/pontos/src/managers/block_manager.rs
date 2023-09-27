@@ -1,27 +1,27 @@
 use crate::storage::storage_manager::StorageManager;
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
-use ark_starknet::client::StarknetClient;
-use starknet::core::types::*;
-use std::env;
 use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct BlockManager<S: StorageManager, C: StarknetClient> {
+pub struct BlockManager<S: StorageManager> {
     storage: Arc<S>,
-    client: Arc<C>,
 }
 
-impl<S: StorageManager, C: StarknetClient> BlockManager<S, C> {
-    pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
+impl<S: StorageManager> BlockManager<S> {
+    pub fn new(storage: Arc<S>) -> Self {
         Self {
             storage: Arc::clone(&storage),
-            client: Arc::clone(&client),
         }
     }
 
     /// Returns true if the given block number must be indexed.
     /// False otherwise.
-    pub async fn check_candidate(&self, block_number: u64, indexer_version: u64, do_force: bool) -> bool {
+    pub async fn check_candidate(
+        &self,
+        block_number: u64,
+        indexer_version: u64,
+        do_force: bool,
+    ) -> bool {
         if do_force {
             return self.storage.clean_block(block_number).await.is_ok();
         }
@@ -63,18 +63,16 @@ impl<S: StorageManager, C: StarknetClient> BlockManager<S, C> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::storage::{
         storage_manager::MockStorageManager,
         types::{BlockIndexingStatus, BlockInfo},
     };
-    use ark_starknet::client::MockStarknetClient;
-    use std::sync::RwLock;
     use std::ops::Deref;
-    use super::*;
+    use std::sync::RwLock;
 
     #[tokio::test]
     async fn test_check_candidate() {
-        let mock_client = MockStarknetClient::default();
         let mut mock_storage = MockStorageManager::default();
 
         mock_storage
@@ -97,7 +95,6 @@ mod tests {
 
         let manager = BlockManager {
             storage: Arc::new(mock_storage),
-            client: Arc::new(mock_client),
             indexer_version: 1,
         };
 

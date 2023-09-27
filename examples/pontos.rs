@@ -3,25 +3,21 @@
 //! Can be run with `cargo run --example nft_indexer`.
 //!
 use anyhow::Result;
-use arkproject::pontos::{
-    storage::DefaultStorage,
-    storage::types::*,
-    event_handler::EventHandler,
-    Pontos, PontosConfig,
-};
-use starknet::core::types::{BlockId, BlockTag};
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
-use std::sync::Arc;
+use arkproject::pontos::{
+    event_handler::EventHandler, storage::types::*, storage::DefaultStorage, Pontos, PontosConfig,
+};
 use async_trait::async_trait;
+use starknet::core::types::BlockId;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-
     let client = Arc::new(
         StarknetClientHttp::new(
             "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
         )
-            .unwrap(),
+        .unwrap(),
     );
 
     // Typically loaded from env.
@@ -71,12 +67,22 @@ impl DefaultEventHandler {
 
 #[async_trait]
 impl EventHandler for DefaultEventHandler {
-    async fn on_terminated(&self) {
+    async fn on_terminated(&self, _indexer_version: u64, _indexer_identifier: &str) {
         println!("pontos: process terminated");
     }
 
-    async fn on_block_processed(&self, block_number: u64) {
-        println!("pontos: block processed {:?}", block_number);
+    async fn on_block_processed(
+        &self,
+        block_number: u64,
+        indexer_version: u64,
+        indexer_identifier: &str,
+    ) {
+        // TODO: here we want to call some storage if needed from an other object.
+        // But it's totally unrelated to the core process, so we can do whatever we want here.
+        println!(
+            "pontos: block processed {} {} {}",
+            block_number, indexer_version, indexer_identifier
+        );
     }
 
     async fn on_token_registered(&self, token: TokenFromEvent) {
@@ -86,5 +92,4 @@ impl EventHandler for DefaultEventHandler {
     async fn on_event_registered(&self, event: TokenEvent) {
         println!("pontos: event registered {:?}", event);
     }
-
 }
