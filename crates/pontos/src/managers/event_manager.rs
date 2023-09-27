@@ -6,20 +6,21 @@ use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
+use std::sync::Arc;
 
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
 
 #[derive(Debug)]
-pub struct EventManager<'a, T: StorageManager> {
-    storage: &'a T,
+pub struct EventManager<S: StorageManager> {
+    storage: Arc<S>,
     token_event: TokenEvent,
 }
 
-impl<'a, T: StorageManager> EventManager<'a, T> {
+impl<S: StorageManager> EventManager<S> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T) -> Self {
+    pub fn new(storage: Arc<S>) -> Self {
         EventManager {
-            storage,
+            storage: Arc::clone(&storage),
             token_event: TokenEvent::default(),
         }
     }
@@ -32,12 +33,12 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
     /// Formats & register a token event based on the event content.
     /// Returns the token_id if the event were identified.
     pub async fn format_and_register_event(
-        &mut self,
+        &self,
         event: &EmittedEvent,
         contract_type: ContractType,
         timestamp: u64,
     ) -> Result<TokenEvent> {
-        self.reset_event();
+        let mut token_event = TokenEvent::default();
 
         // As cairo didn't have keys before, we first check if the data
         // contains the info. If not, we check into the keys, skipping the first
@@ -52,24 +53,24 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
 
         let (from, to, token_id) = event_info;
 
-        self.token_event.from_address_field_element = from;
-        self.token_event.to_address_field_element = to;
-        self.token_event.contract_address = format!("{:#064x}", event.from_address);
-        self.token_event.transaction_hash = format!("{:#064x}", event.transaction_hash);
-        self.token_event.token_id = token_id.clone();
-        self.token_event.formated_token_id = self.token_event.token_id.format();
-        self.token_event.block_number = event.block_number;
-        self.token_event.timestamp = timestamp;
-        self.token_event.contract_type = contract_type.to_string();
-        self.token_event.event_type = Self::get_event_type(from, to);
-        self.token_event.event_id = self.get_event_id_as_field_element();
+        token_event.from_address_field_element = from;
+        token_event.to_address_field_element = to;
+        token_event.contract_address = format!("{:#064x}", event.from_address);
+        token_event.transaction_hash = format!("{:#064x}", event.transaction_hash);
+        token_event.token_id = token_id.clone();
+        token_event.formated_token_id = token_event.token_id.format();
+        token_event.block_number = event.block_number;
+        token_event.timestamp = timestamp;
+        token_event.contract_type = contract_type.to_string();
+        token_event.event_type = Self::get_event_type(from, to);
+        token_event.event_id = Self::get_event_id_as_field_element(&token_event);
 
-        info!("Event identified: {:?}", self.token_event.event_type);
+        info!("Event identified: {:?}", token_event.event_type);
         self.storage
-            .register_event(&self.token_event, event.block_number)
+            .register_event(&token_event, event.block_number)
             .await?;
 
-        Ok(self.token_event.clone())
+        Ok(token_event.clone())
     }
 
     pub fn get_event_type(from: FieldElement, to: FieldElement) -> EventType {
@@ -83,15 +84,15 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
     }
 
     /// Returns the event id as a field element.
-    pub fn get_event_id_as_field_element(&self) -> FieldElement {
+    pub fn get_event_id_as_field_element(token_event: &TokenEvent) -> FieldElement {
         let mut bytes = Vec::new();
-        bytes.extend_from_slice(&self.token_event.token_id.low.to_bytes_be());
-        bytes.extend_from_slice(&self.token_event.token_id.high.to_bytes_be());
-        bytes.extend_from_slice(&self.token_event.from_address_field_element.to_bytes_be());
-        bytes.extend_from_slice(&self.token_event.to_address_field_element.to_bytes_be());
-        bytes.extend_from_slice(self.token_event.contract_address.as_bytes());
-        bytes.extend_from_slice(self.token_event.transaction_hash.as_bytes());
-        bytes.extend_from_slice(&self.token_event.block_number.to_le_bytes());
+        bytes.extend_from_slice(&token_event.token_id.low.to_bytes_be());
+        bytes.extend_from_slice(&token_event.token_id.high.to_bytes_be());
+        bytes.extend_from_slice(&token_event.from_address_field_element.to_bytes_be());
+        bytes.extend_from_slice(&token_event.to_address_field_element.to_bytes_be());
+        bytes.extend_from_slice(token_event.contract_address.as_bytes());
+        bytes.extend_from_slice(token_event.transaction_hash.as_bytes());
+        bytes.extend_from_slice(&token_event.block_number.to_le_bytes());
         starknet_keccak(&bytes)
     }
 
@@ -116,10 +117,6 @@ impl<'a, T: StorageManager> EventManager<'a, T> {
 
         Some((from, to, token_id))
     }
-
-    fn reset_event(&mut self) {
-        self.token_event = TokenEvent::default();
-    }
 }
 
 #[cfg(test)]
@@ -129,8 +126,8 @@ mod tests {
 
     #[test]
     fn test_keys_selector() {
-        let mock_storage = MockStorageManager::default();
-        let event_manager = EventManager::new(&mock_storage);
+        let mock_storage = Arc::new(MockStorageManager::default());
+        let event_manager = EventManager::<MockStorageManager>::new(mock_storage);
 
         let selectors = event_manager.keys_selector().unwrap();
         assert_eq!(selectors[0][0], TRANSFER_SELECTOR);
@@ -175,16 +172,5 @@ mod tests {
         assert_eq!(field2, FieldElement::from_dec_str("2").unwrap());
         assert_eq!(token_id.low, FieldElement::from_dec_str("3").unwrap());
         assert_eq!(token_id.high, FieldElement::from_dec_str("4").unwrap());
-    }
-
-    #[test]
-    fn test_reset_event() {
-        let mock_storage = MockStorageManager::new();
-        let mut manager = EventManager::new(&mock_storage);
-
-        manager.token_event.block_number = 12345;
-        manager.reset_event();
-
-        assert_eq!(manager.token_event, TokenEvent::default());
     }
 }

@@ -1,114 +1,166 @@
 pub mod managers;
 pub mod storage;
+pub mod event_handler;
 
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use dotenv::dotenv;
+use event_handler::EventHandler;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::env;
+use std::sync::Arc;
 use storage::storage_manager::StorageManager;
-use storage::types::{BlockIndexingStatus, ContractType};
+use storage::types::{StorageError, BlockIndexingStatus, ContractType};
 use tokio::time::{self, Duration};
 use tracing::{span, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
-pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
-    dotenv().ok();
+pub type IndexerResult<T> = Result<T, IndexerError>;
 
-    init_tracing();
+/// Generic errors for Pontos.
+#[derive(Debug, thiserror::Error)]
+pub enum IndexerError {
+    #[error("Storage error occurred")]
+    StorageError(StorageError),
+}
 
-    let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
-    let sn_client = StarknetClientHttp::new(&rpc_provider.clone())?;
-    let block_manager = BlockManager::new(&storage, &sn_client);
-    let mut event_manager = EventManager::new(&storage);
-    let mut token_manager = TokenManager::new(&storage, &sn_client);
-    let mut collection_manager = CollectionManager::new(&storage, &sn_client);
-
-    let (from_block, to_block, poll_head_of_chain) = block_manager.get_block_range();
-
-    let mut current_u64 = sn_client.block_id_to_u64(&from_block).await?;
-    let mut to_u64 = sn_client.block_id_to_u64(&to_block).await?;
-
-    loop {
-        log::trace!("Indexing block range: {} {}", current_u64, to_u64);
-
-        to_u64 = check_range(&sn_client, current_u64, to_u64, poll_head_of_chain).await;
-        if current_u64 > to_u64 {
-            continue;
-        }
-
-        if !block_manager.check_candidate(current_u64).await {
-            current_u64 += 1;
-            continue;
-        }
-
-        // Set block as pending
-        block_manager
-            .set_block_info(current_u64, BlockIndexingStatus::Processing)
-            .await?;
-
-        let block_ts = sn_client.block_time(BlockId::Number(current_u64)).await?;
-
-        let blocks_events = sn_client
-            .fetch_events(
-                BlockId::Number(current_u64),
-                BlockId::Number(current_u64),
-                event_manager.keys_selector(),
-            )
-            .await?;
-
-        for (_, events) in blocks_events {
-            for e in events {
-                let contract_address = e.from_address;
-
-                let contract_type = match collection_manager
-                    .identify_contract(contract_address, current_u64)
-                    .await
-                {
-                    Ok(info) => info,
-                    Err(e) => {
-                        log::error!(
-                            "Error while identifying contract {}: {:?}",
-                            contract_address,
-                            e
-                        );
-                        continue;
-                    }
-                };
-
-                if contract_type == ContractType::Other {
-                    continue;
-                }
-
-                let token_event = match event_manager
-                    .format_and_register_event(&e, contract_type, block_ts)
-                    .await
-                {
-                    Ok(te) => te,
-                    Err(err) => {
-                        log::error!("Error while registering event {:?}\n{:?}", err, e);
-                        continue;
-                    }
-                };
-
-                match token_manager.format_and_register_token(&token_event).await {
-                    Ok(()) => (),
-                    Err(err) => {
-                        log::error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
-                        continue;
-                    }
-                }
-            }
-        }
-
-        block_manager
-            .set_block_info(current_u64, BlockIndexingStatus::Terminated)
-            .await?;
-        // set block as indexed here
-        current_u64 += 1;
+impl From<StorageError> for IndexerError {
+    fn from(e: StorageError) -> Self {
+        IndexerError::StorageError(e)
     }
 }
+
+pub struct Pontos<S: StorageManager, C: StarknetClient, E: EventHandler> {
+    client: Arc<C>,
+    storage: Arc<S>,
+    event_handler: Arc<E>,
+}
+
+impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
+    ///
+    pub fn new(client: Arc<C>, storage: Arc<S>, event_handler: Arc<E>) -> Self {
+        Pontos {
+            client: Arc::clone(&client),
+            storage: Arc::clone(&storage),
+            event_handler: Arc::clone(&event_handler),
+        }
+    }
+
+    ///
+    pub async fn index_block_range(
+        &self,
+        from_block: BlockId,
+        to_block: BlockId,
+        do_force: bool,
+    ) -> IndexerResult<()> {
+        let block_manager = BlockManager::new(Arc::clone(&self.storage), Arc::clone(&self.client));
+        let event_manager = EventManager::new(Arc::clone(&self.storage));
+        let token_manager = TokenManager::new(Arc::clone(&self.storage), Arc::clone(&self.client));
+        let collection_manager = CollectionManager::new(Arc::clone(&self.storage), Arc::clone(&self.client));
+
+        Ok(())
+    }
+}
+
+// pub async fn main_loop<T: StorageManager>(storage: T) -> Result<()> {
+//     dotenv().ok();
+
+//     init_tracing();
+
+//     let rpc_provider = env::var("RPC_PROVIDER").expect("RPC_PROVIDER must be set");
+//     let sn_client = StarknetClientHttp::new(&rpc_provider.clone())?;
+//     let block_manager = BlockManager::new(Arc::new(storage.clone()), sn_client));
+//     let mut event_manager = EventManager::new(&storage);
+//     let mut token_manager = TokenManager::new(&storage, &sn_client);
+//     let mut collection_manager = CollectionManager::new(&storage, &sn_client);
+
+//     let (from_block, to_block, poll_head_of_chain) = block_manager.get_block_range();
+
+//     let mut current_u64 = sn_client.block_id_to_u64(&from_block).await?;
+//     let mut to_u64 = sn_client.block_id_to_u64(&to_block).await?;
+
+//     loop {
+//         log::trace!("Indexing block range: {} {}", current_u64, to_u64);
+
+//         to_u64 = check_range(&sn_client, current_u64, to_u64, poll_head_of_chain).await;
+//         if current_u64 > to_u64 {
+//             continue;
+//         }
+
+//         if !block_manager.check_candidate(current_u64).await {
+//             current_u64 += 1;
+//             continue;
+//         }
+
+//         // Set block as pending
+//         block_manager
+//             .set_block_info(current_u64, BlockIndexingStatus::Processing)
+//             .await?;
+
+//         let block_ts = sn_client.block_time(BlockId::Number(current_u64)).await?;
+
+//         let blocks_events = sn_client
+//             .fetch_events(
+//                 BlockId::Number(current_u64),
+//                 BlockId::Number(current_u64),
+//                 event_manager.keys_selector(),
+//             )
+//             .await?;
+
+//         for (_, events) in blocks_events {
+//             for e in events {
+//                 let contract_address = e.from_address;
+
+//                 let contract_type = match collection_manager
+//                     .identify_contract(contract_address, current_u64)
+//                     .await
+//                 {
+//                     Ok(info) => info,
+//                     Err(e) => {
+//                         log::error!(
+//                             "Error while identifying contract {}: {:?}",
+//                             contract_address,
+//                             e
+//                         );
+//                         continue;
+//                     }
+//                 };
+
+//                 if contract_type == ContractType::Other {
+//                     continue;
+//                 }
+
+//                 let token_event = match event_manager
+//                     .format_and_register_event(&e, contract_type, block_ts)
+//                     .await
+//                 {
+//                     Ok(te) => te,
+//                     Err(err) => {
+//                         log::error!("Error while registering event {:?}\n{:?}", err, e);
+//                         continue;
+//                     }
+//                 };
+
+//                 match token_manager.format_and_register_token(&token_event).await {
+//                     Ok(()) => (),
+//                     Err(err) => {
+//                         log::error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
+//                         continue;
+//                     }
+//                 }
+//             }
+//         }
+
+//         block_manager
+//             .set_block_info(current_u64, BlockIndexingStatus::Terminated)
+//             .await?;
+
+        
+
+//         current_u64 += 1;
+//     }
+// }
 
 async fn check_range(
     client: &StarknetClientHttp,

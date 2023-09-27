@@ -2,26 +2,26 @@ use crate::storage::storage_manager::StorageManager;
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use ark_starknet::client::StarknetClient;
 use starknet::core::types::*;
-
 use std::env;
+use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct BlockManager<'a, T: StorageManager, C: StarknetClient> {
-    storage: &'a T,
-    client: &'a C,
+pub struct BlockManager<S: StorageManager, C: StarknetClient> {
+    storage: Arc<S>,
+    client: Arc<C>,
     indexer_version: u64,
 }
 
-impl<'a, T: StorageManager, C: StarknetClient> BlockManager<'a, T, C> {
-    pub fn new(storage: &'a T, client: &'a C) -> Self {
+impl<S: StorageManager, C: StarknetClient> BlockManager<S, C> {
+    pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
         let v: &u64 = &env::var("INDEXER_VERSION")
             .expect("INDEXER_VERSION env var is missing")
             .parse()
             .expect("INDEXER_VERSION env var is invalid");
 
         Self {
-            storage,
-            client,
+            storage: Arc::clone(&storage),
+            client: Arc::clone(&client),
             indexer_version: *v,
         }
     }
@@ -100,21 +100,22 @@ mod tests {
         types::{BlockIndexingStatus, BlockInfo},
     };
     use ark_starknet::client::MockStarknetClient;
-
+    use std::sync::RwLock;
+    use std::ops::Deref;
     use super::*;
 
     #[test]
     fn test_get_block_range() {
         let mut mock_client = MockStarknetClient::default();
-        let mock_storage = MockStorageManager::default();
+        let mock_storage = Arc::new(MockStorageManager::default());
 
         mock_client
             .expect_parse_block_range()
             .returning(|_, _| Ok((BlockId::Number(1), BlockId::Tag(BlockTag::Latest))));
 
         let manager = BlockManager {
-            storage: &mock_storage,
-            client: &mock_client,
+            storage: mock_storage,
+            client: Arc::new(mock_client),
             indexer_version: 1,
         };
 
@@ -155,8 +156,8 @@ mod tests {
             });
 
         let manager = BlockManager {
-            storage: &mock_storage,
-            client: &mock_client,
+            storage: Arc::new(mock_storage),
+            client: Arc::new(mock_client),
             indexer_version: 1,
         };
 

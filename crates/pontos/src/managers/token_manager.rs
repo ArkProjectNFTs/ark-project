@@ -4,31 +4,30 @@ use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use starknet::core::types::*;
 use starknet::macros::selector;
+use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct TokenManager<'a, T: StorageManager, C: StarknetClient> {
-    storage: &'a T,
-    client: &'a C,
-    token: TokenFromEvent,
+pub struct TokenManager<S: StorageManager, C: StarknetClient> {
+    storage: Arc<S>,
+    client: Arc<C>,
 }
 
-impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
+impl<S: StorageManager, C: StarknetClient> TokenManager<S, C> {
     /// Initializes a new instance.
-    pub fn new(storage: &'a T, client: &'a C) -> Self {
+    pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
         Self {
-            storage,
-            client,
-            token: TokenFromEvent::default(),
+            storage: Arc::clone(&storage),
+            client: Arc::clone(&client),
         }
     }
 
     /// Formats a token registry from the token event data.
-    pub async fn format_and_register_token(&mut self, event: &TokenEvent) -> Result<()> {
-        self.reset_token();
+    pub async fn format_and_register_token(&self, event: &TokenEvent) -> Result<()> {
+        let mut token = TokenFromEvent::default();
 
-        self.token.address = event.contract_address.clone();
-        self.token.token_id = event.token_id.clone();
-        self.token.formated_token_id = event.formated_token_id.clone();
+        token.address = event.contract_address.clone();
+        token.token_id = event.token_id.clone();
+        token.formated_token_id = event.formated_token_id.clone();
         let token_owner = self
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)
@@ -37,27 +36,22 @@ impl<'a, T: StorageManager, C: StarknetClient> TokenManager<'a, T, C> {
                 event.token_id.high,
             )
             .await?[0];
-        self.token.owner = format!("{:#064x}", token_owner);
+        token.owner = format!("{:#064x}", token_owner);
 
         if event.event_type == EventType::Mint {
-            self.token.mint_address = Some(event.to_address_field_element);
-            self.token.mint_timestamp = Some(event.timestamp);
-            self.token.mint_transaction_hash = Some(event.transaction_hash.clone());
-            self.token.mint_block_number = Some(event.block_number);
+            token.mint_address = Some(event.to_address_field_element);
+            token.mint_timestamp = Some(event.timestamp);
+            token.mint_transaction_hash = Some(event.transaction_hash.clone());
+            token.mint_block_number = Some(event.block_number);
             self.storage
-                .register_mint(&self.token, event.block_number)
+                .register_mint(&token, event.block_number)
                 .await?;
         } else {
             self.storage
-                .register_token(&self.token, event.block_number)
+                .register_token(&token, event.block_number)
                 .await?;
         }
         Ok(())
-    }
-
-    /// Resets the token registry.
-    pub fn reset_token(&mut self) {
-        self.token = TokenFromEvent::default();
     }
 
     /// Retrieves the token owner for the last block.
@@ -101,21 +95,6 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn test_reset_token() {
-        let mock_storage = MockStorageManager::default();
-        let mock_client = MockStarknetClient::default();
-
-        let mut token_manager = TokenManager::new(&mock_storage, &mock_client);
-
-        // Modify some values
-        token_manager.token.owner = String::from("some_owner");
-
-        token_manager.reset_token();
-
-        assert_eq!(token_manager.token, TokenFromEvent::default());
-    }
-
     #[tokio::test]
     async fn test_get_token_owner() {
         let mock_storage = MockStorageManager::default();
@@ -129,7 +108,7 @@ mod tests {
             .expect_call_contract()
             .returning(|_, _, _, _| Ok(vec![FieldElement::from_dec_str("1").unwrap()]));
 
-        let token_manager = TokenManager::new(&mock_storage, &mock_client);
+        let token_manager = TokenManager::new(Arc::new(mock_storage), Arc::new(mock_client));
 
         let result = token_manager
             .get_token_owner(contract_address, token_id_low, token_id_high)
