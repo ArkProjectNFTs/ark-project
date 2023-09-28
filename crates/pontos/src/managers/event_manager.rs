@@ -1,5 +1,5 @@
-use crate::storage::Storage;
 use crate::storage::types::{EventType, TokenEvent, TokenId};
+use crate::storage::Storage;
 use crate::ContractType;
 use anyhow::{anyhow, Result};
 use log::info;

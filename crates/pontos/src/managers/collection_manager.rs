@@ -1,6 +1,6 @@
-use crate::storage::Storage;
 use crate::storage::types::ContractType;
 use crate::storage::types::StorageError;
+use crate::storage::Storage;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};

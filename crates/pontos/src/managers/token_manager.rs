@@ -1,5 +1,5 @@
-use crate::storage::Storage;
 use crate::storage::types::{EventType, TokenEvent, TokenFromEvent};
+use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use starknet::core::types::*;
