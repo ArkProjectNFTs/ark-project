@@ -5,7 +5,7 @@ pub mod storage;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use event_handler::EventHandler;
-use log::{info, trace};
+use log::info;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::sync::Arc;
@@ -178,10 +178,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                         .await
                     {
                         Ok(token_event) => {
-                            log::info!(
+                            info!(
                                 "{}, Tx Hash={}",
-                                token_event.event_type,
-                                token_event.transaction_hash
+                                token_event.event_type, token_event.transaction_hash
                             );
                             token_event
                         }
@@ -230,7 +229,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         if current >= to {
             if !is_head_of_chain {
                 // TODO: can print some stats here if necessary.
-                log::info!("End of indexing block range");
+                info!("End of indexing block range");
                 std::process::exit(0);
             }
 
