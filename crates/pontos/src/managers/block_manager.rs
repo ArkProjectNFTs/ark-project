@@ -1,13 +1,13 @@
-use crate::storage::storage_manager::StorageManager;
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
+use crate::storage::Storage;
 use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct BlockManager<S: StorageManager> {
+pub struct BlockManager<S: Storage> {
     storage: Arc<S>,
 }
 
-impl<S: StorageManager> BlockManager<S> {
+impl<S: Storage> BlockManager<S> {
     pub fn new(storage: Arc<S>) -> Self {
         Self {
             storage: Arc::clone(&storage),
@@ -65,15 +65,13 @@ impl<S: StorageManager> BlockManager<S> {
 mod tests {
     use super::*;
     use crate::storage::{
-        storage_manager::MockStorageManager,
         types::{BlockIndexingStatus, BlockInfo},
+        MockStorage,
     };
-    use std::ops::Deref;
-    use std::sync::RwLock;
 
     #[tokio::test]
     async fn test_check_candidate() {
-        let mut mock_storage = MockStorageManager::default();
+        let mut mock_storage = MockStorage::default();
 
         mock_storage
             .expect_clean_block()

@@ -1,5 +1,5 @@
-use crate::storage::storage_manager::StorageManager;
 use crate::storage::types::{EventType, TokenEvent, TokenId};
+use crate::storage::Storage;
 use crate::ContractType;
 use anyhow::{anyhow, Result};
 use log::info;
@@ -11,11 +11,11 @@ use std::sync::Arc;
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
 
 #[derive(Debug)]
-pub struct EventManager<S: StorageManager> {
+pub struct EventManager<S: Storage> {
     storage: Arc<S>,
 }
 
-impl<S: StorageManager> EventManager<S> {
+impl<S: Storage> EventManager<S> {
     /// Initializes a new instance.
     pub fn new(storage: Arc<S>) -> Self {
         EventManager {
@@ -120,8 +120,7 @@ impl<S: StorageManager> EventManager<S> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::storage::storage_manager::MockStorageManager;
-    use ark_starknet::client::MockStarknetClient;
+    use crate::storage::MockStorage;
 
     /// Sets up sample data and event for testing purposes.
     fn setup_sample_event() -> EmittedEvent {
@@ -146,7 +145,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_format_event_successfully() {
-        let mut storage = MockStorageManager::default();
+        let mut storage = MockStorage::default();
 
         storage
             .expect_register_event()
@@ -166,8 +165,6 @@ mod tests {
 
         let token_event = result.unwrap();
 
-        println!("===> {}", token_event.from_address_field_element);
-
         assert_eq!(
             token_event.from_address_field_element,
             FieldElement::from_dec_str("1234").unwrap()
@@ -176,14 +173,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_format_event_data_extraction_from_data() {
-        // Initialize a MockStorageManager and the EventManager
-        let mut storage = MockStorageManager::default();
+        // Initialize a MockStorage and the EventManager
+        let mut storage = MockStorage::default();
 
         storage
             .expect_register_event()
             .returning(|_, _| Box::pin(futures::future::ready(Ok(()))));
 
-        let mut manager = EventManager::new(Arc::new(storage));
+        let manager = EventManager::new(Arc::new(storage));
 
         // Construct an event where the event data is only present in `event.data`
         // and not in `event.keys`.
@@ -236,7 +233,7 @@ mod tests {
 
     #[test]
     fn test_keys_selector() {
-        let storage = Arc::new(MockStorageManager::default());
+        let storage = Arc::new(MockStorage::default());
         let manager = EventManager::new(storage);
 
         // Call the method
@@ -262,7 +259,7 @@ mod tests {
         let sample_data = vec![from_value, to_value, token_id_low, token_id_high];
 
         // Call the method
-        let result = EventManager::<MockStorageManager>::get_event_info_from_felts(&sample_data);
+        let result = EventManager::<MockStorage>::get_event_info_from_felts(&sample_data);
 
         // Assert the output
         assert_eq!(result.is_some(), true);
@@ -284,7 +281,7 @@ mod tests {
         ];
 
         // Call the method
-        let result = EventManager::<MockStorageManager>::get_event_info_from_felts(&sample_data);
+        let result = EventManager::<MockStorage>::get_event_info_from_felts(&sample_data);
 
         // Assert the output
         assert_eq!(result.is_none(), true);
