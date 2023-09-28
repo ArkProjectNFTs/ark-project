@@ -3,7 +3,7 @@ use crate::storage::Storage;
 use crate::ContractType;
 use anyhow::{anyhow, Result};
 use ark_starknet::format::to_hex_str;
-use log::{info, debug, trace};
+use log::{debug, info, trace};
 use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
@@ -44,13 +44,14 @@ impl<S: Storage> EventManager<S> {
         // As cairo didn't have keys before, we first check if the data
         // contains the info. If not, we check into the keys, skipping the first
         // element which is the selector.
-        let event_info: (FieldElement, FieldElement, TokenId) = if let Some(d_info) = Self::get_event_info_from_felts(&event.data) {
-            d_info
-        } else if let Some(k_info) = Self::get_event_info_from_felts(&event.keys[1..]) {
-            k_info
-        } else {
-            return Err(anyhow!("Can't find event data into this event"));
-        };
+        let event_info: (FieldElement, FieldElement, TokenId) =
+            if let Some(d_info) = Self::get_event_info_from_felts(&event.data) {
+                d_info
+            } else if let Some(k_info) = Self::get_event_info_from_felts(&event.keys[1..]) {
+                k_info
+            } else {
+                return Err(anyhow!("Can't find event data into this event"));
+            };
 
         let (from, to, token_id) = event_info;
 
