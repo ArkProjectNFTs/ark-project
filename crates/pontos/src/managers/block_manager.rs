@@ -1,5 +1,5 @@
-use crate::storage::storage::Storage;
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
+use crate::storage::Storage;
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -65,11 +65,9 @@ impl<S: Storage> BlockManager<S> {
 mod tests {
     use super::*;
     use crate::storage::{
-        storage::MockStorage,
         types::{BlockIndexingStatus, BlockInfo},
+        MockStorage,
     };
-    use std::ops::Deref;
-    use std::sync::RwLock;
 
     #[tokio::test]
     async fn test_check_candidate() {

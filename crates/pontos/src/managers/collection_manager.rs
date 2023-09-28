@@ -1,4 +1,4 @@
-use crate::storage::storage::Storage;
+use crate::storage::Storage;
 use crate::storage::types::ContractType;
 use crate::storage::types::StorageError;
 use anyhow::Result;

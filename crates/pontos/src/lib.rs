@@ -8,7 +8,7 @@ use event_handler::EventHandler;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::sync::Arc;
-use storage::storage::Storage;
+use storage::Storage;
 use storage::types::{BlockIndexingStatus, ContractType, StorageError};
 use tokio::sync::RwLock as AsyncRwLock;
 use tokio::time::{self, Duration};

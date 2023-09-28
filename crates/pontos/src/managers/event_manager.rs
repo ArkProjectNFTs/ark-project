@@ -1,4 +1,4 @@
-use crate::storage::storage::Storage;
+use crate::storage::Storage;
 use crate::storage::types::{EventType, TokenEvent, TokenId};
 use crate::ContractType;
 use anyhow::{anyhow, Result};
@@ -120,8 +120,7 @@ impl<S: Storage> EventManager<S> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::storage::storage::MockStorage;
-    use ark_starknet::client::MockStarknetClient;
+    use crate::storage::MockStorage;
 
     /// Sets up sample data and event for testing purposes.
     fn setup_sample_event() -> EmittedEvent {
@@ -181,7 +180,7 @@ mod tests {
             .expect_register_event()
             .returning(|_, _| Box::pin(futures::future::ready(Ok(()))));
 
-        let mut manager = EventManager::new(Arc::new(storage));
+        let manager = EventManager::new(Arc::new(storage));
 
         // Construct an event where the event data is only present in `event.data`
         // and not in `event.keys`.

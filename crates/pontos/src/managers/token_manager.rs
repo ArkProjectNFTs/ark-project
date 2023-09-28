@@ -1,4 +1,4 @@
-use crate::storage::storage::Storage;
+use crate::storage::Storage;
 use crate::storage::types::{EventType, TokenEvent, TokenFromEvent};
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
@@ -92,7 +92,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
 
 #[cfg(test)]
 mod tests {
-    use crate::storage::storage::MockStorage;
+    use crate::storage::MockStorage;
     use ark_starknet::client::MockStarknetClient;
 
     use super::*;
