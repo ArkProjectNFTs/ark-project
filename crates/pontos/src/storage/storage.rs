@@ -7,7 +7,7 @@ use mockall::automock;
 
 #[async_trait]
 #[cfg_attr(test, automock)]
-pub trait StorageManager {
+pub trait Storage {
     async fn register_mint(
         &self,
         token: &TokenFromEvent,

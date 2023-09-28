@@ -1,4 +1,4 @@
-use crate::storage::storage_manager::StorageManager;
+use crate::storage::storage::Storage;
 use crate::storage::types::ContractType;
 use crate::storage::types::StorageError;
 use anyhow::Result;
@@ -8,14 +8,14 @@ use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub struct CollectionManager<S: StorageManager, C: StarknetClient> {
+pub struct CollectionManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
     client: Arc<C>,
     /// A cache with contract address mapped to its type.
     cache: HashMap<FieldElement, ContractType>,
 }
 
-impl<S: StorageManager, C: StarknetClient> CollectionManager<S, C> {
+impl<S: Storage, C: StarknetClient> CollectionManager<S, C> {
     /// Initializes a new instance.
     pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
         Self {

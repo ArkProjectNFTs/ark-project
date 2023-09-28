@@ -3,10 +3,10 @@
 pub mod prisma;
 
 pub mod default_storage;
-pub mod storage_manager;
+pub mod storage;
 
 pub use default_storage::DefaultStorage;
-pub use storage_manager::StorageManager;
+pub use storage::Storage;
 
 pub mod types;
 pub mod utils;

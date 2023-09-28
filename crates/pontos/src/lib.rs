@@ -8,7 +8,7 @@ use event_handler::EventHandler;
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::sync::Arc;
-use storage::storage_manager::StorageManager;
+use storage::storage::Storage;
 use storage::types::{BlockIndexingStatus, ContractType, StorageError};
 use tokio::sync::RwLock as AsyncRwLock;
 use tokio::time::{self, Duration};
@@ -43,7 +43,7 @@ pub struct PontosConfig {
     pub indexer_identifier: String,
 }
 
-pub struct Pontos<S: StorageManager, C: StarknetClient, E: EventHandler> {
+pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {
     client: Arc<C>,
     event_handler: Arc<E>,
     config: PontosConfig,
@@ -53,7 +53,7 @@ pub struct Pontos<S: StorageManager, C: StarknetClient, E: EventHandler> {
     collection_manager: Arc<AsyncRwLock<CollectionManager<S, C>>>,
 }
 
-impl<S: StorageManager, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, E> {
+impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, E> {
     ///
     pub fn new(
         client: Arc<C>,

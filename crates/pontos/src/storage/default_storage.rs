@@ -1,7 +1,7 @@
 use crate::storage::prisma::PrismaClient;
 use crate::storage::prisma::{block, collection, event, token};
 use crate::storage::types::{BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent};
-use crate::StorageManager;
+use crate::Storage;
 use async_trait::async_trait;
 use log;
 use prisma_client_rust::NewClientError;
@@ -23,7 +23,7 @@ impl DefaultStorage {
 // TODO - add indexer version check with @remi
 // TODO - add tests
 #[async_trait]
-impl StorageManager for DefaultStorage {
+impl Storage for DefaultStorage {
     async fn register_mint(
         &self,
         token: &TokenFromEvent,

@@ -1,4 +1,4 @@
-use crate::storage::storage_manager::StorageManager;
+use crate::storage::storage::Storage;
 use crate::storage::types::{EventType, TokenEvent, TokenFromEvent};
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
@@ -7,12 +7,12 @@ use starknet::macros::selector;
 use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct TokenManager<S: StorageManager, C: StarknetClient> {
+pub struct TokenManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
     client: Arc<C>,
 }
 
-impl<S: StorageManager, C: StarknetClient> TokenManager<S, C> {
+impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
     /// Initializes a new instance.
     pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
         Self {
@@ -92,14 +92,14 @@ impl<S: StorageManager, C: StarknetClient> TokenManager<S, C> {
 
 #[cfg(test)]
 mod tests {
-    use crate::storage::storage_manager::MockStorageManager;
+    use crate::storage::storage::MockStorage;
     use ark_starknet::client::MockStarknetClient;
 
     use super::*;
 
     #[tokio::test]
     async fn test_get_token_owner() {
-        let mock_storage = MockStorageManager::default();
+        let mock_storage = MockStorage::default();
         let mut mock_client = MockStarknetClient::default();
 
         let contract_address = FieldElement::from_dec_str("12345").unwrap();
