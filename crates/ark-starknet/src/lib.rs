@@ -1,6 +1,7 @@
 pub mod client;
 pub mod format;
 
+use format::to_hex_str;
 use num_bigint::BigUint;
 
 #[derive(Debug, Clone)]
@@ -23,7 +24,7 @@ impl CairoU256 {
 
     pub fn to_hex(&self) -> String {
         let token_id_big_uint = self.to_biguint();
-        format!("{:#064x}", token_id_big_uint)
+        to_hex_str(&token_id_big_uint)
     }
 
     pub fn to_decimal(&self, padded: bool) -> String {

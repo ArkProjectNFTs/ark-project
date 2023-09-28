@@ -5,7 +5,7 @@ use crate::{
     utils::{extract_metadata_from_headers, get_token_metadata},
 };
 use anyhow::{anyhow, Result};
-use ark_starknet::{client::StarknetClient, CairoU256};
+use ark_starknet::{client::StarknetClient, format::to_hex_str, CairoU256};
 use log::{debug, error};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
@@ -182,7 +182,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     .save(&FileInfo {
                         name: format!("{}.{}", token_id.to_hex(), file_ext),
                         content: bytes.to_vec(),
-                        dir_path: Some(format!("{:#064x}", contract_address)),
+                        dir_path: Some(to_hex_str(&contract_address)),
                     })
                     .await?;
 

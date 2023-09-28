@@ -2,6 +2,7 @@ use crate::storage::prisma::PrismaClient;
 use crate::storage::prisma::{block, collection, event, token};
 use crate::storage::types::{BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent};
 use crate::Storage;
+use ark_starknet::format::to_hex_str;
 use async_trait::async_trait;
 use log;
 use prisma_client_rust::NewClientError;
@@ -52,9 +53,8 @@ impl Storage for DefaultStorage {
                         token::id::equals(data.id.clone()),
                         vec![
                             token::owner::set(token.owner.clone()),
-                            token::mint_address::set(Some(format!(
-                                "{:#064x}",
-                                token.mint_address.unwrap()
+                            token::mint_address::set(Some(to_hex_str(
+                                &token.mint_address.unwrap(),
                             ))),
                             token::mint_timestamp::set(Some(
                                 token.mint_timestamp.unwrap().try_into().unwrap(),
@@ -86,9 +86,8 @@ impl Storage for DefaultStorage {
                         token.owner.clone(),
                         block_number as i32,
                         vec![
-                            token::mint_address::set(Some(format!(
-                                "{:#064x}",
-                                token.mint_address.unwrap()
+                            token::mint_address::set(Some(to_hex_str(
+                                &token.mint_address.unwrap(),
                             ))),
                             token::mint_timestamp::set(Some(
                                 token.mint_timestamp.unwrap().try_into().unwrap(),
@@ -191,9 +190,8 @@ impl Storage for DefaultStorage {
         match event_from_db {
             Some(_) => Err(StorageError::AlreadyExists),
             None => {
-                let from_address = format!("{:#064x}", event.from_address_field_element);
-
-                let to_address = format!("{:#064x}", event.to_address_field_element);
+                let from_address = to_hex_str(&event.from_address_field_element);
+                let to_address = to_hex_str(&event.to_address_field_element);
 
                 let result = self
                     .prisma_client
@@ -257,7 +255,7 @@ impl Storage for DefaultStorage {
             contract_type,
             contract_address
         );
-        let formated_contract_address = format!("{:#064x}", contract_address);
+        let formated_contract_address = to_hex_str(&contract_address);
 
         let result = self
             .prisma_client

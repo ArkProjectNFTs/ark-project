@@ -6,7 +6,7 @@ use event_handler::EventHandler;
 
 use ark_starknet::{
     client::{StarknetClient, StarknetClientHttp},
-    format::felt_to_hex_str,
+    format::to_hex_str,
     CairoU256,
 };
 use log::{debug, trace};
@@ -84,7 +84,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                 }
 
                 let e_selector = ev.keys[0];
-                let _tx_hash_str = felt_to_hex_str(&ev.transaction_hash);
+                let _tx_hash_str = to_hex_str(&ev.transaction_hash);
 
                 if e_selector == EV_BROKER_REGISTERED {
                     debug!("Broker register event");
