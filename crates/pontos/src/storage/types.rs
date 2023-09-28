@@ -149,8 +149,8 @@ pub struct TokenId {
 impl TokenId {
     // Implement the format_token_id as a method on the struct
     pub fn format(&self) -> FormattedTokenId {
-        // let token_id_low_hex = format!("{:#064x}", token_id_low);
-        // let token_id_high_hex = format!("{:#064x}", token_id_high);
+        // let token_id_low_hex = to_hex_str(&token_id_low);
+        // let token_id_high_hex = to_hex_str(&token_id_high);
 
         // let low = u128::from_str_radix(token_id_low.to_string().as_str(), 10).unwrap();
         let low = self.low.to_string().as_str().parse::<u128>().unwrap();

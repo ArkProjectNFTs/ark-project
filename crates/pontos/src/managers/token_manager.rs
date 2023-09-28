@@ -2,6 +2,7 @@ use crate::storage::types::{EventType, TokenEvent, TokenFromEvent};
 use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
+use ark_starknet::format::to_hex_str;
 use starknet::core::types::*;
 use starknet::macros::selector;
 use std::sync::Arc;
@@ -38,7 +39,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
                 event.token_id.high,
             )
             .await?[0];
-        token.owner = format!("{:#064x}", token_owner);
+        token.owner = to_hex_str(&token_owner);
 
         if event.event_type == EventType::Mint {
             token.mint_address = Some(event.to_address_field_element);

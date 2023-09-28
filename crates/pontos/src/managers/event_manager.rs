@@ -2,6 +2,7 @@ use crate::storage::types::{EventType, TokenEvent, TokenId};
 use crate::storage::Storage;
 use crate::ContractType;
 use anyhow::{anyhow, Result};
+use ark_starknet::format::to_hex_str;
 use log::info;
 use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::core::utils::starknet_keccak;
@@ -53,8 +54,8 @@ impl<S: Storage> EventManager<S> {
 
         token_event.from_address_field_element = from;
         token_event.to_address_field_element = to;
-        token_event.contract_address = format!("{:#064x}", event.from_address);
-        token_event.transaction_hash = format!("{:#064x}", event.transaction_hash);
+        token_event.contract_address = to_hex_str(&event.from_address);
+        token_event.transaction_hash = to_hex_str(&event.transaction_hash);
         token_event.token_id = token_id.clone();
         token_event.formated_token_id = token_event.token_id.format();
         token_event.block_number = event.block_number;
