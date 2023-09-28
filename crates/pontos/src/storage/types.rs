@@ -222,7 +222,7 @@ pub struct BlockIndexing {
     pub range: Range,
     pub percentage: u64,
     pub status: IndexerStatus,
-    pub indentifier: String,
+    pub identifier: String,
     pub indexer_version: u64,
 }
 
