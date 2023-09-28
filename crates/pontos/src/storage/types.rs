@@ -42,10 +42,10 @@ pub enum EventType {
 impl fmt::Display for EventType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EventType::Mint => write!(f, "mint"),
-            EventType::Burn => write!(f, "burn"),
-            EventType::Transfer => write!(f, "transfer"),
-            EventType::Uninitialized => write!(f, "uninitialized"),
+            EventType::Mint => write!(f, "🟢 Mint"),
+            EventType::Burn => write!(f, "🔴 Burn"),
+            EventType::Transfer => write!(f, "🔵 Transfer"),
+            EventType::Uninitialized => write!(f, "❓ Uninitialized"),
         }
     }
 }

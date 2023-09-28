@@ -5,6 +5,7 @@ pub mod storage;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use event_handler::EventHandler;
+use log::{info, trace};
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::sync::Arc;
@@ -139,6 +140,12 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 )
                 .await?;
 
+            let total_events_count: usize = blocks_events.values().map(|events| events.len()).sum();
+            info!(
+                "✨ Processing block {}. Total Events Count: {}",
+                current_u64, total_events_count
+            );
+
             for (_, events) in blocks_events {
                 for e in events {
                     let contract_address = e.from_address;
@@ -170,7 +177,14 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                         .format_and_register_event(&e, contract_type, block_ts)
                         .await
                     {
-                        Ok(te) => te,
+                        Ok(token_event) => {
+                            log::info!(
+                                "{}, Tx Hash={}",
+                                token_event.event_type,
+                                token_event.transaction_hash
+                            );
+                            token_event
+                        }
                         Err(err) => {
                             log::error!("Error while registering event {:?}\n{:?}", err, e);
                             continue;
