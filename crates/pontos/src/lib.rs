@@ -53,7 +53,7 @@ pub struct Pontos<S: StorageManager, C: StarknetClient, E: EventHandler> {
     collection_manager: Arc<AsyncRwLock<CollectionManager<S, C>>>,
 }
 
-impl<S: StorageManager, C: StarknetClient, E: EventHandler> Pontos<S, C, E> {
+impl<S: StorageManager, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, E> {
     ///
     pub fn new(
         client: Arc<C>,

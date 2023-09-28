@@ -1,6 +1,4 @@
-use crate::storage::types::{
-    BlockIndexing, BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent,
-};
+use crate::storage::types::{BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent};
 use async_trait::async_trait;
 use starknet::core::types::FieldElement;
 
@@ -45,6 +43,4 @@ pub trait StorageManager {
     async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError>;
 
     async fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
-
-    async fn set_indexer_progress(&self, progress: BlockIndexing) -> Result<(), StorageError>;
 }
