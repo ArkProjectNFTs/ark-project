@@ -1,8 +1,6 @@
 use crate::storage::prisma::PrismaClient;
 use crate::storage::prisma::{block, collection, event, token};
-use crate::storage::types::{
-    BlockIndexing, BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent,
-};
+use crate::storage::types::{BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent};
 use crate::StorageManager;
 use async_trait::async_trait;
 use log;
@@ -364,19 +362,5 @@ impl StorageManager for DefaultStorage {
             (Ok(_), Ok(_), Ok(_), Ok(_)) => Ok(()),
             _ => Err(StorageError::DatabaseError),
         }
-    }
-
-    // TODO check with @remi
-    async fn set_indexer_progress(
-        &self,
-        indexer_progress: BlockIndexing,
-    ) -> Result<(), StorageError> {
-        log::debug!(
-            "Setting indexer progress to block #{}",
-            indexer_progress.percentage
-        );
-        // TODO: In future, handle and return potential errors
-        // Err(StorageError::DatabaseError)
-        Ok(())
     }
 }
