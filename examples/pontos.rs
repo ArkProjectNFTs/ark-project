@@ -67,22 +67,14 @@ impl DefaultEventHandler {
 
 #[async_trait]
 impl EventHandler for DefaultEventHandler {
-    async fn on_terminated(&self, _indexer_version: u64, _indexer_identifier: &str) {
-        println!("pontos: process terminated");
+    async fn on_terminated(&self, indexation_progress: f64) {
+        println!("pontos: terminated {}", indexation_progress);
     }
 
-    async fn on_block_processed(
-        &self,
-        block_number: u64,
-        indexer_version: u64,
-        indexer_identifier: &str,
-    ) {
+    async fn on_block_processing(&self, block_number: u64) {
         // TODO: here we want to call some storage if needed from an other object.
         // But it's totally unrelated to the core process, so we can do whatever we want here.
-        println!(
-            "pontos: block processed {} {} {}",
-            block_number, indexer_version, indexer_identifier
-        );
+        println!("pontos: block processed {}", block_number);
     }
 
     async fn on_token_registered(&self, token: TokenFromEvent) {
