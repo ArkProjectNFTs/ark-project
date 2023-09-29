@@ -216,7 +216,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 )
                 .await?;
             self.event_handler
-                .on_terminated((current_u64 as f64 / to_u64 as f64) * 100.0)
+                .on_terminated(current_u64, (current_u64 as f64 / to_u64 as f64) * 100.0)
                 .await;
 
             current_u64 += 1;

@@ -208,9 +208,19 @@ impl FromStr for BlockIndexingStatus {
     }
 }
 
+#[derive(Debug)]
 pub enum IndexerStatus {
     Running,
     Stopped,
+}
+
+impl fmt::Display for IndexerStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IndexerStatus::Running => write!(f, "running"),
+            IndexerStatus::Stopped => write!(f, "stopped"),
+        }
+    }
 }
 
 pub struct Range {
