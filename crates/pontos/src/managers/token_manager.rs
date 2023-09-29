@@ -3,7 +3,7 @@ use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_starknet::format::to_hex_str;
-use log::debug;
+use log::{debug, info};
 use starknet::core::types::*;
 use starknet::macros::selector;
 use std::sync::Arc;
@@ -88,7 +88,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             }
         }
 
-        debug!("Failed to get token owner");
+        info!("Failed to get token owner");
         Err(anyhow!("Failed to get token owner from chain"))
     }
 }

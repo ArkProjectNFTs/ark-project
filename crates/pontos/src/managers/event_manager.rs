@@ -3,7 +3,7 @@ use crate::storage::Storage;
 use crate::ContractType;
 use anyhow::{anyhow, Result};
 use ark_starknet::format::to_hex_str;
-use log::debug;
+use log::{debug, info};
 use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
@@ -67,7 +67,7 @@ impl<S: Storage> EventManager<S> {
         token_event.event_type = Self::get_event_type(from, to);
         token_event.event_id = Self::get_event_id_as_field_element(&token_event);
 
-        debug!("Registering event: {:?}", token_event);
+        info!("Registering event: {:?}", token_event);
 
         self.storage
             .register_event(&token_event, event.block_number)
