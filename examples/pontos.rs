@@ -5,10 +5,11 @@
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
 use arkproject::pontos::{
-    event_handler::EventHandler, storage::types::*, storage::DefaultStorage, Pontos, PontosConfig,
+    event_handler::EventHandler, storage::types::*, storage::Storage, Pontos, PontosConfig,
 };
 use async_trait::async_trait;
 use starknet::core::types::BlockId;
+use starknet::core::types::*;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -28,7 +29,7 @@ async fn main() -> Result<()> {
 
     let pontos = Arc::new(Pontos::new(
         Arc::clone(&client),
-        Arc::new(DefaultStorage::new().await.unwrap()),
+        Arc::new(DefaultStorage::new()),
         Arc::new(DefaultEventHandler::new()),
         config,
     ));
@@ -91,5 +92,91 @@ impl EventHandler for DefaultEventHandler {
 
     async fn on_event_registered(&self, event: TokenEvent) {
         println!("pontos: event registered {:?}", event);
+    }
+}
+
+// Default storage.
+pub struct DefaultStorage;
+
+impl DefaultStorage {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Default for DefaultStorage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[async_trait]
+impl Storage for DefaultStorage {
+    async fn register_mint(
+        &self,
+        token: &TokenFromEvent,
+        _block_number: u64,
+    ) -> Result<(), StorageError> {
+        log::trace!("Registering mint {:?}", token);
+        Ok(())
+    }
+
+    async fn register_token(
+        &self,
+        token: &TokenFromEvent,
+        _block_number: u64,
+    ) -> Result<(), StorageError> {
+        log::trace!("Registering token {:?}", token);
+        Ok(())
+    }
+
+    async fn register_event(
+        &self,
+        event: &TokenEvent,
+        _block_number: u64,
+    ) -> Result<(), StorageError> {
+        log::trace!("Registering event {:?}", event);
+        Ok(())
+    }
+
+    async fn get_contract_type(
+        &self,
+        contract_address: &FieldElement,
+    ) -> Result<ContractType, StorageError> {
+        log::trace!("Getting contract info for contract {}", contract_address);
+        Ok(ContractType::Other)
+    }
+
+    async fn register_contract_info(
+        &self,
+        contract_address: &FieldElement,
+        contract_type: &ContractType,
+        _block_number: u64,
+    ) -> Result<(), StorageError> {
+        log::trace!(
+            "Registering contract info {:?} for contract {}",
+            contract_type,
+            contract_address
+        );
+        Ok(())
+    }
+
+    async fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError> {
+        log::trace!("Setting block info {:?} for block #{}", info, block_number);
+        Ok(())
+    }
+
+    async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError> {
+        log::trace!("Getting block info for block #{}", block_number);
+        Ok(BlockInfo {
+            indexer_version: 0,
+            indexer_identifier: "v0".to_string(),
+            status: BlockIndexingStatus::None,
+        })
+    }
+
+    async fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
+        log::trace!("Cleaning block #{}", block_number);
+        Ok(())
     }
 }
