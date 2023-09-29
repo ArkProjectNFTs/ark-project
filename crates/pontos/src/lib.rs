@@ -2,13 +2,15 @@ pub mod event_handler;
 pub mod managers;
 pub mod storage;
 
+use crate::storage::types::BlockIndexingStatus;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use event_handler::EventHandler;
+use log::{info, trace};
 use managers::{BlockManager, CollectionManager, EventManager, TokenManager};
 use starknet::core::types::*;
 use std::sync::Arc;
-use storage::types::{BlockIndexingStatus, ContractType, StorageError};
+use storage::types::{ContractType, StorageError};
 use storage::Storage;
 use tokio::sync::RwLock as AsyncRwLock;
 use tokio::time::{self, Duration};
@@ -100,7 +102,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         let mut to_u64 = self.client.block_id_to_u64(&to_block).await?;
 
         loop {
-            log::trace!("Indexing block range: {} {}", current_u64, to_u64);
+            trace!("Indexing block range: {} {}", current_u64, to_u64);
 
             to_u64 = self
                 .check_range(current_u64, to_u64, is_head_of_chain)
@@ -117,6 +119,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 current_u64 += 1;
                 continue;
             }
+
+            self.event_handler.on_block_processing(current_u64).await;
 
             // Set block as pending
             self.block_manager
@@ -138,6 +142,12 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     self.event_manager.keys_selector(),
                 )
                 .await?;
+
+            let total_events_count: usize = blocks_events.values().map(|events| events.len()).sum();
+            info!(
+                "✨ Processing block {}. Total Events Count: {}",
+                current_u64, total_events_count
+            );
 
             for (_, events) in blocks_events {
                 for e in events {
@@ -170,7 +180,13 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                         .format_and_register_event(&e, contract_type, block_ts)
                         .await
                     {
-                        Ok(te) => te,
+                        Ok(token_event) => {
+                            info!(
+                                "{}, Tx Hash={}",
+                                token_event.event_type, token_event.transaction_hash
+                            );
+                            token_event
+                        }
                         Err(err) => {
                             log::error!("Error while registering event {:?}\n{:?}", err, e);
                             continue;
@@ -199,13 +215,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     BlockIndexingStatus::Terminated,
                 )
                 .await?;
-
             self.event_handler
-                .on_block_processed(
-                    current_u64,
-                    self.config.indexer_version,
-                    &self.config.indexer_identifier,
-                )
+                .on_terminated(current_u64, (current_u64 as f64 / to_u64 as f64) * 100.0)
                 .await;
 
             current_u64 += 1;
@@ -216,7 +227,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         if current >= to {
             if !is_head_of_chain {
                 // TODO: can print some stats here if necessary.
-                log::info!("End of indexing block range");
+                info!("End of indexing block range");
                 std::process::exit(0);
             }
 

@@ -13,22 +13,14 @@ use async_trait::async_trait;
 #[allow(unused)]
 pub trait EventHandler {
     /// Pontos has normally terminated the indexation of the given blocks.
-    async fn on_terminated(&self, indexer_version: u64, indexer_identifier: &str) {}
+    async fn on_terminated(&self, block_number: u64, indexation_progress: f64) {}
 
     /// Block has be processed by Pontos.
-    async fn on_block_processed(
-        &self,
-        block_number: u64,
-        indexer_version: u64,
-        indexer_identifier: &str,
-    ) {
-    }
+    async fn on_block_processing(&self, block_number: u64) {}
 
     /// A new token has be registered.
     async fn on_token_registered(&self, token: TokenFromEvent) {}
 
     /// A new event has be registered.
     async fn on_event_registered(&self, event: TokenEvent) {}
-
-    // TODO: add pertinent events to react on.
 }

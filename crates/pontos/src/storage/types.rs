@@ -42,10 +42,10 @@ pub enum EventType {
 impl fmt::Display for EventType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EventType::Mint => write!(f, "mint"),
-            EventType::Burn => write!(f, "burn"),
-            EventType::Transfer => write!(f, "transfer"),
-            EventType::Uninitialized => write!(f, "uninitialized"),
+            EventType::Mint => write!(f, "🟢 Mint"),
+            EventType::Burn => write!(f, "🔴 Burn"),
+            EventType::Transfer => write!(f, "🔵 Transfer"),
+            EventType::Uninitialized => write!(f, "❓ Uninitialized"),
         }
     }
 }
@@ -208,9 +208,19 @@ impl FromStr for BlockIndexingStatus {
     }
 }
 
+#[derive(Debug)]
 pub enum IndexerStatus {
     Running,
     Stopped,
+}
+
+impl fmt::Display for IndexerStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IndexerStatus::Running => write!(f, "running"),
+            IndexerStatus::Stopped => write!(f, "stopped"),
+        }
+    }
 }
 
 pub struct Range {

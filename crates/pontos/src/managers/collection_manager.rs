@@ -3,6 +3,7 @@ use crate::storage::types::StorageError;
 use crate::storage::Storage;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
+use log::info;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
@@ -55,7 +56,7 @@ impl<S: Storage, C: StarknetClient> CollectionManager<S, C> {
                 // Can't find info, try to identify with calls.
                 let contract_type = self.get_contract_type(address).await?;
 
-                log::info!(
+                info!(
                     "New contract identified [{:#064x}] : {}",
                     address,
                     contract_type.to_string()

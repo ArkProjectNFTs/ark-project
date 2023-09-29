@@ -3,6 +3,7 @@ use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_starknet::format::to_hex_str;
+use log::{debug, info};
 use starknet::core::types::*;
 use starknet::macros::selector;
 use std::sync::Arc;
@@ -31,15 +32,19 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             ..Default::default()
         };
 
-        let token_owner = self
+        let token_owner_raw_result = self
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)
                     .expect("Contract address bad format"),
                 event.token_id.low,
                 event.token_id.high,
             )
-            .await?[0];
-        token.owner = to_hex_str(&token_owner);
+            .await;
+
+        token.owner = token_owner_raw_result
+            .ok()
+            .and_then(|owner| owner.get(0).map(to_hex_str))
+            .unwrap_or_default();
 
         if event.event_type == EventType::Mint {
             token.mint_address = Some(event.to_address_field_element);
@@ -65,29 +70,26 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         token_id_high: FieldElement,
     ) -> Result<Vec<FieldElement>> {
         let block = BlockId::Tag(BlockTag::Latest);
+        let selectors = vec![selector!("owner_of"), selector!("ownerOf")];
 
-        match self
-            .client
-            .call_contract(
-                contract_address,
-                selector!("owner_of"),
-                vec![token_id_low, token_id_high],
-                block,
-            )
-            .await
-        {
-            Ok(res) => Ok(res),
-            Err(_) => self
+        for selector in selectors {
+            match self
                 .client
                 .call_contract(
                     contract_address,
-                    selector!("ownerOf"),
+                    selector,
                     vec![token_id_low, token_id_high],
                     block,
                 )
                 .await
-                .map_err(|_| anyhow!("Failed to get token owner from chain")),
+            {
+                Ok(res) => return Ok(res),
+                Err(_) => debug!("Failed to get token owner with {:?}", selector),
+            }
         }
+
+        info!("Failed to get token owner");
+        Err(anyhow!("Failed to get token owner from chain"))
     }
 }
 
