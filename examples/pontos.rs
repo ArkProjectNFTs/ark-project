@@ -8,7 +8,7 @@ use arkproject::pontos::{
     event_handler::EventHandler, storage::types::*, storage::Storage, Pontos, PontosConfig,
 };
 use async_trait::async_trait;
-use starknet::core::types::BlockId;
+use starknet::core::types::{BlockId, FieldElement};
 use std::sync::Arc;
 
 #[tokio::main]

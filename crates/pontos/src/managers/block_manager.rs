@@ -25,6 +25,10 @@ impl<S: Storage> BlockManager<S> {
             .await
     }
 
+    pub async fn clean_block(&self, block_number: u64) -> bool {
+        self.storage.clean_block(block_number).await.is_ok()
+    }
+
     /// Returns true if the given block number must be indexed.
     /// False otherwise.
     pub async fn check_candidate(
@@ -77,16 +81,24 @@ impl<S: Storage> BlockManager<S> {
 /// of the transactions already processed by the indexer.
 #[derive(Debug)]
 pub struct PendingBlockData {
-    pub timestamp: u64,
+    timestamp: u64,
     txs_hashes: Vec<FieldElement>,
 }
 
 impl PendingBlockData {
     pub fn new() -> Self {
         PendingBlockData {
-            timestamp: u64::MAX,
+            timestamp: 0,
             txs_hashes: vec![],
         }
+    }
+
+    pub fn get_timestamp(&self) -> u64 {
+        self.timestamp
+    }
+
+    pub fn set_timestamp(&mut self, ts: u64) {
+        self.timestamp = ts;
     }
 
     pub fn add_tx_as_processed(&mut self, tx_hash: &FieldElement) {

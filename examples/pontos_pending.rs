@@ -33,11 +33,15 @@ async fn main() -> Result<()> {
         config,
     ));
 
-    let task = tokio::spawn(async move { Arc::clone(&pontos).index_pending().await });
+    let task = tokio::spawn(async move {
+        if let Err(err) = Arc::clone(&pontos).index_pending().await {
+            log::error!("Error in the spawned task: {:?}", err);
+        } else {
+            log::info!("End task");
+        }
+    });
 
-    if let Err(err) = task.await {
-        eprintln!("Error in the spawned task: {:?}", err);
-    }
+    futures::future::join_all(vec![task]).await;
 
     Ok(())
 }
