@@ -1,5 +1,6 @@
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use crate::storage::Storage;
+use starknet::core::types::FieldElement;
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -12,6 +13,16 @@ impl<S: Storage> BlockManager<S> {
         Self {
             storage: Arc::clone(&storage),
         }
+    }
+
+    pub async fn update_last_pending_block(
+        &self,
+        block_number: u64,
+        block_timestamp: u64,
+    ) -> Result<(), StorageError> {
+        self.storage
+            .update_last_pending_block(block_number, block_timestamp)
+            .await
     }
 
     /// Returns true if the given block number must be indexed.
@@ -58,6 +69,42 @@ impl<S: Storage> BlockManager<S> {
             )
             .await?;
         Ok(())
+    }
+}
+
+/// Data of the pending block being indexed.
+/// The vector of txs hashes are the hashes
+/// of the transactions already processed by the indexer.
+#[derive(Debug)]
+pub struct PendingBlockData {
+    pub timestamp: u64,
+    txs_hashes: Vec<FieldElement>,
+}
+
+impl PendingBlockData {
+    pub fn new() -> Self {
+        PendingBlockData {
+            timestamp: u64::MAX,
+            txs_hashes: vec![],
+        }
+    }
+
+    pub fn add_tx_as_processed(&mut self, tx_hash: &FieldElement) {
+        self.txs_hashes.push(*tx_hash);
+    }
+
+    pub fn is_tx_processed(&self, tx_hash: &FieldElement) -> bool {
+        self.txs_hashes.contains(tx_hash)
+    }
+
+    pub fn clear_tx_hashes(&mut self) {
+        self.txs_hashes.clear();
+    }
+}
+
+impl Default for PendingBlockData {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
