@@ -43,7 +43,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
 
         token.owner = token_owner_raw_result
             .ok()
-            .and_then(|owner| owner.get(0).map(|o| to_hex_str(o)))
+            .and_then(|owner| owner.get(0).map(to_hex_str))
             .unwrap_or_default();
 
         if event.event_type == EventType::Mint {
@@ -76,7 +76,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             match self
                 .client
                 .call_contract(
-                    contract_address.clone(),
+                    contract_address,
                     selector,
                     vec![token_id_low, token_id_high],
                     block,
