@@ -24,10 +24,10 @@ pub trait EventHandler {
     ) {
     }
 
-    /// A new token has be registered.
+    /// A new token has been registered.
     async fn on_token_registered(&self, token: TokenFromEvent) {}
 
-    /// A new event has be registered.
+    /// A new event has been registered.
     async fn on_event_registered(&self, event: TokenEvent) {}
 
     // TODO: add pertinent events to react on.

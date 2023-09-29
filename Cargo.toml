@@ -15,7 +15,6 @@ ArkProject libraries written in Rust
 
 [workspace]
 members = [
-  "crates/ark-prisma-cli",
   "crates/ark-metadata",
   "crates/ark-starknet",
   "crates/pontos",
@@ -32,6 +31,7 @@ async-trait = "0.1.73"
 starknet = "0.5.0"
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
+sqlx = { version = "0.7.1", features = ["sqlite", "runtime-tokio", "migrate"] }
 log = "0.4.17"
 
 # Thoses dependencies are used by the examples + the lib.rs.

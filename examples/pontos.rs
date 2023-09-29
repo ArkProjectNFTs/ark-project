@@ -1,6 +1,6 @@
 //! How to start a NFT indexer.
 //!
-//! Can be run with `cargo run --example nft_indexer`.
+//! Can be run with `cargo run --example pontos`.
 //!
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
@@ -13,6 +13,7 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+
     let client = Arc::new(
         StarknetClientHttp::new(
             "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
@@ -28,30 +29,32 @@ async fn main() -> Result<()> {
 
     let pontos = Arc::new(Pontos::new(
         Arc::clone(&client),
-        Arc::new(DefaultStorage::new().await.unwrap()),
+        Arc::new(DefaultStorage::new("db.sqlite3").await.unwrap()),
         Arc::new(DefaultEventHandler::new()),
         config,
     ));
 
-    let mut handles = vec![];
-    let do_force = false;
+    let indexer = Arc::clone(&pontos);
 
-    for i in 0..3 {
-        let indexer = Arc::clone(&pontos);
-        let handle = tokio::spawn(async move {
-            let from = BlockId::Number(i * 10_000);
-            let to = BlockId::Number(i * 10_000 + 100);
-            println!("Indexer [{:?} - {:?}] started!", from, to);
-            match indexer.index_block_range(from, to, do_force).await {
-                Ok(_) => println!("Indexer [{:?} - {:?}] completed!", from, to),
-                Err(e) => println!("Indexer [{:?} - {:?}] failed! [{:?}]", from, to, e),
-            }
-        });
+    // let mut handles = vec![];
+    // let do_force = false;
 
-        handles.push(handle);
-    }
+    // for i in 0..3 {
+    //     let indexer = Arc::clone(&pontos);
+    //     let handle = tokio::spawn(async move {
+    //         let from = BlockId::Number(i + 1 * 10_000);
+    //         let to = BlockId::Number(i + 1 * 10_000 + 100);
+    //         println!("Indexer [{:?} - {:?}] started!", from, to);
+    //         match indexer.index_block_range(from, to, do_force).await {
+    //             Ok(_) => println!("Indexer [{:?} - {:?}] completed!", from, to),
+    //             Err(e) => println!("Indexer [{:?} - {:?}] failed! [{:?}]", from, to, e),
+    //         }
+    //     });
 
-    futures::future::join_all(handles).await;
+    //     handles.push(handle);
+    // }
+
+    // futures::future::join_all(handles).await;
 
     Ok(())
 }
