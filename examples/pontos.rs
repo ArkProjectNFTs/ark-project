@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
         let indexer = Arc::clone(&pontos);
         let handle = tokio::spawn(async move {
             let from = BlockId::Number(i * 10_000);
-            let to = BlockId::Number(i * 10_000 + 100);
+            let to = BlockId::Number(i * 10_000 + 3);
             println!("Indexer [{:?} - {:?}] started!", from, to);
             match indexer.index_block_range(from, to, do_force).await {
                 Ok(_) => println!("Indexer [{:?} - {:?}] completed!", from, to),
