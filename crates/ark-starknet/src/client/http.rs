@@ -5,7 +5,7 @@ use async_trait::async_trait;
 
 use regex::Regex;
 use starknet::{
-    core::{types::FieldElement, types::*},
+    core::types::*,
     providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider},
 };
 use std::collections::HashMap;
@@ -28,6 +28,77 @@ impl StarknetClient for StarknetClientHttp {
         let provider = AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url)));
 
         Ok(Self { provider })
+    }
+
+    /// Transaction receipts don't have `EmittedEvent` but `Event` instead.
+    /// This function aims at converting the `Event` into `EmittedEvent` to
+    /// be compatible with all the indexing process.
+    async fn events_from_tx_receipt(
+        &self,
+        transaction_hash: FieldElement,
+    ) -> Result<Vec<EmittedEvent>> {
+        let receipt = self
+            .provider
+            .get_transaction_receipt(transaction_hash)
+            .await?;
+        let mut block_hash = FieldElement::MAX;
+        let mut block_number = u64::MAX;
+
+        let events = match receipt {
+            // We must assign the block hash and number for every type
+            // of transaction because we don't know in advance which
+            // type of txs are present in the block.
+            MaybePendingTransactionReceipt::Receipt(r) => match r {
+                TransactionReceipt::Invoke(inner) => {
+                    block_hash = inner.block_hash;
+                    block_number = inner.block_number;
+                    inner.events
+                }
+                TransactionReceipt::L1Handler(inner) => {
+                    block_hash = inner.block_hash;
+                    block_number = inner.block_number;
+                    inner.events
+                }
+                TransactionReceipt::Declare(inner) => {
+                    block_hash = inner.block_hash;
+                    block_number = inner.block_number;
+                    inner.events
+                }
+                TransactionReceipt::Deploy(inner) => {
+                    block_hash = inner.block_hash;
+                    block_number = inner.block_number;
+                    inner.events
+                }
+                TransactionReceipt::DeployAccount(inner) => {
+                    block_hash = inner.block_hash;
+                    block_number = inner.block_number;
+                    inner.events
+                }
+            },
+            // For pending, we don't have the block hash or the block number.
+            // Default value of MAX is used.
+            MaybePendingTransactionReceipt::PendingReceipt(pr) => match pr {
+                PendingTransactionReceipt::Invoke(inner) => inner.events,
+                PendingTransactionReceipt::L1Handler(inner) => inner.events,
+                PendingTransactionReceipt::Declare(inner) => inner.events,
+                PendingTransactionReceipt::Deploy(inner) => inner.events,
+                PendingTransactionReceipt::DeployAccount(inner) => inner.events,
+            },
+        };
+
+        let mut emitted_events = vec![];
+        for e in events {
+            emitted_events.push(EmittedEvent {
+                from_address: e.from_address,
+                keys: e.keys,
+                data: e.data,
+                block_hash,
+                block_number,
+                transaction_hash,
+            })
+        }
+
+        Ok(emitted_events)
     }
 
     ///
@@ -68,6 +139,19 @@ impl StarknetClient for StarknetClientHttp {
         let timestamp = match block {
             MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
             MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,
+        };
+
+        Ok(timestamp)
+    }
+
+    /// Retuns the tx hashes of the asked block + the block timestamp.
+    async fn block_txs_hashes(&self, block: BlockId) -> Result<(u64, Vec<FieldElement>)> {
+        let block = self.provider.get_block_with_tx_hashes(block).await?;
+        let timestamp = match block {
+            MaybePendingBlockWithTxHashes::Block(block) => (block.timestamp, block.transactions),
+            MaybePendingBlockWithTxHashes::PendingBlock(block) => {
+                (block.timestamp, block.transactions)
+            }
         };
 
         Ok(timestamp)

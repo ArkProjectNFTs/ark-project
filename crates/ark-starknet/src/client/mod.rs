@@ -20,6 +20,15 @@ pub trait StarknetClient {
         Self: Sized;
 
     ///
+    async fn events_from_tx_receipt(
+        &self,
+        transaction_hash: FieldElement,
+    ) -> Result<Vec<EmittedEvent>>;
+
+    ///
+    async fn block_txs_hashes(&self, block: BlockId) -> Result<(u64, Vec<FieldElement>)>;
+
+    ///
     async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64>;
 
     ///

@@ -1,6 +1,6 @@
-//! How to start a NFT indexer.
+//! How to run pontos on pending block only.
 //!
-//! Can be run with `cargo run --example pontos`.
+//! Can be run with `cargo run --example pontos_pending`.
 //!
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
@@ -8,7 +8,7 @@ use arkproject::pontos::{
     event_handler::EventHandler, storage::types::*, storage::Storage, Pontos, PontosConfig,
 };
 use async_trait::async_trait;
-use starknet::core::types::{BlockId, FieldElement};
+use starknet::core::types::*;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -33,25 +33,15 @@ async fn main() -> Result<()> {
         config,
     ));
 
-    let mut handles = vec![];
-    let do_force = false;
+    let task = tokio::spawn(async move {
+        if let Err(err) = Arc::clone(&pontos).index_pending().await {
+            log::error!("Error in the spawned task: {:?}", err);
+        } else {
+            log::info!("End task");
+        }
+    });
 
-    for i in 0..3 {
-        let indexer = Arc::clone(&pontos);
-        let handle = tokio::spawn(async move {
-            let from = BlockId::Number(i * 10_000);
-            let to = BlockId::Number(i * 10_000 + 3);
-            println!("Indexer [{:?} - {:?}] started!", from, to);
-            match indexer.index_block_range(from, to, do_force).await {
-                Ok(_) => println!("Indexer [{:?} - {:?}] completed!", from, to),
-                Err(e) => println!("Indexer [{:?} - {:?}] failed! [{:?}]", from, to, e),
-            }
-        });
-
-        handles.push(handle);
-    }
-
-    futures::future::join_all(handles).await;
+    futures::future::join_all(vec![task]).await;
 
     Ok(())
 }
@@ -66,28 +56,7 @@ impl DefaultEventHandler {
 }
 
 #[async_trait]
-impl EventHandler for DefaultEventHandler {
-    async fn on_terminated(&self, block_number: u64, indexation_progress: f64) {
-        println!(
-            "pontos: block processed: block_number={}, indexation_progress={}",
-            block_number, indexation_progress
-        );
-    }
-
-    async fn on_block_processing(&self, block_number: u64) {
-        // TODO: here we want to call some storage if needed from an other object.
-        // But it's totally unrelated to the core process, so we can do whatever we want here.
-        println!("pontos: processing block: block_number={}", block_number);
-    }
-
-    async fn on_token_registered(&self, token: TokenFromEvent) {
-        println!("pontos: token registered {:?}", token);
-    }
-
-    async fn on_event_registered(&self, event: TokenEvent) {
-        println!("pontos: event registered {:?}", event);
-    }
-}
+impl EventHandler for DefaultEventHandler {}
 
 // Default storage.
 pub struct DefaultStorage;
@@ -137,7 +106,10 @@ impl Storage for DefaultStorage {
         &self,
         contract_address: &FieldElement,
     ) -> Result<ContractType, StorageError> {
-        log::trace!("Getting contract info for contract {}", contract_address);
+        log::trace!(
+            "Getting contract info for contract {:#64x}",
+            contract_address
+        );
         Ok(ContractType::Other)
     }
 
@@ -148,7 +120,7 @@ impl Storage for DefaultStorage {
         _block_number: u64,
     ) -> Result<(), StorageError> {
         log::trace!(
-            "Registering contract info {:?} for contract {}",
+            "Registering contract info {:?} for contract {:#64x}",
             contract_type,
             contract_address
         );

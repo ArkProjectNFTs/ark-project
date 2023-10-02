@@ -46,4 +46,14 @@ pub trait Storage {
     async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError>;
 
     async fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
+
+    /// A block that was pending is now the latest block.
+    /// When pending, the only data we have to identify the block is the timestamp.
+    /// This function aims at updating all database record that were inserted with pending
+    /// state with the new block number. The timestamp is used as primary key here.
+    async fn update_last_pending_block(
+        &self,
+        block_number: u64,
+        block_timestamp: u64,
+    ) -> Result<(), StorageError>;
 }
