@@ -41,7 +41,7 @@ impl<S: Storage> BlockManager<S> {
             return match self.storage.clean_block(block_number).await {
                 Ok(()) => Ok(true),
                 Err(e) => Err(e),
-            }
+            };
         }
 
         match self.storage.get_block_info(block_number).await {
