@@ -126,7 +126,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                         latest_ts,
                     );
 
-                    self.block_manager.clean_block(cache.get_timestamp()).await;
+                    self.block_manager.clean_block(cache.get_timestamp()).await?;
 
                     // Clean up and wait next tick to restart on the last pending block.
                     cache.set_timestamp(0);
@@ -228,10 +228,10 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 break;
             }
 
-            if !self
+            if self
                 .block_manager
                 .check_candidate(current_u64, self.config.indexer_version, do_force)
-                .await
+                .await?
             {
                 current_u64 += 1;
                 continue;

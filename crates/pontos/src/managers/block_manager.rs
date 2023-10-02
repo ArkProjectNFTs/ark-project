@@ -25,8 +25,8 @@ impl<S: Storage> BlockManager<S> {
             .await
     }
 
-    pub async fn clean_block(&self, block_number: u64) -> bool {
-        self.storage.clean_block(block_number).await.is_ok()
+    pub async fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
+        self.storage.clean_block(block_number).await
     }
 
     /// Returns true if the given block number must be indexed.
@@ -36,22 +36,28 @@ impl<S: Storage> BlockManager<S> {
         block_number: u64,
         indexer_version: u64,
         do_force: bool,
-    ) -> bool {
+    ) -> Result<bool, StorageError> {
         if do_force {
-            return self.storage.clean_block(block_number).await.is_ok();
+            return match self.storage.clean_block(block_number).await {
+                Ok(()) => Ok(true),
+                Err(e) => Err(e),
+            }
         }
 
         match self.storage.get_block_info(block_number).await {
             Ok(info) => {
                 log::debug!("Block {} already indexed", block_number);
                 if indexer_version > info.indexer_version {
-                    self.storage.clean_block(block_number).await.is_ok()
+                    match self.storage.clean_block(block_number).await {
+                        Ok(()) => Ok(true),
+                        Err(e) => Err(e),
+                    }
                 } else {
-                    false
+                    Ok(false)
                 }
             }
-            Err(StorageError::NotFound) => true,
-            Err(_) => false,
+            Err(StorageError::NotFound) => Ok(true),
+            Err(_) => Ok(false),
         }
     }
 
@@ -155,9 +161,9 @@ mod tests {
         };
 
         // New version, should update.
-        assert!(manager.check_candidate(1, 2, false).await);
+        assert!(manager.check_candidate(1, 2, false).await.unwrap());
 
         // Force but same version, should update.
-        assert!(manager.check_candidate(2, 0, true).await);
+        assert!(manager.check_candidate(2, 0, true).await.unwrap());
     }
 }
