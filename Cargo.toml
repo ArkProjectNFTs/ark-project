@@ -28,7 +28,7 @@ ark-metadata = { path = "./crates/ark-metadata" }
 pontos = { path = "./crates/pontos" }
 diri = { path = "./crates/diri" }
 async-trait = "0.1.73"
-starknet = "0.5.0"
+starknet = "0.6.0"
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
