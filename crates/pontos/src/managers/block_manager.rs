@@ -31,8 +31,8 @@ impl<S: Storage> BlockManager<S> {
         self.storage.clean_block(block_number).await
     }
 
-    /// Returns true if the given block number must be indexed.
-    /// False otherwise.
+    /// Returns false if the given block number must be indexed.
+    /// True otherwise.
     pub async fn check_candidate(
         &self,
         block_number: u64,
@@ -42,8 +42,8 @@ impl<S: Storage> BlockManager<S> {
         if do_force {
             // Force indexing by cleaning the block, and return true.
             match self.storage.clean_block(block_number).await {
-                Ok(()) => Ok(true),
-                Err(e) => Err(e),
+                Ok(()) => Ok(false),
+                Err(_) => Ok(true),
             }
         } else {
             match self.storage.get_block_info(block_number).await {
@@ -56,14 +56,10 @@ impl<S: Storage> BlockManager<S> {
 
                     // Compare the indexer versions.
                     match compare(indexer_version, info.indexer_version) {
-                        Ok(Cmp::Gt) => {
-                            // If the current version is greater, clean the block and return true for indexing.
-                            match self.storage.clean_block(block_number).await {
-                                Ok(()) => Ok(true),
-                                Err(_) => Ok(false), // Error cleaning, return false.
-                            }
-                        }
-                        _ => Ok(false), // Versions are equal or current is older, return false for skipping indexing.
+                        // if the current version is greater, clean the block & return false we index the block
+                        Ok(Cmp::Gt) => self.storage.clean_block(block_number).await.map(|_| false),
+                        // if the current version is equal, return false we skip the block indexation
+                        _ => Ok(true),
                     }
                 }
                 Err(StorageError::NotFound) => Ok(false),
@@ -213,10 +209,10 @@ mod tests {
 
         // New version, should return true for indexing.
         let result = manager.check_candidate(1, "v0.0.2", false).await.unwrap();
-        assert!(result == true);
+        assert!(result == false);
 
         // Force but same version, should return true for indexing.
         let result = manager.check_candidate(2, "v0.0.1", true).await.unwrap();
-        assert!(result == true);
+        assert!(result == false);
     }
 }
