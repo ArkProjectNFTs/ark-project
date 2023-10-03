@@ -1,14 +1,13 @@
 /// Provides file management capabilities.
 ///
-/// This module offers functionality to save files both locally and to AWS S3.
+/// This module offers functionality to save files locally by default
 use std::fs::{create_dir_all, File};
 use std::io::prelude::*;
 use std::path::Path;
 
 use anyhow::{Context, Ok, Result};
 use async_trait::async_trait;
-use aws_sdk_s3::primitives::ByteStream;
-use log::{debug, info};
+use log::info;
 
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;
@@ -57,47 +56,6 @@ impl FileManager for LocalFileManager {
             .context("Failed to write to file")?;
 
         info!("File saved: {}", file.name);
-        Ok(())
-    }
-}
-
-/// FileManager implementation that saves files to AWS S3.
-///
-/// This implementation requires a bucket name for storing files in AWS S3.
-#[derive(Default)]
-pub struct AWSFileManager {
-    bucket_name: String,
-}
-
-impl AWSFileManager {
-    /// Create a new AWSFileManager with the specified bucket name.
-    pub fn new(bucket_name: String) -> Self {
-        Self { bucket_name }
-    }
-}
-
-#[async_trait]
-impl FileManager for AWSFileManager {
-    async fn save(&self, file: &FileInfo) -> Result<()> {
-        debug!("Uploading {} to AWS...", file.name);
-
-        let config = aws_config::load_from_env().await;
-        let client = aws_sdk_s3::Client::new(&config);
-        let body = ByteStream::from(file.content.clone());
-
-        let key = match &file.dir_path {
-            Some(dir_path) => format!("{}/{}", dir_path, &file.name),
-            None => file.name.clone(),
-        };
-
-        let _ = client
-            .put_object()
-            .bucket(&self.bucket_name)
-            .key(key)
-            .body(body)
-            .send()
-            .await?;
-
         Ok(())
     }
 }
