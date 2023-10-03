@@ -235,6 +235,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 .check_candidate(current_u64, self.config.indexer_version, do_force)
                 .await?
             {
+                info!("Skipping block, already indexed");
                 current_u64 += 1;
                 continue;
             }
