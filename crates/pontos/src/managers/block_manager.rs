@@ -33,7 +33,7 @@ impl<S: Storage> BlockManager<S> {
 
     /// Returns false if the given block number must be indexed.
     /// True otherwise.
-    pub async fn check_candidate(
+    pub async fn should_skip_indexing(
         &self,
         block_number: u64,
         indexer_version: &str,
@@ -145,7 +145,7 @@ mod tests {
     };
 
     #[tokio::test]
-    async fn test_check_candidate_not_found() {
+    async fn test_should_skip_indexing_not_found() {
         let mut mock_storage = MockStorage::default();
 
         // Mock the get_block_info to return NotFound.
@@ -167,7 +167,7 @@ mod tests {
 
         // Should return false as the block is not found.
         let result = manager
-            .check_candidate(block_number, "v0.0.2", false)
+            .should_skip_indexing(block_number, "v0.0.2", false)
             .await
             .unwrap();
 
@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_check_candidate() {
+    async fn test_should_skip_indexing() {
         let mut mock_storage = MockStorage::default();
 
         // Mock the clean_block method to return Ok(()).
@@ -208,11 +208,17 @@ mod tests {
         };
 
         // New version, should return true for indexing.
-        let result = manager.check_candidate(1, "v0.0.2", false).await.unwrap();
+        let result = manager
+            .should_skip_indexing(1, "v0.0.2", false)
+            .await
+            .unwrap();
         assert!(result == false);
 
         // Force but same version, should return true for indexing.
-        let result = manager.check_candidate(2, "v0.0.1", true).await.unwrap();
+        let result = manager
+            .should_skip_indexing(2, "v0.0.1", true)
+            .await
+            .unwrap();
         assert!(result == false);
     }
 }
