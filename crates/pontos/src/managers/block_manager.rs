@@ -1,6 +1,6 @@
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use crate::storage::Storage;
-use log::debug;
+use log::{debug, trace};
 use starknet::core::types::FieldElement;
 use std::sync::Arc;
 use version_compare::{compare, Cmp};
@@ -48,9 +48,9 @@ impl<S: Storage> BlockManager<S> {
 
         match self.storage.get_block_info(block_number).await {
             Ok(info) => {
-                debug!("Block {} already indexed", block_number);
+                trace!("Block {} already indexed", block_number);
 
-                println!(
+                debug!(
                     "Checking indexation version: current={:?}, last={:?}",
                     indexer_version, info.indexer_version
                 );
