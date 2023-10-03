@@ -41,7 +41,7 @@ impl<S: Storage> BlockManager<S> {
     ) -> Result<bool, StorageError> {
         if do_force {
             return match self.storage.clean_block(block_number).await {
-                Ok(()) => Ok(true),
+                Ok(()) => Ok(false),
                 Err(e) => Err(e),
             };
         }
@@ -49,18 +49,21 @@ impl<S: Storage> BlockManager<S> {
         match self.storage.get_block_info(block_number).await {
             Ok(info) => {
                 trace!("Block {} already indexed", block_number);
-
                 debug!(
                     "Checking indexation version: current={:?}, last={:?}",
                     indexer_version, info.indexer_version
                 );
-
+                // check if the current indexer version is greater than the last one
                 match compare(indexer_version, info.indexer_version) {
-                    Ok(Cmp::Gt) => self.storage.clean_block(block_number).await.map(|_| true),
-                    _ => Ok(false),
+                    // if the current version is greater, clean the block & return false we index the block
+                    Ok(Cmp::Gt) => self.storage.clean_block(block_number).await.map(|_| false),
+                    // if the current version is equal, return false we skip the block indexation
+                    _ => Ok(true),
                 }
             }
+            // handle item not found in the storage we index the block
             Err(StorageError::NotFound) => Ok(false),
+            // handle base storage errors we skip the block indexation, in most of the case the indexer will break anyway
             Err(_) => Ok(true),
         }
     }
