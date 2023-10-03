@@ -1,7 +1,9 @@
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use crate::storage::Storage;
+use log::debug;
 use starknet::core::types::FieldElement;
 use std::sync::Arc;
+use version_compare::{compare, Cmp};
 
 #[derive(Debug)]
 pub struct BlockManager<S: Storage> {
@@ -34,7 +36,7 @@ impl<S: Storage> BlockManager<S> {
     pub async fn check_candidate(
         &self,
         block_number: u64,
-        indexer_version: u64,
+        indexer_version: &str,
         do_force: bool,
     ) -> Result<bool, StorageError> {
         if do_force {
@@ -46,14 +48,16 @@ impl<S: Storage> BlockManager<S> {
 
         match self.storage.get_block_info(block_number).await {
             Ok(info) => {
-                log::debug!("Block {} already indexed", block_number);
-                if indexer_version > info.indexer_version {
-                    match self.storage.clean_block(block_number).await {
-                        Ok(()) => Ok(true),
-                        Err(e) => Err(e),
-                    }
-                } else {
-                    Ok(false)
+                debug!("Block {} already indexed", block_number);
+
+                println!(
+                    "Checking indexation version: current={:?}, last={:?}",
+                    indexer_version, info.indexer_version
+                );
+
+                match compare(indexer_version, info.indexer_version) {
+                    Ok(Cmp::Gt) => self.storage.clean_block(block_number).await.map(|_| true),
+                    _ => Ok(false),
                 }
             }
             Err(StorageError::NotFound) => Ok(true),
@@ -64,7 +68,7 @@ impl<S: Storage> BlockManager<S> {
     pub async fn set_block_info(
         &self,
         block_number: u64,
-        indexer_version: u64,
+        indexer_version: &str,
         indexer_identifier: &str,
         status: BlockIndexingStatus,
     ) -> Result<(), StorageError> {
@@ -72,7 +76,7 @@ impl<S: Storage> BlockManager<S> {
             .set_block_info(
                 block_number,
                 BlockInfo {
-                    indexer_version,
+                    indexer_version: indexer_version.to_string(),
                     indexer_identifier: indexer_identifier.to_string(),
                     status,
                 },
@@ -135,6 +139,21 @@ mod tests {
     };
 
     #[tokio::test]
+    async fn test_check_candidate_not_found() {
+        let mut mock_storage = MockStorage::default();
+
+        mock_storage
+            .expect_get_block_info()
+            .returning(|_| Box::pin(futures::future::ready(Err(StorageError::NotFound))));
+
+        let manager = BlockManager {
+            storage: Arc::new(mock_storage),
+        };
+
+        assert!(manager.check_candidate(3, "v0.0.2", false).await.unwrap());
+    }
+
+    #[tokio::test]
     async fn test_check_candidate() {
         let mut mock_storage = MockStorage::default();
 
@@ -147,9 +166,9 @@ mod tests {
             .returning(|block_number| {
                 Box::pin(futures::future::ready(if block_number == 1 {
                     Ok(BlockInfo {
-                        indexer_version: 0,
-                        status: BlockIndexingStatus::None,
-                        indexer_identifier: String::from("123"),
+                        status: BlockIndexingStatus::Processing,
+                        indexer_version: String::from("v0.0.1"),
+                        indexer_identifier: String::from("TASK#123"),
                     })
                 } else {
                     Err(StorageError::NotFound)
@@ -161,9 +180,9 @@ mod tests {
         };
 
         // New version, should update.
-        assert!(manager.check_candidate(1, 2, false).await.unwrap());
+        assert!(manager.check_candidate(1, "v0.0.2", false).await.unwrap());
 
         // Force but same version, should update.
-        assert!(manager.check_candidate(2, 0, true).await.unwrap());
+        assert!(manager.check_candidate(2, "v0.0.1", true).await.unwrap());
     }
 }
