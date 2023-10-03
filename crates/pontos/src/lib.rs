@@ -40,7 +40,7 @@ impl From<anyhow::Error> for IndexerError {
 }
 
 pub struct PontosConfig {
-    pub indexer_version: u64,
+    pub indexer_version: String,
     pub indexer_identifier: String,
 }
 
@@ -232,7 +232,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             if self
                 .block_manager
-                .check_candidate(current_u64, self.config.indexer_version, do_force)
+                .should_skip_indexing(current_u64, &self.config.indexer_version, do_force)
                 .await?
             {
                 current_u64 += 1;
@@ -245,7 +245,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             self.block_manager
                 .set_block_info(
                     current_u64,
-                    self.config.indexer_version,
+                    &self.config.indexer_version,
                     &self.config.indexer_identifier,
                     BlockIndexingStatus::Processing,
                 )
@@ -275,7 +275,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             self.block_manager
                 .set_block_info(
                     current_u64,
-                    self.config.indexer_version,
+                    &self.config.indexer_version,
                     &self.config.indexer_identifier,
                     BlockIndexingStatus::Terminated,
                 )

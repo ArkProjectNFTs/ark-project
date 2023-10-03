@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
 
     // Typically loaded from env.
     let config = PontosConfig {
-        indexer_version: 1,
+        indexer_version: String::from("0.0.1"),
         indexer_identifier: "task_1234".to_string(),
     };
 
@@ -163,8 +163,8 @@ impl Storage for DefaultStorage {
     async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError> {
         log::trace!("Getting block info for block #{}", block_number);
         Ok(BlockInfo {
-            indexer_version: 0,
-            indexer_identifier: "v0".to_string(),
+            indexer_version: String::from("0.0.1"),
+            indexer_identifier: String::from("v0"),
             status: BlockIndexingStatus::None,
         })
     }

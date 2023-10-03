@@ -1,7 +1,9 @@
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use crate::storage::Storage;
+use log::{debug, trace};
 use starknet::core::types::FieldElement;
 use std::sync::Arc;
+use version_compare::{compare, Cmp};
 
 #[derive(Debug)]
 pub struct BlockManager<S: Storage> {
@@ -29,42 +31,47 @@ impl<S: Storage> BlockManager<S> {
         self.storage.clean_block(block_number).await
     }
 
-    /// Returns true if the given block number must be indexed.
-    /// False otherwise.
-    pub async fn check_candidate(
+    /// Returns false if the given block number must be indexed.
+    /// True otherwise.
+    pub async fn should_skip_indexing(
         &self,
         block_number: u64,
-        indexer_version: u64,
+        indexer_version: &str,
         do_force: bool,
     ) -> Result<bool, StorageError> {
         if do_force {
-            return match self.storage.clean_block(block_number).await {
-                Ok(()) => Ok(true),
-                Err(e) => Err(e),
-            };
-        }
-
-        match self.storage.get_block_info(block_number).await {
-            Ok(info) => {
-                log::debug!("Block {} already indexed", block_number);
-                if indexer_version > info.indexer_version {
-                    match self.storage.clean_block(block_number).await {
-                        Ok(()) => Ok(true),
-                        Err(e) => Err(e),
-                    }
-                } else {
-                    Ok(false)
-                }
+            // Force indexing by cleaning the block, and return true.
+            match self.storage.clean_block(block_number).await {
+                Ok(()) => Ok(false),
+                Err(_) => Ok(true),
             }
-            Err(StorageError::NotFound) => Ok(true),
-            Err(_) => Ok(false),
+        } else {
+            match self.storage.get_block_info(block_number).await {
+                Ok(info) => {
+                    trace!("Block {} already indexed", block_number);
+                    debug!(
+                        "Checking indexation version: current={:?}, last={:?}",
+                        indexer_version, info.indexer_version
+                    );
+
+                    // Compare the indexer versions.
+                    match compare(indexer_version, info.indexer_version) {
+                        // if the current version is greater, clean the block & return false we index the block
+                        Ok(Cmp::Gt) => self.storage.clean_block(block_number).await.map(|_| false),
+                        // if the current version is equal, return false we skip the block indexation
+                        _ => Ok(true),
+                    }
+                }
+                Err(StorageError::NotFound) => Ok(false),
+                Err(_) => Ok(true),
+            }
         }
     }
 
     pub async fn set_block_info(
         &self,
         block_number: u64,
-        indexer_version: u64,
+        indexer_version: &str,
         indexer_identifier: &str,
         status: BlockIndexingStatus,
     ) -> Result<(), StorageError> {
@@ -72,7 +79,7 @@ impl<S: Storage> BlockManager<S> {
             .set_block_info(
                 block_number,
                 BlockInfo {
-                    indexer_version,
+                    indexer_version: indexer_version.to_string(),
                     indexer_identifier: indexer_identifier.to_string(),
                     status,
                 },
@@ -128,42 +135,90 @@ impl Default for PendingBlockData {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
+    use mockall::predicate::*;
+
     use crate::storage::{
         types::{BlockIndexingStatus, BlockInfo},
         MockStorage,
     };
 
     #[tokio::test]
-    async fn test_check_candidate() {
+    async fn test_should_skip_indexing_not_found() {
         let mut mock_storage = MockStorage::default();
 
+        // Mock the get_block_info to return NotFound.
+        mock_storage
+            .expect_get_block_info()
+            .returning(|_| Box::pin(async { Err(StorageError::NotFound) }));
+
+        let block_number = 3;
+
+        // Mock the clean_block method to return Ok(()).
+        mock_storage
+            .expect_clean_block()
+            .with(eq(block_number))
+            .returning(|_| Box::pin(async { Ok(()) }));
+
+        let manager = BlockManager {
+            storage: Arc::new(mock_storage),
+        };
+
+        // Should return false as the block is not found.
+        let result = manager
+            .should_skip_indexing(block_number, "v0.0.2", false)
+            .await
+            .unwrap();
+
+        assert!(result == false);
+    }
+
+    #[tokio::test]
+    async fn test_should_skip_indexing() {
+        let mut mock_storage = MockStorage::default();
+
+        // Mock the clean_block method to return Ok(()).
         mock_storage
             .expect_clean_block()
             .returning(|_| Box::pin(futures::future::ready(Ok(()))));
 
+        // Mock the get_block_info to return an indexed block with an older version.
         mock_storage
             .expect_get_block_info()
             .returning(|block_number| {
                 Box::pin(futures::future::ready(if block_number == 1 {
                     Ok(BlockInfo {
-                        indexer_version: 0,
-                        status: BlockIndexingStatus::None,
-                        indexer_identifier: String::from("123"),
+                        status: BlockIndexingStatus::Processing,
+                        indexer_version: String::from("v0.0.1"),
+                        indexer_identifier: String::from("TASK#123"),
                     })
                 } else {
                     Err(StorageError::NotFound)
                 }))
             });
 
+        // Mock the clean_block method to return Ok(()).
+        mock_storage
+            .expect_clean_block()
+            .returning(|_| Box::pin(async { Ok(()) }));
+
         let manager = BlockManager {
             storage: Arc::new(mock_storage),
         };
 
-        // New version, should update.
-        assert!(manager.check_candidate(1, 2, false).await.unwrap());
+        // New version, should return true for indexing.
+        let result = manager
+            .should_skip_indexing(1, "v0.0.2", false)
+            .await
+            .unwrap();
+        assert!(result == false);
 
-        // Force but same version, should update.
-        assert!(manager.check_candidate(2, 0, true).await.unwrap());
+        // Force but same version, should return true for indexing.
+        let result = manager
+            .should_skip_indexing(2, "v0.0.1", true)
+            .await
+            .unwrap();
+        assert!(result == false);
     }
 }
