@@ -1,6 +1,8 @@
 /// Provides file management capabilities.
 ///
-/// This module offers functionality to save files locally by default
+/// This module offers functionality to save files.
+/// You may choose to implement the `FileManager` trait
+/// to save files remotely (i.g. AWS S3).
 use std::fs::{create_dir_all, File};
 use std::io::prelude::*;
 use std::path::Path;
