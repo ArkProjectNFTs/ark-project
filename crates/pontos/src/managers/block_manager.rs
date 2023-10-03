@@ -40,31 +40,35 @@ impl<S: Storage> BlockManager<S> {
         do_force: bool,
     ) -> Result<bool, StorageError> {
         if do_force {
-            return match self.storage.clean_block(block_number).await {
-                Ok(()) => Ok(false),
+            // Force indexing by cleaning the block, and return true.
+            match self.storage.clean_block(block_number).await {
+                Ok(()) => Ok(true),
                 Err(e) => Err(e),
-            };
-        }
-
-        match self.storage.get_block_info(block_number).await {
-            Ok(info) => {
-                trace!("Block {} already indexed", block_number);
-                debug!(
-                    "Checking indexation version: current={:?}, last={:?}",
-                    indexer_version, info.indexer_version
-                );
-                // check if the current indexer version is greater than the last one
-                match compare(indexer_version, info.indexer_version) {
-                    // if the current version is greater, clean the block & return false we index the block
-                    Ok(Cmp::Gt) => self.storage.clean_block(block_number).await.map(|_| false),
-                    // if the current version is equal, return false we skip the block indexation
-                    _ => Ok(true),
-                }
             }
-            // handle item not found in the storage we index the block
-            Err(StorageError::NotFound) => Ok(false),
-            // handle base storage errors we skip the block indexation, in most of the case the indexer will break anyway
-            Err(_) => Ok(true),
+        } else {
+            match self.storage.get_block_info(block_number).await {
+                Ok(info) => {
+                    trace!("Block {} already indexed", block_number);
+                    debug!(
+                        "Checking indexation version: current={:?}, last={:?}",
+                        indexer_version, info.indexer_version
+                    );
+
+                    // Compare the indexer versions.
+                    match compare(indexer_version, info.indexer_version) {
+                        Ok(Cmp::Gt) => {
+                            // If the current version is greater, clean the block and return true for indexing.
+                            match self.storage.clean_block(block_number).await {
+                                Ok(()) => Ok(true),
+                                Err(_) => Ok(false), // Error cleaning, return false.
+                            }
+                        }
+                        _ => Ok(false), // Versions are equal or current is older, return false for skipping indexing.
+                    }
+                }
+                Err(StorageError::NotFound) => Ok(false),
+                Err(_) => Ok(true),
+            }
         }
     }
 
@@ -135,7 +139,10 @@ impl Default for PendingBlockData {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
+    use mockall::predicate::*;
+
     use crate::storage::{
         types::{BlockIndexingStatus, BlockInfo},
         MockStorage,
@@ -145,25 +152,42 @@ mod tests {
     async fn test_check_candidate_not_found() {
         let mut mock_storage = MockStorage::default();
 
+        // Mock the get_block_info to return NotFound.
         mock_storage
             .expect_get_block_info()
-            .returning(|_| Box::pin(futures::future::ready(Err(StorageError::NotFound))));
+            .returning(|_| Box::pin(async { Err(StorageError::NotFound) }));
+
+        let block_number = 3;
+
+        // Mock the clean_block method to return Ok(()).
+        mock_storage
+            .expect_clean_block()
+            .with(eq(block_number))
+            .returning(|_| Box::pin(async { Ok(()) }));
 
         let manager = BlockManager {
             storage: Arc::new(mock_storage),
         };
 
-        assert!(manager.check_candidate(3, "v0.0.2", false).await.unwrap());
+        // Should return false as the block is not found.
+        let result = manager
+            .check_candidate(block_number, "v0.0.2", false)
+            .await
+            .unwrap();
+
+        assert!(result == false);
     }
 
     #[tokio::test]
     async fn test_check_candidate() {
         let mut mock_storage = MockStorage::default();
 
+        // Mock the clean_block method to return Ok(()).
         mock_storage
             .expect_clean_block()
             .returning(|_| Box::pin(futures::future::ready(Ok(()))));
 
+        // Mock the get_block_info to return an indexed block with an older version.
         mock_storage
             .expect_get_block_info()
             .returning(|block_number| {
@@ -178,14 +202,21 @@ mod tests {
                 }))
             });
 
+        // Mock the clean_block method to return Ok(()).
+        mock_storage
+            .expect_clean_block()
+            .returning(|_| Box::pin(async { Ok(()) }));
+
         let manager = BlockManager {
             storage: Arc::new(mock_storage),
         };
 
-        // New version, should update.
-        assert!(manager.check_candidate(1, "v0.0.2", false).await.unwrap());
+        // New version, should return true for indexing.
+        let result = manager.check_candidate(1, "v0.0.2", false).await.unwrap();
+        assert!(result == true);
 
-        // Force but same version, should update.
-        assert!(manager.check_candidate(2, "v0.0.1", true).await.unwrap());
+        // Force but same version, should return true for indexing.
+        let result = manager.check_candidate(2, "v0.0.1", true).await.unwrap();
+        assert!(result == true);
     }
 }
