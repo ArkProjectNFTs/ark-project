@@ -312,7 +312,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 continue;
             }
 
-            let token_event = match self
+            let (token_id, token_event) = match self
                 .event_manager
                 .format_and_register_event(&e, contract_type, block_timestamp)
                 .await
@@ -326,7 +326,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             match self
                 .token_manager
-                .format_and_register_token(&token_event)
+                .format_and_register_token(&token_id, &token_event)
                 .await
             {
                 Ok(()) => (),
