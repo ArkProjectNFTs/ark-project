@@ -3,11 +3,11 @@ use crate::storage::Storage;
 use crate::ContractType;
 use anyhow::{anyhow, Result};
 use ark_starknet::format::to_hex_str;
-use log::{debug, info};
 use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
 use std::sync::Arc;
+use tracing::{debug, info};
 
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
 
