@@ -63,7 +63,6 @@ impl<S: Storage> EventManager<S> {
         token_event.transaction_hash = to_hex_str(&event.transaction_hash);
         token_event.token_id_hex = token_id.to_hex();
         token_event.token_id = token_id.to_decimal(false);
-        token_event.token_id_padded = token_id.to_decimal(true);
         token_event.block_number = event.block_number;
         token_event.timestamp = timestamp;
         token_event.contract_type = contract_type.to_string();

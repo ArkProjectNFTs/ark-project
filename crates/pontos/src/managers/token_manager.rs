@@ -33,7 +33,6 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         let mut token = TokenFromEvent {
             address: event.contract_address.clone(),
             token_id: event.token_id.clone(),
-            token_id_padded: event.token_id_padded.clone(),
             token_id_hex: event.token_id_hex.clone(),
             ..Default::default()
         };

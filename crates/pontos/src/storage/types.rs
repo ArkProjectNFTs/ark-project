@@ -55,7 +55,6 @@ pub struct TokenEvent {
     pub contract_address: String,
     pub transaction_hash: String,
     pub token_id: String,
-    pub token_id_padded: String,
     pub token_id_hex: String,
     pub block_number: u64,
     pub contract_type: String,
@@ -72,7 +71,6 @@ impl Default for TokenEvent {
             contract_address: String::new(),
             transaction_hash: String::new(),
             token_id: String::new(),
-            token_id_padded: String::new(),
             token_id_hex: String::new(),
             block_number: 0,
             contract_type: String::new(),
@@ -87,7 +85,6 @@ impl Default for TokenEvent {
 pub struct TokenFromEvent {
     pub address: String,
     pub token_id: String,
-    pub token_id_padded: String,
     pub token_id_hex: String,
     pub owner: String,
     pub mint_address: Option<String>,
