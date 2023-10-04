@@ -13,8 +13,6 @@ use std::sync::Arc;
 use storage::types::{ContractType, StorageError};
 use storage::Storage;
 use tokio::sync::RwLock as AsyncRwLock;
-use tracing::{span, Level};
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
@@ -63,8 +61,6 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         event_handler: Arc<E>,
         config: PontosConfig,
     ) -> Self {
-        init_tracing();
-
         Pontos {
             config,
             client: Arc::clone(&client),
@@ -349,22 +345,4 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
         Ok(())
     }
-}
-
-fn init_tracing() {
-    // Initialize the LogTracer to convert `log` records to `tracing` events
-    tracing_log::LogTracer::init().expect("Setting log tracer failed.");
-
-    // Create the layers
-    let env_filter = EnvFilter::from_default_env();
-    let fmt_layer = fmt::layer();
-
-    // Combine layers and set as global default
-    let subscriber = Registry::default().with(env_filter).with(fmt_layer);
-
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("Setting default subscriber failed.");
-
-    let main_span = span!(Level::TRACE, "main");
-    let _main_guard = main_span.enter();
 }
