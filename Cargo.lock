@@ -5269,7 +5269,6 @@ dependencies = [
  "async-trait",
  "dotenv",
  "futures",
- "log",
  "mockall",
  "num-bigint",
  "serde",
@@ -5278,8 +5277,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
- "tracing-log",
- "tracing-subscriber",
  "version-compare",
 ]
 

@@ -3,11 +3,11 @@ use crate::storage::types::StorageError;
 use crate::storage::Storage;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
-use log::info;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tracing::{info, trace};
 
 pub struct CollectionManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
@@ -35,7 +35,7 @@ impl<S: Storage, C: StarknetClient> CollectionManager<S, C> {
             return Ok(contract_type.clone());
         }
 
-        log::trace!("Cache miss for contract {}", address);
+        trace!("Cache miss for contract {}", address);
 
         let contract_type = self.storage.get_contract_type(&address).await?;
 

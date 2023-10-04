@@ -3,10 +3,10 @@ use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_starknet::format::to_hex_str;
-use log::warn;
 use starknet::core::types::*;
 use starknet::macros::selector;
 use std::sync::Arc;
+use tracing::warn;
 
 #[derive(Debug)]
 pub struct TokenManager<S: Storage, C: StarknetClient> {

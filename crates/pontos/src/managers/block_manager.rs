@@ -1,8 +1,8 @@
 use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use crate::storage::Storage;
-use log::{debug, trace};
 use starknet::core::types::FieldElement;
 use std::sync::Arc;
+use tracing::{debug, trace};
 use version_compare::{compare, Cmp};
 
 #[derive(Debug)]
