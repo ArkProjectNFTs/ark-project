@@ -23,3 +23,6 @@ async-trait.workspace = true
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }
 mockall = "0.11.4"
+
+[features]
+tracing-support = []
