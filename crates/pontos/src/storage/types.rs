@@ -42,10 +42,10 @@ pub enum EventType {
 impl fmt::Display for EventType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EventType::Mint => write!(f, "🟢 Mint"),
-            EventType::Burn => write!(f, "🔴 Burn"),
-            EventType::Transfer => write!(f, "🔵 Transfer"),
-            EventType::Uninitialized => write!(f, "❓ Uninitialized"),
+            EventType::Mint => write!(f, "MINT"),
+            EventType::Burn => write!(f, "BURN"),
+            EventType::Transfer => write!(f, "TRANSFER"),
+            EventType::Uninitialized => write!(f, "UNINITIALIZED"),
         }
     }
 }
@@ -254,9 +254,9 @@ pub enum ContractType {
 impl ToString for ContractType {
     fn to_string(&self) -> String {
         match self {
-            ContractType::Other => "other".to_string(),
-            ContractType::ERC721 => "erc721".to_string(),
-            ContractType::ERC1155 => "erc1155".to_string(),
+            ContractType::Other => "OTHER".to_string(),
+            ContractType::ERC721 => "ERC721".to_string(),
+            ContractType::ERC1155 => "ERC1155".to_string(),
         }
     }
 }
@@ -266,8 +266,8 @@ impl FromStr for ContractType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "erc721" => Ok(ContractType::ERC721),
-            "erc1155" => Ok(ContractType::ERC1155),
+            "ERC721" => Ok(ContractType::ERC721),
+            "ERC1155" => Ok(ContractType::ERC1155),
             _ => Ok(ContractType::Other),
         }
     }
