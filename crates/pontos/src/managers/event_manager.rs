@@ -39,7 +39,10 @@ impl<S: Storage> EventManager<S> {
     ) -> Result<TokenEvent> {
         let mut token_event = TokenEvent::default();
 
-        debug!("Processing event: {:?}", event);
+        debug!(
+            "Processing event: event={:?}, contract_type={:?}, timestamp={}",
+            event, contract_type, timestamp
+        );
 
         // As cairo didn't have keys before, we first check if the data
         // contains the info. If not, we check into the keys, skipping the first
