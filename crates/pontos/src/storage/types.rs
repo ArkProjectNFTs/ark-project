@@ -28,7 +28,8 @@ impl fmt::Display for StorageError {
 
 impl std::error::Error for StorageError {}
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EventType {
     Mint,
     Burn,
@@ -61,7 +62,7 @@ impl FromStr for EventType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TokenEvent {
     pub timestamp: u64,
     pub from_address: String,
@@ -95,7 +96,7 @@ impl Default for TokenEvent {
 }
 
 // Token struct based on the informations we get from an event
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct TokenInfo {
     pub address: String,
     pub token_id: String,
@@ -107,7 +108,8 @@ pub struct TokenInfo {
     pub mint_block_number: Option<u64>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum BlockIndexingStatus {
     None,
     Processing,
@@ -165,7 +167,7 @@ pub struct BlockIndexing {
     pub indexer_version: u64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BlockInfo {
     pub indexer_version: String,
     pub indexer_identifier: String,
@@ -200,4 +202,11 @@ impl FromStr for ContractType {
             _ => Ok(ContractType::Other),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct ContractInfo {
+    pub contract_address: String,
+    pub contract_type: String,
+    pub block_number: u64,
 }
