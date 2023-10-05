@@ -8,6 +8,7 @@ use ark_starknet::client::StarknetClient;
 use event_handler::EventHandler;
 use managers::{BlockManager, ContractManager, EventManager, PendingBlockData, TokenManager};
 use starknet::core::types::*;
+use std::fmt;
 use std::sync::Arc;
 use storage::types::{ContractType, StorageError};
 use storage::Storage;
@@ -17,11 +18,9 @@ use tracing::{debug, error, info, trace, warn};
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
 /// Generic errors for Pontos.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone)]
 pub enum IndexerError {
-    #[error("Storage error occurred")]
     StorageError(StorageError),
-    #[error("An error occurred")]
     Anyhow(String),
 }
 
@@ -36,6 +35,17 @@ impl From<anyhow::Error> for IndexerError {
         IndexerError::Anyhow(e.to_string())
     }
 }
+
+impl fmt::Display for IndexerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IndexerError::StorageError(e) => write!(f, "Storage Error occurred: {}", e),
+            IndexerError::Anyhow(s) => write!(f, "An error occurred: {}", s),
+        }
+    }
+}
+
+impl std::error::Error for IndexerError {}
 
 pub struct PontosConfig {
     pub indexer_version: String,

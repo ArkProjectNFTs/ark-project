@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum StorageError {
     DatabaseError,
     NotFound,
