@@ -1,4 +1,4 @@
-# arkproject in 🦀
+# arkproject in 🦀🦀
 
 ## Overview
 Rust libraries and binaries related to the ArkProject.
