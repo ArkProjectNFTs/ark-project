@@ -11,14 +11,14 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, trace};
 
-pub struct CollectionManager<S: Storage, C: StarknetClient> {
+pub struct ContractManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
     client: Arc<C>,
     /// A cache with contract address mapped to its type.
     cache: HashMap<FieldElement, ContractType>,
 }
 
-impl<S: Storage, C: StarknetClient> CollectionManager<S, C> {
+impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
     /// Initializes a new instance.
     pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
         Self {
