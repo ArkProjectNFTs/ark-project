@@ -47,6 +47,20 @@ impl fmt::Display for EventType {
     }
 }
 
+impl FromStr for EventType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "MINT" => Ok(EventType::Mint),
+            "BURN" => Ok(EventType::Burn),
+            "TRANSFER" => Ok(EventType::Transfer),
+            "UNINITIALIZED" => Ok(EventType::Uninitialized),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct TokenEvent {
     pub timestamp: u64,
