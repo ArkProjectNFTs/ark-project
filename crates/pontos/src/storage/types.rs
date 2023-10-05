@@ -96,7 +96,7 @@ impl Default for TokenEvent {
 
 // Token struct based on the informations we get from an event
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct TokenFromEvent {
+pub struct TokenInfo {
     pub address: String,
     pub token_id: String,
     pub token_id_hex: String,

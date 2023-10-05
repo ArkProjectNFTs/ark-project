@@ -80,7 +80,7 @@ impl EventHandler for DefaultEventHandler {
         println!("pontos: processing block: block_number={}", block_number);
     }
 
-    async fn on_token_registered(&self, token: TokenFromEvent) {
+    async fn on_token_registered(&self, token: TokenInfo) {
         println!("pontos: token registered {:?}", token);
     }
 
@@ -108,7 +108,7 @@ impl Default for DefaultStorage {
 impl Storage for DefaultStorage {
     async fn register_mint(
         &self,
-        token: &TokenFromEvent,
+        token: &TokenInfo,
         _block_number: u64,
     ) -> Result<(), StorageError> {
         log::trace!("Registering mint {:?}", token);
@@ -117,7 +117,7 @@ impl Storage for DefaultStorage {
 
     async fn register_token(
         &self,
-        token: &TokenFromEvent,
+        token: &TokenInfo,
         _block_number: u64,
     ) -> Result<(), StorageError> {
         log::trace!("Registering token {:?}", token);

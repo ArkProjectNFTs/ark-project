@@ -1,4 +1,4 @@
-use crate::storage::types::{EventType, TokenEvent, TokenFromEvent};
+use crate::storage::types::{EventType, TokenEvent, TokenInfo};
 use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
@@ -30,7 +30,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         token_id: &CairoU256,
         event: &TokenEvent,
     ) -> Result<()> {
-        let mut token = TokenFromEvent {
+        let mut token = TokenInfo {
             address: event.contract_address.clone(),
             token_id: event.token_id.clone(),
             token_id_hex: event.token_id_hex.clone(),

@@ -1,5 +1,5 @@
 //! Trait related to any events that Pontos can emit to be handled.
-use crate::storage::types::{TokenEvent, TokenFromEvent};
+use crate::storage::types::{TokenEvent, TokenInfo};
 use async_trait::async_trait;
 
 /// A trait to be implemented in order to handle
@@ -19,7 +19,7 @@ pub trait EventHandler {
     async fn on_block_processing(&self, block_number: u64) {}
 
     /// A new token has be registered.
-    async fn on_token_registered(&self, token: TokenFromEvent) {}
+    async fn on_token_registered(&self, token: TokenInfo) {}
 
     /// A new event has be registered.
     async fn on_event_registered(&self, event: TokenEvent) {}

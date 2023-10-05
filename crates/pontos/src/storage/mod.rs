@@ -1,7 +1,7 @@
 pub mod types;
 pub mod utils;
 
-use crate::storage::types::{BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent};
+use crate::storage::types::{BlockInfo, ContractType, StorageError, TokenEvent, TokenInfo};
 use async_trait::async_trait;
 use starknet::core::types::FieldElement;
 
@@ -11,15 +11,12 @@ use mockall::automock;
 #[async_trait]
 #[cfg_attr(test, automock)]
 pub trait Storage {
-    async fn register_mint(
-        &self,
-        token: &TokenFromEvent,
-        block_number: u64,
-    ) -> Result<(), StorageError>;
+    async fn register_mint(&self, token: &TokenInfo, block_number: u64)
+        -> Result<(), StorageError>;
 
     async fn register_token(
         &self,
-        token: &TokenFromEvent,
+        token: &TokenInfo,
         block_number: u64,
     ) -> Result<(), StorageError>;
 
