@@ -6,7 +6,7 @@ use crate::storage::types::BlockIndexingStatus;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use event_handler::EventHandler;
-use managers::{BlockManager, CollectionManager, EventManager, PendingBlockData, TokenManager};
+use managers::{BlockManager, ContractManager, EventManager, PendingBlockData, TokenManager};
 use starknet::core::types::*;
 use std::sync::Arc;
 use storage::types::{ContractType, StorageError};
@@ -49,7 +49,7 @@ pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {
     block_manager: Arc<BlockManager<S>>,
     event_manager: Arc<EventManager<S>>,
     token_manager: Arc<TokenManager<S, C>>,
-    collection_manager: Arc<AsyncRwLock<CollectionManager<S, C>>>,
+    contract_manager: Arc<AsyncRwLock<ContractManager<S, C>>>,
     pending_cache: Arc<AsyncRwLock<PendingBlockData>>,
 }
 
@@ -68,10 +68,10 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             block_manager: Arc::new(BlockManager::new(Arc::clone(&storage))),
             event_manager: Arc::new(EventManager::new(Arc::clone(&storage))),
             token_manager: Arc::new(TokenManager::new(Arc::clone(&storage), Arc::clone(&client))),
-            // Collection manager has internal cache, so some functions are using `&mut self`.
+            // Contract manager has internal cache, so some functions are using `&mut self`.
             // For this reason, we must protect the write operations in order to share
             // the cache with any possible thread using `index_block_range` of this instance.
-            collection_manager: Arc::new(AsyncRwLock::new(CollectionManager::new(
+            contract_manager: Arc::new(AsyncRwLock::new(ContractManager::new(
                 Arc::clone(&storage),
                 Arc::clone(&client),
             ))),
@@ -292,7 +292,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             let contract_address = e.from_address;
 
             let contract_type = match self
-                .collection_manager
+                .contract_manager
                 .write()
                 .await
                 .identify_contract(contract_address, block_number)
