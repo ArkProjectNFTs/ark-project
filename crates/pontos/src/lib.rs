@@ -153,7 +153,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                                 cache.add_tx_as_processed(&tx_hash);
                             }
                             Err(e) => {
-                                error!("[latest] error processing tx {:#064x} {:?}", tx_hash, e);
+                                error!("[latest] error processing tx {:#066x} {:?}", tx_hash, e);
                                 // TODO: cleanup then?
                                 // This should not happen on the latest block, we want
                                 // to stop if this happen.
@@ -184,7 +184,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 if cache.is_tx_processed(&tx_hash) {
                     continue;
                 } else {
-                    debug!("processing tx {:#064x}", tx_hash);
+                    debug!("processing tx {:#066x}", tx_hash);
                     match self.client.events_from_tx_receipt(tx_hash).await {
                         Ok(events) => {
                             self.process_events(events, block_number, cache.get_timestamp())
@@ -192,7 +192,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                             cache.add_tx_as_processed(&tx_hash);
                         }
                         Err(e) => {
-                            warn!("error processing tx {:#064x} {:?}", tx_hash, e);
+                            warn!("error processing tx {:#066x} {:?}", tx_hash, e);
                             // Sometimes, the tx hash is not found. To avoid
                             // loosing this tx as it will be available few seconds
                             // later, we skip it and try to parse it at the next

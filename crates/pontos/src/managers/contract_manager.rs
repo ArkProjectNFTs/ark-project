@@ -62,7 +62,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                 let contract_type = self.get_contract_type(address).await?;
 
                 info!(
-                    "New contract identified [{:#064x}] : {}",
+                    "New contract identified [0x{:064x}] : {}",
                     address,
                     contract_type.to_string()
                 );
