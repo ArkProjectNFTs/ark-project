@@ -23,6 +23,7 @@ pub trait StarknetClient {
     async fn events_from_tx_receipt(
         &self,
         transaction_hash: FieldElement,
+        keys: Option<Vec<Vec<FieldElement>>>,
     ) -> Result<Vec<EmittedEvent>>;
 
     ///
