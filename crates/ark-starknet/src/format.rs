@@ -27,10 +27,7 @@ mod tests {
 
     #[test]
     fn test_to_hex_str_short() {
-        let address = FieldElement::from_hex_be(
-            "0x1234",
-        )
-        .unwrap();
+        let address = FieldElement::from_hex_be("0x1234").unwrap();
         let value = to_hex_str(&address);
         assert_eq!(
             value,
