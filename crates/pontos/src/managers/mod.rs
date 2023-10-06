@@ -1,5 +1,5 @@
-pub mod collection_manager;
-pub use collection_manager::CollectionManager;
+pub mod contract_manager;
+pub use contract_manager::ContractManager;
 
 pub mod event_manager;
 pub use event_manager::EventManager;

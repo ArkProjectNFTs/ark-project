@@ -1,22 +1,24 @@
-use crate::storage::types::ContractType;
-use crate::storage::types::StorageError;
-use crate::storage::Storage;
+use crate::storage::{
+    types::{ContractInfo, ContractType, StorageError},
+    Storage,
+};
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
+use ark_starknet::format::to_hex_str;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, trace};
 
-pub struct CollectionManager<S: Storage, C: StarknetClient> {
+pub struct ContractManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
     client: Arc<C>,
     /// A cache with contract address mapped to its type.
     cache: HashMap<FieldElement, ContractType>,
 }
 
-impl<S: Storage, C: StarknetClient> CollectionManager<S, C> {
+impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
     /// Initializes a new instance.
     pub fn new(storage: Arc<S>, client: Arc<C>) -> Self {
         Self {
@@ -37,7 +39,10 @@ impl<S: Storage, C: StarknetClient> CollectionManager<S, C> {
 
         trace!("Cache miss for contract {}", address);
 
-        let contract_type = self.storage.get_contract_type(&address).await?;
+        let contract_type = self
+            .storage
+            .get_contract_type(&to_hex_str(&address))
+            .await?;
 
         self.cache.insert(address, contract_type.clone()); // Adding to the cache
 
@@ -57,16 +62,20 @@ impl<S: Storage, C: StarknetClient> CollectionManager<S, C> {
                 let contract_type = self.get_contract_type(address).await?;
 
                 info!(
-                    "New contract identified [{:#064x}] : {}",
+                    "New contract identified [0x{:064x}] : {}",
                     address,
                     contract_type.to_string()
                 );
 
                 self.cache.insert(address, contract_type.clone());
 
-                self.storage
-                    .register_contract_info(&address, &contract_type, block_number)
-                    .await?;
+                let info = ContractInfo {
+                    contract_address: to_hex_str(&address),
+                    contract_type: contract_type.to_string(),
+                    block_number,
+                };
+
+                self.storage.register_contract_info(&info).await?;
 
                 Ok(contract_type)
             }

@@ -1,9 +1,10 @@
 pub mod types;
 pub mod utils;
 
-use crate::storage::types::{BlockInfo, ContractType, StorageError, TokenEvent, TokenFromEvent};
+use crate::storage::types::{
+    BlockInfo, ContractInfo, ContractType, StorageError, TokenEvent, TokenInfo,
+};
 use async_trait::async_trait;
-use starknet::core::types::FieldElement;
 
 #[cfg(test)]
 use mockall::automock;
@@ -11,15 +12,12 @@ use mockall::automock;
 #[async_trait]
 #[cfg_attr(test, automock)]
 pub trait Storage {
-    async fn register_mint(
-        &self,
-        token: &TokenFromEvent,
-        block_number: u64,
-    ) -> Result<(), StorageError>;
+    async fn register_mint(&self, token: &TokenInfo, block_number: u64)
+        -> Result<(), StorageError>;
 
     async fn register_token(
         &self,
-        token: &TokenFromEvent,
+        token: &TokenInfo,
         block_number: u64,
     ) -> Result<(), StorageError>;
 
@@ -29,17 +27,10 @@ pub trait Storage {
         block_number: u64,
     ) -> Result<(), StorageError>;
 
-    async fn get_contract_type(
-        &self,
-        contract_address: &FieldElement,
-    ) -> Result<ContractType, StorageError>;
+    async fn get_contract_type(&self, contract_address: &str)
+        -> Result<ContractType, StorageError>;
 
-    async fn register_contract_info(
-        &self,
-        contract_address: &FieldElement,
-        contract_type: &ContractType,
-        block_number: u64,
-    ) -> Result<(), StorageError>;
+    async fn register_contract_info(&self, info: &ContractInfo) -> Result<(), StorageError>;
 
     async fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
 

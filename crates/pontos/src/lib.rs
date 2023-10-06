@@ -6,8 +6,9 @@ use crate::storage::types::BlockIndexingStatus;
 use anyhow::Result;
 use ark_starknet::client::StarknetClient;
 use event_handler::EventHandler;
-use managers::{BlockManager, CollectionManager, EventManager, PendingBlockData, TokenManager};
+use managers::{BlockManager, ContractManager, EventManager, PendingBlockData, TokenManager};
 use starknet::core::types::*;
+use std::fmt;
 use std::sync::Arc;
 use storage::types::{ContractType, StorageError};
 use storage::Storage;
@@ -17,11 +18,9 @@ use tracing::{debug, error, info, trace, warn};
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
 /// Generic errors for Pontos.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone)]
 pub enum IndexerError {
-    #[error("Storage error occurred")]
     StorageError(StorageError),
-    #[error("An error occurred")]
     Anyhow(String),
 }
 
@@ -37,6 +36,17 @@ impl From<anyhow::Error> for IndexerError {
     }
 }
 
+impl fmt::Display for IndexerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IndexerError::StorageError(e) => write!(f, "Storage Error occurred: {}", e),
+            IndexerError::Anyhow(s) => write!(f, "An error occurred: {}", s),
+        }
+    }
+}
+
+impl std::error::Error for IndexerError {}
+
 pub struct PontosConfig {
     pub indexer_version: String,
     pub indexer_identifier: String,
@@ -49,7 +59,7 @@ pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {
     block_manager: Arc<BlockManager<S>>,
     event_manager: Arc<EventManager<S>>,
     token_manager: Arc<TokenManager<S, C>>,
-    collection_manager: Arc<AsyncRwLock<CollectionManager<S, C>>>,
+    contract_manager: Arc<AsyncRwLock<ContractManager<S, C>>>,
     pending_cache: Arc<AsyncRwLock<PendingBlockData>>,
 }
 
@@ -68,10 +78,10 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             block_manager: Arc::new(BlockManager::new(Arc::clone(&storage))),
             event_manager: Arc::new(EventManager::new(Arc::clone(&storage))),
             token_manager: Arc::new(TokenManager::new(Arc::clone(&storage), Arc::clone(&client))),
-            // Collection manager has internal cache, so some functions are using `&mut self`.
+            // Contract manager has internal cache, so some functions are using `&mut self`.
             // For this reason, we must protect the write operations in order to share
             // the cache with any possible thread using `index_block_range` of this instance.
-            collection_manager: Arc::new(AsyncRwLock::new(CollectionManager::new(
+            contract_manager: Arc::new(AsyncRwLock::new(ContractManager::new(
                 Arc::clone(&storage),
                 Arc::clone(&client),
             ))),
@@ -147,7 +157,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                                 cache.add_tx_as_processed(&tx_hash);
                             }
                             Err(e) => {
-                                error!("[latest] error processing tx {:#064x} {:?}", tx_hash, e);
+                                error!("[latest] error processing tx {:#066x} {:?}", tx_hash, e);
                                 // TODO: cleanup then?
                                 // This should not happen on the latest block, we want
                                 // to stop if this happen.
@@ -178,7 +188,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 if cache.is_tx_processed(&tx_hash) {
                     continue;
                 } else {
-                    debug!("processing tx {:#064x}", tx_hash);
+                    debug!("processing tx {:#066x}", tx_hash);
                     match self
                         .client
                         .events_from_tx_receipt(tx_hash, self.event_manager.keys_selector())
@@ -190,7 +200,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                             cache.add_tx_as_processed(&tx_hash);
                         }
                         Err(e) => {
-                            warn!("error processing tx {:#064x} {:?}", tx_hash, e);
+                            warn!("error processing tx {:#066x} {:?}", tx_hash, e);
                             // Sometimes, the tx hash is not found. To avoid
                             // loosing this tx as it will be available few seconds
                             // later, we skip it and try to parse it at the next
@@ -300,7 +310,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             let contract_address = e.from_address;
 
             let contract_type = match self
-                .collection_manager
+                .contract_manager
                 .write()
                 .await
                 .identify_contract(contract_address, block_number)
@@ -320,7 +330,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 continue;
             }
 
-            let token_event = match self
+            let (token_id, token_event) = match self
                 .event_manager
                 .format_and_register_event(&e, contract_type, block_timestamp)
                 .await
@@ -334,7 +344,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             match self
                 .token_manager
-                .format_and_register_token(&token_event)
+                .format_and_register_token(&token_id, &token_event)
                 .await
             {
                 Ok(()) => (),

@@ -1,8 +1,9 @@
-use crate::storage::types::{EventType, TokenEvent, TokenFromEvent};
+use crate::storage::types::{EventType, TokenEvent, TokenInfo};
 use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
 use ark_starknet::format::to_hex_str;
+use ark_starknet::CairoU256;
 use starknet::core::types::*;
 use starknet::macros::selector;
 use std::sync::Arc;
@@ -24,11 +25,15 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
     }
 
     /// Formats a token registry from the token event data.
-    pub async fn format_and_register_token(&self, event: &TokenEvent) -> Result<()> {
-        let mut token = TokenFromEvent {
-            address: event.contract_address.clone(),
+    pub async fn format_and_register_token(
+        &self,
+        token_id: &CairoU256,
+        event: &TokenEvent,
+    ) -> Result<()> {
+        let mut token = TokenInfo {
+            contract_address: event.contract_address.clone(),
             token_id: event.token_id.clone(),
-            formated_token_id: event.formated_token_id.clone(),
+            token_id_hex: event.token_id_hex.clone(),
             ..Default::default()
         };
 
@@ -36,8 +41,8 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             .get_token_owner(
                 FieldElement::from_hex_be(&event.contract_address)
                     .expect("Contract address bad format"),
-                event.token_id.low,
-                event.token_id.high,
+                token_id.low.into(),
+                token_id.high.into(),
             )
             .await;
 
@@ -47,7 +52,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             .unwrap_or_default();
 
         if event.event_type == EventType::Mint {
-            token.mint_address = Some(event.to_address_field_element);
+            token.mint_address = Some(event.to_address.clone());
             token.mint_timestamp = Some(event.timestamp);
             token.mint_transaction_hash = Some(event.transaction_hash.clone());
             token.mint_block_number = Some(event.block_number);
