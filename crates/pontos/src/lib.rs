@@ -147,7 +147,11 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     if cache.is_tx_processed(&tx_hash) {
                         continue;
                     } else {
-                        match self.client.events_from_tx_receipt(tx_hash).await {
+                        match self
+                            .client
+                            .events_from_tx_receipt(tx_hash, self.event_manager.keys_selector())
+                            .await
+                        {
                             Ok(events) => {
                                 self.process_events(events, block_number, latest_ts).await?;
                                 cache.add_tx_as_processed(&tx_hash);
@@ -185,7 +189,11 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     continue;
                 } else {
                     debug!("processing tx {:#066x}", tx_hash);
-                    match self.client.events_from_tx_receipt(tx_hash).await {
+                    match self
+                        .client
+                        .events_from_tx_receipt(tx_hash, self.event_manager.keys_selector())
+                        .await
+                    {
                         Ok(events) => {
                             self.process_events(events, block_number, cache.get_timestamp())
                                 .await?;

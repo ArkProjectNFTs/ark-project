@@ -36,6 +36,7 @@ impl StarknetClient for StarknetClientHttp {
     async fn events_from_tx_receipt(
         &self,
         transaction_hash: FieldElement,
+        keys: Option<Vec<Vec<FieldElement>>>,
     ) -> Result<Vec<EmittedEvent>> {
         let receipt = self
             .provider
@@ -88,14 +89,19 @@ impl StarknetClient for StarknetClientHttp {
 
         let mut emitted_events = vec![];
         for e in events {
-            emitted_events.push(EmittedEvent {
-                from_address: e.from_address,
-                keys: e.keys,
-                data: e.data,
-                block_hash,
-                block_number,
-                transaction_hash,
-            })
+            if keys.is_some()
+                && !e.keys.is_empty()
+                && keys.as_ref().map_or(false, |keys| keys.contains(&e.keys))
+            {
+                emitted_events.push(EmittedEvent {
+                    from_address: e.from_address,
+                    keys: e.keys,
+                    data: e.data,
+                    block_hash,
+                    block_number,
+                    transaction_hash,
+                })
+            }
         }
 
         Ok(emitted_events)
