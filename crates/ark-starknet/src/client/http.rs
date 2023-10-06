@@ -90,7 +90,7 @@ impl StarknetClient for StarknetClientHttp {
         let mut emitted_events = vec![];
         for e in events {
             if keys.is_some()
-                && e.keys.len() > 0
+                && !e.keys.is_empty()
                 && keys.as_ref().map_or(false, |keys| keys.contains(&e.keys))
             {
                 emitted_events.push(EmittedEvent {
