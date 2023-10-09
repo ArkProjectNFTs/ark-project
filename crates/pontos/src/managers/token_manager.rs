@@ -46,7 +46,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             )
             .await;
 
-        token.owner = token_owner_raw_result
+        token.current_owner = token_owner_raw_result
             .ok()
             .and_then(|owner| owner.get(0).map(to_hex_str))
             .unwrap_or_default();

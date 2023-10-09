@@ -101,7 +101,7 @@ pub struct TokenInfo {
     pub contract_address: String,
     pub token_id: String,
     pub token_id_hex: String,
-    pub owner: String,
+    pub current_owner: String,
     pub mint_address: Option<String>,
     pub mint_timestamp: Option<u64>,
     pub mint_transaction_hash: Option<String>,
