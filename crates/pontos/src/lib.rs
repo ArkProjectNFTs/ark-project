@@ -318,7 +318,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             {
                 Ok(info) => info,
                 Err(e) => {
-                    error!(
+                    warn!(
                         "Error while identifying contract {}: {:?}",
                         contract_address, e
                     );
