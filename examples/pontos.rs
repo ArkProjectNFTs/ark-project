@@ -108,10 +108,17 @@ impl Default for DefaultStorage {
 impl Storage for DefaultStorage {
     async fn register_mint(
         &self,
-        token: &TokenInfo,
+        contract_address: &str,
+        token_id_hex: &str,
+        info: &TokenMintInfo,
         _block_number: u64,
     ) -> Result<(), StorageError> {
-        log::trace!("Registering mint {:?}", token);
+        log::trace!(
+            "Registering mint {} {} {:?}",
+            contract_address,
+            token_id_hex,
+            info
+        );
         Ok(())
     }
 

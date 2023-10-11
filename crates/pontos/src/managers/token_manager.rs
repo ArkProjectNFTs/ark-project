@@ -1,4 +1,4 @@
-use crate::storage::types::{EventType, TokenEvent, TokenInfo};
+use crate::storage::types::{EventType, TokenEvent, TokenInfo, TokenMintInfo};
 use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
@@ -52,12 +52,19 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             .unwrap_or_default();
 
         if event.event_type == EventType::Mint {
-            token.mint_address = Some(event.to_address.clone());
-            token.mint_timestamp = Some(event.timestamp);
-            token.mint_transaction_hash = Some(event.transaction_hash.clone());
-            token.mint_block_number = Some(event.block_number);
+            let info = TokenMintInfo {
+                address: event.to_address.clone(),
+                timestamp: event.timestamp,
+                transaction_hash: event.transaction_hash.clone(),
+            };
+
             self.storage
-                .register_mint(&token, event.block_number)
+                .register_mint(
+                    &token.contract_address,
+                    &token.token_id_hex,
+                    &info,
+                    event.block_number,
+                )
                 .await?;
         } else {
             self.storage

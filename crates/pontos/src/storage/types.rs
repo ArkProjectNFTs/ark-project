@@ -95,17 +95,19 @@ impl Default for TokenEvent {
     }
 }
 
-// Token struct based on the informations we get from an event
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct TokenInfo {
     pub contract_address: String,
     pub token_id: String,
     pub token_id_hex: String,
     pub owner: String,
-    pub mint_address: Option<String>,
-    pub mint_timestamp: Option<u64>,
-    pub mint_transaction_hash: Option<String>,
-    pub mint_block_number: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct TokenMintInfo {
+    pub address: String,
+    pub timestamp: u64,
+    pub transaction_hash: String,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

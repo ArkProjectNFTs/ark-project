@@ -2,7 +2,7 @@ pub mod types;
 pub mod utils;
 
 use crate::storage::types::{
-    BlockInfo, ContractInfo, ContractType, StorageError, TokenEvent, TokenInfo,
+    BlockInfo, ContractInfo, ContractType, StorageError, TokenEvent, TokenInfo, TokenMintInfo,
 };
 use async_trait::async_trait;
 
@@ -12,8 +12,13 @@ use mockall::automock;
 #[async_trait]
 #[cfg_attr(test, automock)]
 pub trait Storage {
-    async fn register_mint(&self, token: &TokenInfo, block_number: u64)
-        -> Result<(), StorageError>;
+    async fn register_mint(
+        &self,
+        contract_address: &str,
+        token_id_hex: &str,
+        info: &TokenMintInfo,
+        block_number: u64,
+    ) -> Result<(), StorageError>;
 
     async fn register_token(
         &self,
