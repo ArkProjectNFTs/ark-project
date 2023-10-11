@@ -51,6 +51,10 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             .and_then(|owner| owner.get(0).map(to_hex_str))
             .unwrap_or_default();
 
+        self.storage
+            .register_token(&token, event.block_number)
+            .await?;
+
         if event.event_type == EventType::Mint {
             let info = TokenMintInfo {
                 address: event.to_address.clone(),
@@ -66,11 +70,8 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
                     event.block_number,
                 )
                 .await?;
-        } else {
-            self.storage
-                .register_token(&token, event.block_number)
-                .await?;
         }
+
         Ok(())
     }
 
