@@ -35,7 +35,11 @@ pub trait Storage {
     async fn get_contract_type(&self, contract_address: &str)
         -> Result<ContractType, StorageError>;
 
-    async fn register_contract_info(&self, info: &ContractInfo) -> Result<(), StorageError>;
+    async fn register_contract_info(
+        &self,
+        info: &ContractInfo,
+        block_number: u64,
+    ) -> Result<(), StorageError>;
 
     async fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
 

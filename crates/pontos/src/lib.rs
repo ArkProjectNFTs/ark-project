@@ -344,7 +344,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             match self
                 .token_manager
-                .format_and_register_token(&token_id, &token_event)
+                .format_and_register_token(&token_id, &token_event, block_number)
                 .await
             {
                 Ok(()) => (),

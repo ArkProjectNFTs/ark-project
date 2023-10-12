@@ -72,10 +72,11 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                 let info = ContractInfo {
                     contract_address: to_hex_str(&address),
                     contract_type: contract_type.to_string(),
-                    block_number,
                 };
 
-                self.storage.register_contract_info(&info).await?;
+                self.storage
+                    .register_contract_info(&info, block_number)
+                    .await?;
 
                 Ok(contract_type)
             }

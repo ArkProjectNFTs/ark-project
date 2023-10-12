@@ -116,7 +116,11 @@ impl Storage for DefaultStorage {
         Ok(ContractType::Other)
     }
 
-    async fn register_contract_info(&self, info: &ContractInfo) -> Result<(), StorageError> {
+    async fn register_contract_info(
+        &self,
+        info: &ContractInfo,
+        _block_number: u64,
+    ) -> Result<(), StorageError> {
         log::trace!(
             "Registering contract info {} for contract {}",
             info.contract_type,
