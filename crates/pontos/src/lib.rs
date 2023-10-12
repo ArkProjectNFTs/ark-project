@@ -142,6 +142,18 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     continue;
                 }
 
+                // We start the processing of remaining TXs for the latest, we want
+                // to ensure that no other indexer with a range can take it.
+                self.block_manager
+                    .set_block_info(
+                        block_number,
+                        latest_ts,
+                        &self.config.indexer_version,
+                        &self.config.indexer_identifier,
+                        BlockIndexingStatus::Processing,
+                    )
+                    .await?;
+
                 // Ensures all the txs of the latest block are processed correctly.
                 for tx_hash in txs {
                     if cache.is_tx_processed(&tx_hash) {
@@ -158,7 +170,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                             }
                             Err(e) => {
                                 error!("[latest] error processing tx {:#066x} {:?}", tx_hash, e);
-                                // TODO: cleanup then?
+
+                                self.block_manager.clean_block(latest_ts, None).await?;
+
                                 // This should not happen on the latest block, we want
                                 // to stop if this happen.
                                 return Err(e.into());
