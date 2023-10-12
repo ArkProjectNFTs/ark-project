@@ -29,7 +29,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         &self,
         token_id: &CairoU256,
         event: &TokenEvent,
-        block_number: u64,
+        block_timestamp: u64,
     ) -> Result<()> {
         let mut token = TokenInfo {
             contract_address: event.contract_address.clone(),
@@ -52,7 +52,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             .and_then(|owner| owner.get(0).map(to_hex_str))
             .unwrap_or_default();
 
-        self.storage.register_token(&token, block_number).await?;
+        self.storage.register_token(&token, block_timestamp).await?;
 
         if event.event_type == EventType::Mint {
             let info = TokenMintInfo {
@@ -62,12 +62,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             };
 
             self.storage
-                .register_mint(
-                    &token.contract_address,
-                    &token.token_id_hex,
-                    &info,
-                    block_number,
-                )
+                .register_mint(&token.contract_address, &token.token_id_hex, &info)
                 .await?;
         }
 

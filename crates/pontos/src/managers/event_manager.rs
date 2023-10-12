@@ -35,13 +35,13 @@ impl<S: Storage> EventManager<S> {
         &self,
         event: &EmittedEvent,
         contract_type: ContractType,
-        timestamp: u64,
+        block_timestamp: u64,
     ) -> Result<(CairoU256, TokenEvent)> {
         let mut token_event = TokenEvent::default();
 
         debug!(
             "Processing event: event={:?}, contract_type={:?}, timestamp={}",
-            event, contract_type, timestamp
+            event, contract_type, block_timestamp
         );
 
         // As cairo didn't have keys before, we first check if the data
@@ -58,7 +58,7 @@ impl<S: Storage> EventManager<S> {
 
         let (from, to, token_id) = event_info;
 
-        let event_id = Self::get_event_id(&token_id, &from, &to, timestamp, event);
+        let event_id = Self::get_event_id(&token_id, &from, &to, block_timestamp, event);
 
         token_event.from_address = to_hex_str(&from);
         token_event.to_address = to_hex_str(&to);
@@ -66,7 +66,7 @@ impl<S: Storage> EventManager<S> {
         token_event.transaction_hash = to_hex_str(&event.transaction_hash);
         token_event.token_id_hex = token_id.to_hex();
         token_event.token_id = token_id.to_decimal(false);
-        token_event.timestamp = timestamp;
+        token_event.timestamp = block_timestamp;
         token_event.contract_type = contract_type.to_string();
         token_event.event_type = Self::get_event_type(from, to);
         token_event.event_id = to_hex_str(&event_id);
@@ -74,7 +74,7 @@ impl<S: Storage> EventManager<S> {
         info!("Registering event: {:?}", token_event);
 
         self.storage
-            .register_event(&token_event, event.block_number)
+            .register_event(&token_event, block_timestamp)
             .await?;
 
         Ok((token_id, token_event.clone()))

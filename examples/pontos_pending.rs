@@ -79,7 +79,6 @@ impl Storage for DefaultStorage {
         contract_address: &str,
         token_id_hex: &str,
         info: &TokenMintInfo,
-        _block_number: u64,
     ) -> Result<(), StorageError> {
         log::trace!(
             "Registering mint {} {} {:?}",
@@ -93,7 +92,7 @@ impl Storage for DefaultStorage {
     async fn register_token(
         &self,
         token: &TokenInfo,
-        _block_number: u64,
+        _block_timestamp: u64,
     ) -> Result<(), StorageError> {
         log::trace!("Registering token {:?}", token);
         Ok(())
@@ -102,7 +101,7 @@ impl Storage for DefaultStorage {
     async fn register_event(
         &self,
         event: &TokenEvent,
-        _block_number: u64,
+        _block_timestamp: u64,
     ) -> Result<(), StorageError> {
         log::trace!("Registering event {:?}", event);
         Ok(())
@@ -119,7 +118,7 @@ impl Storage for DefaultStorage {
     async fn register_contract_info(
         &self,
         info: &ContractInfo,
-        _block_number: u64,
+        _block_timestamp: u64,
     ) -> Result<(), StorageError> {
         log::trace!(
             "Registering contract info {} for contract {}",
