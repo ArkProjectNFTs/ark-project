@@ -76,17 +76,23 @@ impl Default for DefaultStorage {
 impl Storage for DefaultStorage {
     async fn register_mint(
         &self,
-        token: &TokenInfo,
-        _block_number: u64,
+        contract_address: &str,
+        token_id_hex: &str,
+        info: &TokenMintInfo,
     ) -> Result<(), StorageError> {
-        log::trace!("Registering mint {:?}", token);
+        log::trace!(
+            "Registering mint {} {} {:?}",
+            contract_address,
+            token_id_hex,
+            info
+        );
         Ok(())
     }
 
     async fn register_token(
         &self,
         token: &TokenInfo,
-        _block_number: u64,
+        _block_timestamp: u64,
     ) -> Result<(), StorageError> {
         log::trace!("Registering token {:?}", token);
         Ok(())
@@ -95,7 +101,7 @@ impl Storage for DefaultStorage {
     async fn register_event(
         &self,
         event: &TokenEvent,
-        _block_number: u64,
+        _block_timestamp: u64,
     ) -> Result<(), StorageError> {
         log::trace!("Registering event {:?}", event);
         Ok(())
@@ -109,7 +115,11 @@ impl Storage for DefaultStorage {
         Ok(ContractType::Other)
     }
 
-    async fn register_contract_info(&self, info: &ContractInfo) -> Result<(), StorageError> {
+    async fn register_contract_info(
+        &self,
+        info: &ContractInfo,
+        _block_timestamp: u64,
+    ) -> Result<(), StorageError> {
         log::trace!(
             "Registering contract info {} for contract {}",
             info.contract_type,
@@ -118,7 +128,12 @@ impl Storage for DefaultStorage {
         Ok(())
     }
 
-    async fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError> {
+    async fn set_block_info(
+        &self,
+        block_number: u64,
+        _block_timestamp: u64,
+        info: BlockInfo,
+    ) -> Result<(), StorageError> {
         log::trace!("Setting block info {:?} for block #{}", info, block_number);
         Ok(())
     }
@@ -132,21 +147,12 @@ impl Storage for DefaultStorage {
         })
     }
 
-    async fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
-        log::trace!("Cleaning block #{}", block_number);
-        Ok(())
-    }
-
-    async fn update_last_pending_block(
+    async fn clean_block(
         &self,
-        block_number: u64,
-        block_timestamp: u64,
+        _block_timestamp: u64,
+        block_number: Option<u64>,
     ) -> Result<(), StorageError> {
-        log::trace!(
-            "Update last pending block #{} {}",
-            block_number,
-            block_timestamp
-        );
+        log::trace!("Cleaning block #{:?}", block_number);
         Ok(())
     }
 }

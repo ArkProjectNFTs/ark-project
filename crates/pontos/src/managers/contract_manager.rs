@@ -53,7 +53,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
     pub async fn identify_contract(
         &mut self,
         address: FieldElement,
-        block_number: u64,
+        block_timestamp: u64,
     ) -> Result<ContractType> {
         match self.get_cached_or_fetch_info(address).await {
             Ok(contract_type) => Ok(contract_type),
@@ -72,10 +72,11 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                 let info = ContractInfo {
                     contract_address: to_hex_str(&address),
                     contract_type: contract_type.to_string(),
-                    block_number,
                 };
 
-                self.storage.register_contract_info(&info).await?;
+                self.storage
+                    .register_contract_info(&info, block_timestamp)
+                    .await?;
 
                 Ok(contract_type)
             }
