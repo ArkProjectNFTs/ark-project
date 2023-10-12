@@ -129,7 +129,12 @@ impl Storage for DefaultStorage {
         Ok(())
     }
 
-    async fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError> {
+    async fn set_block_info(
+        &self,
+        block_number: u64,
+        _block_timestamp: u64,
+        info: BlockInfo,
+    ) -> Result<(), StorageError> {
         log::trace!("Setting block info {:?} for block #{}", info, block_number);
         Ok(())
     }
@@ -143,8 +148,12 @@ impl Storage for DefaultStorage {
         })
     }
 
-    async fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
-        log::trace!("Cleaning block #{}", block_number);
+    async fn clean_block(
+        &self,
+        _block_timestamp: u64,
+        block_number: Option<u64>,
+    ) -> Result<(), StorageError> {
+        log::trace!("Cleaning block #{:?}", block_number);
         Ok(())
     }
 

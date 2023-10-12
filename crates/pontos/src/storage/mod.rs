@@ -41,11 +41,23 @@ pub trait Storage {
         block_number: u64,
     ) -> Result<(), StorageError>;
 
-    async fn set_block_info(&self, block_number: u64, info: BlockInfo) -> Result<(), StorageError>;
+    /// A block info is only set if the block has a number and a timestamp.
+    async fn set_block_info(
+        &self,
+        block_number: u64,
+        block_timestamp: u64,
+        info: BlockInfo,
+    ) -> Result<(), StorageError>;
 
     async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError>;
 
-    async fn clean_block(&self, block_number: u64) -> Result<(), StorageError>;
+    /// The block timestamps is always present. But the number can be missing
+    /// for the pending block support.
+    async fn clean_block(
+        &self,
+        block_timestamp: u64,
+        block_number: Option<u64>,
+    ) -> Result<(), StorageError>;
 
     /// A block that was pending is now the latest block.
     /// When pending, the only data we have to identify the block is the timestamp.

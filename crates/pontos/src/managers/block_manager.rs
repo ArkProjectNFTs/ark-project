@@ -27,8 +27,14 @@ impl<S: Storage> BlockManager<S> {
             .await
     }
 
-    pub async fn clean_block(&self, block_number: u64) -> Result<(), StorageError> {
-        self.storage.clean_block(block_number).await
+    pub async fn clean_block(
+        &self,
+        block_timestamp: u64,
+        block_number: Option<u64>,
+    ) -> Result<(), StorageError> {
+        self.storage
+            .clean_block(block_timestamp, block_number)
+            .await
     }
 
     /// Returns false if the given block number must be indexed.
@@ -36,12 +42,17 @@ impl<S: Storage> BlockManager<S> {
     pub async fn should_skip_indexing(
         &self,
         block_number: u64,
+        block_timestamp: u64,
         indexer_version: &str,
         do_force: bool,
     ) -> Result<bool, StorageError> {
         if do_force {
             // Force indexing by cleaning the block, and return true.
-            match self.storage.clean_block(block_number).await {
+            match self
+                .storage
+                .clean_block(block_timestamp, Some(block_number))
+                .await
+            {
                 Ok(()) => Ok(false),
                 Err(_) => Ok(true),
             }
@@ -57,7 +68,11 @@ impl<S: Storage> BlockManager<S> {
                     // Compare the indexer versions.
                     match compare(indexer_version, info.indexer_version) {
                         // if the current version is greater, clean the block & return false we index the block
-                        Ok(Cmp::Gt) => self.storage.clean_block(block_number).await.map(|_| false),
+                        Ok(Cmp::Gt) => self
+                            .storage
+                            .clean_block(block_timestamp, Some(block_number))
+                            .await
+                            .map(|_| false),
                         // if the current version is equal, return false we skip the block indexation
                         _ => Ok(true),
                     }
@@ -71,6 +86,7 @@ impl<S: Storage> BlockManager<S> {
     pub async fn set_block_info(
         &self,
         block_number: u64,
+        block_timestamp: u64,
         indexer_version: &str,
         indexer_identifier: &str,
         status: BlockIndexingStatus,
@@ -78,6 +94,7 @@ impl<S: Storage> BlockManager<S> {
         self.storage
             .set_block_info(
                 block_number,
+                block_timestamp,
                 BlockInfo {
                     indexer_version: indexer_version.to_string(),
                     indexer_identifier: indexer_identifier.to_string(),
@@ -137,7 +154,6 @@ impl Default for PendingBlockData {
 mod tests {
 
     use super::*;
-    use mockall::predicate::*;
 
     use crate::storage::{
         types::{BlockIndexingStatus, BlockInfo},
@@ -158,8 +174,7 @@ mod tests {
         // Mock the clean_block method to return Ok(()).
         mock_storage
             .expect_clean_block()
-            .with(eq(block_number))
-            .returning(|_| Box::pin(async { Ok(()) }));
+            .returning(|_, _| Box::pin(async { Ok(()) }));
 
         let manager = BlockManager {
             storage: Arc::new(mock_storage),
@@ -167,7 +182,7 @@ mod tests {
 
         // Should return false as the block is not found.
         let result = manager
-            .should_skip_indexing(block_number, "v0.0.2", false)
+            .should_skip_indexing(block_number, 0, "v0.0.2", false)
             .await
             .unwrap();
 
@@ -181,7 +196,7 @@ mod tests {
         // Mock the clean_block method to return Ok(()).
         mock_storage
             .expect_clean_block()
-            .returning(|_| Box::pin(futures::future::ready(Ok(()))));
+            .returning(|_, _| Box::pin(futures::future::ready(Ok(()))));
 
         // Mock the get_block_info to return an indexed block with an older version.
         mock_storage
@@ -201,7 +216,7 @@ mod tests {
         // Mock the clean_block method to return Ok(()).
         mock_storage
             .expect_clean_block()
-            .returning(|_| Box::pin(async { Ok(()) }));
+            .returning(|_, _| Box::pin(async { Ok(()) }));
 
         let manager = BlockManager {
             storage: Arc::new(mock_storage),
@@ -209,14 +224,14 @@ mod tests {
 
         // New version, should return true for indexing.
         let result = manager
-            .should_skip_indexing(1, "v0.0.2", false)
+            .should_skip_indexing(1, 0, "v0.0.2", false)
             .await
             .unwrap();
         assert!(result == false);
 
         // Force but same version, should return true for indexing.
         let result = manager
-            .should_skip_indexing(2, "v0.0.1", true)
+            .should_skip_indexing(2, 0, "v0.0.1", true)
             .await
             .unwrap();
         assert!(result == false);

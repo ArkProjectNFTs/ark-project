@@ -133,7 +133,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     );
 
                     self.block_manager
-                        .clean_block(cache.get_timestamp())
+                        .clean_block(cache.get_timestamp(), None)
                         .await?;
 
                     // Clean up and wait next tick to restart on the last pending block.
@@ -168,7 +168,13 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 }
 
                 self.block_manager
-                    .update_last_pending_block(block_number, latest_ts)
+                    .set_block_info(
+                        block_number,
+                        latest_ts,
+                        &self.config.indexer_version,
+                        &self.config.indexer_identifier,
+                        BlockIndexingStatus::Terminated,
+                    )
                     .await?;
 
                 info!(
@@ -239,9 +245,16 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 break;
             }
 
+            let block_ts = self.client.block_time(BlockId::Number(current_u64)).await?;
+
             if self
                 .block_manager
-                .should_skip_indexing(current_u64, &self.config.indexer_version, do_force)
+                .should_skip_indexing(
+                    current_u64,
+                    block_ts,
+                    &self.config.indexer_version,
+                    do_force,
+                )
                 .await?
             {
                 current_u64 += 1;
@@ -254,13 +267,12 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             self.block_manager
                 .set_block_info(
                     current_u64,
+                    block_ts,
                     &self.config.indexer_version,
                     &self.config.indexer_identifier,
                     BlockIndexingStatus::Processing,
                 )
                 .await?;
-
-            let block_ts = self.client.block_time(BlockId::Number(current_u64)).await?;
 
             let blocks_events = self
                 .client
@@ -284,6 +296,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             self.block_manager
                 .set_block_info(
                     current_u64,
+                    block_ts,
                     &self.config.indexer_version,
                     &self.config.indexer_identifier,
                     BlockIndexingStatus::Terminated,
