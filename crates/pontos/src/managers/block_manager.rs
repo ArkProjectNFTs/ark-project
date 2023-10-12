@@ -17,16 +17,6 @@ impl<S: Storage> BlockManager<S> {
         }
     }
 
-    pub async fn update_last_pending_block(
-        &self,
-        block_number: u64,
-        block_timestamp: u64,
-    ) -> Result<(), StorageError> {
-        self.storage
-            .update_last_pending_block(block_number, block_timestamp)
-            .await
-    }
-
     pub async fn clean_block(
         &self,
         block_timestamp: u64,

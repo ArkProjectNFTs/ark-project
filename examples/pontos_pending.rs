@@ -156,17 +156,4 @@ impl Storage for DefaultStorage {
         log::trace!("Cleaning block #{:?}", block_number);
         Ok(())
     }
-
-    async fn update_last_pending_block(
-        &self,
-        block_number: u64,
-        block_timestamp: u64,
-    ) -> Result<(), StorageError> {
-        log::trace!(
-            "Update last pending block #{} {}",
-            block_number,
-            block_timestamp
-        );
-        Ok(())
-    }
 }
