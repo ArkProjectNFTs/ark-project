@@ -1,10 +1,10 @@
 use crate::types::{MetadataType, TokenMetadata};
 use anyhow::{anyhow, Result};
 use base64::{engine::general_purpose, Engine as _};
-use log::debug;
 use reqwest::header::{HeaderMap, CONTENT_LENGTH, CONTENT_TYPE};
 use reqwest::Client;
 use std::{env, time::Duration};
+use tracing::debug;
 
 pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
