@@ -9,7 +9,7 @@ use std::path::Path;
 
 use anyhow::{Context, Ok, Result};
 use async_trait::async_trait;
-use log::info;
+use tracing::info;
 
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;

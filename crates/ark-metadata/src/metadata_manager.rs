@@ -6,10 +6,10 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use ark_starknet::{client::StarknetClient, format::to_hex_str, CairoU256};
-use log::{debug, error};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
+use tracing::{debug, error};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
