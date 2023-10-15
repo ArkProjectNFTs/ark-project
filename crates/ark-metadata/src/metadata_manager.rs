@@ -101,6 +101,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 
         self.storage
             .register_token_metadata(&contract_address, token_id, token_metadata)
+            .await
             .map_err(|_e| MetadataError::DatabaseError)?;
 
         Ok(())
@@ -126,6 +127,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         let token_ids = self
             .storage
             .find_token_ids_without_metadata_in_collection(contract_address)
+            .await
             .map_err(|_| MetadataError::DatabaseError)?;
 
         for token_id in token_ids {
