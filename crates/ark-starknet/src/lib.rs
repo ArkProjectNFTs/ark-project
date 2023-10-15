@@ -58,9 +58,6 @@ impl CairoU256 {
         // Split the input array into two parts
         let (high, low) = bytes.split_at(16);
 
-        println!("BUF {:?}", high);
-        println!("BUF {:?}", low);
-
         let low = u128::from_be_bytes(low.try_into()?);
         let high = u128::from_be_bytes(high.try_into()?);
 
