@@ -4,6 +4,7 @@ pub mod format;
 use anyhow::Result;
 use format::to_hex_str;
 use num_bigint::BigUint;
+use num_traits::Num;
 
 #[derive(Debug, Clone)]
 pub struct CairoU256 {
@@ -41,23 +42,27 @@ impl CairoU256 {
 
     pub fn from_hex_be(value: &str) -> Result<Self> {
         // Remove the "0x" prefix if it exists
-        let value = value.trim_start_matches("0x");
+        let value = value.strip_prefix("0x").unwrap_or(value);
 
         // Parse the hexadecimal string into a BigUint
-        let big_uint_from_hex = match BigUint::parse_bytes(value.as_bytes(), 16) {
-            Some(big_uint) => big_uint,
-            None => return Err(anyhow::anyhow!("Invalid hexadecimal string")),
+        let biguint = match BigUint::from_str_radix(value, 16) {
+            Ok(b) => b,
+            Err(_) => return Err(anyhow::anyhow!("Invalid hexadecimal string")),
         };
 
         // Convert the BigUint to a 32-byte buffer
-        let mut buffer = [0u8; 32];
-        let hex_bytes = big_uint_from_hex.to_bytes_be();
-        let start = 32 - hex_bytes.len();
-        buffer[start..].copy_from_slice(&hex_bytes);
+        let mut bytes = biguint.to_bytes_be();
+        let padding = vec![0; 32 - bytes.len()];
+        bytes.splice(0..0, padding);
 
-        // Extract u128 values from the buffer
-        let low = u128::from_be_bytes(buffer[16..].try_into()?);
-        let high = u128::from_be_bytes(buffer[..16].try_into()?);
+        // Split the input array into two parts
+        let (high, low) = bytes.split_at(16);
+
+        println!("BUF {:?}", high);
+        println!("BUF {:?}", low);
+
+        let low = u128::from_be_bytes(low.try_into()?);
+        let high = u128::from_be_bytes(high.try_into()?);
 
         Ok(Self { low, high })
     }
@@ -117,11 +122,11 @@ mod tests {
 
         assert_eq!(
             u256.low,
-            u128::from_str_radix("0xeb5337d9a885be319366b5205a414fdd", 16).unwrap()
+            u128::from_str_radix("eb5337d9a885be319366b5205a414fdd", 16).unwrap()
         );
         assert_eq!(
             u256.high,
-            u128::from_str_radix("0x05f7cd1fd465baff2ba9d2d1501ad0a2", 16).unwrap()
+            u128::from_str_radix("05f7cd1fd465baff2ba9d2d1501ad0a2", 16).unwrap()
         );
     }
 }

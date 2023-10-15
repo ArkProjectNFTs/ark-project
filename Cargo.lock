@@ -312,6 +312,7 @@ dependencies = [
  "async-trait",
  "mockall",
  "num-bigint",
+ "num-traits 0.2.16",
  "regex",
  "starknet",
  "url",
