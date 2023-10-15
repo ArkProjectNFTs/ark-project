@@ -1,6 +1,7 @@
 pub mod client;
 pub mod format;
 
+use anyhow::Result;
 use format::to_hex_str;
 use num_bigint::BigUint;
 
@@ -36,5 +37,91 @@ impl CairoU256 {
         } else {
             token_id_str
         }
+    }
+
+    pub fn from_hex_be(value: &str) -> Result<Self> {
+        // Remove the "0x" prefix if it exists
+        let value = value.trim_start_matches("0x");
+
+        // Parse the hexadecimal string into a BigUint
+        let big_uint_from_hex = match BigUint::parse_bytes(value.as_bytes(), 16) {
+            Some(big_uint) => big_uint,
+            None => return Err(anyhow::anyhow!("Invalid hexadecimal string")),
+        };
+
+        // Convert the BigUint to a 32-byte buffer
+        let mut buffer = [0u8; 32];
+        let hex_bytes = big_uint_from_hex.to_bytes_be();
+        let start = 32 - hex_bytes.len();
+        buffer[start..].copy_from_slice(&hex_bytes);
+
+        // Extract u128 values from the buffer
+        let low = u128::from_be_bytes(buffer[16..].try_into()?);
+        let high = u128::from_be_bytes(buffer[..16].try_into()?);
+
+        Ok(Self { low, high })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use num_traits::Num;
+
+    use super::*;
+
+    #[test]
+    fn test_to_biguint() {
+        let u256 = CairoU256 { low: 15, high: 0 };
+
+        let result = u256.to_biguint();
+        assert_eq!(result, BigUint::from_str_radix("15", 10).unwrap());
+    }
+
+    #[test]
+    fn test_to_hex() {
+        let u256 = CairoU256 { low: 15, high: 0 };
+
+        let expected_hex = "0x000000000000000000000000000000000000000000000000000000000000000f";
+        let result = u256.to_hex();
+        assert_eq!(result, expected_hex);
+    }
+
+    #[test]
+    fn test_to_decimal() {
+        let u256 = CairoU256 { low: 15, high: 0 };
+
+        let expected_decimal = "15";
+        let result = u256.to_decimal(false);
+        assert_eq!(result, expected_decimal);
+
+        let expected_padded_decimal =
+            "000000000000000000000000000000000000000000000000000000000000000000000000000015";
+        let result_padded = u256.to_decimal(true);
+        assert_eq!(result_padded, expected_padded_decimal);
+    }
+
+    #[test]
+    fn test_from_hex_be() {
+        let hex_string = "0x000000000000000000000000000000000000000000000000000000000000000f";
+        let u256 = CairoU256::from_hex_be(hex_string).unwrap();
+
+        assert_eq!(u256.low, 15);
+        assert_eq!(u256.high, 0);
+
+        // Test with invalid hex string
+        let invalid_hex_string = "invalidhex";
+        assert!(CairoU256::from_hex_be(invalid_hex_string).is_err());
+
+        let hex_string = "0x05f7cd1fd465baff2ba9d2d1501ad0a2eb5337d9a885be319366b5205a414fdd";
+        let u256 = CairoU256::from_hex_be(hex_string).unwrap();
+
+        assert_eq!(
+            u256.low,
+            u128::from_str_radix("0xeb5337d9a885be319366b5205a414fdd", 16).unwrap()
+        );
+        assert_eq!(
+            u256.high,
+            u128::from_str_radix("0x05f7cd1fd465baff2ba9d2d1501ad0a2", 16).unwrap()
+        );
     }
 }
