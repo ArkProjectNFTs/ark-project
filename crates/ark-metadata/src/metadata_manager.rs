@@ -389,6 +389,7 @@ mod tests {
                 contract_address,
                 ImageCacheOption::DoNotSave,
                 ipfs_gateway_uri,
+                Duration::from_secs(5),
             )
             .await;
 
