@@ -73,6 +73,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         token_id: CairoU256,
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
+        image_timeout: Duration,
     ) -> Result<(), MetadataError> {
         let token_uri = self
             .get_token_uri(&token_id, contract_address)
@@ -91,9 +92,15 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 .map(|s| s.replace("ipfs://", &ipfs_url))
                 .unwrap_or_default();
 
-            self.fetch_token_image(url.as_str(), cache, contract_address, &token_id)
-                .await
-                .map_err(|_| MetadataError::RequestImageError)?;
+            self.fetch_token_image(
+                url.as_str(),
+                cache,
+                contract_address,
+                &token_id,
+                image_timeout,
+            )
+            .await
+            .map_err(|_| MetadataError::RequestImageError)?;
         }
 
         self.storage
@@ -120,6 +127,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         contract_address: FieldElement,
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
+        image_timeout: Duration,
     ) -> Result<(), MetadataError> {
         let token_ids = self
             .storage
@@ -128,8 +136,14 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             .map_err(|_| MetadataError::DatabaseError)?;
 
         for token_id in token_ids {
-            self.refresh_token_metadata(contract_address, token_id, cache, ipfs_gateway_uri)
-                .await?;
+            self.refresh_token_metadata(
+                contract_address,
+                token_id,
+                cache,
+                ipfs_gateway_uri,
+                image_timeout,
+            )
+            .await?;
         }
 
         Ok(())
@@ -156,6 +170,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         cache: ImageCacheOption,
         contract_address: FieldElement,
         token_id: &CairoU256,
+        timeout: Duration,
     ) -> Result<MetadataImage> {
         info!("Fetching image... {}", url);
 
@@ -172,12 +187,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 })
             }
             ImageCacheOption::Save => {
-                let response = self
-                    .request_client
-                    .get(url)
-                    .timeout(Duration::from_secs(5))
-                    .send()
-                    .await?;
+                let response = self.request_client.get(url).timeout(timeout).send().await?;
 
                 let headers = response.headers().clone();
                 let bytes = response.bytes().await?;
