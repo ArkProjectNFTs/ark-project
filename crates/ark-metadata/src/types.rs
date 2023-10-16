@@ -26,7 +26,7 @@ pub enum DisplayType {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
-pub enum AttributeValue {
+pub enum MetadataAttributeValue {
     String(String),
     Number(Number),
     Bool(bool),
@@ -39,7 +39,7 @@ pub enum AttributeValue {
 pub struct Attribute {
     pub display_type: Option<DisplayType>,
     pub trait_type: Option<String>,
-    pub value: AttributeValue,
+    pub value: MetadataAttributeValue,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]

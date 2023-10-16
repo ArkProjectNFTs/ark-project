@@ -2,14 +2,15 @@ use crate::{
     cairo_string_parser::parse_cairo_long_string,
     file_manager::{FileInfo, FileManager},
     storage::Storage,
-    utils::{extract_metadata_from_headers, get_token_metadata},
+    utils::{extract_metadata_from_headers, file_extension_from_mime_type, get_token_metadata},
 };
 use anyhow::{anyhow, Result};
 use ark_starknet::{client::StarknetClient, format::to_hex_str, CairoU256};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
-use tracing::{debug, error};
+use std::time::Duration;
+use tracing::{debug, error, info};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -27,10 +28,9 @@ pub struct MetadataImage {
 }
 
 #[derive(Copy, Clone)]
-pub enum CacheOption {
-    Cache,
-    NoCache,
-    Default,
+pub enum ImageCacheOption {
+    Save,
+    DoNotSave,
 }
 
 /// Represents possible errors that can arise while working with metadata in the manager.
@@ -71,8 +71,9 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         &mut self,
         contract_address: FieldElement,
         token_id: CairoU256,
-        cache: CacheOption,
+        cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
+        image_timeout: Duration,
     ) -> Result<(), MetadataError> {
         let token_uri = self
             .get_token_uri(&token_id, contract_address)
@@ -91,16 +92,20 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 .map(|s| s.replace("ipfs://", &ipfs_url))
                 .unwrap_or_default();
 
-            let image_name = url.rsplit('/').next().unwrap_or_default();
-            let image_ext = image_name.rsplit('.').next().unwrap_or_default();
-
-            self.fetch_token_image(url.as_str(), image_ext, cache, contract_address, &token_id)
-                .await
-                .map_err(|_| MetadataError::RequestImageError)?;
+            self.fetch_token_image(
+                url.as_str(),
+                cache,
+                contract_address,
+                &token_id,
+                image_timeout,
+            )
+            .await
+            .map_err(|_| MetadataError::RequestImageError)?;
         }
 
         self.storage
             .register_token_metadata(&contract_address, token_id, token_metadata)
+            .await
             .map_err(|_e| MetadataError::DatabaseError)?;
 
         Ok(())
@@ -120,17 +125,25 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     pub async fn refresh_collection_token_metadata(
         &mut self,
         contract_address: FieldElement,
-        cache: CacheOption,
+        cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
+        image_timeout: Duration,
     ) -> Result<(), MetadataError> {
         let token_ids = self
             .storage
             .find_token_ids_without_metadata_in_collection(contract_address)
+            .await
             .map_err(|_| MetadataError::DatabaseError)?;
 
         for token_id in token_ids {
-            self.refresh_token_metadata(contract_address, token_id, cache, ipfs_gateway_uri)
-                .await?;
+            self.refresh_token_metadata(
+                contract_address,
+                token_id,
+                cache,
+                ipfs_gateway_uri,
+                image_timeout,
+            )
+            .await?;
         }
 
         Ok(())
@@ -154,13 +167,15 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     pub async fn fetch_token_image(
         &mut self,
         url: &str,
-        file_ext: &str,
-        cache: CacheOption,
+        cache: ImageCacheOption,
         contract_address: FieldElement,
         token_id: &CairoU256,
+        timeout: Duration,
     ) -> Result<MetadataImage> {
+        info!("Fetching image... {}", url);
+
         match cache {
-            CacheOption::NoCache => {
+            ImageCacheOption::DoNotSave => {
                 let response = self.request_client.head(url).send().await?;
                 let (content_type, content_length) =
                     extract_metadata_from_headers(response.headers())?;
@@ -171,16 +186,22 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     is_cache_updated: false,
                 })
             }
-            _ => {
-                debug!("Fetching image... {}", url);
-                let response = reqwest::get(url).await?;
+            ImageCacheOption::Save => {
+                let response = self.request_client.get(url).timeout(timeout).send().await?;
+
                 let headers = response.headers().clone();
                 let bytes = response.bytes().await?;
                 let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
+                let file_ext = file_extension_from_mime_type(content_type.as_str());
+
+                debug!(
+                    "Image: Content-Type={}, Content-Length={}, File-Ext={}",
+                    content_type, content_length, file_ext
+                );
 
                 self.file_manager
                     .save(&FileInfo {
-                        name: format!("{}.{}", token_id.to_hex(), file_ext),
+                        name: format!("{}.{}", token_id.to_decimal(false), file_ext),
                         content: bytes.to_vec(),
                         dir_path: Some(to_hex_str(&contract_address)),
                     })
@@ -366,8 +387,9 @@ mod tests {
         let result = metadata_manager
             .refresh_collection_token_metadata(
                 contract_address,
-                CacheOption::NoCache,
+                ImageCacheOption::DoNotSave,
                 ipfs_gateway_uri,
+                Duration::from_secs(5),
             )
             .await;
 
