@@ -42,6 +42,24 @@ async fn get_http_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> 
     Ok(metadata)
 }
 
+pub fn file_extension_from_mime_type(mime_type: &str) -> &str {
+    match mime_type {
+        "image/png" => "png",
+        "image/jpeg" => "jpg",
+        "image/gif" => "gif",
+        "image/bmp" => "bmp",
+        "image/webp" => "webp",
+        "image/svg+xml" => "svg",
+        "video/mp4" => "mp4",
+        "video/quicktime" => "mov",
+        "video/x-msvideo" => "avi",
+        "video/x-matroska" => "mkv",
+        "video/ogg" => "ogv",
+        "video/webm" => "webm",
+        _ => "",
+    }
+}
+
 fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
     // Try to split from the comma as it is the standard with on chain metadata
     let url_encoded = urlencoding::decode(uri).map(|s| String::from(s.as_ref()));
