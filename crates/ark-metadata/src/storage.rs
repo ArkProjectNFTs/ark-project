@@ -22,12 +22,8 @@ pub trait Storage {
         token_id: CairoU256,
     ) -> Result<bool, StorageError>;
 
-    async fn find_token_ids_without_metadata_in_collection(
-        &self,
-        contract_address: FieldElement,
-    ) -> Result<Vec<CairoU256>, StorageError>;
-
     async fn find_token_ids_without_metadata(
         &self,
+        contract_address_filter: Option<FieldElement>,
     ) -> Result<Vec<(FieldElement, CairoU256)>, StorageError>;
 }

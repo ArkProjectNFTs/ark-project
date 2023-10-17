@@ -129,13 +129,13 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
     ) -> Result<(), MetadataError> {
-        let token_ids = self
+        let results = self
             .storage
-            .find_token_ids_without_metadata_in_collection(contract_address)
+            .find_token_ids_without_metadata(Some(contract_address))
             .await
             .map_err(|_| MetadataError::DatabaseError)?;
 
-        for token_id in token_ids {
+        for (contract_address, token_id) in results {
             self.refresh_token_metadata(
                 contract_address,
                 token_id,
@@ -231,27 +231,37 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 vec![token_id.low.into(), token_id.high.into()],
                 BlockId::Tag(BlockTag::Latest),
             )
-            .await?;
+            .await;
 
-        if self.is_valid_uri(&token_uri_cairo0) {
-            return Ok(token_uri_cairo0);
+        match token_uri_cairo0 {
+            Ok(token_uri_cairo0) => {
+                if self.is_valid_uri(&token_uri_cairo0) {
+                    return Ok(token_uri_cairo0);
+                }
+            }
+            Err(_) => {
+                match self
+                    .get_contract_property_string(
+                        contract_address,
+                        selector!("token_uri"),
+                        vec![token_id.low.into(), token_id.high.into()],
+                        BlockId::Tag(BlockTag::Latest),
+                    )
+                    .await
+                {
+                    Ok(token_uri_cairo1) => {
+                        if self.is_valid_uri(&token_uri_cairo1) {
+                            return Ok(token_uri_cairo1);
+                        }
+                    }
+                    Err(_) => {
+                        error!("Token URI not found");
+                        return Err(anyhow!("Token URI not found"));
+                    }
+                }
+            }
         }
-
-        let token_uri_cairo1 = self
-            .get_contract_property_string(
-                contract_address,
-                selector!("token_uri"),
-                vec![token_id.low.into(), token_id.high.into()],
-                BlockId::Tag(BlockTag::Latest),
-            )
-            .await?;
-
-        if self.is_valid_uri(&token_uri_cairo1) {
-            Ok(token_uri_cairo1)
-        } else {
-            error!("Token URI not found");
-            Err(anyhow!("Token URI not found"))
-        }
+        Err(anyhow!("Token URI not found"))
     }
 
     /// Checks if the given URI is valid.
@@ -356,10 +366,10 @@ mod tests {
 
         // Mocking expected behaviors
         mock_storage
-            .expect_find_token_ids_without_metadata_in_collection()
+            .expect_find_token_ids_without_metadata()
             .times(1)
-            .with(eq(contract_address))
-            .returning(|_| Ok(vec![CairoU256 { low: 1, high: 0 }]));
+            .with(eq(Some(contract_address)))
+            .returning(|_| Ok(vec![(FieldElement::ONE, CairoU256 { low: 1, high: 0 })]));
 
         mock_client
             .expect_call_contract()
