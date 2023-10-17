@@ -7,7 +7,7 @@ use ark_starknet::CairoU256;
 use starknet::core::types::*;
 use starknet::macros::selector;
 use std::sync::Arc;
-use tracing::warn;
+use tracing::{debug, warn};
 
 #[derive(Debug)]
 pub struct TokenManager<S: Storage, C: StarknetClient> {
@@ -76,7 +76,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         token_id_low: FieldElement,
         token_id_high: FieldElement,
     ) -> Result<Vec<FieldElement>> {
-        let block = BlockId::Tag(BlockTag::Latest);
+        let block = BlockId::Tag(BlockTag::Pending);
         let selectors = vec![selector!("owner_of"), selector!("ownerOf")];
 
         for selector in selectors {
@@ -90,7 +90,10 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
                 )
                 .await
             {
-                Ok(res) => return Ok(res),
+                Ok(res) => {
+                    debug!("Got token owner! {:?}", res);
+                    return Ok(res);
+                }
                 Err(_) => warn!("Failed to get token owner with {:?}", selector),
             }
         }
