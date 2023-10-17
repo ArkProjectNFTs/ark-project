@@ -84,7 +84,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
     }
 
     pub async fn get_contract_type(&self, contract_address: FieldElement) -> Result<ContractType> {
-        let block = BlockId::Tag(BlockTag::Latest);
+        let block = BlockId::Tag(BlockTag::Pending);
         let token_uri_cairo_0 = self
             .get_contract_property_string(
                 contract_address,
