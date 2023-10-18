@@ -3,7 +3,7 @@ use crate::storage::{
     Storage,
 };
 use anyhow::Result;
-use ark_starknet::client::StarknetClient;
+use ark_starknet::client::{StarknetClient, StarknetClientError};
 use ark_starknet::format::to_hex_str;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
@@ -83,41 +83,44 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         }
     }
 
+    /// Verifies if the contracft is an ERC721, ERC1155 or an other one by calling the `balance_of`
+    /// function (with the two cases at the moment).
+    /// ERC721 `balance_of` expects only the `owner` address.
     pub async fn get_contract_type(&self, contract_address: FieldElement) -> Result<ContractType> {
         let block = BlockId::Tag(BlockTag::Pending);
-        let token_uri_cairo_0 = self
+        let balance_of_0 = self
             .get_contract_property_string(
                 contract_address,
-                "tokenURI",
-                vec![FieldElement::ONE, FieldElement::ZERO],
+                "balanceOf",
+                vec![FieldElement::ZERO],
                 block,
             )
-            .await
-            .unwrap_or("undefined".to_string());
+            .await;
 
-        let token_uri = self
-            .get_contract_property_string(
-                contract_address,
-                "token_uri",
-                vec![FieldElement::ONE, FieldElement::ZERO],
-                block,
-            )
-            .await
-            .unwrap_or("undefined".to_string());
+        let balance_of = match balance_of_0 {
+            Ok(_) => return Ok(ContractType::ERC721),
+            Err(e) => match e {
+                StarknetClientError::EntrypointNotFound(_) => {
+                    self.get_contract_property_string(
+                        contract_address,
+                        "balance_of",
+                        vec![FieldElement::ZERO],
+                        block,
+                    )
+                    .await
+                }
+                StarknetClientError::InputTooShort => return Ok(ContractType::ERC1155),
+                _ => return Err(e.into()),
+            },
+        };
 
-        let uri_result = self
-            .get_contract_property_string(contract_address, "uri", vec![], block)
-            .await
-            .unwrap_or("undefined".to_string());
-
-        if (token_uri_cairo_0 != "undefined" && !token_uri_cairo_0.is_empty())
-            || (token_uri != "undefined" && !token_uri.is_empty())
-        {
-            Ok(ContractType::ERC721)
-        } else if uri_result != "undefined" {
-            Ok(ContractType::ERC1155)
-        } else {
-            Ok(ContractType::Other)
+        match balance_of {
+            Ok(_) => Ok(ContractType::ERC721),
+            Err(e) => match e {
+                StarknetClientError::EntrypointNotFound(_) => Ok(ContractType::Other),
+                StarknetClientError::InputTooShort => Ok(ContractType::ERC1155),
+                _ => Err(e.into()),
+            },
         }
     }
 
@@ -127,18 +130,22 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         selector_name: &str,
         calldata: Vec<FieldElement>,
         block: BlockId,
-    ) -> Result<String> {
+    ) -> Result<String, StarknetClientError> {
         let response = self
             .client
             .call_contract(
                 contract_address,
-                get_selector_from_name(selector_name)?,
+                get_selector_from_name(selector_name).map_err(|_| {
+                    StarknetClientError::Other(format!("Invalid selector: {}", selector_name))
+                })?,
                 calldata,
                 block,
             )
             .await?;
 
-        decode_string_array(&response)
+        decode_string_array(&response).map_err(|e| {
+            StarknetClientError::Other(format!("Impossible to decode response string: {}", e))
+        })
     }
 }
 
