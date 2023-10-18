@@ -1,6 +1,4 @@
 //! Starknet Client implementation using `JsonRpcHttp` provider.
-
-use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 
 use regex::Regex;
@@ -11,7 +9,11 @@ use starknet::{
 use std::collections::HashMap;
 use url::Url;
 
-use super::StarknetClient;
+use super::{StarknetClient, StarknetClientError};
+
+const INPUT_TOO_SHORT: &str = "0x496e70757420746f6f2073686f727420666f7220617267756d656e7473";
+const INPUT_TOO_LONG: &str = "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473";
+const ENTRYPOINT_NOT_FOUND: &str = "EntryPointNotFoundInContract";
 
 #[derive(Debug)]
 pub struct StarknetClientHttp {
@@ -23,8 +25,11 @@ pub struct StarknetClientHttp {
 #[async_trait]
 impl StarknetClient for StarknetClientHttp {
     ///
-    fn new(rpc_url: &str) -> Result<StarknetClientHttp> {
-        let rpc_url = Url::parse(rpc_url)?;
+    fn new(rpc_url: &str) -> Result<StarknetClientHttp, StarknetClientError> {
+        let rpc_url = Url::parse(rpc_url).map_err(|_| {
+            StarknetClientError::Other("Can't parse RPC url to create the provider".to_string())
+        })?;
+
         let provider = AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url)));
 
         Ok(Self { provider })
@@ -37,11 +42,13 @@ impl StarknetClient for StarknetClientHttp {
         &self,
         transaction_hash: FieldElement,
         keys: Option<Vec<Vec<FieldElement>>>,
-    ) -> Result<Vec<EmittedEvent>> {
+    ) -> Result<Vec<EmittedEvent>, StarknetClientError> {
         let receipt = self
             .provider
             .get_transaction_receipt(transaction_hash)
-            .await?;
+            .await
+            .map_err(StarknetClientError::Provider)?;
+
         let mut block_hash = FieldElement::MAX;
         let mut block_number = u64::MAX;
 
@@ -108,16 +115,26 @@ impl StarknetClient for StarknetClientHttp {
     }
 
     ///
-    async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64> {
+    async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64, StarknetClientError> {
         match id {
-            BlockId::Tag(BlockTag::Latest) => Ok(self.provider.block_number().await?),
+            BlockId::Tag(BlockTag::Latest) => Ok(self
+                .provider
+                .block_number()
+                .await
+                .map_err(StarknetClientError::Provider)?),
             BlockId::Number(n) => Ok(*n),
-            _ => Err(anyhow!("BlockID can´t be converted to u64")),
+            _ => Err(StarknetClientError::Conversion(
+                "BlockID can´t be converted to u64".to_string(),
+            )),
         }
     }
 
     ///
-    fn parse_block_range(&self, from: &str, to: &str) -> Result<(BlockId, BlockId)> {
+    fn parse_block_range(
+        &self,
+        from: &str,
+        to: &str,
+    ) -> Result<(BlockId, BlockId), StarknetClientError> {
         let from_block = self.parse_block_id(from)?;
         let to_block = self.parse_block_id(to)?;
 
@@ -125,7 +142,7 @@ impl StarknetClient for StarknetClientHttp {
     }
 
     ///
-    fn parse_block_id(&self, id: &str) -> Result<BlockId> {
+    fn parse_block_id(&self, id: &str) -> Result<BlockId, StarknetClientError> {
         let regex_block_number = Regex::new("^[0-9]{1,}$").unwrap();
 
         if id == "latest" {
@@ -133,15 +150,28 @@ impl StarknetClient for StarknetClientHttp {
         } else if id == "pending" {
             Ok(BlockId::Tag(BlockTag::Pending))
         } else if regex_block_number.is_match(id) {
-            Ok(BlockId::Number(id.parse::<u64>()?))
+            Ok(BlockId::Number(id.parse::<u64>().map_err(|_| {
+                StarknetClientError::Conversion("Can't convert block id to u64".to_string())
+            })?))
         } else {
-            Ok(BlockId::Hash(FieldElement::from_hex_be(id)?))
+            Ok(BlockId::Hash(FieldElement::from_hex_be(id).map_err(
+                |_| {
+                    StarknetClientError::Conversion(
+                        "Can't convert block hash from given hexadecimal string".to_string(),
+                    )
+                },
+            )?))
         }
     }
 
     ///
-    async fn block_time(&self, block: BlockId) -> Result<u64> {
-        let block = self.provider.get_block_with_tx_hashes(block).await?;
+    async fn block_time(&self, block: BlockId) -> Result<u64, StarknetClientError> {
+        let block = self
+            .provider
+            .get_block_with_tx_hashes(block)
+            .await
+            .map_err(StarknetClientError::Provider)?;
+
         let timestamp = match block {
             MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
             MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,
@@ -151,8 +181,16 @@ impl StarknetClient for StarknetClientHttp {
     }
 
     /// Retuns the tx hashes of the asked block + the block timestamp.
-    async fn block_txs_hashes(&self, block: BlockId) -> Result<(u64, Vec<FieldElement>)> {
-        let block = self.provider.get_block_with_tx_hashes(block).await?;
+    async fn block_txs_hashes(
+        &self,
+        block: BlockId,
+    ) -> Result<(u64, Vec<FieldElement>), StarknetClientError> {
+        let block = self
+            .provider
+            .get_block_with_tx_hashes(block)
+            .await
+            .map_err(StarknetClientError::Provider)?;
+
         let timestamp = match block {
             MaybePendingBlockWithTxHashes::Block(block) => (block.timestamp, block.transactions),
             MaybePendingBlockWithTxHashes::PendingBlock(block) => {
@@ -164,8 +202,12 @@ impl StarknetClient for StarknetClientHttp {
     }
 
     ///
-    async fn block_number(&self) -> Result<u64> {
-        Ok(self.provider.block_number().await?)
+    async fn block_number(&self) -> Result<u64, StarknetClientError> {
+        Ok(self
+            .provider
+            .block_number()
+            .await
+            .map_err(StarknetClientError::Provider)?)
     }
 
     ///
@@ -174,7 +216,7 @@ impl StarknetClient for StarknetClientHttp {
         from_block: BlockId,
         to_block: BlockId,
         keys: Option<Vec<Vec<FieldElement>>>,
-    ) -> Result<HashMap<u64, Vec<EmittedEvent>>> {
+    ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError> {
         let mut events: HashMap<u64, Vec<EmittedEvent>> = HashMap::new();
 
         let filter = EventFilter {
@@ -191,7 +233,8 @@ impl StarknetClient for StarknetClientHttp {
             let event_page = self
                 .provider
                 .get_events(filter.clone(), continuation_token, chunk_size)
-                .await?;
+                .await
+                .map_err(StarknetClientError::Provider)?;
 
             event_page.events.iter().for_each(|e| {
                 events
@@ -217,8 +260,8 @@ impl StarknetClient for StarknetClientHttp {
         selector: FieldElement,
         calldata: Vec<FieldElement>,
         block: BlockId,
-    ) -> Result<Vec<FieldElement>> {
-        Ok(self
+    ) -> Result<Vec<FieldElement>, StarknetClientError> {
+        let r = self
             .provider
             .call(
                 FunctionCall {
@@ -228,6 +271,22 @@ impl StarknetClient for StarknetClientHttp {
                 },
                 block,
             )
-            .await?)
+            .await;
+
+        match r {
+            Ok(felts) => Ok(felts),
+            Err(e) => {
+                let s = e.to_string();
+                if s.contains(ENTRYPOINT_NOT_FOUND) {
+                    Err(StarknetClientError::EntrypointNotFound(s))
+                } else if s.contains(INPUT_TOO_SHORT) {
+                    Err(StarknetClientError::InputTooShort)
+                } else if s.contains(INPUT_TOO_LONG) {
+                    Err(StarknetClientError::InputTooLong)
+                } else {
+                    Err(StarknetClientError::Contract(s))
+                }
+            }
+        }
     }
 }

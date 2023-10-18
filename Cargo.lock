@@ -315,6 +315,7 @@ dependencies = [
  "num-traits 0.2.17",
  "regex",
  "starknet",
+ "thiserror",
  "url",
 ]
 
