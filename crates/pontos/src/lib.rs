@@ -4,7 +4,7 @@ pub mod storage;
 
 use crate::storage::types::BlockIndexingStatus;
 use anyhow::Result;
-use ark_starknet::client::StarknetClient;
+use ark_starknet::client::{StarknetClient, StarknetClientError};
 use event_handler::EventHandler;
 use managers::{BlockManager, ContractManager, EventManager, PendingBlockData, TokenManager};
 use starknet::core::types::*;
@@ -18,15 +18,22 @@ use tracing::{debug, error, info, trace, warn};
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
 /// Generic errors for Pontos.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum IndexerError {
     StorageError(StorageError),
+    Starknet(StarknetClientError),
     Anyhow(String),
 }
 
 impl From<StorageError> for IndexerError {
     fn from(e: StorageError) -> Self {
         IndexerError::StorageError(e)
+    }
+}
+
+impl From<StarknetClientError> for IndexerError {
+    fn from(e: StarknetClientError) -> Self {
+        IndexerError::Starknet(e)
     }
 }
 
@@ -40,6 +47,7 @@ impl fmt::Display for IndexerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             IndexerError::StorageError(e) => write!(f, "Storage Error occurred: {}", e),
+            IndexerError::Starknet(e) => write!(f, "Starknet Error occurred: {}", e),
             IndexerError::Anyhow(s) => write!(f, "An error occurred: {}", s),
         }
     }
