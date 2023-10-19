@@ -26,7 +26,7 @@ pub enum DisplayType {
 }
 
 impl fmt::Display for DisplayType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             DisplayType::Number => write!(f, "Number"),
             DisplayType::BoostPercentage => write!(f, "Boost Percentage"),
