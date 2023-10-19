@@ -1,5 +1,6 @@
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Number;
+use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub enum MetadataType {
@@ -24,6 +25,17 @@ pub enum DisplayType {
     Date,
 }
 
+impl fmt::Display for DisplayType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DisplayType::Number => write!(f, "Number"),
+            DisplayType::BoostPercentage => write!(f, "Boost Percentage"),
+            DisplayType::BoostNumber => write!(f, "Boost Number"),
+            DisplayType::Date => write!(f, "Date"),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum MetadataAttributeValue {
@@ -36,7 +48,7 @@ pub enum MetadataAttributeValue {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Attribute {
+pub struct MetadataAttribute {
     pub display_type: Option<DisplayType>,
     pub trait_type: Option<String>,
     pub value: MetadataAttributeValue,
@@ -49,7 +61,7 @@ pub struct TokenMetadata {
     pub external_url: Option<String>,
     pub description: Option<String>,
     pub name: Option<String>,
-    pub attributes: Option<Vec<Attribute>>,
+    pub attributes: Option<Vec<MetadataAttribute>>,
     pub background_color: Option<String>,
     pub animation_url: Option<String>,
     pub youtube_url: Option<String>,
