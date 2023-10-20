@@ -19,9 +19,13 @@ pub enum StorageError {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum DisplayType {
+    #[serde(rename = "number")]
     Number,
+    #[serde(rename = "boost_percentage")]
     BoostPercentage,
+    #[serde(rename = "boost_number")]
     BoostNumber,
+    #[serde(rename = "date")]
     Date,
 }
 
@@ -56,8 +60,14 @@ pub struct MetadataAttribute {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct TokenMetadata {
+    pub raw_metadata: String,
+    pub metadata: NormalizedMetadata,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct NormalizedMetadata {
     pub image: Option<String>,
-    pub image_data: Option<String>,
+    pub image_data: Option<String>, // Raw SVG image data, if you want to generate images on the fly (not recommended). Only use this if you're not including the image parameter.
     pub external_url: Option<String>,
     pub description: Option<String>,
     pub name: Option<String>,

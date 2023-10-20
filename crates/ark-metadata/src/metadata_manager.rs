@@ -80,13 +80,19 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             .await
             .map_err(|_| MetadataError::ParsingError)?;
 
-        let token_metadata = get_token_metadata(&self.request_client, token_uri.as_str())
-            .await
-            .map_err(|_| MetadataError::RequestTokenUriError)?;
+        let token_metadata = get_token_metadata(
+            &self.request_client,
+            token_uri.as_str(),
+            ipfs_gateway_uri,
+            image_timeout,
+        )
+        .await
+        .map_err(|_| MetadataError::RequestTokenUriError)?;
 
-        if token_metadata.image.is_some() {
+        if token_metadata.metadata.image.is_some() {
             let ipfs_url = ipfs_gateway_uri.to_string();
             let url = token_metadata
+                .metadata
                 .image
                 .as_ref()
                 .map(|s| s.replace("ipfs://", &ipfs_url))
