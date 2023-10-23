@@ -17,7 +17,7 @@ pub async fn get_token_metadata(
         MetadataType::Ipfs(uri) => {
             let ipfs_hash = uri.trim_start_matches("ipfs://");
             let complete_uri = format!("{}{}", ipfs_gateway_uri, ipfs_hash);
-            info!("Fetching metadata from IPFS: {}", complete_uri.as_str());
+            trace!("Fetching metadata from IPFS: {}", complete_uri.as_str());
             fetch_metadata(complete_uri.as_str(), client, request_timeout_duration).await?
         }
         MetadataType::Http(uri) => {
