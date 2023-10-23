@@ -9,7 +9,7 @@ use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{info, trace};
+use tracing::{error, info, trace};
 
 pub struct ContractManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
@@ -37,7 +37,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
             return Ok(contract_type.clone());
         }
 
-        trace!("Cache miss for contract {}", address);
+        trace!("Cache miss for contract {:#064x}", address);
 
         let contract_type = self
             .storage
@@ -83,43 +83,102 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         }
     }
 
-    /// Verifies if the contracft is an ERC721, ERC1155 or an other one by calling the `balance_of`
-    /// function (with the two cases at the moment).
-    /// ERC721 `balance_of` expects only the `owner` address.
+    /// Verifies if the contracft is an ERC721, ERC1155 or an other type.
+    /// `owner_of` is specific to ERC721.
+    /// `balance_of` is specific to ERC1155 and different from ERC20 as 2 arguments are expected.
     pub async fn get_contract_type(&self, contract_address: FieldElement) -> Result<ContractType> {
         let block = BlockId::Tag(BlockTag::Pending);
-        let balance_of_0 = self
-            .get_contract_property_string(
-                contract_address,
-                "balanceOf",
-                vec![FieldElement::ZERO],
-                block,
-            )
-            .await;
 
-        let balance_of = match balance_of_0 {
-            Ok(_) => return Ok(ContractType::ERC721),
+        if self.is_erc721(contract_address.clone()).await? {
+            Ok(ContractType::ERC721)
+        } else if self.is_erc1155(contract_address).await? {
+            Ok(ContractType::ERC1155)
+        } else {
+            Ok(ContractType::Other)
+        }
+    }
+
+    /// Returns true if the contract is ERC721, false otherwise.
+    pub async fn is_erc721(&self, contract_address: FieldElement) -> Result<bool> {
+        let block = BlockId::Tag(BlockTag::Pending);
+        let token_id = vec![FieldElement::ONE, FieldElement::ZERO]; // u256.
+
+        match self
+            .get_contract_property_string(contract_address, "ownerOf", token_id.clone(), block)
+            .await
+        {
+            Ok(_) => return Ok(true),
             Err(e) => match e {
-                StarknetClientError::EntrypointNotFound(_) => {
-                    self.get_contract_property_string(
-                        contract_address,
-                        "balance_of",
-                        vec![FieldElement::ZERO],
-                        block,
-                    )
-                    .await
+                StarknetClientError::Contract(s) => {
+                    // Token ID may not exist, but the entrypoint was hit.
+                    if s.contains("not found in contract") {
+                        // do nothing and go to the next selector.
+                    } else {
+                        return Ok(true);
+                    }
                 }
-                StarknetClientError::InputTooShort => return Ok(ContractType::ERC1155),
-                _ => return Err(e.into()),
+                StarknetClientError::EntrypointNotFound(_) => (),
+                _ => return Ok(false),
             },
         };
 
-        match balance_of {
-            Ok(_) => Ok(ContractType::ERC721),
+        match self
+            .get_contract_property_string(contract_address, "owner_of", token_id, block)
+            .await
+        {
+            Ok(_) => return Ok(true),
             Err(e) => match e {
-                StarknetClientError::EntrypointNotFound(_) => Ok(ContractType::Other),
-                StarknetClientError::InputTooShort => Ok(ContractType::ERC1155),
-                _ => Err(e.into()),
+                StarknetClientError::Contract(s) => {
+                    // Token ID may not exist, but the entrypoint was hit.
+                    if s.contains("not found in contract") {
+                        Ok(false)
+                    } else {
+                        Ok(true)
+                    }
+                }
+                StarknetClientError::EntrypointNotFound(_) => Ok(false),
+                _ => Ok(false),
+            },
+        }
+    }
+
+    /// Returns true if the contract is ERC1155, false otherwise.
+    pub async fn is_erc1155(&self, contract_address: FieldElement) -> Result<bool> {
+        let block = BlockId::Tag(BlockTag::Pending);
+        // felt and u256 expected.
+        let address_and_token_id = vec![FieldElement::ZERO, FieldElement::ONE, FieldElement::ZERO];
+
+        match self
+            .get_contract_property_string(
+                contract_address,
+                "balanceOf",
+                address_and_token_id.clone(),
+                block,
+            )
+            .await
+        {
+            Ok(_) => return Ok(true),
+            Err(e) => match e {
+                StarknetClientError::EntrypointNotFound(_) => (),
+                StarknetClientError::InputTooLong => return Ok(false), // ERC20.
+                _ => return Ok(false),
+            },
+        };
+
+        match self
+            .get_contract_property_string(
+                contract_address,
+                "balance_of",
+                address_and_token_id,
+                block,
+            )
+            .await
+        {
+            Ok(_) => return Ok(true),
+            Err(e) => match e {
+                StarknetClientError::EntrypointNotFound(_) => Ok(false),
+                StarknetClientError::InputTooLong => Ok(false), // ERC20.
+                _ => Ok(false),
             },
         }
     }
