@@ -11,7 +11,7 @@ use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use std::time::Duration;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, trace};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -245,7 +245,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 contract_address,
                 selector!("tokenURI"),
                 vec![token_id.low.into(), token_id.high.into()],
-                BlockId::Tag(BlockTag::Latest),
+                BlockId::Tag(BlockTag::Pending),
             )
             .await;
 
@@ -253,31 +253,49 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             Ok(token_uri_cairo0) => {
                 if self.is_valid_uri(&token_uri_cairo0) {
                     return Ok(token_uri_cairo0);
+                } else {
+                    trace!("tokenURI for token ID {} at contract address 0x{:064x} resulted in an invalid URI: {}", token_id.to_decimal(false), contract_address, token_uri_cairo0);
                 }
             }
-            Err(_) => {
+            Err(err) => {
+                trace!(
+                    "Failed to retrieve tokenURI for token ID {} at contract address 0x{:064x}\nError: {:?}",
+                    token_id.to_decimal(false),
+                    contract_address,
+                    err
+                );
+
                 match self
                     .get_contract_property_string(
                         contract_address,
                         selector!("token_uri"),
                         vec![token_id.low.into(), token_id.high.into()],
-                        BlockId::Tag(BlockTag::Latest),
+                        BlockId::Tag(BlockTag::Pending),
                     )
                     .await
                 {
                     Ok(token_uri_cairo1) => {
                         if self.is_valid_uri(&token_uri_cairo1) {
                             return Ok(token_uri_cairo1);
+                        } else {
+                            trace!("token_uri for token ID {} at contract address 0x{:064x} resulted in an invalid URI: {}", token_id.to_decimal(false), contract_address, token_uri_cairo1);
                         }
                     }
                     Err(_) => {
-                        error!("Token URI not found");
-                        return Err(anyhow!("Token URI not found"));
+                        return Err(anyhow!(
+                            "Unable to retrieve the token ID {} from contract address 0x{:064x} using both 'token_uri' and 'tokenURI' methods",
+                            token_id.to_decimal(false),
+                            contract_address
+                        ));
                     }
                 }
             }
         }
-        Err(anyhow!("Token URI not found"))
+        Err(anyhow!(
+            "Token URI not found for token ID {} at contract address {}",
+            token_id.to_decimal(false),
+            contract_address
+        ))
     }
 
     /// Checks if the given URI is valid.
@@ -295,11 +313,18 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<String> {
+        trace!(
+            "get_contract_property_string(contract_address=0x{:064x}, selector=0x{:064x}, calldata={:?}, block={:?})",
+            contract_address, selector, calldata, block
+        );
+
         let value = self
             .starknet_client
             .call_contract(contract_address, selector, calldata, block)
             .await
             .map_err(|e| anyhow!("Error calling contract: {}", e.to_string()))?;
+
+        trace!("Call contract: value={:?}", value);
 
         parse_cairo_long_string(value).map_err(|_| anyhow!("Error parsing string"))
     }

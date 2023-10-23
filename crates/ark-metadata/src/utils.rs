@@ -54,7 +54,13 @@ async fn fetch_metadata(
         Ok(response) => {
             if response.status().is_success() {
                 let raw_metadata = response.text().await?;
-                let metadata = serde_json::from_str::<NormalizedMetadata>(raw_metadata.as_str())?;
+
+                let metadata =
+                    match serde_json::from_str::<NormalizedMetadata>(raw_metadata.as_str()) {
+                        Ok(v) => v,
+                        Err(_) => NormalizedMetadata::default(),
+                    };
+
                 Ok(TokenMetadata {
                     raw: raw_metadata,
                     normalized: metadata,
