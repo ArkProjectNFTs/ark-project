@@ -29,7 +29,12 @@ async fn main() -> Result<()> {
     tracing::subscriber::set_global_default(subscriber)
         .expect("Setting default subscriber failed.");
 
-    let client = Arc::new(StarknetClientHttp::new("https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161").unwrap());
+    let client = Arc::new(
+        StarknetClientHttp::new(
+            "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+        )
+        .unwrap(),
+    );
 
     // Typically loaded from env.
     let config = PontosConfig {
