@@ -9,19 +9,30 @@ pub enum MetadataType {
     OnChain(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum StorageError {
-    DatabaseError,
-    NotFound,
-    DuplicateToken,
-    InvalidMintData,
+    #[error("Database operation failed: {0}")]
+    DatabaseError(String),
+
+    #[error("Item not found: {0}")]
+    NotFound(String),
+
+    #[error("Duplicate token detected: {0}")]
+    DuplicateToken(String),
+
+    #[error("Provided mint data is invalid: {0}")]
+    InvalidMintData(String),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum DisplayType {
+    #[serde(rename = "number")]
     Number,
+    #[serde(rename = "boost_percentage")]
     BoostPercentage,
+    #[serde(rename = "boost_number")]
     BoostNumber,
+    #[serde(rename = "date")]
     Date,
 }
 
@@ -56,8 +67,14 @@ pub struct MetadataAttribute {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct TokenMetadata {
+    pub raw: String,
+    pub normalized: NormalizedMetadata,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct NormalizedMetadata {
     pub image: Option<String>,
-    pub image_data: Option<String>,
+    pub image_data: Option<String>, // Raw SVG image data, if you want to generate images on the fly (not recommended). Only use this if you're not including the image parameter.
     pub external_url: Option<String>,
     pub description: Option<String>,
     pub name: Option<String>,

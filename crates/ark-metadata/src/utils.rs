@@ -1,17 +1,33 @@
-use crate::types::{MetadataType, TokenMetadata};
+use crate::types::{MetadataType, NormalizedMetadata, TokenMetadata};
 use anyhow::{anyhow, Result};
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::header::{HeaderMap, CONTENT_LENGTH, CONTENT_TYPE};
 use reqwest::Client;
-use std::{env, time::Duration};
-use tracing::debug;
+use std::time::Duration;
+use tracing::{debug, error, trace};
 
-pub async fn get_token_metadata(client: &Client, uri: &str) -> Result<TokenMetadata> {
+pub async fn get_token_metadata(
+    client: &Client,
+    uri: &str,
+    ipfs_gateway_uri: &str,
+    request_timeout_duration: Duration,
+) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
     let metadata = match metadata_type {
-        MetadataType::Ipfs(uri) => get_ipfs_metadata(&uri, client).await?,
-        MetadataType::Http(uri) => get_http_metadata(&uri, client).await?,
-        MetadataType::OnChain(uri) => get_onchain_metadata(&uri)?,
+        MetadataType::Ipfs(uri) => {
+            let ipfs_hash = uri.trim_start_matches("ipfs://");
+            let complete_uri = format!("{}{}", ipfs_gateway_uri, ipfs_hash);
+            trace!("Fetching metadata from IPFS: {}", complete_uri.as_str());
+            fetch_metadata(complete_uri.as_str(), client, request_timeout_duration).await?
+        }
+        MetadataType::Http(uri) => {
+            trace!("Fetching metadata from HTTPS: {}", uri.as_str());
+            fetch_metadata(&uri, client, request_timeout_duration).await?
+        }
+        MetadataType::OnChain(uri) => {
+            trace!("Fetching on-chain metadata: {}", uri);
+            get_onchain_metadata(&uri)?
+        }
     };
     Ok(metadata)
 }
@@ -26,20 +42,33 @@ pub fn get_metadata_type(uri: &str) -> MetadataType {
     }
 }
 
-async fn get_ipfs_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> {
-    let mut ipfs_url = env::var("IPFS_GATEWAY_URI").expect("IPFS_GATEWAY_URI must be set");
-    let ipfs_hash = uri.trim_start_matches("ipfs://");
-    ipfs_url.push_str(ipfs_hash);
-    let request = client.get(ipfs_url).timeout(Duration::from_secs(3));
-    let response = request.send().await?;
-    let metadata = response.json::<TokenMetadata>().await?;
-    Ok(metadata)
-}
+async fn fetch_metadata(
+    uri: &str,
+    client: &Client,
+    request_timeout_duration: Duration,
+) -> Result<TokenMetadata> {
+    let request = client.get(uri).timeout(request_timeout_duration);
+    let response = request.send().await;
 
-async fn get_http_metadata(uri: &str, client: &Client) -> Result<TokenMetadata> {
-    let resp = client.get(uri).send().await?;
-    let metadata: TokenMetadata = resp.json().await?;
-    Ok(metadata)
+    match response {
+        Ok(response) => {
+            if response.status().is_success() {
+                let raw_metadata = response.text().await?;
+                let metadata = serde_json::from_str::<NormalizedMetadata>(raw_metadata.as_str())?;
+                Ok(TokenMetadata {
+                    raw: raw_metadata,
+                    normalized: metadata,
+                })
+            } else {
+                error!("Failed to get ipfs metadata. URI: {}", uri);
+                Err(anyhow!("Failed to get ipfs metadata"))
+            }
+        }
+        Err(e) => {
+            error!("Failed to get ipfs metadata: {:?}", e);
+            Err(anyhow!("Failed to get ipfs metadata"))
+        }
+    }
 }
 
 pub fn file_extension_from_mime_type(mime_type: &str) -> &str {
@@ -73,14 +102,19 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             // If it is base64 encoded, decode it, parse and return
             let decoded = general_purpose::STANDARD.decode(uri)?;
             let decoded = std::str::from_utf8(&decoded)?;
-            let metadata: TokenMetadata = serde_json::from_str(decoded)?;
-            Ok(metadata)
+
+            let metadata: NormalizedMetadata = serde_json::from_str::<NormalizedMetadata>(decoded)?;
+            Ok(TokenMetadata {
+                raw: decoded.to_string(),
+                normalized: metadata,
+            })
         }
         Some(("data:application/json", uri)) => {
-            // If it is plain json, parse it and return
-            //println!("Handling {:?}", uri);
-            let metadata: TokenMetadata = serde_json::from_str(uri)?;
-            Ok(metadata)
+            let metadata = serde_json::from_str::<NormalizedMetadata>(uri)?;
+            Ok(TokenMetadata {
+                raw: uri.to_string(),
+                normalized: metadata,
+            })
         }
         _ => match serde_json::from_str(uri) {
             // If it is only the URI without the data format information, try to format it
@@ -122,6 +156,13 @@ pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, u64
 mod tests {
     use super::*;
     use reqwest::header::{HeaderMap, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
+
+    #[test]
+    fn test_file_extension_from_mime_type() {
+        assert_eq!(file_extension_from_mime_type("image/png"), "png");
+        assert_eq!(file_extension_from_mime_type("image/jpeg"), "jpg");
+        assert_eq!(file_extension_from_mime_type("video/mp4"), "mp4");
+    }
 
     #[tokio::test]
     async fn test_determining_metadata_type() {
