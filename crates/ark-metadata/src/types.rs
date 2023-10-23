@@ -9,12 +9,19 @@ pub enum MetadataType {
     OnChain(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum StorageError {
-    DatabaseError,
-    NotFound,
-    DuplicateToken,
-    InvalidMintData,
+    #[error("Database operation failed: {0}")]
+    DatabaseError(String),
+
+    #[error("Item not found: {0}")]
+    NotFound(String),
+
+    #[error("Duplicate token detected: {0}")]
+    DuplicateToken(String),
+
+    #[error("Provided mint data is invalid: {0}")]
+    InvalidMintData(String),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -60,8 +67,8 @@ pub struct MetadataAttribute {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct TokenMetadata {
-    pub raw_metadata: String,
-    pub metadata: NormalizedMetadata,
+    pub raw: String,
+    pub normalized: NormalizedMetadata,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]

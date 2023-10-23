@@ -2,6 +2,7 @@ use crate::{
     cairo_string_parser::parse_cairo_long_string,
     file_manager::{FileInfo, FileManager},
     storage::Storage,
+    types::StorageError,
     utils::{extract_metadata_from_headers, file_extension_from_mime_type, get_token_metadata},
 };
 use anyhow::{anyhow, Result};
@@ -34,13 +35,22 @@ pub enum ImageCacheOption {
 }
 
 /// Represents possible errors that can arise while working with metadata in the manager.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum MetadataError {
-    DatabaseError,
-    ParsingError,
-    RequestTokenUriError,
-    RequestImageError,
-    EnvVarMissingError,
+    #[error("Database operation failed: {0}")]
+    DatabaseError(StorageError),
+
+    #[error("Failed to parse data: {0}")]
+    ParsingError(String),
+
+    #[error("Failed to request token URI: {0}")]
+    RequestTokenUriError(String),
+
+    #[error("Failed to request image: {0}")]
+    RequestImageError(String),
+
+    #[error("Required environment variable is missing: {0}")]
+    EnvVarMissingError(String),
 }
 
 impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C, F> {
@@ -78,7 +88,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         let token_uri = self
             .get_token_uri(&token_id, contract_address)
             .await
-            .map_err(|_| MetadataError::ParsingError)?;
+            .map_err(|err| MetadataError::ParsingError(err.to_string()))?;
 
         let token_metadata = get_token_metadata(
             &self.request_client,
@@ -87,12 +97,12 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             image_timeout,
         )
         .await
-        .map_err(|_| MetadataError::RequestTokenUriError)?;
+        .map_err(|err| MetadataError::RequestTokenUriError(err.to_string()))?;
 
-        if token_metadata.metadata.image.is_some() {
+        if token_metadata.normalized.image.is_some() {
             let ipfs_url = ipfs_gateway_uri.to_string();
             let url = token_metadata
-                .metadata
+                .normalized
                 .image
                 .as_ref()
                 .map(|s| s.replace("ipfs://", &ipfs_url))
@@ -106,13 +116,13 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 image_timeout,
             )
             .await
-            .map_err(|_| MetadataError::RequestImageError)?;
+            .map_err(|err| MetadataError::RequestImageError(err.to_string()))?;
         }
 
         self.storage
             .register_token_metadata(&contract_address, token_id, token_metadata)
             .await
-            .map_err(|_e| MetadataError::DatabaseError)?;
+            .map_err(MetadataError::DatabaseError)?;
 
         Ok(())
     }
@@ -139,7 +149,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             .storage
             .find_token_ids_without_metadata(Some(contract_address))
             .await
-            .map_err(|_| MetadataError::DatabaseError)?;
+            .map_err(MetadataError::DatabaseError)?;
 
         for (contract_address, token_id) in results {
             self.refresh_token_metadata(
@@ -289,7 +299,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             .starknet_client
             .call_contract(contract_address, selector, calldata, block)
             .await
-            .map_err(|_| anyhow!("Error calling contract"))?;
+            .map_err(|e| anyhow!("Error calling contract: {}", e.to_string()))?;
 
         parse_cairo_long_string(value).map_err(|_| anyhow!("Error parsing string"))
     }

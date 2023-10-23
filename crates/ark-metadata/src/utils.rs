@@ -4,7 +4,7 @@ use base64::{engine::general_purpose, Engine as _};
 use reqwest::header::{HeaderMap, CONTENT_LENGTH, CONTENT_TYPE};
 use reqwest::Client;
 use std::time::Duration;
-use tracing::{debug, error, info};
+use tracing::{debug, error, trace};
 
 pub async fn get_token_metadata(
     client: &Client,
@@ -21,11 +21,11 @@ pub async fn get_token_metadata(
             fetch_metadata(complete_uri.as_str(), client, request_timeout_duration).await?
         }
         MetadataType::Http(uri) => {
-            info!("Fetching metadata from HTTPS: {}", uri.as_str());
+            trace!("Fetching metadata from HTTPS: {}", uri.as_str());
             fetch_metadata(&uri, client, request_timeout_duration).await?
         }
         MetadataType::OnChain(uri) => {
-            info!("Fetching on-chain metadata: {}", uri);
+            trace!("Fetching on-chain metadata: {}", uri);
             get_onchain_metadata(&uri)?
         }
     };
@@ -56,8 +56,8 @@ async fn fetch_metadata(
                 let raw_metadata = response.text().await?;
                 let metadata = serde_json::from_str::<NormalizedMetadata>(raw_metadata.as_str())?;
                 Ok(TokenMetadata {
-                    raw_metadata,
-                    metadata,
+                    raw: raw_metadata,
+                    normalized: metadata,
                 })
             } else {
                 error!("Failed to get ipfs metadata. URI: {}", uri);
@@ -105,15 +105,15 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
 
             let metadata: NormalizedMetadata = serde_json::from_str::<NormalizedMetadata>(decoded)?;
             Ok(TokenMetadata {
-                raw_metadata: decoded.to_string(),
-                metadata,
+                raw: decoded.to_string(),
+                normalized: metadata,
             })
         }
         Some(("data:application/json", uri)) => {
             let metadata = serde_json::from_str::<NormalizedMetadata>(uri)?;
             Ok(TokenMetadata {
-                raw_metadata: uri.to_string(),
-                metadata,
+                raw: uri.to_string(),
+                normalized: metadata,
             })
         }
         _ => match serde_json::from_str(uri) {
