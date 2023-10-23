@@ -2,6 +2,7 @@ use crate::{
     cairo_string_parser::parse_cairo_long_string,
     file_manager::{FileInfo, FileManager},
     storage::Storage,
+    types::StorageError,
     utils::{extract_metadata_from_headers, file_extension_from_mime_type, get_token_metadata},
 };
 use anyhow::{anyhow, Result};
@@ -10,7 +11,7 @@ use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use std::time::Duration;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, trace};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -34,13 +35,22 @@ pub enum ImageCacheOption {
 }
 
 /// Represents possible errors that can arise while working with metadata in the manager.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum MetadataError {
-    DatabaseError,
-    ParsingError,
-    RequestTokenUriError,
-    RequestImageError,
-    EnvVarMissingError,
+    #[error("Database operation failed: {0}")]
+    DatabaseError(StorageError),
+
+    #[error("Failed to parse data: {0}")]
+    ParsingError(String),
+
+    #[error("Failed to request token URI: {0}")]
+    RequestTokenUriError(String),
+
+    #[error("Failed to request image: {0}")]
+    RequestImageError(String),
+
+    #[error("Required environment variable is missing: {0}")]
+    EnvVarMissingError(String),
 }
 
 impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C, F> {
@@ -78,15 +88,21 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         let token_uri = self
             .get_token_uri(&token_id, contract_address)
             .await
-            .map_err(|_| MetadataError::ParsingError)?;
+            .map_err(|err| MetadataError::ParsingError(err.to_string()))?;
 
-        let token_metadata = get_token_metadata(&self.request_client, token_uri.as_str())
-            .await
-            .map_err(|_| MetadataError::RequestTokenUriError)?;
+        let token_metadata = get_token_metadata(
+            &self.request_client,
+            token_uri.as_str(),
+            ipfs_gateway_uri,
+            image_timeout,
+        )
+        .await
+        .map_err(|err| MetadataError::RequestTokenUriError(err.to_string()))?;
 
-        if token_metadata.image.is_some() {
+        if token_metadata.normalized.image.is_some() {
             let ipfs_url = ipfs_gateway_uri.to_string();
             let url = token_metadata
+                .normalized
                 .image
                 .as_ref()
                 .map(|s| s.replace("ipfs://", &ipfs_url))
@@ -100,13 +116,13 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 image_timeout,
             )
             .await
-            .map_err(|_| MetadataError::RequestImageError)?;
+            .map_err(|err| MetadataError::RequestImageError(err.to_string()))?;
         }
 
         self.storage
             .register_token_metadata(&contract_address, token_id, token_metadata)
             .await
-            .map_err(|_e| MetadataError::DatabaseError)?;
+            .map_err(MetadataError::DatabaseError)?;
 
         Ok(())
     }
@@ -133,7 +149,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             .storage
             .find_token_ids_without_metadata(Some(contract_address))
             .await
-            .map_err(|_| MetadataError::DatabaseError)?;
+            .map_err(MetadataError::DatabaseError)?;
 
         for (contract_address, token_id) in results {
             self.refresh_token_metadata(
@@ -229,7 +245,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 contract_address,
                 selector!("tokenURI"),
                 vec![token_id.low.into(), token_id.high.into()],
-                BlockId::Tag(BlockTag::Latest),
+                BlockId::Tag(BlockTag::Pending),
             )
             .await;
 
@@ -237,31 +253,49 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             Ok(token_uri_cairo0) => {
                 if self.is_valid_uri(&token_uri_cairo0) {
                     return Ok(token_uri_cairo0);
+                } else {
+                    trace!("tokenURI for token ID {} at contract address 0x{:064x} resulted in an invalid URI: {}", token_id.to_decimal(false), contract_address, token_uri_cairo0);
                 }
             }
-            Err(_) => {
+            Err(err) => {
+                trace!(
+                    "Failed to retrieve tokenURI for token ID {} at contract address 0x{:064x}\nError: {:?}",
+                    token_id.to_decimal(false),
+                    contract_address,
+                    err
+                );
+
                 match self
                     .get_contract_property_string(
                         contract_address,
                         selector!("token_uri"),
                         vec![token_id.low.into(), token_id.high.into()],
-                        BlockId::Tag(BlockTag::Latest),
+                        BlockId::Tag(BlockTag::Pending),
                     )
                     .await
                 {
                     Ok(token_uri_cairo1) => {
                         if self.is_valid_uri(&token_uri_cairo1) {
                             return Ok(token_uri_cairo1);
+                        } else {
+                            trace!("token_uri for token ID {} at contract address 0x{:064x} resulted in an invalid URI: {}", token_id.to_decimal(false), contract_address, token_uri_cairo1);
                         }
                     }
                     Err(_) => {
-                        error!("Token URI not found");
-                        return Err(anyhow!("Token URI not found"));
+                        return Err(anyhow!(
+                            "Unable to retrieve the token ID {} from contract address 0x{:064x} using both 'token_uri' and 'tokenURI' methods",
+                            token_id.to_decimal(false),
+                            contract_address
+                        ));
                     }
                 }
             }
         }
-        Err(anyhow!("Token URI not found"))
+        Err(anyhow!(
+            "Token URI not found for token ID {} at contract address {}",
+            token_id.to_decimal(false),
+            contract_address
+        ))
     }
 
     /// Checks if the given URI is valid.
@@ -279,11 +313,18 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<String> {
+        trace!(
+            "get_contract_property_string(contract_address=0x{:064x}, selector=0x{:064x}, calldata={:?}, block={:?})",
+            contract_address, selector, calldata, block
+        );
+
         let value = self
             .starknet_client
             .call_contract(contract_address, selector, calldata, block)
             .await
-            .map_err(|_| anyhow!("Error calling contract"))?;
+            .map_err(|e| anyhow!("Error calling contract: {}", e.to_string()))?;
+
+        trace!("Call contract: value={:?}", value);
 
         parse_cairo_long_string(value).map_err(|_| anyhow!("Error parsing string"))
     }

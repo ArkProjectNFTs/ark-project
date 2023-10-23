@@ -10,13 +10,14 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 anyhow = "1.0"
-starknet.workspace = true
 tokio = { version = "1", features = ["full"] }
-ark-starknet.workspace = true
 urlencoding = "2.1.2"
 base64 = "0.21.0"
-async-trait.workspace = true
 tracing = "0.1"
+starknet.workspace = true
+ark-starknet.workspace = true
+async-trait.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }

@@ -241,6 +241,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "starknet 0.6.0",
+ "thiserror",
  "tokio",
  "tracing",
  "urlencoding",
