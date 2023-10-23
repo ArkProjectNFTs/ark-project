@@ -9,7 +9,7 @@ use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{error, info, trace};
+use tracing::trace;
 
 pub struct ContractManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
@@ -61,7 +61,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                 // Can't find info, try to identify with calls.
                 let contract_type = self.get_contract_type(address).await?;
 
-                info!(
+                trace!(
                     "New contract identified [0x{:064x}] : {}",
                     address,
                     contract_type.to_string()
@@ -87,9 +87,9 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
     /// `owner_of` is specific to ERC721.
     /// `balance_of` is specific to ERC1155 and different from ERC20 as 2 arguments are expected.
     pub async fn get_contract_type(&self, contract_address: FieldElement) -> Result<ContractType> {
-        let block = BlockId::Tag(BlockTag::Pending);
+        let _block = BlockId::Tag(BlockTag::Pending);
 
-        if self.is_erc721(contract_address.clone()).await? {
+        if self.is_erc721(contract_address).await? {
             Ok(ContractType::ERC721)
         } else if self.is_erc1155(contract_address).await? {
             Ok(ContractType::ERC1155)
@@ -126,7 +126,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
             .get_contract_property_string(contract_address, "owner_of", token_id, block)
             .await
         {
-            Ok(_) => return Ok(true),
+            Ok(_) => Ok(true),
             Err(e) => match e {
                 StarknetClientError::Contract(s) => {
                     // Token ID may not exist, but the entrypoint was hit.
@@ -174,7 +174,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
             )
             .await
         {
-            Ok(_) => return Ok(true),
+            Ok(_) => Ok(true),
             Err(e) => match e {
                 StarknetClientError::EntrypointNotFound(_) => Ok(false),
                 StarknetClientError::InputTooLong => Ok(false), // ERC20.

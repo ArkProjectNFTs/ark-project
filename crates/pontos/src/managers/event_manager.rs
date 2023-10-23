@@ -7,7 +7,7 @@ use starknet::core::types::{EmittedEvent, FieldElement};
 use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::{debug, trace};
 
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
 
@@ -71,7 +71,7 @@ impl<S: Storage> EventManager<S> {
         token_event.event_type = Self::get_event_type(from, to);
         token_event.event_id = to_hex_str(&event_id);
 
-        info!("Registering event: {:?}", token_event);
+        trace!("Registering event: {:?}", token_event);
 
         self.storage
             .register_event(&token_event, block_timestamp)

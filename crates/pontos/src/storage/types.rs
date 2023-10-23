@@ -4,24 +4,24 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub enum StorageError {
-    DatabaseError,
-    NotFound,
-    InvalidStatus,
-    DuplicateToken,
-    InvalidMintData,
-    AlreadyExists,
+    DatabaseError(String),
+    NotFound(String),
+    InvalidStatus(String),
+    DuplicateToken(String),
+    InvalidMintData(String),
+    AlreadyExists(String),
 }
 
 impl fmt::Display for StorageError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Note the lifetime parameter <'_>
         match self {
-            StorageError::DatabaseError => write!(f, "Database error occurred"),
-            StorageError::NotFound => write!(f, "Item not found in storage"),
-            StorageError::InvalidStatus => write!(f, "Invalid status"),
-            StorageError::DuplicateToken => write!(f, "Token already exists in storage"),
-            StorageError::InvalidMintData => write!(f, "Provided mint data is invalid"),
-            StorageError::AlreadyExists => write!(f, "Item already exists in storage"),
+            StorageError::DatabaseError(s) => write!(f, "Database error occurred: {s}"),
+            StorageError::NotFound(s) => write!(f, "Item not found in storage: {s}"),
+            StorageError::InvalidStatus(s) => write!(f, "Invalid status: {s}"),
+            StorageError::DuplicateToken(s) => write!(f, "Token already exists in storage: {s}"),
+            StorageError::InvalidMintData(s) => write!(f, "Provided mint data is invalid: {s}"),
+            StorageError::AlreadyExists(s) => write!(f, "Item already exists in storage: {s}"),
         }
     }
 }

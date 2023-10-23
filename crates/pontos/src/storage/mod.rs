@@ -1,6 +1,9 @@
 pub mod types;
 pub mod utils;
 
+pub mod sqlx;
+pub use sqlx::DefaultSqlxStorage;
+
 use crate::storage::types::{
     BlockInfo, ContractInfo, ContractType, StorageError, TokenEvent, TokenInfo, TokenMintInfo,
 };

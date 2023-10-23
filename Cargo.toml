@@ -28,11 +28,13 @@ ark-metadata = { path = "./crates/ark-metadata" }
 pontos = { path = "./crates/pontos" }
 diri = { path = "./crates/diri" }
 async-trait = "0.1.73"
-starknet = "0.6.0"
+#starknet = "0.6.0"
+starknet = { path = "../../starknet/starknet-rs" }
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
 thiserror = "1.0.40"
+sqlx = "0.7"
 
 # Thoses dependencies are used by the examples + the lib.rs.
 [dependencies]
@@ -46,6 +48,10 @@ ark-metadata.workspace = true
 pontos.workspace = true
 diri.workspace = true
 starknet.workspace = true
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tracing = "0.1"
+tracing-log = "0.1"
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
 
 [patch."https://github.com/starkware-libs/blockifier"]
 blockifier = { git = "https://github.com/dojoengine/blockifier", rev = "c794d1b" }

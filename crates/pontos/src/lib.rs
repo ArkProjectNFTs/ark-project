@@ -5,6 +5,7 @@ pub mod storage;
 use crate::storage::types::BlockIndexingStatus;
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientError};
+use ark_starknet::format::to_hex_str;
 use event_handler::EventHandler;
 use managers::{BlockManager, ContractManager, EventManager, PendingBlockData, TokenManager};
 use starknet::core::types::*;
@@ -173,7 +174,11 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                                 cache.add_tx_as_processed(&tx_hash);
                             }
                             Err(e) => {
-                                error!("[latest] error processing tx {:#066x} {:?}", tx_hash, e);
+                                error!(
+                                    "[latest] error processing tx {} {:?}",
+                                    to_hex_str(&tx_hash),
+                                    e
+                                );
 
                                 self.block_manager.clean_block(latest_ts, None).await?;
 
@@ -211,7 +216,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 if cache.is_tx_processed(&tx_hash) {
                     continue;
                 } else {
-                    debug!("processing tx {:#066x}", tx_hash);
+                    debug!("processing tx {}", to_hex_str(&tx_hash));
                     match self
                         .client
                         .events_from_tx_receipt(tx_hash, self.event_manager.keys_selector())
@@ -222,7 +227,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                             cache.add_tx_as_processed(&tx_hash);
                         }
                         Err(e) => {
-                            warn!("error processing tx {:#066x} {:?}", tx_hash, e);
+                            warn!("error processing tx {} {:?}", to_hex_str(&tx_hash), e);
                             // Sometimes, the tx hash is not found. To avoid
                             // loosing this tx as it will be available few seconds
                             // later, we skip it and try to parse it at the next
@@ -348,7 +353,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 Err(e) => {
                     warn!(
                         "Error while identifying contract {}: {:?}",
-                        contract_address, e
+                        to_hex_str(&contract_address),
+                        e
                     );
                     continue;
                 }

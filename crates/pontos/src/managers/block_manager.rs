@@ -67,8 +67,8 @@ impl<S: Storage> BlockManager<S> {
                         _ => Ok(true),
                     }
                 }
-                Err(StorageError::NotFound) => Ok(false),
-                Err(_) => Ok(true),
+                Err(StorageError::NotFound(_s)) => Ok(false),
+                Err(e) => Err(e),
             }
         }
     }
