@@ -157,7 +157,7 @@ mod tests {
         // Mock the get_block_info to return NotFound.
         mock_storage
             .expect_get_block_info()
-            .returning(|_| Box::pin(async { Err(StorageError::NotFound) }));
+            .returning(|_| Box::pin(async { Err(StorageError::NotFound("".to_string())) }));
 
         let block_number = 3;
 
@@ -199,7 +199,7 @@ mod tests {
                         indexer_identifier: String::from("TASK#123"),
                     })
                 } else {
-                    Err(StorageError::NotFound)
+                    Err(StorageError::NotFound("".to_string()))
                 }))
             });
 
