@@ -83,7 +83,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         }
     }
 
-    /// Verifies if the contracft is an ERC721, ERC1155 or an other type.
+    /// Verifies if the contract is an ERC721, ERC1155 or an other type.
     /// `owner_of` is specific to ERC721.
     /// `balance_of` is specific to ERC1155 and different from ERC20 as 2 arguments are expected.
     pub async fn get_contract_type(&self, contract_address: FieldElement) -> Result<ContractType> {
