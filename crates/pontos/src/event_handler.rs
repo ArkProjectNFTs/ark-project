@@ -13,10 +13,13 @@ use async_trait::async_trait;
 #[allow(unused)]
 pub trait EventHandler {
     /// Pontos has normally terminated the indexation of the given blocks.
-    async fn on_terminated(&self, block_number: u64, indexation_progress: f64) {}
+    async fn on_block_processed(&self, block_number: u64, indexation_progress: f64) {}
 
-    /// Block has be processed by Pontos.
-    async fn on_block_processing(&self, block_number: u64) {}
+    /// Block is processing by Pontos.
+    async fn on_block_processing(&self, block_timestamp: u64, block_number: Option<u64>) {}
+
+    /// Invoked when Pontos has successfully indexed a range of blocks up to the given block number.
+    async fn on_indexation_range_completed(&self) {}
 
     /// A new token has be registered.
     async fn on_token_registered(&self, token: TokenInfo) {}
