@@ -67,11 +67,15 @@ impl DefaultEventHandler {
 
 #[async_trait]
 impl EventHandler for DefaultEventHandler {
-    async fn on_terminated(&self, block_number: u64, indexation_progress: f64) {
+    async fn on_block_processed(&self, block_number: u64, indexation_progress: f64) {
         println!(
             "pontos: block processed: block_number={}, indexation_progress={}",
             block_number, indexation_progress
         );
+    }
+
+    async fn on_indexation_range_completed(&self) {
+        println!("pontos: indexation range completed");
     }
 
     async fn on_block_processing(&self, block_number: u64) {
