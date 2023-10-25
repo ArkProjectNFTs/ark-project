@@ -89,6 +89,7 @@ impl<S: Storage> BlockManager<S> {
                     indexer_version: indexer_version.to_string(),
                     indexer_identifier: indexer_identifier.to_string(),
                     status,
+                    block_number,
                 },
             )
             .await?;
