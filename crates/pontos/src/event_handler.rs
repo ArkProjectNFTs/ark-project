@@ -16,7 +16,7 @@ pub trait EventHandler {
     async fn on_block_processed(&self, block_number: u64, indexation_progress: f64) {}
 
     /// Block is processing by Pontos.
-    async fn on_block_processing(&self, block_number: u64) {}
+    async fn on_block_processing(&self, block_timestamp: u64, block_number: Option<u64>) {}
 
     /// Invoked when Pontos has successfully indexed a range of blocks up to the given block number.
     async fn on_indexation_range_completed(&self) {}

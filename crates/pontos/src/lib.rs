@@ -269,7 +269,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 continue;
             }
 
-            self.event_handler.on_block_processing(current_u64).await;
+            self.event_handler
+                .on_block_processing(block_ts, Some(current_u64))
+                .await;
 
             // Set block as processing.
             self.block_manager
