@@ -89,6 +89,7 @@ impl<S: Storage> BlockManager<S> {
                     indexer_version: indexer_version.to_string(),
                     indexer_identifier: indexer_identifier.to_string(),
                     status,
+                    block_number,
                 },
             )
             .await?;
@@ -197,6 +198,7 @@ mod tests {
                         status: BlockIndexingStatus::Processing,
                         indexer_version: String::from("v0.0.1"),
                         indexer_identifier: String::from("TASK#123"),
+                        block_number: 123,
                     })
                 } else {
                     Err(StorageError::NotFound)
