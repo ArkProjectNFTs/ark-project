@@ -323,6 +323,7 @@ impl Storage for DefaultSqlxStorage {
                         indexer_version: d.indexer_version.clone(),
                         indexer_identifier: d.indexer_identifier.clone(),
                         status: BlockIndexingStatus::from_str(&d.status).unwrap(),
+                        block_number,
                     })
                 }
             }
