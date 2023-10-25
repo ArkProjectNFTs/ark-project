@@ -176,6 +176,7 @@ impl Storage for DefaultStorage {
             indexer_version: String::from("0.0.1"),
             indexer_identifier: String::from("v0"),
             status: BlockIndexingStatus::None,
+            block_number,
         })
     }
 

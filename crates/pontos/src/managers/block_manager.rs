@@ -198,6 +198,7 @@ mod tests {
                         status: BlockIndexingStatus::Processing,
                         indexer_version: String::from("v0.0.1"),
                         indexer_identifier: String::from("TASK#123"),
+                        block_number: 123,
                     })
                 } else {
                     Err(StorageError::NotFound)
