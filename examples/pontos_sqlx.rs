@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
 
     let storage = Arc::new(DefaultSqlxStorage::new_any("sqlite::memory:").await?);
 
-    sqlx::migrate!("./examples/migrations")
+    sqlx::migrate!("./crates/pontos/src/storage/sqlx/migrations")
         .run(storage.get_pool_ref())
         .await?;
 

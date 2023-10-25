@@ -33,13 +33,13 @@ CREATE TABLE event (
 );
 
 CREATE TABLE block (
-       ts BIGINT NOT NULL,
-       num BIGINT NOT NULL,
+       block_timestamp BIGINT NOT NULL,
+       block_number BIGINT NOT NULL,
        status TEXT NOT NULL,
        indexer_version TEXT NOT NULL,
        indexer_identifier TEXT NOT NULL,
 
-       PRIMARY KEY (ts)
+       PRIMARY KEY (block_timestamp)
 );
 
 CREATE TABLE contract (

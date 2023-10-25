@@ -34,7 +34,6 @@ anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
 thiserror = "1.0.40"
-sqlx = "0.7"
 
 # Thoses dependencies are used by the examples + the lib.rs.
 [dependencies]
@@ -45,7 +44,7 @@ anyhow.workspace = true
 tokio.workspace = true
 ark-starknet.workspace = true
 ark-metadata.workspace = true
-pontos.workspace = true
+pontos = { path = "./crates/pontos", features = ["sqlxdb"] }
 diri.workspace = true
 starknet.workspace = true
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }

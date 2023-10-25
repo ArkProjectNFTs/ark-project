@@ -1,4 +1,4 @@
-//! Implementation of default storage using sqlx crate..
+//! Implementation of default storage using sqlx crate.
 //!
 //! The implementation in this file is very naive, and mostly
 //! used for testing and as an example of implementation.
@@ -110,7 +110,7 @@ impl DefaultSqlxStorage {
     }
 
     async fn get_block_by_timestamp(&self, ts: u64) -> Result<Option<BlockData>, StorageError> {
-        let q = "SELECT * FROM block WHERE ts = ?";
+        let q = "SELECT * FROM block WHERE block_timestamp = ?";
 
         match sqlx::query(q)
             .bind(ts.to_string())
@@ -276,7 +276,7 @@ impl Storage for DefaultSqlxStorage {
         trace!("Setting block info {:?} for block #{}", info, block_number);
 
         let _r = if (self.get_block_by_timestamp(block_timestamp).await?).is_some() {
-            let q = "UPDATE block SET ts = ?, num = ?, status = ?, indexer_version = ?, indexer_identifier = ? WHERE ts = ?";
+            let q = "UPDATE block SET block_timestamp = ?, block_number = ?, status = ?, indexer_version = ?, indexer_identifier = ? WHERE block_timestamp = ?";
             sqlx::query(q)
                 .bind(block_timestamp.to_string())
                 .bind(block_number.to_string())
@@ -287,7 +287,7 @@ impl Storage for DefaultSqlxStorage {
                 .execute(&self.pool)
                 .await?
         } else {
-            let q = "INSERT INTO block (ts, num, status, indexer_version, indexer_identifier) VALUES (?, ?, ?, ?, ?)";
+            let q = "INSERT INTO block (block_timestamp, block_number, status, indexer_version, indexer_identifier) VALUES (?, ?, ?, ?, ?)";
 
             sqlx::query(q)
                 .bind(block_timestamp.to_string())
@@ -305,7 +305,7 @@ impl Storage for DefaultSqlxStorage {
     async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError> {
         trace!("Getting block info for block #{}", block_number);
 
-        let q = "SELECT * FROM block WHERE num = ?";
+        let q = "SELECT * FROM block WHERE block_number = ?";
 
         match sqlx::query(q)
             .bind(block_number.to_string())
@@ -341,7 +341,7 @@ impl Storage for DefaultSqlxStorage {
             block_timestamp.to_string()
         );
 
-        let q = "DELETE FROM block WHERE ts = ?";
+        let q = "DELETE FROM block WHERE block_timestamp = ?";
         sqlx::query(q)
             .bind(block_timestamp.to_string())
             .fetch_all(&self.pool)
