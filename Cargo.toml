@@ -29,6 +29,7 @@ pontos = { path = "./crates/pontos" }
 diri = { path = "./crates/diri" }
 async-trait = "0.1.73"
 starknet = "0.6.0"
+#starknet = { path = "../../starknet/starknet-rs" }
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
@@ -43,9 +44,13 @@ anyhow.workspace = true
 tokio.workspace = true
 ark-starknet.workspace = true
 ark-metadata.workspace = true
-pontos.workspace = true
+pontos = { path = "./crates/pontos", features = ["sqlxdb"] }
 diri.workspace = true
 starknet.workspace = true
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tracing = "0.1"
+tracing-log = "0.1"
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
 
 [patch."https://github.com/starkware-libs/blockifier"]
 blockifier = { git = "https://github.com/dojoengine/blockifier", rev = "c794d1b" }

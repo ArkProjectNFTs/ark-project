@@ -1,6 +1,11 @@
 pub mod types;
 pub mod utils;
 
+#[cfg(feature = "sqlxdb")]
+pub mod sqlx;
+#[cfg(feature = "sqlxdb")]
+pub use sqlx::DefaultSqlxStorage;
+
 use crate::storage::types::{
     BlockInfo, ContractInfo, ContractType, StorageError, TokenEvent, TokenInfo, TokenMintInfo,
 };

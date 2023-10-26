@@ -67,8 +67,8 @@ impl<S: Storage> BlockManager<S> {
                         _ => Ok(true),
                     }
                 }
-                Err(StorageError::NotFound) => Ok(false),
-                Err(_) => Ok(true),
+                Err(StorageError::NotFound(_s)) => Ok(false),
+                Err(e) => Err(e),
             }
         }
     }
@@ -158,7 +158,7 @@ mod tests {
         // Mock the get_block_info to return NotFound.
         mock_storage
             .expect_get_block_info()
-            .returning(|_| Box::pin(async { Err(StorageError::NotFound) }));
+            .returning(|_| Box::pin(async { Err(StorageError::NotFound("".to_string())) }));
 
         let block_number = 3;
 
@@ -201,7 +201,7 @@ mod tests {
                         block_number: 123,
                     })
                 } else {
-                    Err(StorageError::NotFound)
+                    Err(StorageError::NotFound("".to_string()))
                 }))
             });
 

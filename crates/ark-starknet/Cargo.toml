@@ -12,6 +12,7 @@ regex = "1.9.1"
 mockall = "0.11.2"
 num-bigint = "0.4.4"
 num-traits = "0.2.17"
+thiserror.workspace = true
 
 [features]
 mock = []
