@@ -65,6 +65,7 @@ pub struct MetadataAttribute {
 pub struct TokenMetadata {
     pub normalized: NormalizedMetadata,
     pub raw: String,
+    pub metadata_updated_at: Option<i64>,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]

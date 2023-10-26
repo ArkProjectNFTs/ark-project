@@ -1,6 +1,7 @@
 use crate::types::{MetadataType, NormalizedMetadata, TokenMetadata};
 use anyhow::{anyhow, Result};
 use base64::{engine::general_purpose, Engine as _};
+use chrono::Utc;
 use reqwest::header::{HeaderMap, CONTENT_LENGTH, CONTENT_TYPE};
 use reqwest::Client;
 use std::time::Duration;
@@ -61,9 +62,12 @@ async fn fetch_metadata(
                         Err(_) => NormalizedMetadata::default(),
                     };
 
+                let now = Utc::now();
+
                 Ok(TokenMetadata {
                     raw: raw_metadata,
                     normalized: metadata,
+                    metadata_updated_at: Some(now.timestamp()),
                 })
             } else {
                 error!("Failed to get ipfs metadata. URI: {}", uri);
@@ -79,6 +83,7 @@ async fn fetch_metadata(
 
 pub fn file_extension_from_mime_type(mime_type: &str) -> &str {
     match mime_type {
+        "model/gltf-binary" => "glb",
         "image/png" => "png",
         "image/jpeg" => "jpg",
         "image/gif" => "gif",
@@ -113,6 +118,7 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             Ok(TokenMetadata {
                 raw: decoded.to_string(),
                 normalized: metadata,
+                metadata_updated_at: None,
             })
         }
         Some(("data:application/json", uri)) => {
@@ -120,6 +126,7 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             Ok(TokenMetadata {
                 raw: uri.to_string(),
                 normalized: metadata,
+                metadata_updated_at: None,
             })
         }
         _ => match serde_json::from_str(uri) {
@@ -233,5 +240,19 @@ mod tests {
             result.unwrap_err().to_string(),
             "Failed to extract or parse content length"
         );
+    }
+
+    #[tokio::test]
+    async fn test_fetch_metadata() {
+        let client = Client::new();
+        let uri = "https://example.com";
+        let request_timeout_duration = Duration::from_secs(10);
+
+        let metadata = fetch_metadata(uri, &client, request_timeout_duration).await;
+        assert!(metadata.is_ok());
+
+        let uri = "invalid_uri";
+        let metadata = fetch_metadata(uri, &client, request_timeout_duration).await;
+        assert!(metadata.is_err());
     }
 }

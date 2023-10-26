@@ -85,10 +85,18 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
     ) -> Result<(), MetadataError> {
+        trace!(
+            "refresh_token_metadata(contract_address=0x{:064x}, token_id={})",
+            contract_address,
+            token_id.to_decimal(false),
+        );
+
         let token_uri = self
             .get_token_uri(&token_id, contract_address)
             .await
             .map_err(|err| MetadataError::ParsingError(err.to_string()))?;
+
+        trace!("Token URI: {}", token_uri);
 
         let token_metadata = get_token_metadata(
             &self.request_client,
@@ -108,15 +116,15 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 .map(|s| s.replace("ipfs://", &ipfs_url))
                 .unwrap_or_default();
 
-            self.fetch_token_image(
-                url.as_str(),
-                cache,
-                contract_address,
-                &token_id,
-                image_timeout,
-            )
-            .await
-            .map_err(|err| MetadataError::RequestImageError(err.to_string()))?;
+            let _ = self
+                .fetch_token_image(
+                    url.as_str(),
+                    cache,
+                    contract_address,
+                    &token_id,
+                    image_timeout,
+                )
+                .await;
         }
 
         self.storage
@@ -208,6 +216,12 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 let headers = response.headers().clone();
                 let bytes = response.bytes().await?;
                 let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
+
+                info!(
+                    "Image: Content-Type={}, Content-Length={}",
+                    content_type, content_length
+                );
+
                 let file_ext = file_extension_from_mime_type(content_type.as_str());
 
                 debug!(
