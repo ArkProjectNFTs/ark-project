@@ -18,6 +18,7 @@ starknet.workspace = true
 ark-starknet.workspace = true
 async-trait.workspace = true
 thiserror.workspace = true
+chrono = "0.4"
 
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }
