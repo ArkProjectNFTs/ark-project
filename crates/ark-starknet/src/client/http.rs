@@ -290,3 +290,48 @@ impl StarknetClient for StarknetClientHttp {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use starknet::core::utils::get_selector_from_name;
+    use std::sync::Arc;
+    use tokio;
+
+    #[tokio::test]
+    async fn test_contract_error_entrypoint_not_found() {
+        let client = Arc::new(
+            StarknetClientHttp::new(
+                "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            )
+            .unwrap(),
+        );
+
+        let contract_address = FieldElement::from_hex_be(
+            "049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        )
+        .unwrap();
+
+        let entry_point_selector = get_selector_from_name("notValidEntryPoint").unwrap();
+
+        let calldata = vec![FieldElement::from_hex_be(
+            "01352dd0ac2a462cb53e4f125169b28f13bd6199091a9815c444dcae83056bbc",
+        )
+        .unwrap()];
+
+        let r = client
+            .call_contract(
+                contract_address,
+                entry_point_selector,
+                calldata,
+                BlockId::Tag(BlockTag::Latest),
+            )
+            .await;
+
+        if let Err(StarknetClientError::Contract(e)) = r {
+            assert!(e.to_string().contains("not found in contract"));
+        } else {
+            panic!("Expecting EntrypointNotFound error, got {:?}", r);
+        }
+    }
+}

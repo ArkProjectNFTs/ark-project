@@ -5,7 +5,7 @@ use async_trait::async_trait;
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;
 use starknet::core::{types::FieldElement, types::*};
-use starknet::providers::{AnyProviderError, ProviderError};
+use starknet::providers::ProviderError;
 use std::collections::HashMap;
 use std::marker::Sized;
 
@@ -23,7 +23,7 @@ pub enum StarknetClientError {
     #[error("Invalid value conversion: {0}")]
     Conversion(String),
     #[error("Starknet-rs provider error: {0}")]
-    Provider(ProviderError<AnyProviderError>),
+    Provider(ProviderError),
     #[error("Other error: {0}")]
     Other(String),
 }
