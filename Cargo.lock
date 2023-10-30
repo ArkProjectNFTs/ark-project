@@ -6973,13 +6973,13 @@ dependencies = [
 [[package]]
 name = "starknet"
 version = "0.7.0"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "starknet-accounts 0.6.0",
  "starknet-contract 0.6.0",
  "starknet-core 0.7.0",
  "starknet-crypto 0.6.1",
- "starknet-ff 0.3.4 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
+ "starknet-ff 0.3.4 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
  "starknet-macros 0.1.4",
  "starknet-providers 0.7.0",
  "starknet-signers 0.5.0",
@@ -7002,7 +7002,7 @@ dependencies = [
 [[package]]
 name = "starknet-accounts"
 version = "0.6.0"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -7030,7 +7030,7 @@ dependencies = [
 [[package]]
 name = "starknet-contract"
 version = "0.6.0"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "serde",
  "serde_json",
@@ -7062,7 +7062,7 @@ dependencies = [
 [[package]]
 name = "starknet-core"
 version = "0.7.0"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "base64 0.21.4",
  "flate2",
@@ -7073,7 +7073,7 @@ dependencies = [
  "serde_with 2.3.3",
  "sha3",
  "starknet-crypto 0.6.1",
- "starknet-ff 0.3.4 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
+ "starknet-ff 0.3.4 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
 ]
 
 [[package]]
@@ -7119,7 +7119,7 @@ dependencies = [
 [[package]]
 name = "starknet-crypto"
 version = "0.6.1"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "crypto-bigint",
  "hex",
@@ -7129,9 +7129,9 @@ dependencies = [
  "num-traits 0.2.17",
  "rfc6979",
  "sha2",
- "starknet-crypto-codegen 0.3.2 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
- "starknet-curve 0.4.0 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
- "starknet-ff 0.3.4 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
+ "starknet-crypto-codegen 0.3.2 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
+ "starknet-curve 0.4.0 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
+ "starknet-ff 0.3.4 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
  "zeroize",
 ]
 
@@ -7149,10 +7149,10 @@ dependencies = [
 [[package]]
 name = "starknet-crypto-codegen"
 version = "0.3.2"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
- "starknet-curve 0.4.0 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
- "starknet-ff 0.3.4 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
+ "starknet-curve 0.4.0 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
+ "starknet-ff 0.3.4 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
  "syn 2.0.38",
 ]
 
@@ -7177,9 +7177,9 @@ dependencies = [
 [[package]]
 name = "starknet-curve"
 version = "0.4.0"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
- "starknet-ff 0.3.4 (git+https://github.com/glihm/starknet-rs?branch=contract-error-2)",
+ "starknet-ff 0.3.4 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
 ]
 
 [[package]]
@@ -7200,7 +7200,7 @@ dependencies = [
 [[package]]
 name = "starknet-ff"
 version = "0.3.4"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "ark-ff",
  "bigdecimal",
@@ -7224,7 +7224,7 @@ dependencies = [
 [[package]]
 name = "starknet-macros"
 version = "0.1.4"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "starknet-core 0.7.0",
  "syn 2.0.38",
@@ -7253,7 +7253,7 @@ dependencies = [
 [[package]]
 name = "starknet-providers"
 version = "0.7.0"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -7288,7 +7288,7 @@ dependencies = [
 [[package]]
 name = "starknet-signers"
 version = "0.5.0"
-source = "git+https://github.com/glihm/starknet-rs?branch=contract-error-2#ed59eace21820993c2e863c2f8ce770be4353458"
+source = "git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error#ed59eace21820993c2e863c2f8ce770be4353458"
 dependencies = [
  "async-trait",
  "auto_impl",

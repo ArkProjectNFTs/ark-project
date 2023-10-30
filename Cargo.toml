@@ -28,7 +28,7 @@ ark-metadata = { path = "./crates/ark-metadata" }
 pontos = { path = "./crates/pontos" }
 diri = { path = "./crates/diri" }
 async-trait = "0.1.73"
-starknet = { git = "https://github.com/glihm/starknet-rs", branch = "contract-error-2" }
+starknet = { git = "https://github.com/ArkProjectNFTs/starknet-rs", branch = "fix/contract-error" }
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
