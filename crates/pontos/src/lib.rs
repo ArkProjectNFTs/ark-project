@@ -330,7 +330,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             let progress = if to_u64 == from_u64 {
                 if current_u64 == to_u64 {
                     100.0
-                } else { 
+                } else {
                     0.0
                 }
             } else {
