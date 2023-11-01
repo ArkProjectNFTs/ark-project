@@ -257,7 +257,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
     ) -> IndexerResult<()> {
         let mut current_u64 = self.client.block_id_to_u64(&from_block).await?;
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
-        let from_u64 = self.client.block_id_to_u64(&from_block).await?;
+        let from_u64 = current_u64;
 
         loop {
             trace!("Indexing block range: {} {}", current_u64, to_u64);
