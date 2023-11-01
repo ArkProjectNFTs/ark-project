@@ -257,6 +257,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
     ) -> IndexerResult<()> {
         let mut current_u64 = self.client.block_id_to_u64(&from_block).await?;
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
+        let from_u64 = current_u64;
 
         loop {
             trace!("Indexing block range: {} {}", current_u64, to_u64);
@@ -325,8 +326,19 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     BlockIndexingStatus::Terminated,
                 )
                 .await?;
+
+            let progress = if to_u64 == from_u64 {
+                if current_u64 == to_u64 {
+                    100.0
+                } else {
+                    0.0
+                }
+            } else {
+                ((current_u64 - from_u64) as f64 / (to_u64 - from_u64) as f64) * 100.0
+            };
+
             self.event_handler
-                .on_block_processed(current_u64, (current_u64 as f64 / to_u64 as f64) * 100.0)
+                .on_block_processed(current_u64, progress)
                 .await;
 
             current_u64 += 1;
