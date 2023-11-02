@@ -26,4 +26,11 @@ pub trait Storage {
         &self,
         contract_address_filter: Option<FieldElement>,
     ) -> Result<Vec<(FieldElement, CairoU256)>, StorageError>;
+
+    async fn update_token_metadata_status(
+        &self,
+        contract_address: FieldElement,
+        token_id: CairoU256,
+        metadata_status: &str,
+    ) -> Result<(), StorageError>;
 }
