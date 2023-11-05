@@ -6,7 +6,7 @@ use crate::{
     utils::{extract_metadata_from_headers, file_extension_from_mime_type, get_token_metadata},
 };
 use anyhow::{anyhow, Result};
-use ark_starknet::{client::StarknetClient, format::to_hex_str, CairoU256};
+use ark_starknet::{client::StarknetClient, CairoU256};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
@@ -26,6 +26,7 @@ pub struct MetadataImage {
     pub file_type: String,
     pub content_length: u64,
     pub is_cache_updated: bool,
+    pub media_uri: Option<String>,
 }
 
 #[derive(Copy, Clone)]
@@ -98,7 +99,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 
         trace!("Token URI: {}", token_uri);
 
-        let token_metadata = get_token_metadata(
+        let mut token_metadata = get_token_metadata(
             &self.request_client,
             token_uri.as_str(),
             ipfs_gateway_uri,
@@ -107,24 +108,24 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         .await
         .map_err(|err| MetadataError::RequestTokenUriError(err.to_string()))?;
 
-        if token_metadata.normalized.image.is_some() {
+        // Check if there is an image to fetch in the metadata.
+        if let Some(image_uri) = &token_metadata.normalized.image {
             let ipfs_url = ipfs_gateway_uri.to_string();
-            let url = token_metadata
-                .normalized
-                .image
-                .as_ref()
-                .map(|s| s.replace("ipfs://", &ipfs_url))
-                .unwrap_or_default();
-
-            let _ = self
-                .fetch_token_image(
-                    url.as_str(),
-                    cache,
-                    contract_address,
-                    &token_id,
-                    image_timeout,
-                )
-                .await;
+            let url = image_uri.replace("ipfs://", &ipfs_url);
+            match self
+                .fetch_token_image(url.as_str(), cache, &token_id, image_timeout)
+                .await
+            {
+                Ok(metadata_image) => match metadata_image.file_type.as_str() {
+                    "video/mp4" => {
+                        token_metadata.normalized.animation_url = metadata_image.media_uri.clone();
+                    }
+                    _ => {
+                        token_metadata.normalized.image = metadata_image.media_uri.clone();
+                    }
+                },
+                _ => {}
+            }
         }
 
         self.storage
@@ -192,7 +193,6 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         &mut self,
         url: &str,
         cache: ImageCacheOption,
-        contract_address: FieldElement,
         token_id: &CairoU256,
         timeout: Duration,
     ) -> Result<MetadataImage> {
@@ -208,6 +208,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     file_type: content_type,
                     content_length,
                     is_cache_updated: false,
+                    media_uri: None,
                 })
             }
             ImageCacheOption::Save => {
@@ -229,11 +230,12 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     content_type, content_length, file_ext
                 );
 
-                self.file_manager
+                let media_uri = self
+                    .file_manager
                     .save(&FileInfo {
                         name: format!("{}.{}", token_id.to_decimal(false), file_ext),
                         content: bytes.to_vec(),
-                        dir_path: Some(to_hex_str(&contract_address)),
+                        dir_path: None,
                     })
                     .await?;
 
@@ -241,6 +243,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     file_type: content_type,
                     content_length,
                     is_cache_updated: true,
+                    media_uri: Some(media_uri),
                 })
             }
         }

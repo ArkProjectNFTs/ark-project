@@ -7,7 +7,7 @@ use std::fs::{create_dir_all, File};
 use std::io::prelude::*;
 use std::path::Path;
 
-use anyhow::{Context, Ok, Result};
+use anyhow::{anyhow, Context, Ok, Result};
 use async_trait::async_trait;
 use tracing::info;
 
@@ -32,7 +32,7 @@ pub trait FileManager {
     /// Save the provided file.
     ///
     /// Implementors will provide the logic to save `file` and will return a `Result`.
-    async fn save(&self, file: &FileInfo) -> Result<()>;
+    async fn save(&self, file: &FileInfo) -> Result<String>;
 }
 
 /// FileManager implementation that saves files locally.
@@ -41,8 +41,8 @@ pub struct LocalFileManager;
 
 #[async_trait]
 impl FileManager for LocalFileManager {
-    async fn save(&self, file: &FileInfo) -> Result<()> {
-        let dir_path = file.dir_path.clone().unwrap_or(String::from("./tmp"));
+    async fn save(&self, file: &FileInfo) -> Result<String> {
+        let dir_path = file.dir_path.clone().unwrap_or_else(|| "./tmp".into());
 
         // Construct the path
         let path = Path::new("images").join(dir_path.as_str()).join(&file.name);
@@ -58,7 +58,13 @@ impl FileManager for LocalFileManager {
             .context("Failed to write to file")?;
 
         info!("File saved: {}", file.name);
-        Ok(())
+
+        let path_str = path
+            .to_str()
+            .ok_or_else(|| anyhow!("Failed to convert path to string"))?
+            .to_string();
+
+        Ok(path_str)
     }
 }
 
