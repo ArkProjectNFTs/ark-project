@@ -112,19 +112,27 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         if let Some(image_uri) = &token_metadata.normalized.image {
             let ipfs_url = ipfs_gateway_uri.to_string();
             let url = image_uri.replace("ipfs://", &ipfs_url);
-            match self
+            if let Ok(metadata_image) = self
                 .fetch_token_image(url.as_str(), cache, &token_id, image_timeout)
                 .await
             {
-                Ok(metadata_image) => match metadata_image.file_type.as_str() {
-                    "video/mp4" => {
-                        token_metadata.normalized.animation_url = metadata_image.media_uri.clone();
-                    }
-                    _ => {
-                        token_metadata.normalized.image = metadata_image.media_uri.clone();
-                    }
-                },
-                _ => {}
+                let is_video_type = matches!(
+                    metadata_image.file_type.as_str(),
+                    "video/mpeg"
+                        | "video/mp4"
+                        | "video/webm"
+                        | "video/ogg"
+                        | "video/quicktime"
+                        | "video/x-flv"
+                        | "video/3gpp"
+                        | "video/x-msvideo"
+                );
+
+                if is_video_type {
+                    token_metadata.normalized.animation_url = metadata_image.media_uri.clone();
+                } else {
+                    token_metadata.normalized.image = metadata_image.media_uri.clone();
+                }
             }
         }
 
