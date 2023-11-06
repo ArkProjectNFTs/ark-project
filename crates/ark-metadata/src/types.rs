@@ -70,6 +70,24 @@ pub struct TokenMetadata {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct NormalizedMetadata {
+    pub image_mime_type: Option<String>,
+    pub image_key: Option<String>,
+    pub image: Option<String>,
+    pub image_data: Option<String>, // Raw SVG image data, if you want to generate images on the fly (not recommended). Only use this if you're not including the image parameter.
+    pub external_url: Option<String>,
+    pub description: Option<String>,
+    pub name: Option<String>,
+    pub attributes: Option<Vec<MetadataAttribute>>,
+    pub properties: Option<HashMap<String, MetadataProperty>>,
+    pub background_color: Option<String>,
+    pub animation_url: Option<String>,
+    pub animation_key: Option<String>,
+    pub animation_mime_type: Option<String>,
+    pub youtube_url: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct RawMetadata {
     pub image: Option<String>,
     pub image_data: Option<String>, // Raw SVG image data, if you want to generate images on the fly (not recommended). Only use this if you're not including the image parameter.
     pub external_url: Option<String>,

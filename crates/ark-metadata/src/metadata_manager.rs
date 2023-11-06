@@ -22,11 +22,11 @@ pub struct MetadataManager<'a, T: Storage, C: StarknetClient, F: FileManager> {
     file_manager: &'a F,
 }
 
-pub struct MetadataImage {
+pub struct MetadataMedia {
     pub file_type: String,
     pub content_length: u64,
     pub is_cache_updated: bool,
-    pub media_uri: Option<String>,
+    pub media_key: Option<String>,
 }
 
 #[derive(Copy, Clone)]
@@ -110,10 +110,14 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 
         // Check if there is an image to fetch in the metadata.
         if let Some(image_uri) = &token_metadata.normalized.image {
-            let ipfs_url = ipfs_gateway_uri.to_string();
-            let url = image_uri.replace("ipfs://", &ipfs_url);
             if let Ok(metadata_image) = self
-                .fetch_token_image(url.as_str(), cache, &token_id, image_timeout)
+                .fetch_metadata_media(
+                    image_uri.as_str(),
+                    cache,
+                    &token_id,
+                    image_timeout,
+                    ipfs_gateway_uri,
+                )
                 .await
             {
                 let is_video_type = matches!(
@@ -129,9 +133,32 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 );
 
                 if is_video_type {
-                    token_metadata.normalized.animation_url = metadata_image.media_uri.clone();
+                    token_metadata.normalized.animation_mime_type = Some(metadata_image.file_type);
+                    token_metadata.normalized.animation_url = Some(image_uri.to_string());
+                    token_metadata.normalized.animation_key = metadata_image.media_key;
                 } else {
-                    token_metadata.normalized.image = metadata_image.media_uri.clone();
+                    token_metadata.normalized.image_key = metadata_image.media_key.clone();
+                    token_metadata.normalized.image_mime_type =
+                        Some(metadata_image.file_type.clone());
+
+                    if let Some(animation_uri) = &token_metadata.normalized.animation_url {
+                        if let Ok(metadata_animation) = self
+                            .fetch_metadata_media(
+                                animation_uri.as_str(),
+                                cache,
+                                &token_id,
+                                image_timeout,
+                                ipfs_gateway_uri,
+                            )
+                            .await
+                        {
+                            token_metadata.normalized.animation_mime_type =
+                                Some(metadata_animation.file_type);
+                            token_metadata.normalized.animation_url =
+                                Some(animation_uri.to_string());
+                            token_metadata.normalized.animation_key = metadata_animation.media_key;
+                        }
+                    }
                 }
             }
         }
@@ -182,29 +209,32 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         Ok(())
     }
 
-    /// Fetches the image for a given token and optionally caches it.
+    /// Fetches the media for a given token and optionally caches it.
     ///
     /// Depending on the provided `CacheOption`, this function might directly fetch
-    /// the image's metadata without actually fetching the image, or it might fetch and cache the image.
+    /// the media's metadata without actually fetching the media, or it might fetch and cache the media.
     ///
     /// # Parameters
-    /// - `url`: The URL from which the token image can be fetched.
-    /// - `file_ext`: The file extension of the token image (e.g., "jpg", "png").
-    /// - `cache`: Specifies whether the token's image should be cached.
+    /// - `url`: The URL from which the token media can be fetched.
+    /// - `file_ext`: The file extension of the token media (e.g., "jpg", "png").
+    /// - `cache`: Specifies whether the token's media should be cached.
     /// - `contract_address`: The address of the contract representing the token collection.
-    /// - `token_id`: The ID of the token whose image is to be fetched.
+    /// - `token_id`: The ID of the token whose media is to be fetched.
     ///
     /// # Returns
-    /// - A `Result` containing `MetadataImage` which provides details about the fetched image,
-    ///   or an error if the image fetch operation fails.
-    pub async fn fetch_token_image(
+    /// - A `Result` containing `MetadataImage` which provides details about the fetched media,
+    ///   or an error if the media fetch operation fails.
+    pub async fn fetch_metadata_media(
         &mut self,
-        url: &str,
+        raw_url: &str,
         cache: ImageCacheOption,
         token_id: &CairoU256,
         timeout: Duration,
-    ) -> Result<MetadataImage> {
-        info!("Fetching image... {}", url);
+        ipfs_url: &str,
+    ) -> Result<MetadataMedia> {
+        info!("Fetching media... {}", raw_url);
+
+        let url = raw_url.replace("ipfs://", ipfs_url);
 
         match cache {
             ImageCacheOption::DoNotSave => {
@@ -212,11 +242,11 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 let (content_type, content_length) =
                     extract_metadata_from_headers(response.headers())?;
 
-                Ok(MetadataImage {
+                Ok(MetadataMedia {
                     file_type: content_type,
                     content_length,
                     is_cache_updated: false,
-                    media_uri: None,
+                    media_key: None,
                 })
             }
             ImageCacheOption::Save => {
@@ -238,7 +268,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     content_type, content_length, file_ext
                 );
 
-                let media_uri = self
+                let media_key = self
                     .file_manager
                     .save(&FileInfo {
                         name: format!("{}.{}", token_id.to_decimal(false), file_ext),
@@ -247,11 +277,11 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     })
                     .await?;
 
-                Ok(MetadataImage {
+                Ok(MetadataMedia {
                     file_type: content_type,
                     content_length,
                     is_cache_updated: true,
-                    media_uri: Some(media_uri),
+                    media_key: Some(media_key),
                 })
             }
         }
