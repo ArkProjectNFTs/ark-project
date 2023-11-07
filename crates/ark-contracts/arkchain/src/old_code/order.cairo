@@ -83,7 +83,7 @@ struct OrderBuyExecute {
 }
 
 /// Computes an order hash.
-fn compute_order_hash<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order: T) -> felt252 {
+fn compute_order_hash<T, +Serde<T>, +Drop<T>>(order: T) -> felt252 {
     let mut buf = array![];
     order.serialize(ref buf);
     starknet_keccak(buf.span())

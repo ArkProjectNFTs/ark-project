@@ -1,6 +1,16 @@
-mod orderbook;
-mod order;
-mod order_db;
-mod broker;
+mod order {
+    mod types;
+    mod database;
+    mod order_v1;
+}
 
-mod tests;
+mod crypto {
+    mod hash;
+    mod signer;
+}
+
+mod storage {
+    mod storage;
+}
+
+mod orderbook;
