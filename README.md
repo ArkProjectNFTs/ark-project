@@ -81,3 +81,6 @@ To work on a specific package:
 ```
 cargo build -p <package>
 ```
+
+## License
+Ark Project is licensed under the [Apache License](./LICENCE).
