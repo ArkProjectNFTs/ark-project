@@ -1,4 +1,4 @@
-use arkchain::order::order::OrderStatus;
+use arkchain::order::types::OrderStatus;
 
 #[test]
 fn order_enum_into_felt252() {
