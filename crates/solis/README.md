@@ -1,8 +1,8 @@
-# Solis Crate
+# Solis
 
 ## Introduction
 
-Welcome to the `solis` crate, a key component for sequencing in our app chain. It enables the deployment of a `katana`, a starknet node with custom settings for messaging and order within our blockchain app.
+Welcome to the `solis` crate, a key component for sequencing in our app chain. It enables the deployment of a `katana`, a starknet node with custom settings for messaging and order within our blockchain app.  Our version of `katana` is a modified fork sourced from DOJO, available at [ArkProjectNFTs' DOJO repository on GitHub](https://github.com/ArkProjectNFTs/dojo).
 
 ## Features
 
