@@ -42,20 +42,18 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
 
     // First offset is the status.
     let status: felt252 = starknet::storage_read_syscall(
-        ADDRESS_DOMAIN,
-        starknet::storage_address_from_base_and_offset(base, 0)
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 0)
     )
         .unwrap_syscall();
 
     let status = match status.try_into() {
         Option::Some(s) => s,
-        Option::None => { return Option::None; } ,
+        Option::None => { return Option::None; },
     };
 
     // Then, we must read the length to deserialize the data.
     let length: felt252 = starknet::storage_read_syscall(
-        ADDRESS_DOMAIN,
-        starknet::storage_address_from_base_and_offset(base, 1)
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1)
     )
         .unwrap_syscall();
 
@@ -71,10 +69,7 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
             break ();
         }
         let v = starknet::storage_read_syscall(
-            ADDRESS_DOMAIN,
-            starknet::storage_address_from_base_and_offset(
-                base,
-                offset)
+            ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, offset)
         )
             .unwrap_syscall();
 
@@ -98,10 +93,7 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
 ///
 /// * `order_hash` - Hash of the order used as key.
 /// * `order` - An order structure that must be serializable.
-fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
-    order_hash: felt252,
-    order: T
-) {
+fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt252, order: T) {
     let key = array![ORDER_DB_BASE_KEY, order_hash];
 
     let base = starknet::storage_base_address_from_felt252(
@@ -120,9 +112,7 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
     order.serialize(ref buf);
 
     starknet::storage_write_syscall(
-        ADDRESS_DOMAIN,
-        starknet::storage_address_from_base_and_offset(base, 1),
-        buf.len().into()
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1), buf.len().into()
     );
 
     let mut offset = 2;
@@ -131,15 +121,11 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
         match buf.pop_front() {
             Option::Some(v) => {
                 starknet::storage_write_syscall(
-                    ADDRESS_DOMAIN,
-                    starknet::storage_address_from_base_and_offset(base, offset),
-                    v
+                    ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, offset), v
                 );
                 offset += 1
             },
-            Option::None(_) => {
-                break ();
-            },
+            Option::None(_) => { break (); },
         };
     };
 }
@@ -158,8 +144,7 @@ fn order_status_read(order_hash: felt252) -> Option<OrderStatus> {
 
     // First offset is the status.
     let status: felt252 = starknet::storage_read_syscall(
-        ADDRESS_DOMAIN,
-        starknet::storage_address_from_base_and_offset(base, 0)
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 0)
     )
         .unwrap_syscall();
 
@@ -189,9 +174,7 @@ fn order_status_write(order_hash: felt252, status: OrderStatus) -> bool {
 
     // At offset 0, we have the status.
     starknet::storage_write_syscall(
-        ADDRESS_DOMAIN,
-        starknet::storage_address_from_base_and_offset(base, 0),
-        status.into()
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 0), status.into()
     );
 
     true

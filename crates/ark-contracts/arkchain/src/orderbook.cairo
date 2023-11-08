@@ -24,7 +24,9 @@ trait Orderbook<T> {
 
     fn cancel_order(ref self: T, order_hash: felt252, sign_info: SignInfo);
 
-    fn execute_order(ref self: T, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo);
+    fn execute_order(
+        ref self: T, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo
+    );
 }
 
 mod orderbook_errors {
@@ -57,8 +59,7 @@ mod orderbook {
         listings: LegacyMap<(felt252, ContractAddress, u256), felt252>,
         // (chain_id, token_address, token_id) -> (order_hash, nonce)
         auction: LegacyMap<(felt252, ContractAddress, u256), (felt252, felt252)>,
-
-        // Order database [order status, order data]
+    // Order database [order status, order data]
     }
 
     #[event]
@@ -112,17 +113,18 @@ mod orderbook {
 
     // Only the sequencer can call this function with L1HandlerTransaction.
     #[l1_handler]
-    fn fulfill_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {
-        // Verify it comes from Arkchain operator contract.
-        // Check data + cancel / fulfill the order.
+    fn fulfill_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {// Verify it comes from Arkchain operator contract.
+    // Check data + cancel / fulfill the order.
     }
 
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
         fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
             // TODO: check components with OZ when ready for ownable.
-            assert(self.admin.read() == starknet::get_caller_address(),
-                   orderbook_errors::BROKER_UNREGISTERED);
+            assert(
+                self.admin.read() == starknet::get_caller_address(),
+                orderbook_errors::BROKER_UNREGISTERED
+            );
 
             self.brokers.write(broker_id, 1);
         }
@@ -130,32 +132,33 @@ mod orderbook {
         fn place_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
             order.validate_common_data().expect(orderbook_errors::ORDER_INVALID_DATA);
 
-            let order_type = order.validate_order_type()
+            let order_type = order
+                .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
 
             let order_hash = order.compute_data_hash();
+        // TODO:
+        // 1. based on order type -> validate the storage (match order_type -> call a
+        // function to validate each cases).
+        // (if the order can be placed, if it triggers the cancel of other order, etc..)
 
-            // TODO:
-            // 1. based on order type -> validate the storage (match order_type -> call a
-            // function to validate each cases).
-            // (if the order can be placed, if it triggers the cancel of other order, etc..)
+        // 4. register the order in the storage (can be multiple storage item to update).
 
-            // 4. register the order in the storage (can be multiple storage item to update).
-
-            // 5. Emit an event.
+        // 5. Emit an event.
         }
 
         fn cancel_order(ref self: ContractState, order_hash: felt252, sign_info: SignInfo) {
-
             let status = match order_status_read(order_hash) {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
-
         }
 
-        fn execute_order(ref self: ContractState, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo) {
-
-        }
+        fn execute_order(
+            ref self: ContractState,
+            order_hash: felt252,
+            execution_info: ExecutionInfo,
+            sign_info: SignInfo
+        ) {}
     }
 }

@@ -32,13 +32,8 @@ trait IOrderbook<T> {
 #[starknet::contract]
 mod orderbook {
     use arkchain::broker::Broker;
-    use arkchain::order::{
-        OrderListing, OrderBuy, OrderStatus, OrderBuyExecute,
-        compute_order_hash};
-    use arkchain::order_db::{
-        order_read, order_write,
-        order_status_read, order_status_write
-    };
+    use arkchain::order::{OrderListing, OrderBuy, OrderStatus, OrderBuyExecute, compute_order_hash};
+    use arkchain::order_db::{order_read, order_write, order_status_read, order_status_write};
     use starknet::{ContractAddress, ClassHash, SyscallResultTrait};
 
     use super::IOrderbook;
@@ -145,10 +140,14 @@ mod orderbook {
 
     /// Can only be called on a message received from Starknet.
     #[l1_handler]
-    fn finalize_order_buy(ref self: ContractState, from_address: felt252, order_hash: felt252, buyer: ContractAddress) {
+    fn finalize_order_buy(
+        ref self: ContractState, from_address: felt252, order_hash: felt252, buyer: ContractAddress
+    ) {
         assert(from_address == self.executor_address.read().into(), 'Bad executor');
 
-        let tup: (Option<OrderStatus>, Option<OrderListing>) = order_read::<OrderListing>(order_hash);
+        let tup: (Option<OrderStatus>, Option<OrderListing>) = order_read::<
+            OrderListing
+        >(order_hash);
 
         let (status, order) = tup;
 
@@ -173,20 +172,20 @@ mod orderbook {
                 }
 
                 // Ensure the token is not considered as listed.
-                self.tokens_listing.write(
-                    (broker.chain_id, order.collection, order.token_id),
-                    0
-                );
+                self.tokens_listing.write((broker.chain_id, order.collection, order.token_id), 0);
 
-                self.emit(OrderBuyFinalized {
-                    hash: order_hash,
-                    timestamp: starknet::get_block_timestamp(),
-                    seller: order.seller,
-                    buyer,
-                    collection: order.collection,
-                    token_id: order.token_id,
-                    price: order.price,
-                });
+                self
+                    .emit(
+                        OrderBuyFinalized {
+                            hash: order_hash,
+                            timestamp: starknet::get_block_timestamp(),
+                            seller: order.seller,
+                            buyer,
+                            collection: order.collection,
+                            token_id: order.token_id,
+                            price: order.price,
+                        }
+                    );
             },
             OrderStatus::Finalized => panic_with_felt252('Order already finalized'),
             OrderStatus::Cancelled => panic_with_felt252('Order already cancelled'),
@@ -195,10 +194,7 @@ mod orderbook {
 
     #[external(v0)]
     fn upgrade(ref self: ContractState, class_hash: ClassHash) {
-        assert(
-            starknet::get_caller_address() == self.owner.read(),
-            'Unauthorized replace class'
-        );
+        assert(starknet::get_caller_address() == self.owner.read(), 'Unauthorized replace class');
 
         match starknet::replace_class_syscall(class_hash) {
             Result::Ok(_) => self.emit(Upgraded { class_hash }),
@@ -209,28 +205,24 @@ mod orderbook {
     #[external(v0)]
     impl OrderbookImpl of IOrderbook<ContractState> {
         fn register_broker(
-            ref self: ContractState,
-            name: felt252,
-            public_key: felt252,
-            chain_id: felt252
+            ref self: ContractState, name: felt252, public_key: felt252, chain_id: felt252
         ) {
             // TODO: add pre-validation of the broker.
             assert(self.chains.read(chain_id), 'Invalid chain id');
             assert(name != 0, 'Invalid broker name');
             assert(!_is_broker_registered(@self, name), 'Broker already registered');
 
-            self.brokers.write(name, Broker {
-                name,
-                public_key,
-                chain_id,
-            });
+            self.brokers.write(name, Broker { name, public_key, chain_id, });
 
-            self.emit(BrokerRegistered {
-                name,
-                chain_id,
-                timestamp: starknet::info::get_block_timestamp(),
-                public_key,
-            });
+            self
+                .emit(
+                    BrokerRegistered {
+                        name,
+                        chain_id,
+                        timestamp: starknet::info::get_block_timestamp(),
+                        public_key,
+                    }
+                );
         }
 
         fn add_order_listing(ref self: ContractState, order: OrderListing) {
@@ -242,30 +234,34 @@ mod orderbook {
             // TODO: verify signature.
 
             let hash = compute_order_hash(order);
-            
+
             let status = order_status_read(hash);
             if status.is_some() {
                 panic_with_felt252('Order already registered');
             }
 
-            assert(self.tokens_listing.read((b.chain_id, order.collection, order.token_id))
-                   == 0,
-                   'Token already listed');
+            assert(
+                self.tokens_listing.read((b.chain_id, order.collection, order.token_id)) == 0,
+                'Token already listed'
+            );
 
             order_write(hash, order);
 
             self.tokens_listing.write((b.chain_id, order.collection, order.token_id), hash);
 
-            self.emit(OrderListingAdded {
-                hash,
-                broker_name: b.name,
-                chain_id: b.chain_id,
-                timestamp: starknet::info::get_block_timestamp(),
-                seller: order.seller,
-                collection: order.collection,
-                token_id: order.token_id,
-                price: order.price,
-            });
+            self
+                .emit(
+                    OrderListingAdded {
+                        hash,
+                        broker_name: b.name,
+                        chain_id: b.chain_id,
+                        timestamp: starknet::info::get_block_timestamp(),
+                        seller: order.seller,
+                        collection: order.collection,
+                        token_id: order.token_id,
+                        price: order.price,
+                    }
+                );
         }
 
         fn submit_order_buy(ref self: ContractState, order: OrderBuy) {
@@ -274,8 +270,9 @@ mod orderbook {
                 panic_with_felt252('Broker not registered');
             }
 
-            let tup: (Option<OrderStatus>, Option<OrderListing>)
-                = order_read::<OrderListing>(order.order_listing_hash);
+            let tup: (Option<OrderStatus>, Option<OrderListing>) = order_read::<
+                OrderListing
+            >(order.order_listing_hash);
 
             let (status, listing_order) = tup;
 
@@ -317,35 +314,31 @@ mod orderbook {
             // Need to then add the payload to the address and selector.
             loop {
                 match buf.pop_front() {
-                    Option::Some(v) => {
-                        payload.append(v);
-                    },
-                    Option::None(_) => {
-                        break ();
-                    },
+                    Option::Some(v) => { payload.append(v); },
+                    Option::None(_) => { break (); },
                 };
             };
 
-            starknet::send_message_to_l1_syscall(
-                0,
-                payload.span(),
-            ).unwrap_syscall();
+            starknet::send_message_to_l1_syscall(0, payload.span(),).unwrap_syscall();
 
             if !order_status_write(order.order_listing_hash, OrderStatus::Executing) {
                 panic_with_felt252('Could write status');
             }
 
-            self.emit(OrderBuyExecuting {
-                hash: order.order_listing_hash,
-                broker_name: b.name,
-                chain_id: b.chain_id,
-                timestamp: starknet::get_block_timestamp(),
-                buyer: order.buyer,
-                seller: order_l.seller,
-                collection: order_l.collection,
-                token_id: order_l.token_id,
-                price: order_l.price,
-            });
+            self
+                .emit(
+                    OrderBuyExecuting {
+                        hash: order.order_listing_hash,
+                        broker_name: b.name,
+                        chain_id: b.chain_id,
+                        timestamp: starknet::get_block_timestamp(),
+                        buyer: order.buyer,
+                        seller: order_l.seller,
+                        collection: order_l.collection,
+                        token_id: order_l.token_id,
+                        price: order_l.price,
+                    }
+                );
         }
     }
 
