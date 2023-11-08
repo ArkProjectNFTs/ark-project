@@ -7,6 +7,7 @@ enum OrderType {
     Listing,
     Auction,
     Offer,
+    AuctionOffer,
     CollectionOffer,
 }
 
@@ -93,7 +94,7 @@ struct ExecutionInfo {
 
 /// The info related to the fulfillment an order.
 #[derive(starknet::Store, Serde, Copy, Drop)]
-struct FulFillmentInfo {
+struct FulfillmentInfo {
     // The hash of the order that has been fulfilled.
     order_hash: felt252,
     // Possible error on settlement (tx reverted funds/token fault).

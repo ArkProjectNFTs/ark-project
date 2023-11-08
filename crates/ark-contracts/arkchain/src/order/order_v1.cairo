@@ -43,7 +43,8 @@ struct OrderV1 {
     additional_data: Span<felt252>,
 }
 
-impl ListingOfferOrderTrait of OrderTrait<OrderV1> {
+
+impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
     fn validate_common_data(self: @OrderV1) -> Result<(), OrderValidationError> {
         let block_ts = starknet::get_block_timestamp();
 
@@ -93,7 +94,6 @@ impl ListingOfferOrderTrait of OrderTrait<OrderV1> {
 
         Result::Err(OrderValidationError::InvalidContent)
     }
-
 
     fn compute_data_hash(self: @OrderV1) -> felt252 {
         let mut buf = array![];

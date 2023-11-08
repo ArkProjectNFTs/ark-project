@@ -32,8 +32,8 @@ const ORDER_DB_BASE_KEY: felt252 = 'order database';
 ///
 /// * `order_hash` - Hash of the order used as key.
 fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
-    order_hash: felt252
-) -> (Option<OrderStatus>, Option<T>) {
+    order_hash: felt252,
+) -> Option<(OrderStatus, T)> {
     let key = array![ORDER_DB_BASE_KEY, order_hash];
 
     let base = starknet::storage_base_address_from_felt252(
@@ -47,10 +47,10 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
     )
         .unwrap_syscall();
 
-    let status: Option<OrderStatus> = status.try_into();
-    if status.is_none() {
-        return (Option::None, Option::None);
-    }
+    let status = match status.try_into() {
+        Option::Some(s) => s,
+        Option::None => { return Option::None; } ,
+    };
 
     // Then, we must read the length to deserialize the data.
     let length: felt252 = starknet::storage_read_syscall(
@@ -60,7 +60,7 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
         .unwrap_syscall();
 
     if length == 0 {
-        return (Option::None, Option::None);
+        return Option::None;
     }
 
     let mut offset = 2;
@@ -84,7 +84,12 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
     };
 
     let mut vspan = value.span();
-    (status, Serde::<T>::deserialize(ref vspan))
+    let order = match Serde::<T>::deserialize(ref vspan) {
+        Option::Some(o) => o,
+        Option::None => { return Option::None; },
+    };
+
+    Option::Some((status, order))
 }
 
 /// Writes an order into the database (storage), with the status "Open".
