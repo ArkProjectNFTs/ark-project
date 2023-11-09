@@ -113,7 +113,9 @@ mod orderbook {
 
     // Only the sequencer can call this function with L1HandlerTransaction.
     #[l1_handler]
-    fn fulfill_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {// Verify it comes from Arkchain operator contract.
+    fn fulfill_order(
+        ref self: ContractState, from_address: felt252, info: FulfillmentInfo
+    ) { // Verify it comes from Arkchain operator contract.
     // Check data + cancel / fulfill the order.
     }
 
@@ -135,16 +137,19 @@ mod orderbook {
             let order_type = order
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
-
+            // TODO:
+            // 1. based on order type -> validate the storage (match order_type -> call a
+            // function to validate each cases).
+            // (if the order can be placed, if it triggers the cancel of other order, etc..)
+            // 4. register the order in the storage (can be multiple storage item to update).
+            // 5. Emit an event.
             let order_hash = order.compute_data_hash();
-        // TODO:
-        // 1. based on order type -> validate the storage (match order_type -> call a
-        // function to validate each cases).
-        // (if the order can be placed, if it triggers the cancel of other order, etc..)
-
-        // 4. register the order in the storage (can be multiple storage item to update).
-
-        // 5. Emit an event.
+            match order_type {
+                OrderType::Listing => {},
+                OrderType::Auction => {},
+                OrderType::Offer => {},
+                OrderType::CollectionOffer => {},
+            }
         }
 
         fn cancel_order(ref self: ContractState, order_hash: felt252, sign_info: SignInfo) {
@@ -159,6 +164,8 @@ mod orderbook {
             order_hash: felt252,
             execution_info: ExecutionInfo,
             sign_info: SignInfo
-        ) {}
+        ) {
+            
+        }
     }
 }

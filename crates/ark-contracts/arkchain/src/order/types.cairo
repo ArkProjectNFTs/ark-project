@@ -7,7 +7,6 @@ enum OrderType {
     Listing,
     Auction,
     Offer,
-    AuctionOffer,
     CollectionOffer,
 }
 
@@ -104,4 +103,33 @@ struct FulfillmentInfo {
     // If done on the same chain, the transaction hash is the same.
     transaction_hash_token: felt252,
     transaction_hash_currency: felt252,
+}
+
+/// Type of an route, that may be defined from
+/// incoming order.
+#[derive(Serde, Drop, PartialEq, Copy)]
+enum RouteType {
+    Erc20ToErc721,
+    Erc721ToErc20,
+}
+
+impl RouteIntoFelt252 of Into<RouteType, felt252> {
+    fn into(self: RouteType) -> felt252 {
+        match self {
+            RouteType::Erc20ToErc721 => 'ERC20TOERC721',
+            RouteType::Erc721ToErc20 => 'ERC721TOERC20',
+        }
+    }
+}
+
+impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
+    fn try_into(self: felt252) -> Option<RouteType> {
+        if self == 'ERC20TOERC721' {
+            Option::Some(RouteType::Erc20ToErc721)
+        } else if self == 'ERC721TOERC20' {
+            Option::Some(RouteType::Erc721ToErc20)
+        } else {
+            Option::None
+        }
+    }
 }
