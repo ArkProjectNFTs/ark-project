@@ -8,8 +8,44 @@ use arkchain::order::types::OrderType;
 
 #[test]
 fn test_validate_order_listing() {
+    let (order_listing, _, _, _) = setup();
+    let validated_order = order_listing.validate_order_type();
+    // test for order type detection validity
+    assert(validated_order.is_ok(), 'Correct');
+    assert(validated_order.unwrap() == OrderType::Listing, 'Correct');
+}
+
+#[test]
+fn test_validate_order_offer() {
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+    let validated_order = order_offer.validate_order_type();
+    // test for order type detection validity
+    assert(validated_order.is_ok(), 'Correct');
+    assert(validated_order.unwrap() == OrderType::Offer, 'Correct');
+}
+
+#[test]
+fn test_validate_order_auction() {
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+    let validated_order = order_auction.validate_order_type();
+    // test for order type detection validity
+    assert(validated_order.is_ok(), 'Correct');
+    assert(validated_order.unwrap() == OrderType::Auction, 'Correct');
+}
+
+#[test]
+fn test_validate_order_collection_offer() {
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+    let validated_order = order_collection_offer.validate_order_type();
+    // test for order type detection validity
+    assert(validated_order.is_ok(), 'Correct');
+    assert(validated_order.unwrap() == OrderType::CollectionOffer, 'Correct');
+}
+
+fn setup() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
     let data = array![];
     let data_span = data.span();
+
     let order_listing = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
@@ -33,17 +69,6 @@ fn test_validate_order_listing() {
         broker_id: 123,
         additional_data: data_span,
     };
-
-    let validated_order = order_listing.validate_order_type();
-    // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::Listing, 'Correct');
-}
-
-#[test]
-fn test_validate_order_offer() {
-    let data = array![];
-    let data_span = data.span();
     let order_offer = OrderV1 {
         route: RouteType::Erc20ToErc721.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
@@ -67,17 +92,6 @@ fn test_validate_order_offer() {
         broker_id: 123,
         additional_data: data_span,
     };
-
-    let validated_order = order_offer.validate_order_type();
-    // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::Offer, 'Correct');
-}
-
-#[test]
-fn test_validate_order_auction() {
-    let data = array![];
-    let data_span = data.span();
     let order_auction = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
@@ -102,16 +116,6 @@ fn test_validate_order_auction() {
         additional_data: data_span,
     };
 
-    let validated_order = order_auction.validate_order_type();
-    // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::Auction, 'Correct');
-}
-
-#[test]
-fn test_validate_order_collection_offer() {
-    let data = array![];
-    let data_span = data.span();
     let order_collection_offer = OrderV1 {
         route: RouteType::Erc20ToErc721.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
@@ -136,8 +140,5 @@ fn test_validate_order_collection_offer() {
         additional_data: data_span,
     };
 
-    let validated_order = order_collection_offer.validate_order_type();
-    // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::CollectionOffer, 'Correct');
+    (order_listing, order_offer, order_auction, order_collection_offer)
 }

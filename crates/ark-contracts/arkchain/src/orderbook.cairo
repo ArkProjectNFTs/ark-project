@@ -119,6 +119,14 @@ mod orderbook {
     // Check data + cancel / fulfill the order.
     }
 
+    #[generate_trait]
+    impl InternalFunctions of InternalFunctionsTrait {
+        fn check_listing_order() {}
+        fn check_listing_auction() {}
+        fn check_listing_offer() {}
+        fn check_listing_collection_offer() {}
+    }
+
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
         fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
@@ -164,8 +172,6 @@ mod orderbook {
             order_hash: felt252,
             execution_info: ExecutionInfo,
             sign_info: SignInfo
-        ) {
-            
-        }
+        ) {}
     }
 }
