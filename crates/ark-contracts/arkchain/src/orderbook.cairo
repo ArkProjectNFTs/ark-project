@@ -79,6 +79,7 @@ trait Orderbook<T> {
 mod orderbook_errors {
     const BROKER_UNREGISTERED: felt252 = 'OB: unregistered broker';
     const ORDER_INVALID_DATA: felt252 = 'OB: order invalid data';
+    const ORDER_ALREADY_EXISTS: felt252 = 'OB: order already exists';
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
     const ORDER_FULFILLED: felt252 = 'OB: order fulfilled';
@@ -270,6 +271,12 @@ mod orderbook {
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
 
             let order_hash = order.compute_order_hash();
+
+            // TODO
+
+            // let order_read_option = order_read::<OrderV1>(order_hash);
+            // assert(order_read_option.is_some(), orderbook_errors::ORDER_ALREADY_EXISTS);
+
             match order_type {
                 OrderType::Listing => {
                     self._create_listing_order(order, order_type, order_hash);
@@ -467,10 +474,6 @@ mod orderbook {
         fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
-            // Questions: 
-            // - What happens if I try to create an offer with a price above the listing price?
-            // - Should we handle error here? 
-            // - Should we check if the order entry already exists in db?
             order_write(order_hash, order_type, order);
 
             self
