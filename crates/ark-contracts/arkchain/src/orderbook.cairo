@@ -58,7 +58,7 @@ mod orderbook {
         // to ensure future evolution. Set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
         // (chain_id, token_address, token_id) -> order_hash
-        listings: LegacyMap<(felt252, ContractAddress, u256), felt252>,
+        orders: LegacyMap<(felt252, ContractAddress, u256), felt252>,
         // (chain_id, token_address, token_id) -> (order_hash, nonce)
         auction: LegacyMap<(felt252, ContractAddress, u256), (felt252, felt252)>,
     // Order database [order status, order data]
