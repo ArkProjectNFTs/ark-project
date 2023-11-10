@@ -12,10 +12,25 @@ use arkchain::order::types::OrderStatus;
 
 #[test]
 fn test_create_offer() {
+    let offer_order = get_offer_order();
+    let order_hash = '123';
+
+    let mut state = orderbook::contract_state_for_testing();
+    orderbook::InternalFunctions::create_offer(
+        ref state, offer_order, OrderType::Offer, order_hash
+    );
+
+    let order_option = order_read::<OrderV1>(order_hash);
+    assert(order_option.is_some(), 'storage order');
+    let (order_status, order) = order_option.unwrap();
+    assert(order_status == OrderStatus::Open, 'order status');
+    assert(order.token_address == offer_order.token_address, 'token address does not match');
+}
+
+fn get_offer_order() -> OrderV1 {
     let data = array![];
     let data_span = data.span();
-
-    let offer_order = OrderV1 {
+    OrderV1 {
         route: RouteType::Erc20ToErc721.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
@@ -37,19 +52,5 @@ fn test_create_offer() {
         end_date: 1702117884797,
         broker_id: 123,
         additional_data: data_span,
-    };
-
-    let order_hash = '123';
-
-    let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::create_offer(ref state, offer_order, OrderType::Offer, order_hash);
-
-    let order_option = order_read::<OrderV1>(order_hash);
-    assert(order_option.is_some(), 'storage order');
-    
-    let (order_status, order) = order_option.unwrap();
-    assert(order_status == OrderStatus::Open, 'order status');
-
-    assert(order.token_address == offer_order.token_address, 'token address does not match');
-
+    }
 }
