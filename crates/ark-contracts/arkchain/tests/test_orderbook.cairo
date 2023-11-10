@@ -1,5 +1,5 @@
+use core::debug::PrintTrait;
 use core::option::OptionTrait;
-use snforge_std::{declare, ContractClassTrait};
 use arkchain::orderbook::orderbook::ordersContractMemberStateTrait;
 use arkchain::orderbook::orderbook;
 use arkchain::order::order_v1::OrderV1;
@@ -9,13 +9,23 @@ use core::traits::TryInto;
 use arkchain::order::types::OrderType;
 use arkchain::order::database::{order_read, order_status_read, order_write};
 use arkchain::order::types::OrderStatus;
+use snforge_std::{
+    declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions, Event, SpyOn,
+    test_address
+};
+use array::ArrayTrait;
+
+const ORDER_VERSION_V1: felt252 = 'v1';
 
 #[test]
 fn test_create_offer() {
     let offer_order = get_offer_order();
     let order_hash = '123';
 
+    let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
+    let mut spy = spy_events(SpyOn::One(contract_address));
+
     orderbook::InternalFunctions::create_offer(
         ref state, offer_order, OrderType::Offer, order_hash
     );
@@ -25,6 +35,63 @@ fn test_create_offer() {
     let (order_status, order) = order_option.unwrap();
     assert(order_status == OrderStatus::Open, 'order status');
     assert(order.token_address == offer_order.token_address, 'token address does not match');
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    orderbook::Event::OrderPlaced(
+                        orderbook::OrderPlaced {
+                            order_hash,
+                            order_version: ORDER_VERSION_V1,
+                            order_type: OrderType::Offer,
+                            order: offer_order
+                        }
+                    )
+                )
+            ]
+        );
+}
+
+#[test]
+fn test_create_collection_offer() {
+    let contract_address = test_address();
+
+    contract_address.print();
+    let mut spy = spy_events(SpyOn::One(contract_address));
+
+    let mut offer_order = get_offer_order();
+    offer_order.token_id = 0;
+    let order_hash = '123';
+
+    let mut state = orderbook::contract_state_for_testing();
+    orderbook::InternalFunctions::create_offer(
+        ref state, offer_order, OrderType::CollectionOffer, order_hash
+    );
+
+    let order_option = order_read::<OrderV1>(order_hash);
+    assert(order_option.is_some(), 'storage order');
+    let (order_status, order) = order_option.unwrap();
+    assert(order_status == OrderStatus::Open, 'order status');
+    assert(order.token_address == offer_order.token_address, 'token address does not match');
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    orderbook::Event::OrderPlaced(
+                        orderbook::OrderPlaced {
+                            order_hash,
+                            order_version: ORDER_VERSION_V1,
+                            order_type: OrderType::CollectionOffer,
+                            order: offer_order
+                        }
+                    )
+                )
+            ]
+        );
 }
 
 fn get_offer_order() -> OrderV1 {
