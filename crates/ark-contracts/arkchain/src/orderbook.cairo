@@ -154,8 +154,6 @@ mod orderbook {
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
 
-            let order_hash = order.compute_data_hash();
-
             let order_hash = order.compute_order_hash();
             let ressource_hash = order.compute_ressource_hash();
             match order_type {
