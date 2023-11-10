@@ -37,7 +37,7 @@ trait OrderTrait<T, +Serde<T>, +Drop<T>> {
     /// Every field of the order that must be signed
     /// must be considered in the computation of this hash.
     fn compute_order_hash(self: @T) -> felt252;
-    fn compute_ressource_hash(self: @T) -> felt252;
+    fn compute_token_hash(self: @T) -> felt252;
 }
 
 /// Status of an order, that may be defined from
@@ -48,6 +48,7 @@ enum OrderStatus {
     Fulfilled,
     Executed,
     CancelledUser,
+    CancelledByNewOrder,
     CancelledAssetFault,
 }
 
@@ -58,6 +59,7 @@ impl OrderStatusIntoFelt252 of Into<OrderStatus, felt252> {
             OrderStatus::Fulfilled => 'FULFILLED',
             OrderStatus::Executed => 'EXECUTED',
             OrderStatus::CancelledUser => 'CANCELLED_USER',
+            OrderStatus::CancelledByNewOrder => 'CANCELLED_NEW_ORDER',
             OrderStatus::CancelledAssetFault => 'CANCELLED_ASSET_FAULT',
         }
     }
@@ -73,6 +75,8 @@ impl Felt252TryIntoOrderStatus of TryInto<felt252, OrderStatus> {
             Option::Some(OrderStatus::Fulfilled)
         } else if self == 'CANCELLED_USER' {
             Option::Some(OrderStatus::CancelledUser)
+        } else if self == 'CANCELLED_NEW_ORDER' {
+            Option::Some(OrderStatus::CancelledByNewOrder)
         } else if self == 'CANCELLED_ASSET_FAULT' {
             Option::Some(OrderStatus::CancelledAssetFault)
         } else {

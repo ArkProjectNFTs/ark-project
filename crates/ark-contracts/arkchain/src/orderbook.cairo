@@ -37,18 +37,22 @@ mod orderbook_errors {
     const ORDER_INVALID_DATA: felt252 = 'OB: order invalid data';
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
+    const ORDER_EXECUTING: felt252 = 'OB: order executing';
 }
 
 #[starknet::contract]
 mod orderbook {
+    use core::zeroable::Zeroable;
+    use core::option::OptionTrait;
     use core::starknet::event::EventEmitter;
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
     use starknet::ContractAddress;
     use arkchain::order::types::{OrderTrait, OrderType, ExecutionInfo, FulfillmentInfo};
     use arkchain::order::order_v1::OrderV1;
-    use arkchain::order::database::{order_read, order_status_read};
+    use arkchain::order::database::{order_read, order_status_read, order_write, order_status_write};
     use arkchain::crypto::signer::SignInfo;
+    use arkchain::order::types::OrderStatus;
 
     #[storage]
     struct Storage {
@@ -58,10 +62,12 @@ mod orderbook {
         // to ensure future evolution. Set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
         // (chain_id, token_address, token_id) -> order_hash
-        orders: LegacyMap<(felt252, ContractAddress, u256), felt252>,
+        token_listings: LegacyMap<felt252, felt252>,
+        // (chain_id, token_address, token_id) -> order_hash
+        token_offers: LegacyMap<(felt252, ContractAddress), felt252>,
         // (chain_id, token_address, token_id) -> (order_hash, nonce)
-        auction: LegacyMap<(felt252, ContractAddress, u256), (felt252, felt252)>,
-    // Order database [ressource_hash, order_data]
+        auction: LegacyMap<felt252, (felt252, felt252)>,
+    // Order database [token_hash, order_data]
     // see arkchain::order::database
     }
 
@@ -85,6 +91,7 @@ mod orderbook {
         order_version: felt252,
         #[key]
         order_type: OrderType,
+        cancelled_order_hash: felt252,
         // The full order serialized.
         order: OrderV1,
     }
@@ -155,7 +162,6 @@ mod orderbook {
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
 
             let order_hash = order.compute_order_hash();
-            let ressource_hash = order.compute_ressource_hash();
             match order_type {
                 OrderType::Listing => {
                     self._create_listing_order(order, order_type, order_hash);
@@ -193,13 +199,34 @@ mod orderbook {
         fn _create_listing_order(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
+            let token_hash = order.compute_token_hash();
+            let current_listing_order = self.token_listings.read(token_hash);
+            let current_order_status = order_status_read(current_listing_order);
+            if current_listing_order.is_non_zero() {
+                if current_order_status.is_some() {
+                    let current_order_status = current_order_status.unwrap();
+                    if (current_order_status == OrderStatus::Fulfilled) {
+                        panic_with_felt252(orderbook_errors::ORDER_EXECUTING);
+                    } else {
+                        // change old order status to cancelled
+                        order_status_write(current_listing_order, OrderStatus::CancelledByNewOrder);
+                    }
+                } else {
+                    panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+                }
+            }
+            // Associate order_hash to token_hash on the storage
+            order_write(order_hash, order);
+            // Write new order with status open
+            self.token_listings.write(token_hash, order_hash);
             self
                 .emit(
                     OrderPlaced {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        order: order,
+                        cancelled_order_hash: current_listing_order,
+                        order: order
                     }
                 );
         }
@@ -212,6 +239,7 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
+                        cancelled_order_hash: 0,
                         order: order,
                     }
                 );
@@ -225,6 +253,7 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
+                        cancelled_order_hash: 0,
                         order: order,
                     }
                 );
@@ -238,6 +267,7 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
+                        cancelled_order_hash: 0,
                         order: order,
                     }
                 );
