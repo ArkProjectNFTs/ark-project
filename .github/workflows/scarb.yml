@@ -1,4 +1,4 @@
-name: scarb
+name: ArkChain contract testing
 
 on:
   push:
@@ -16,9 +16,6 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.4.0-rc1"
-      - name: Install snforge
-        run: |
-          curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
-          echo "/home/runner/.local/bin" >> $GITHUB_PATH
+      - uses: foundry-rs/setup-snfoundry@v2
       - run: cd crates/ark-contracts/arkchain && scarb fmt --check
       - run: cd crates/ark-contracts/arkchain && snforge test
