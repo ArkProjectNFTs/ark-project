@@ -10,7 +10,7 @@ const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> ERC721_ERC20.
 // Auction can't be cancelled if at least 1 valid offer.
 
-#[derive(Serde, Drop)]
+#[derive(Serde, Drop, Copy)]
 struct OrderV1 {
     // Route ERC20->ERC721 (buy) ERC721->ERC20 (sell)
     route: RouteType,
@@ -49,18 +49,28 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         ORDER_VERSION_V1
     }
 
-    fn validate_common_data(self: @OrderV1) -> Result<(), OrderValidationError> {
-        let block_ts = starknet::get_block_timestamp();
-
+    fn validate_common_data(
+        self: @OrderV1, block_timestamp: u64
+    ) -> Result<(), OrderValidationError> {
         // If start_date is in the past, it's not a problem. The order
         // is valid once it's inserted in the storage.
+
+        if (*self.start_date).is_non_zero() {
+            if *self.start_date >= *self.end_date {
+                return Result::Err(OrderValidationError::StartDateAfterEndDate);
+            }
+
+            if *self.start_date < block_timestamp {
+                return Result::Err(OrderValidationError::StartDateInThePast);
+            }
+        }
 
         let end_date = *self.end_date;
 
         // End date -> block_ts + 30 days.
-        let max_end_date = block_ts + (30 * 24 * 60 * 60);
+        let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
 
-        if end_date < block_ts {
+        if end_date < block_timestamp {
             return Result::Err(OrderValidationError::EndDateInThePast);
         }
 
@@ -79,11 +89,11 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         if (*self.offerer).is_zero()
             || (*self.token_address).is_zero()
             || (*self.token_id).is_zero()
-            || (*self.start_amount).is_zero() {
+            || (*self.start_amount).is_zero()
+            || (*self.salt).is_zero()
+            || (*self.quantity).is_zero() {
             return Result::Err(OrderValidationError::InvalidContent);
         }
-
-        // TODO TO BE COMPLETED FROM THE SCHEMA.
 
         Result::Ok(())
     }

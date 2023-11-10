@@ -58,7 +58,7 @@ mod orderbook {
         // to ensure future evolution. Set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
         // (chain_id, token_address, token_id) -> order_hash
-        listings: LegacyMap<(felt252, ContractAddress, u256), felt252>,
+        orders: LegacyMap<(felt252, ContractAddress, u256), felt252>,
         // (chain_id, token_address, token_id) -> (order_hash, nonce)
         auction: LegacyMap<(felt252, ContractAddress, u256), (felt252, felt252)>,
     // Order database [order status, order data]
@@ -125,11 +125,8 @@ mod orderbook {
     // Only the sequencer can call this function with L1HandlerTransaction.
     // *************************************************************************
     #[l1_handler]
-    fn fulfill_order(
-        ref self: ContractState, from_address: felt252, info: FulfillmentInfo
-    ) { 
-        // Verify it comes from Arkchain operator contract.
-        // Check data + cancel / fulfill the order.
+    fn fulfill_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {// Verify it comes from Arkchain operator contract.
+    // Check data + cancel / fulfill the order.
     }
 
     // *************************************************************************
@@ -148,12 +145,13 @@ mod orderbook {
         }
 
         fn create_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
-            order.validate_common_data().expect(orderbook_errors::ORDER_INVALID_DATA);
+            let block_ts = starknet::get_block_timestamp();
+            order.validate_common_data(block_ts).expect(orderbook_errors::ORDER_INVALID_DATA);
 
             let order_type = order
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
-  
+
             let order_hash = order.compute_data_hash();
 
             match order_type {
@@ -163,9 +161,7 @@ mod orderbook {
                 OrderType::Auction => {
                     self._create_listing_auction(order, order_type, order_hash);
                 },
-                OrderType::Offer => {
-                    self._create_listing_offer(order, order_type, order_hash);
-                },
+                OrderType::Offer => { self._create_listing_offer(order, order_type, order_hash); },
                 OrderType::CollectionOffer => {
                     self._create_listing_collection_offer(order, order_type, order_hash);
                 },
@@ -184,9 +180,7 @@ mod orderbook {
             order_hash: felt252,
             execution_info: ExecutionInfo,
             sign_info: SignInfo
-        ) {
-            
-        }
+        ) {}
     }
 
     // *************************************************************************
