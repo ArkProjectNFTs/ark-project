@@ -3,5 +3,5 @@
   "[cairo]": {
     "editor.formatOnSave": false
   },
-  "editor.formatOnSave": false
+  "editor.formatOnSave": true
 }
