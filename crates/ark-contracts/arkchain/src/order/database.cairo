@@ -20,6 +20,7 @@
 use starknet::SyscallResultTrait;
 
 use arkchain::order::types::OrderStatus;
+use arkchain::order::types::OrderType;
 
 /// Must remain equal to 0 for now.
 const ADDRESS_DOMAIN: u32 = 0;
@@ -31,29 +32,16 @@ const ORDER_DB_BASE_KEY: felt252 = 'order database';
 /// # Arguments
 ///
 /// * `order_hash` - Hash of the order used as key.
-fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
-    order_hash: felt252,
-) -> Option<(OrderStatus, T)> {
+fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt252,) -> Option<T> {
     let key = array![ORDER_DB_BASE_KEY, order_hash];
 
     let base = starknet::storage_base_address_from_felt252(
         poseidon::poseidon_hash_span(key.span())
     );
 
-    // First offset is the status.
-    let status: felt252 = starknet::storage_read_syscall(
-        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 0)
-    )
-        .unwrap_syscall();
-
-    let status = match status.try_into() {
-        Option::Some(s) => s,
-        Option::None => { return Option::None; },
-    };
-
     // Then, we must read the length to deserialize the data.
     let length: felt252 = starknet::storage_read_syscall(
-        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1)
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 2)
     )
         .unwrap_syscall();
 
@@ -61,11 +49,11 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
         return Option::None;
     }
 
-    let mut offset = 2;
+    let mut offset = 3;
     let mut value = array![];
 
     loop {
-        if offset.into() == length + 2 {
+        if offset.into() == length + 3 {
             break ();
         }
         let v = starknet::storage_read_syscall(
@@ -84,7 +72,7 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
         Option::None => { return Option::None; },
     };
 
-    Option::Some((status, order))
+    Option::Some(order)
 }
 
 /// Writes an order into the database (storage), with the status "Open".
@@ -93,7 +81,9 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
 ///
 /// * `order_hash` - Hash of the order used as key.
 /// * `order` - An order structure that must be serializable.
-fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt252, order: T) {
+fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
+    order_hash: felt252, order_type: OrderType, order: T
+) {
     let key = array![ORDER_DB_BASE_KEY, order_hash];
 
     let base = starknet::storage_base_address_from_felt252(
@@ -107,15 +97,20 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt25
         OrderStatus::Open.into()
     );
 
+    // At offset 1, we always have the order type.
+    starknet::storage_write_syscall(
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1), order_type.into()
+    );
+
     // At offset 1, we always have the length.
     let mut buf = array![];
     order.serialize(ref buf);
 
     starknet::storage_write_syscall(
-        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1), buf.len().into()
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 2), buf.len().into()
     );
 
-    let mut offset = 2;
+    let mut offset = 3;
 
     loop {
         match buf.pop_front() {
@@ -128,6 +123,22 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt25
             Option::None(_) => { break (); },
         };
     };
+}
+
+fn order_type_read(order_hash: felt252) -> Option<OrderType> {
+    let key = array![ORDER_DB_BASE_KEY, order_hash];
+
+    let base = starknet::storage_base_address_from_felt252(
+        poseidon::poseidon_hash_span(key.span())
+    );
+
+    // First offset is the status.
+    let order_type: felt252 = starknet::storage_read_syscall(
+        ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1)
+    )
+        .unwrap_syscall();
+
+    order_type.try_into()
 }
 
 /// Reads only the status of the given order.

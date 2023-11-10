@@ -69,6 +69,11 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             }
         }
 
+        // Salt must be non-zero.
+        if (*self.salt).is_zero() {
+            return Result::Err(OrderValidationError::InvalidSalt);
+        }
+
         let end_date = *self.end_date;
 
         // End date -> block_ts + 30 days.

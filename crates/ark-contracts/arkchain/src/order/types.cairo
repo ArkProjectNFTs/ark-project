@@ -10,6 +10,33 @@ enum OrderType {
     CollectionOffer,
 }
 
+impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
+    fn into(self: OrderType) -> felt252 {
+        match self {
+            OrderType::Listing => 'LISTING',
+            OrderType::Auction => 'AUCTION',
+            OrderType::Offer => 'OFFER',
+            OrderType::CollectionOffer => 'COLLECTION_OFFER',
+        }
+    }
+}
+
+impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
+    fn try_into(self: felt252) -> Option<OrderType> {
+        if self == 'LISTING' {
+            Option::Some(OrderType::Listing)
+        } else if self == 'AUCTION' {
+            Option::Some(OrderType::Auction)
+        } else if self == 'OFFER' {
+            Option::Some(OrderType::Offer)
+        } else if self == 'COLLECTION_OFFER' {
+            Option::Some(OrderType::CollectionOffer)
+        } else {
+            Option::None
+        }
+    }
+}
+
 /// Order validation status.
 /// This enum is returned by the `validate_data` in order
 /// to have details on what's wrong with the order.
@@ -21,6 +48,7 @@ enum OrderValidationError {
     EndDateTooFar,
     AdditionalDataTooLong,
     InvalidContent,
+    InvalidSalt
 }
 
 /// A trait to describe order capability.

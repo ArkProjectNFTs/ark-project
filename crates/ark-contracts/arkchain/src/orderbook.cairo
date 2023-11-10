@@ -27,6 +27,8 @@ trait Orderbook<T> {
     fn execute_order(
         ref self: T, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo
     );
+
+    fn get_order(self: @T, order_hash: felt252) -> OrderV1;
 }
 
 // *************************************************************************
@@ -61,14 +63,17 @@ mod orderbook {
         // Whitelist of brokers. For now felt252 is used instead of bool
         // to ensure future evolution. Set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
-        // (chain_id, token_address, token_id) -> order_hash
+        // (chain_id, token_address, token_id): felt252 -> order_hash
         token_listings: LegacyMap<felt252, felt252>,
-        // (chain_id, token_address, token_id) -> order_hash
+        // (<chain_id, token_address, token_id>: felt252, offererAddress: ContractAddress)  -> order_hash
         token_offers: LegacyMap<(felt252, ContractAddress), felt252>,
         // (chain_id, token_address, token_id) -> (order_hash, nonce)
         auction: LegacyMap<felt252, (felt252, felt252)>,
-    // Order database [token_hash, order_data]
-    // see arkchain::order::database
+        // storage for auction offers to match Auction order
+        // (order_hash) -> (nonce)
+        auction_offers_nonces: LegacyMap<felt252, felt252>,
+        // Order database [token_hash, order_data]
+        // see arkchain::order::database
     }
 
     // *************************************************************************
@@ -143,6 +148,14 @@ mod orderbook {
     // *************************************************************************
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
+        fn get_order(self: @ContractState, order_hash: felt252) -> OrderV1 {
+            let order = order_read(order_hash);
+            if (order.is_none()) {
+                panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+            }
+            order.unwrap()
+        }
+
         fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
             // TODO: check components with OZ when ready for ownable.
             assert(
@@ -188,7 +201,9 @@ mod orderbook {
             order_hash: felt252,
             execution_info: ExecutionInfo,
             sign_info: SignInfo
-        ) {}
+        ) {
+            // if auction increment nonce
+        }
     }
 
     // *************************************************************************
@@ -216,7 +231,7 @@ mod orderbook {
                 }
             }
             // Associate order_hash to token_hash on the storage
-            order_write(order_hash, order);
+            order_write(order_hash, order_type, order);
             // Write new order with status open
             self.token_listings.write(token_hash, order_hash);
             self
