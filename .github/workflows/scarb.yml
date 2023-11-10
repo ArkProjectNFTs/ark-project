@@ -1,4 +1,4 @@
-name: CI
+name: scarb
 
 on:
   push:
@@ -17,6 +17,8 @@ jobs:
         with:
           scarb-version: "2.4.0-rc1"
       - name: Install snforge
-        run: curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+        run: |
+          curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+          echo "/home/runner/.local/bin" >> $GITHUB_PATH
       - run: cd crates/ark-contracts/arkchain && scarb fmt --check
       - run: cd crates/ark-contracts/arkchain && snforge test
