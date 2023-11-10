@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'crates/ark-contracts/arkchain/**'
+  pull_request:
+    paths:
+      - 'crates/ark-contracts/arkchain/**'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.4.0-rc1"
+      - run: cd crates/ark-contracts/arkchain && scarb fmt --check
+      - run: cd crates/ark-contracts/arkchain && scarb test
