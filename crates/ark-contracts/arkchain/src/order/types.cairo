@@ -2,7 +2,7 @@
 use starknet::ContractAddress;
 
 /// Order types.
-#[derive(Serde, Drop, PartialEq)]
+#[derive(Serde, Drop, PartialEq, Copy)]
 enum OrderType {
     Listing,
     Auction,
@@ -23,6 +23,8 @@ enum OrderValidationError {
 
 /// A trait to describe order capability.
 trait OrderTrait<T, +Serde<T>, +Drop<T>> {
+    /// get order version.
+    fn get_version(self: @T) -> felt252;
     /// Returns ok if the order common data are valid, `OrderValidationError` otherwise.
     fn validate_common_data(self: @T) -> Result<(), OrderValidationError>;
 
@@ -40,8 +42,8 @@ trait OrderTrait<T, +Serde<T>, +Drop<T>> {
 #[derive(Serde, Drop, PartialEq)]
 enum OrderStatus {
     Open,
-    Executing,
     Fulfilled,
+    Executed,
     CancelledUser,
     CancelledAssetFault,
 }
@@ -50,8 +52,8 @@ impl OrderStatusIntoFelt252 of Into<OrderStatus, felt252> {
     fn into(self: OrderStatus) -> felt252 {
         match self {
             OrderStatus::Open => 'OPEN',
-            OrderStatus::Executing => 'EXECUTING',
             OrderStatus::Fulfilled => 'FULFILLED',
+            OrderStatus::Executed => 'EXECUTED',
             OrderStatus::CancelledUser => 'CANCELLED_USER',
             OrderStatus::CancelledAssetFault => 'CANCELLED_ASSET_FAULT',
         }
@@ -63,7 +65,7 @@ impl Felt252TryIntoOrderStatus of TryInto<felt252, OrderStatus> {
         if self == 'OPEN' {
             Option::Some(OrderStatus::Open)
         } else if self == 'EXECUTING' {
-            Option::Some(OrderStatus::Executing)
+            Option::Some(OrderStatus::Executed)
         } else if self == 'FULFILLED' {
             Option::Some(OrderStatus::Fulfilled)
         } else if self == 'CANCELLED_USER' {

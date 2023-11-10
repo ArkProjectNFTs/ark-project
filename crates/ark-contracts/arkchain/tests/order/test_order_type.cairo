@@ -11,35 +11,46 @@ fn test_validate_order_listing() {
     let (order_listing, _, _, _) = setup();
     let validated_order = order_listing.validate_order_type();
     // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::Listing, 'Correct');
+    assert(validated_order.is_ok(), 'Fail to validate order type');
+    assert(
+        validated_order.unwrap() == OrderType::Listing,
+        'Fail for type listing'
+    );
 }
 
 #[test]
 fn test_validate_order_offer() {
-    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+    let (_, order_offer, _, _) = setup();
     let validated_order = order_offer.validate_order_type();
     // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::Offer, 'Correct');
+    assert(validated_order.is_ok(), 'Fail to validate order type');
+    assert(
+        validated_order.unwrap() == OrderType::Offer, 'Fail for type offer'
+    );
 }
 
 #[test]
 fn test_validate_order_auction() {
-    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+    let (_, _, order_auction, _) = setup();
     let validated_order = order_auction.validate_order_type();
     // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::Auction, 'Correct');
+    assert(validated_order.is_ok(), 'Fail to validate order type');
+    assert(
+        validated_order.unwrap() == OrderType::Auction,
+        'Fail for type auction'
+    );
 }
 
 #[test]
 fn test_validate_order_collection_offer() {
-    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+    let (_, _, _, order_collection_offer) = setup();
     let validated_order = order_collection_offer.validate_order_type();
     // test for order type detection validity
-    assert(validated_order.is_ok(), 'Correct');
-    assert(validated_order.unwrap() == OrderType::CollectionOffer, 'Correct');
+    assert(validated_order.is_ok(), 'Fail to validate order type');
+    assert(
+        validated_order.unwrap() == OrderType::CollectionOffer,
+        'Fail for type collection offer'
+    );
 }
 
 fn setup() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {

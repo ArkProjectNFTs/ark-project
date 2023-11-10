@@ -5,11 +5,12 @@ use starknet::ContractAddress;
 use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType, RouteType};
 use arkchain::crypto::hash::starknet_keccak;
 
+const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).
 // Auction -> ERC721_ERC20.
 // Auction can't be cancelled if at least 1 valid offer.
 
-#[derive(Serde, Copy, Drop)]
+#[derive(Serde, Drop)]
 struct OrderV1 {
     // Route ERC20->ERC721 (buy) ERC721->ERC20 (sell)
     route: RouteType,
@@ -44,6 +45,10 @@ struct OrderV1 {
 }
 
 impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
+    fn get_version(self: @OrderV1) -> felt252 {
+        ORDER_VERSION_V1
+    }
+
     fn validate_common_data(self: @OrderV1) -> Result<(), OrderValidationError> {
         let block_ts = starknet::get_block_timestamp();
 
@@ -111,11 +116,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             && (*self.end_amount).is_zero()
             && (*self.route) == RouteType::Erc20ToErc721 {
             return Result::Ok(OrderType::CollectionOffer);
-        }
-        // Other order types are not supported.
-        else {
-            return Result::Err(OrderValidationError::InvalidContent);
-        }
+        } // Other order types are not supported.
         Result::Err(OrderValidationError::InvalidContent)
     }
 

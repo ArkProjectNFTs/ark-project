@@ -7,7 +7,7 @@ use arkchain::crypto::signer::SignInfo;
 #[starknet::interface]
 trait Orderbook<T> {
     /// Whitelists a broker.
-    /// TODO: good first exercise to use a components for broker managment.
+    /// TODO: good first exercise to use a components for broker management.
     ///
     /// # Arguments
     ///
@@ -20,7 +20,7 @@ trait Orderbook<T> {
     ///
     /// * `order` - The order to be placed.
     /// * `sign_info` - The signing info of the `order`.
-    fn place_order(ref self: T, order: OrderV1, sign_info: SignInfo);
+    fn create_order(ref self: T, order: OrderV1, sign_info: SignInfo);
 
     fn cancel_order(ref self: T, order_hash: felt252, sign_info: SignInfo);
 
@@ -29,20 +29,22 @@ trait Orderbook<T> {
     );
 }
 
+// *************************************************************************
+// ERRORS
+// *************************************************************************
 mod orderbook_errors {
     const BROKER_UNREGISTERED: felt252 = 'OB: unregistered broker';
     const ORDER_INVALID_DATA: felt252 = 'OB: order invalid data';
-
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
 }
 
 #[starknet::contract]
 mod orderbook {
+    use core::starknet::event::EventEmitter;
+    use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
-
     use starknet::ContractAddress;
-
     use arkchain::order::types::{OrderTrait, OrderType, ExecutionInfo, FulfillmentInfo};
     use arkchain::order::order_v1::OrderV1;
     use arkchain::order::database::{order_read, order_status_read};
@@ -60,8 +62,12 @@ mod orderbook {
         // (chain_id, token_address, token_id) -> (order_hash, nonce)
         auction: LegacyMap<(felt252, ContractAddress, u256), (felt252, felt252)>,
     // Order database [order status, order data]
+    // see arkchain::order::database
     }
 
+    // *************************************************************************
+    // EVENTS
+    // *************************************************************************
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
@@ -106,27 +112,29 @@ mod orderbook {
         transaction_hash_settlement: felt252,
     }
 
+    // *************************************************************************
+    // CONSTRUCTOR
+    // *************************************************************************
     #[constructor]
     fn constructor(ref self: ContractState, admin: ContractAddress) {
         self.admin.write(admin);
     }
 
+    // *************************************************************************
+    // L1 HANDLERS
     // Only the sequencer can call this function with L1HandlerTransaction.
+    // *************************************************************************
     #[l1_handler]
     fn fulfill_order(
         ref self: ContractState, from_address: felt252, info: FulfillmentInfo
-    ) { // Verify it comes from Arkchain operator contract.
-    // Check data + cancel / fulfill the order.
+    ) { 
+        // Verify it comes from Arkchain operator contract.
+        // Check data + cancel / fulfill the order.
     }
 
-    #[generate_trait]
-    impl InternalFunctions of InternalFunctionsTrait {
-        fn check_listing_order() {}
-        fn check_listing_auction() {}
-        fn check_listing_offer() {}
-        fn check_listing_collection_offer() {}
-    }
-
+    // *************************************************************************
+    // EXTERNAL FUNCTIONS
+    // *************************************************************************
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
         fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
@@ -139,24 +147,28 @@ mod orderbook {
             self.brokers.write(broker_id, 1);
         }
 
-        fn place_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
+        fn create_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
             order.validate_common_data().expect(orderbook_errors::ORDER_INVALID_DATA);
 
             let order_type = order
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
-            // TODO:
-            // 1. based on order type -> validate the storage (match order_type -> call a
-            // function to validate each cases).
-            // (if the order can be placed, if it triggers the cancel of other order, etc..)
-            // 4. register the order in the storage (can be multiple storage item to update).
-            // 5. Emit an event.
+  
             let order_hash = order.compute_data_hash();
+
             match order_type {
-                OrderType::Listing => {},
-                OrderType::Auction => {},
-                OrderType::Offer => {},
-                OrderType::CollectionOffer => {},
+                OrderType::Listing => {
+                    self._create_listing_order(order, order_type, order_hash);
+                },
+                OrderType::Auction => {
+                    self._create_listing_auction(order, order_type, order_hash);
+                },
+                OrderType::Offer => {
+                    self._create_listing_offer(order, order_type, order_hash);
+                },
+                OrderType::CollectionOffer => {
+                    self._create_listing_collection_offer(order, order_type, order_hash);
+                },
             }
         }
 
@@ -172,6 +184,67 @@ mod orderbook {
             order_hash: felt252,
             execution_info: ExecutionInfo,
             sign_info: SignInfo
-        ) {}
+        ) {
+            
+        }
+    }
+
+    // *************************************************************************
+    // INTERNAL FUNCTIONS
+    // *************************************************************************
+    #[generate_trait]
+    impl InternalFunctions of InternalFunctionsTrait {
+        fn _create_listing_order(
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+        ) {
+            self
+                .emit(
+                    OrderPlaced {
+                        order_hash: order_hash,
+                        order_version: order.get_version(),
+                        order_type: order_type,
+                        order: order,
+                    }
+                );
+        }
+        fn _create_listing_auction(
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+        ) {
+            self
+                .emit(
+                    OrderPlaced {
+                        order_hash: order_hash,
+                        order_version: order.get_version(),
+                        order_type: order_type,
+                        order: order,
+                    }
+                );
+        }
+        fn _create_listing_offer(
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+        ) {
+            self
+                .emit(
+                    OrderPlaced {
+                        order_hash: order_hash,
+                        order_version: order.get_version(),
+                        order_type: order_type,
+                        order: order,
+                    }
+                );
+        }
+        fn _create_listing_collection_offer(
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+        ) {
+            self
+                .emit(
+                    OrderPlaced {
+                        order_hash: order_hash,
+                        order_version: order.get_version(),
+                        order_type: order_type,
+                        order: order,
+                    }
+                );
+        }
     }
 }
