@@ -4,48 +4,14 @@ use core::traits::Into;
 use core::traits::TryInto;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::OrderTraitOrderV1;
-use arkchain::order::types::RouteType;
 use arkchain::order::types::OrderType;
 use snforge_std::PrintTrait;
 
 #[test]
 fn test_validate_common_data_with_valid_order() {
     let (order_listing, _, _, _) = setup();
-
     let block_timestmap: u64 = 1699556828;
     let result = order_listing.validate_common_data(block_timestmap);
-
-    // match result {
-    //     Result::Ok(_) => { 'ok:'.print(); },
-    //     Result::Err(error) => {
-    //         // TODO
-
-    //         if error == arkchain::order::types::OrderValidationError::StartDateAfterEndDate {
-    //             'StartDateAfterEndDate'.print();
-    //         }
-
-    //         if error == arkchain::order::types::OrderValidationError::StartDateInThePast {
-    //             'StartDateInThePast'.print();
-    //         }
-
-    //         if error == arkchain::order::types::OrderValidationError::AdditionalDataTooLong {
-    //             'AdditionalDataTooLong'.print();
-    //         }
-
-    //         if error == arkchain::order::types::OrderValidationError::EndDateInThePast {
-    //             'EndDateInThePast'.print();
-    //         }
-
-    //         if error == arkchain::order::types::OrderValidationError::EndDateTooFar {
-    //             'EndDateTooFar'.print();
-    //         }
-
-    //         if error == arkchain::order::types::OrderValidationError::InvalidContent {
-    //             'InvalidContent'.print();
-    //         }
-    //     }
-    // };
-
     assert(result.is_ok(), 'Invalid result');
 }
 
@@ -162,7 +128,7 @@ fn setup() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
     let data_span = data.span();
 
     let order_listing = OrderV1 {
-        route: RouteType::Erc721ToErc20.into(),
+        route: 0,
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
@@ -185,7 +151,7 @@ fn setup() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         additional_data: data_span,
     };
     let order_offer = OrderV1 {
-        route: RouteType::Erc20ToErc721.into(),
+        route: 0,
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
@@ -208,7 +174,7 @@ fn setup() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         additional_data: data_span,
     };
     let order_auction = OrderV1 {
-        route: RouteType::Erc721ToErc20.into(),
+        route: 0,
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
@@ -232,7 +198,7 @@ fn setup() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
     };
 
     let order_collection_offer = OrderV1 {
-        route: RouteType::Erc20ToErc721.into(),
+        route: 0,
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
