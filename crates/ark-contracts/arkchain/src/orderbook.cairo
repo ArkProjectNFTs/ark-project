@@ -467,6 +467,12 @@ mod orderbook {
         fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
+            // Questions: 
+            // - What happens if I try to create an offer with a price above the listing price?
+            // - Should we handle error here? 
+            // - Should we check if the order entry already exists in db?
+            order_write(order_hash, order_type, order);
+
             self
                 .emit(
                     OrderPlaced {
