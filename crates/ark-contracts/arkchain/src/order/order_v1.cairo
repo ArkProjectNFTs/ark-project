@@ -2,17 +2,18 @@
 //!
 use starknet::ContractAddress;
 
-use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType};
+use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType, RouteType};
 use arkchain::crypto::hash::starknet_keccak;
 
+const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).
 // Auction -> ERC721_ERC20.
 // Auction can't be cancelled if at least 1 valid offer.
 
-#[derive(Serde, Copy, Drop)]
+#[derive(Serde, Drop)]
 struct OrderV1 {
     // Route ERC20->ERC721 (buy) ERC721->ERC20 (sell)
-    route: felt252,
+    route: RouteType,
     // Contract address of the currency used on Starknet for the transfer.
     // For now ERC20 -> ETH Starkgate.
     currency_address: ContractAddress,
@@ -43,8 +44,11 @@ struct OrderV1 {
     additional_data: Span<felt252>,
 }
 
-
 impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
+    fn get_version(self: @OrderV1) -> felt252 {
+        ORDER_VERSION_V1
+    }
+
     fn validate_common_data(self: @OrderV1) -> Result<(), OrderValidationError> {
         let block_ts = starknet::get_block_timestamp();
 
@@ -85,12 +89,34 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
     }
 
     fn validate_order_type(self: @OrderV1) -> Result<OrderType, OrderValidationError> {
-        // TODO:
-        // 1. Define type of the order (if any, if not -> return error).
-        // 2. Based on the type, validate it's content (not from storage, only
-        //    data validation from order content).
-        // 3. Return the order type.
-
+        // Listing order.
+        if (*self.token_id) > 0
+            && (*self.start_amount) > 0
+            && (*self.end_amount).is_zero()
+            && (*self.route) == RouteType::Erc721ToErc20 {
+            return Result::Ok(OrderType::Listing);
+        }
+        // Offer order.
+        if (*self.token_id) > 0
+            && (*self.start_amount) > 0
+            && (*self.end_amount).is_zero()
+            && (*self.route) == RouteType::Erc20ToErc721 {
+            return Result::Ok(OrderType::Offer);
+        }
+        // Auction order.
+        if (*self.token_id) > 0
+            && (*self.start_amount) > 0
+            && (*self.start_amount) >= (*self.end_amount)
+            && (*self.route) == RouteType::Erc721ToErc20 {
+            return Result::Ok(OrderType::Auction);
+        }
+        // Collection Offer order.
+        if (*self.token_id).is_zero()
+            && (*self.start_amount) > 0
+            && (*self.end_amount).is_zero()
+            && (*self.route) == RouteType::Erc20ToErc721 {
+            return Result::Ok(OrderType::CollectionOffer);
+        } // Other order types are not supported.
         Result::Err(OrderValidationError::InvalidContent)
     }
 
