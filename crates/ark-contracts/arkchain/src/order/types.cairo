@@ -15,6 +15,8 @@ enum OrderType {
 /// to have details on what's wrong with the order.
 #[derive(Serde, Drop, PartialEq)]
 enum OrderValidationError {
+    StartDateAfterEndDate,
+    StartDateInThePast,
     EndDateInThePast,
     EndDateTooFar,
     AdditionalDataTooLong,
@@ -26,7 +28,7 @@ trait OrderTrait<T, +Serde<T>, +Drop<T>> {
     /// get order version.
     fn get_version(self: @T) -> felt252;
     /// Returns ok if the order common data are valid, `OrderValidationError` otherwise.
-    fn validate_common_data(self: @T) -> Result<(), OrderValidationError>;
+    fn validate_common_data(self: @T, block_timestamp: u64) -> Result<(), OrderValidationError>;
 
     /// Validates and returns the order type on success, `OrderValidationError` otherwise.
     fn validate_order_type(self: @T) -> Result<OrderType, OrderValidationError>;
