@@ -53,5 +53,3 @@ fn test_create_offer() {
     assert(order.token_address == offer_order.token_address, 'token address does not match');
 
 }
-
-fn setup() {}
