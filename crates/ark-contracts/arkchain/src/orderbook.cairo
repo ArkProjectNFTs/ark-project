@@ -61,7 +61,7 @@ mod orderbook {
         orders: LegacyMap<(felt252, ContractAddress, u256), felt252>,
         // (chain_id, token_address, token_id) -> (order_hash, nonce)
         auction: LegacyMap<(felt252, ContractAddress, u256), (felt252, felt252)>,
-    // Order database [order status, order data]
+    // Order database [ressource_hash, order_data]
     // see arkchain::order::database
     }
 
@@ -154,8 +154,8 @@ mod orderbook {
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
 
-            let order_hash = order.compute_data_hash();
-
+            let order_hash = order.compute_order_hash();
+            let ressource_hash = order.compute_ressource_hash();
             match order_type {
                 OrderType::Listing => {
                     self._create_listing_order(order, order_type, order_hash);

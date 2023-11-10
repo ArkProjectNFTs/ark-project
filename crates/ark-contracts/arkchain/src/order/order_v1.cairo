@@ -1,7 +1,11 @@
+use core::array::ArrayTrait;
+use core::traits::Into;
+use core::traits::TryInto;
+use core::option::OptionTrait;
 //! Order v1 supported by the Orderbook.
 //!
 use starknet::ContractAddress;
-
+use starknet::contract_address_to_felt252;
 use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType, RouteType};
 use arkchain::crypto::hash::starknet_keccak;
 
@@ -130,7 +134,21 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         Result::Err(OrderValidationError::InvalidContent)
     }
 
-    fn compute_data_hash(self: @OrderV1) -> felt252 {
+    fn compute_ressource_hash(self: @OrderV1) -> felt252 {
+        let mut buf = array![];
+        let (high, low) = keccak::u128_split(*self.token_id.low);
+        buf.append(high.into());
+        buf.append(low.into());
+        let (high, low) = keccak::u128_split(*self.token_id.high);
+        buf.append(high.into());
+        buf.append(low.into());
+        let felt_token_address = contract_address_to_felt252(*self.token_address);
+        buf.append(felt_token_address);
+        buf.append(*self.token_chain_id);
+        starknet_keccak(buf.span())
+    }
+
+    fn compute_order_hash(self: @OrderV1) -> felt252 {
         let mut buf = array![];
         self.serialize(ref buf);
         starknet_keccak(buf.span())
