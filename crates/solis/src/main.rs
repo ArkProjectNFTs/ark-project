@@ -1,13 +1,14 @@
-use std::fs;
-use std::process::exit;
+
+
 use std::sync::Arc;
 
+use anyhow::Result;
 use clap::Parser;
 use console::Style;
-use katana_core::sequencer::{KatanaSequencer, Sequencer};
-use katana_rpc::{spawn, KatanaApi, NodeHandle, StarknetApi};
+use katana_core::sequencer::KatanaSequencer;
+use katana_rpc::{spawn, NodeHandle};
 use tokio::signal::ctrl_c;
-use tracing::{error, info};
+
 use tracing_subscriber::fmt;
 
 mod args;
@@ -15,7 +16,7 @@ mod args;
 use args::KatanaArgs;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     tracing::subscriber::set_global_default(
         fmt::Subscriber::builder()
             .with_env_filter(
@@ -33,39 +34,24 @@ async fn main() {
     let starknet_config = config.starknet_config();
 
     let sequencer = Arc::new(KatanaSequencer::new(sequencer_config, starknet_config).await);
-    let starknet_api = StarknetApi::new(sequencer.clone());
-    let katana_api = KatanaApi::new(sequencer.clone());
+    let NodeHandle { addr, handle, .. } = spawn(Arc::clone(&sequencer), server_config).await?;
+    
+    let accounts = sequencer.backend.accounts.iter().map(|a| format!("{a}")).collect::<Vec<_>>().join("\n");
 
-    match spawn(katana_api, starknet_api, server_config).await {
-        Ok(NodeHandle { addr, handle, .. }) => {
-            if !config.silent {
-                let accounts = sequencer
-                    .backend
-                    .accounts
-                    .iter()
-                    .map(|a| format!("{a}"))
-                    .collect::<Vec<_>>()
-                    .join("\n");
+    print_intro(
+        accounts,
+        format!(
+            "🚀 JSON-RPC server started: {}",
+            Style::new().red().apply_to(format!("http://{addr}"))
+        ),
+    );
 
-                print_intro(
-                    accounts,
-                    format!(
-                        "🚀 JSON-RPC server started: {}",
-                        Style::new().blue().apply_to(format!("http://{addr}"))
-                    ),
-                );
-            }
+    // Wait until Ctrl + C is pressed, then shutdown
+    ctrl_c().await?;
+    shutdown_handler(sequencer, config).await;
+    handle.stop()?;
 
-            // Wait until Ctrl + C is pressed, then shutdown
-            ctrl_c().await.unwrap();
-            shutdown_handler(sequencer.clone(), config).await;
-            handle.stop().unwrap();
-        }
-        Err(err) => {
-            error! {"{err}"};
-            exit(1);
-        }
-    };
+    Ok(())
 }
 
 fn print_intro(accounts: String, address: String) {
@@ -92,21 +78,7 @@ PREFUNDED ACCOUNTS
     println!("\n{address}\n\n");
 }
 
-pub async fn shutdown_handler(sequencer: Arc<impl Sequencer>, config: KatanaArgs) {
-    if let Some(path) = config.dump_state {
-        info!("Dumping state on shutdown");
-        let state = (*sequencer).backend().dump_state().await;
-        if let Ok(state) = state {
-            match fs::write(path.clone(), state) {
-                Ok(_) => {
-                    info!("Successfully dumped state")
-                }
-                Err(_) => {
-                    error!("Failed to write state dump to {:?}", path)
-                }
-            };
-        } else {
-            error!("Failed to fetch state dump.")
-        }
-    };
+pub async fn shutdown_handler(_sequencer: Arc<KatanaSequencer>, _config: KatanaArgs) {
+    // Do stuff before exit.
 }
+
