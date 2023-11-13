@@ -57,8 +57,6 @@ fn test_create_offer() {
 #[test]
 fn test_create_collection_offer() {
     let contract_address = test_address();
-
-    contract_address.print();
     let mut spy = spy_events(SpyOn::One(contract_address));
 
     let mut offer_order = get_offer_order();
