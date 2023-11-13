@@ -476,6 +476,14 @@ mod orderbook {
         ) {
             order_write(order_hash, order_type, order);
 
+            // let ressource_hash = order.compute_ressource_hash();
+
+            // TODO: if ressource_hash has already an order
+            // get order hash from resource hash
+            // if some() and if order is auction type
+            // get auction nonce from auction storage
+            // add offer order hash to auction_offers_nonce storage
+
             self
                 .emit(
                     OrderPlaced {
