@@ -46,7 +46,6 @@ struct OrderV1 {
     broker_id: felt252,
     // Additional data, limited to ??? felts.
     additional_data: Span<felt252>,
-    order_type: Option<OrderType>,
 }
 
 impl OrderTraitOrderV1 of OrderTrait<OrderV1> {

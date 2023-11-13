@@ -28,8 +28,15 @@ trait Orderbook<T> {
         ref self: T, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo
     );
 
+    // Views
+    // Get order type from order_hash
+    fn get_order_type(self: @T, order_hash: felt252) -> felt252;
+    // Get order status from order_hash
     fn get_order_status(self: @T, order_hash: felt252) -> felt252;
+    // Get order from order_hash
     fn get_order(self: @T, order_hash: felt252) -> OrderV1;
+    // get order hash from token_hash, obviously only work for a listing
+    fn get_order_hash(self: @T, token_hash: felt252) -> felt252;
 }
 
 // *************************************************************************
@@ -56,7 +63,9 @@ mod orderbook {
     use starknet::ContractAddress;
     use arkchain::order::types::{OrderTrait, OrderType, ExecutionInfo, FulfillmentInfo};
     use arkchain::order::order_v1::OrderV1;
-    use arkchain::order::database::{order_read, order_status_read, order_write, order_status_write};
+    use arkchain::order::database::{
+        order_read, order_status_read, order_write, order_status_write, order_type_read
+    };
     use arkchain::crypto::signer::SignInfo;
     use arkchain::order::types::OrderStatus;
 
@@ -67,19 +76,15 @@ mod orderbook {
         // Whitelist of brokers. For now felt252 is used instead of bool
         // to ensure future evolution. Set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
-
-        // (chain_id, token_address, token_id): felt252 -> order_hash
+        // token_hash(chain_id, token_address, token_id): felt252 -> order_hash
         token_listings: LegacyMap<felt252, felt252>,
-
-        // (chain_id, token_address, token_id): ressource_hash -> (order_hash, end_date)
+        // token_hash(chain_id, token_address, token_id): felt252 -> (order_hash, end_date)
         auctions: LegacyMap<felt252, (felt252, felt252)>,
-
         // storage for auction offers to match Auction order
         // (auction offer order_hash) -> auction listing order_hash
-        auction_offers: LegacyMap<felt252, felt252>,    
-
-        // Order database [token_hash, order_data]
-        // see arkchain::order::database
+        auction_offers: LegacyMap<felt252, felt252>,
+    // Order database [token_hash, order_data]
+    // see arkchain::order::database
     }
 
     // *************************************************************************
@@ -143,9 +148,7 @@ mod orderbook {
     // Only the sequencer can call this function with L1HandlerTransaction.
     // *************************************************************************
     #[l1_handler]
-    fn fulfill_order(
-        ref self: ContractState, from_address: felt252, info: FulfillmentInfo
-    ) { // Verify it comes from Arkchain operator contract.
+    fn fulfill_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {// Verify it comes from Arkchain operator contract.
     // Check data + cancel / fulfill the order.
     }
 
@@ -154,13 +157,16 @@ mod orderbook {
     // *************************************************************************
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
-        // TODO: add a function to get the order status
+        fn get_order_type(self: @ContractState, order_hash: felt252) -> felt252 {
+            order_type_read(order_hash).unwrap().into()
+        }
+
         fn get_order_status(self: @ContractState, order_hash: felt252) -> felt252 {
-            let status order_status_read(order_hash) {
+            let status = order_status_read(order_hash);
             if status.is_none() {
                 panic_with_felt252(orderbook_errors::STATUS_NOT_FOUND);
             }
-            status
+            status.unwrap().into()
         }
 
         fn get_order(self: @ContractState, order_hash: felt252) -> OrderV1 {
@@ -169,6 +175,14 @@ mod orderbook {
                 panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
             }
             order.unwrap()
+        }
+
+        fn get_order_hash(self: @ContractState, token_hash: felt252) -> felt252 {
+            let order_hash = self.token_listings.read(token_hash);
+            if (order_hash.is_zero()) {
+                panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+            }
+            order_hash
         }
 
         fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
