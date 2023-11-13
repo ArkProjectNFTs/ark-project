@@ -148,7 +148,9 @@ mod orderbook {
     // Only the sequencer can call this function with L1HandlerTransaction.
     // *************************************************************************
     #[l1_handler]
-    fn fulfill_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {// Verify it comes from Arkchain operator contract.
+    fn fulfill_order(
+        ref self: ContractState, from_address: felt252, info: FulfillmentInfo
+    ) { // Verify it comes from Arkchain operator contract.
     // Check data + cancel / fulfill the order.
     }
 
