@@ -82,7 +82,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
 
         // End date -> block_ts + 30 days.
         let max_end_date = *self.start_date + (30 * 24 * 60 * 60);
-        if end_date <= max_end_date {
+        if end_date >= max_end_date {
             return Result::Err(OrderValidationError::EndDateTooFar);
         }
 
