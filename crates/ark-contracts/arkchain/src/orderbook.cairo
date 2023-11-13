@@ -28,6 +28,7 @@ trait Orderbook<T> {
         ref self: T, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo
     );
 
+    fn get_order_status(self: @T, order_hash: felt252) -> felt252;
     fn get_order(self: @T, order_hash: felt252) -> OrderV1;
 }
 
@@ -46,7 +47,7 @@ mod orderbook_errors {
 #[starknet::contract]
 mod orderbook {
     use core::traits::TryInto;
-use core::result::ResultTrait;
+    use core::result::ResultTrait;
     use core::zeroable::Zeroable;
     use core::option::OptionTrait;
     use core::starknet::event::EventEmitter;
@@ -66,17 +67,19 @@ use core::result::ResultTrait;
         // Whitelist of brokers. For now felt252 is used instead of bool
         // to ensure future evolution. Set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
+
         // (chain_id, token_address, token_id): felt252 -> order_hash
         token_listings: LegacyMap<felt252, felt252>,
-        // (<chain_id, token_address, token_id>: felt252, offererAddress: ContractAddress)  -> order_hash
-        token_offers: LegacyMap<(felt252, ContractAddress), felt252>,
-        // (chain_id, token_address, token_id) -> (order_hash, nonce)
-        auction: LegacyMap<felt252, (felt252, felt252)>,
+
+        // (chain_id, token_address, token_id): ressource_hash -> (order_hash, end_date)
+        auctions: LegacyMap<felt252, (felt252, felt252)>,
+
         // storage for auction offers to match Auction order
-        // (order_hash) -> (nonce)
-        auction_offers_nonces: LegacyMap<felt252, felt252>,
-    // Order database [token_hash, order_data]
-    // see arkchain::order::database
+        // (auction offer order_hash) -> auction listing order_hash
+        auction_offers: LegacyMap<felt252, felt252>,    
+
+        // Order database [token_hash, order_data]
+        // see arkchain::order::database
     }
 
     // *************************************************************************
@@ -151,6 +154,15 @@ use core::result::ResultTrait;
     // *************************************************************************
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
+        // TODO: add a function to get the order status
+        fn get_order_status(self: @ContractState, order_hash: felt252) -> felt252 {
+            let status order_status_read(order_hash) {
+            if status.is_none() {
+                panic_with_felt252(orderbook_errors::STATUS_NOT_FOUND);
+            }
+            status
+        }
+
         fn get_order(self: @ContractState, order_hash: felt252) -> OrderV1 {
             let order = order_read(order_hash);
             if (order.is_none()) {

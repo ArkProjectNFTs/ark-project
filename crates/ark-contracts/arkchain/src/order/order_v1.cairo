@@ -46,6 +46,7 @@ struct OrderV1 {
     broker_id: felt252,
     // Additional data, limited to ??? felts.
     additional_data: Span<felt252>,
+    order_type: Option<OrderType>,
 }
 
 impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
@@ -83,7 +84,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             return Result::Err(OrderValidationError::EndDateInThePast);
         }
 
-        if end_date <= max_end_date {
+        if end_date > max_end_date {
             return Result::Err(OrderValidationError::EndDateTooFar);
         }
 
