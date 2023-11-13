@@ -39,11 +39,14 @@ mod orderbook_errors {
     const ORDER_INVALID_DATA: felt252 = 'OB: order invalid data';
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
-    const ORDER_EXECUTING: felt252 = 'OB: order executing';
+    const ORDER_FULFILLED: felt252 = 'OB: order fullfiled';
+    const STATUS_NOT_FOUND: felt252 = 'OB: status not found';
 }
 
 #[starknet::contract]
 mod orderbook {
+    use core::traits::TryInto;
+use core::result::ResultTrait;
     use core::zeroable::Zeroable;
     use core::option::OptionTrait;
     use core::starknet::event::EventEmitter;
@@ -72,8 +75,8 @@ mod orderbook {
         // storage for auction offers to match Auction order
         // (order_hash) -> (nonce)
         auction_offers_nonces: LegacyMap<felt252, felt252>,
-        // Order database [token_hash, order_data]
-        // see arkchain::order::database
+    // Order database [token_hash, order_data]
+    // see arkchain::order::database
     }
 
     // *************************************************************************
@@ -168,7 +171,10 @@ mod orderbook {
 
         fn create_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
             let block_ts = starknet::get_block_timestamp();
-            order.validate_common_data(block_ts).expect(orderbook_errors::ORDER_INVALID_DATA);
+            let validation = order.validate_common_data(block_ts);
+            if validation.is_err() {
+                panic_with_felt252(validation.unwrap_err().into());
+            }
 
             let order_type = order
                 .validate_order_type()
@@ -179,12 +185,10 @@ mod orderbook {
                 OrderType::Listing => {
                     self._create_listing_order(order, order_type, order_hash);
                 },
-                OrderType::Auction => {
-                    self._create_listing_auction(order, order_type, order_hash);
-                },
-                OrderType::Offer => { self._create_listing_offer(order, order_type, order_hash); },
+                OrderType::Auction => { self._create_auction(order, order_type, order_hash); },
+                OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
                 OrderType::CollectionOffer => {
-                    self._create_listing_collection_offer(order, order_type, order_hash);
+                    self._create_collection_offer(order, order_type, order_hash);
                 },
             }
         }
@@ -201,8 +205,7 @@ mod orderbook {
             order_hash: felt252,
             execution_info: ExecutionInfo,
             sign_info: SignInfo
-        ) {
-            // if auction increment nonce
+        ) { // if auction increment nonce
         }
     }
 
@@ -215,23 +218,31 @@ mod orderbook {
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             let token_hash = order.compute_token_hash();
-            let current_listing_order = self.token_listings.read(token_hash);
-            let current_order_status = order_status_read(current_listing_order);
-            if current_listing_order.is_non_zero() {
+            let current_listing_orderhash = self.token_listings.read(token_hash);
+            let current_order_status = order_status_read(current_listing_orderhash);
+            // if there is an order already, we need to cancel it
+            if current_listing_orderhash.is_non_zero() {
+                // if current order has a status, we need to cancel it
                 if current_order_status.is_some() {
                     let current_order_status = current_order_status.unwrap();
+                    // if order is already fulfilled, we cannot cancel it
                     if (current_order_status == OrderStatus::Fulfilled) {
-                        panic_with_felt252(orderbook_errors::ORDER_EXECUTING);
+                        panic_with_felt252(orderbook_errors::ORDER_FULFILLED);
                     } else {
                         // change old order status to cancelled
-                        order_status_write(current_listing_order, OrderStatus::CancelledByNewOrder);
+                        order_status_write(
+                            current_listing_orderhash, OrderStatus::CancelledByNewOrder
+                        );
                     }
                 } else {
-                    panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+                    // if order status is not found, panic
+                    panic_with_felt252(orderbook_errors::STATUS_NOT_FOUND);
                 }
             }
             // Associate order_hash to token_hash on the storage
             order_write(order_hash, order_type, order);
+            // Change order status to fulfilled
+            order_status_write(current_listing_orderhash, OrderStatus::Fulfilled);
             // Write new order with status open
             self.token_listings.write(token_hash, order_hash);
             self
@@ -240,12 +251,12 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        cancelled_order_hash: current_listing_order,
+                        cancelled_order_hash: current_listing_orderhash,
                         order: order
                     }
                 );
         }
-        fn _create_listing_auction(
+        fn _create_auction(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             self
@@ -259,7 +270,7 @@ mod orderbook {
                     }
                 );
         }
-        fn _create_listing_offer(
+        fn _create_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             self
@@ -273,7 +284,7 @@ mod orderbook {
                     }
                 );
         }
-        fn _create_listing_collection_offer(
+        fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             self
