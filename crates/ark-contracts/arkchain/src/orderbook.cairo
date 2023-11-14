@@ -253,6 +253,8 @@ mod orderbook {
 
         /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
+            self._validate_order_signature(0, sign_info);
+
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
             if validation.is_err() {
@@ -277,6 +279,8 @@ mod orderbook {
         }
 
         fn cancel_order(ref self: ContractState, order_hash: felt252, sign_info: SignInfo) {
+            self._validate_order_signature(0, sign_info);
+
             let status = match order_status_read(order_hash) {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
@@ -296,7 +300,18 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
-        /// Creates a listing order.
+        fn _validate_order_signature(ref self: ContractState, hash: felt252, sign_info: SignInfo) {
+            // Questions: 
+            // - should we add signature type?
+            // - where can I get the hash ?
+
+            //   message_hash: felt252, public_key: felt252, signature_r: felt252, signature_s: felt252
+            let is_valid = ecdsa::check_ecdsa_signature(
+                hash, sign_info.user_pubkey, sign_info.user_sig_r, sign_info.user_sig_s
+            );
+            assert(is_valid, 'INVALID_SIGNATURE',);
+        }
+
         fn _create_listing_order(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
