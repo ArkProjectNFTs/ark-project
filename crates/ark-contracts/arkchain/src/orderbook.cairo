@@ -459,6 +459,17 @@ mod orderbook {
         fn _create_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
+            // // Manage auction offer
+            // let token_hash = order.compute_token_hash();
+            // let (auction_order_hash, auction_end_date) = self.auctions.read(token_hash);
+            // if auction_order_hash.is_non_zero() {
+            //     let auction_order = self.auction_offers.read(order_hash);
+            //     assert(auction_order.is_zero(), 'already existing auction offer');
+            //     self.auction_offers.write(order_hash, auction_order_hash);
+            // }
+
+            // order_write(order_hash, order);
+            
             self
                 .emit(
                     OrderPlaced {
