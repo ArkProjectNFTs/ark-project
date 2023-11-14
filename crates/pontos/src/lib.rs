@@ -377,6 +377,10 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             };
 
             if contract_type == ContractType::Other {
+                debug!(
+                    "Contract identified as OTHER: {}",
+                    to_hex_str(&contract_address),
+                );
                 continue;
             }
 
