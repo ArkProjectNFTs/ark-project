@@ -26,7 +26,7 @@ fn test_create_offer() {
     let mut state = orderbook::contract_state_for_testing();
     let mut spy = spy_events(SpyOn::One(contract_address));
 
-    orderbook::InternalFunctions::create_offer(
+    orderbook::InternalFunctions::_create_offer(
         ref state, offer_order, OrderType::Offer, order_hash
     );
 
@@ -64,7 +64,7 @@ fn test_create_collection_offer() {
     let order_hash = '123';
 
     let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::create_offer(
+    orderbook::InternalFunctions::_create_offer(
         ref state, offer_order, OrderType::CollectionOffer, order_hash
     );
 
