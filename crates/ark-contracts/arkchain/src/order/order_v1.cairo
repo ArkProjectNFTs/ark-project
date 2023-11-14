@@ -133,6 +133,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
                 return Result::Ok(OrderType::CollectionOffer);
             }
         }
+
         // Other order types are not supported.
         Result::Err(OrderValidationError::InvalidContent)
     }

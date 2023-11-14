@@ -60,7 +60,7 @@ fn test_create_collection_offer() {
     let mut spy = spy_events(SpyOn::One(contract_address));
 
     let mut offer_order = get_offer_order();
-    offer_order.token_id = 0;
+    offer_order.token_id = Option::None;
     let order_hash = '123';
 
     let mut state = orderbook::contract_state_for_testing();
@@ -109,7 +109,7 @@ fn get_offer_order() -> OrderV1 {
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
-        token_id: 0,
+        token_id: Option::Some(0),
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 0,
