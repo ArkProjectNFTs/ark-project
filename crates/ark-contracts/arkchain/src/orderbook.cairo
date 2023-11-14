@@ -1,9 +1,15 @@
-//! Orderbook contract.
-//!
+//! # Orderbook Contract
+//! 
+//! This module defines the structure and functionalities of an orderbook contract. It includes
+//! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external functions, 
+//! and internal functions. The primary functionalities include broker whitelisting, order management 
+//! (creation, cancellation, execution), and order queries.
+
 use arkchain::order::types::ExecutionInfo;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::crypto::signer::SignInfo;
 
+/// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
 trait Orderbook<T> {
     /// Whitelists a broker.
@@ -22,35 +28,63 @@ trait Orderbook<T> {
     /// * `sign_info` - The signing info of the `order`.
     fn create_order(ref self: T, order: OrderV1, sign_info: SignInfo);
 
+    /// Cancels an existing order in the orderbook.
+    ///
+    /// # Arguments
+    ///
+    /// * `order_hash` - The order to be cancelled.
+    /// * `sign_info` - The signing information associated with the order cancellation.
     fn cancel_order(ref self: T, order_hash: felt252, sign_info: SignInfo);
 
-    fn execute_order(
+    /// Fulfils an existing order in the orderbook.
+    ///
+    /// # Arguments
+    ///
+    /// * `order_hash` - The order to be fulfil.
+    /// * `sign_info` - The signing information associated with the order fulfillment.
+    fn fullfil_order(
         ref self: T, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo
     );
 
-    // Views
-    // Get order type from order_hash
+    /// Retrieves the type of an order using its hash.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
     fn get_order_type(self: @T, order_hash: felt252) -> felt252;
-    // Get order status from order_hash
+
+    /// Retrieves the status of an order using its hash.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
     fn get_order_status(self: @T, order_hash: felt252) -> felt252;
-    // Get order from order_hash
+
+    /// Retrieves the order using its hash.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
     fn get_order(self: @T, order_hash: felt252) -> OrderV1;
-    // get order hash from token_hash, obviously only work for a listing
+
+    /// Retrieves the order hash using its token hash. 
+    ///
+    /// # Arguments
+    /// * `token_hash` - The token hash of the order.
     fn get_order_hash(self: @T, token_hash: felt252) -> felt252;
 }
 
 // *************************************************************************
 // ERRORS
+//
+// Error messages used within the orderbook contract.
 // *************************************************************************
 mod orderbook_errors {
     const BROKER_UNREGISTERED: felt252 = 'OB: unregistered broker';
     const ORDER_INVALID_DATA: felt252 = 'OB: order invalid data';
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
-    const ORDER_FULFILLED: felt252 = 'OB: order fullfiled';
-    const STATUS_NOT_FOUND: felt252 = 'OB: status not found';
+    const ORDER_FULFILLED: felt252 = 'OB: order fulfilled';
 }
 
+/// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
     use core::traits::TryInto;
@@ -69,27 +103,32 @@ mod orderbook {
     use arkchain::crypto::signer::SignInfo;
     use arkchain::order::types::OrderStatus;
 
+    /// Storage struct for the Orderbook contract.
     #[storage]
     struct Storage {
-        // Administrator of the orderbook.
+        /// Order database.
+        /// Mapping of token hashes to order data.
+        /// Order database [token_hash, order_data]
+        /// see arkchain::order::database for more details.
+
+        /// Administrator address of the order book.
         admin: ContractAddress,
-        // Whitelist of brokers. For now felt252 is used instead of bool
-        // to ensure future evolution. Set to 1 if the broker is registered.
+        /// Mapping of broker addresses to their whitelisted status.
+        /// Represented as felt252, set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
-        // token_hash(chain_id, token_address, token_id): felt252 -> order_hash
+        /// Mapping of token hashes to order hashes.
         token_listings: LegacyMap<felt252, felt252>,
-        // token_hash(chain_id, token_address, token_id): felt252 -> (order_hash, end_date)
+        /// Mapping of token hashes to auction details (order hash and end date).
         auctions: LegacyMap<felt252, (felt252, felt252)>,
-        // storage for auction offers to match Auction order
-        // (auction offer order_hash) -> auction listing order_hash
+        /// Mapping of auction offer order hashes to auction listing order hashes.
         auction_offers: LegacyMap<felt252, felt252>,
-    // Order database [token_hash, order_data]
-    // see arkchain::order::database
     }
 
     // *************************************************************************
     // EVENTS
     // *************************************************************************
+
+    /// Events emitted by the Orderbook contract.
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
@@ -99,6 +138,7 @@ mod orderbook {
         OrderFulfilled: OrderFulfilled,
     }
 
+    /// Event for when an order is placed.
     #[derive(Drop, starknet::Event)]
     struct OrderPlaced {
         #[key]
@@ -113,6 +153,7 @@ mod orderbook {
         order: OrderV1,
     }
 
+    /// Event for when an order is executed.
     #[derive(Drop, starknet::Event)]
     struct OrderExecuted {
         #[key]
@@ -120,6 +161,7 @@ mod orderbook {
         info: ExecutionInfo,
     }
 
+    /// Event for when an order is cancelled.
     #[derive(Drop, starknet::Event)]
     struct OrderCancelled {
         #[key]
@@ -128,6 +170,7 @@ mod orderbook {
         reason: felt252,
     }
 
+    /// Event for when an order is fulfilled.
     #[derive(Drop, starknet::Event)]
     struct OrderFulfilled {
         #[key]
@@ -148,30 +191,37 @@ mod orderbook {
     // L1 HANDLERS
     // Only the sequencer can call this function with L1HandlerTransaction.
     // *************************************************************************
+
+    /// L1 handler for placing an order.
+    /// # TODO
+    /// * Verify it comes from Arkchain executor contract.
+    /// * Check data + cancel / execute the order.
     #[l1_handler]
-    fn fulfill_order(
-        ref self: ContractState, from_address: felt252, info: FulfillmentInfo
-    ) { // Verify it comes from Arkchain operator contract.
-    // Check data + cancel / fulfill the order.
-    }
+    fn execute_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {}
 
     // *************************************************************************
     // EXTERNAL FUNCTIONS
     // *************************************************************************
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
+        /// Retrieves the type of an order using its hash.
+        /// # View
         fn get_order_type(self: @ContractState, order_hash: felt252) -> felt252 {
             order_type_read(order_hash).unwrap().into()
         }
 
+        /// Retrieves the status of an order using its hash.
+        /// # View
         fn get_order_status(self: @ContractState, order_hash: felt252) -> felt252 {
             let status = order_status_read(order_hash);
             if status.is_none() {
-                panic_with_felt252(orderbook_errors::STATUS_NOT_FOUND);
+                panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
             }
             status.unwrap().into()
         }
 
+        /// Retrieves the order using its hash.
+        /// # View
         fn get_order(self: @ContractState, order_hash: felt252) -> OrderV1 {
             let order = order_read(order_hash);
             if (order.is_none()) {
@@ -180,6 +230,8 @@ mod orderbook {
             order.unwrap()
         }
 
+        /// Retrieves the order hash using its token hash.
+        /// # View
         fn get_order_hash(self: @ContractState, token_hash: felt252) -> felt252 {
             let order_hash = self.token_listings.read(token_hash);
             if (order_hash.is_zero()) {
@@ -188,6 +240,7 @@ mod orderbook {
             order_hash
         }
 
+        /// Whitelists a broker.
         fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
             // TODO: check components with OZ when ready for ownable.
             assert(
@@ -198,6 +251,7 @@ mod orderbook {
             self.brokers.write(broker_id, 1);
         }
 
+        /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
@@ -229,13 +283,12 @@ mod orderbook {
             };
         }
 
-        fn execute_order(
+        fn fullfil_order(
             ref self: ContractState,
             order_hash: felt252,
             execution_info: ExecutionInfo,
             sign_info: SignInfo
-        ) { // if auction increment nonce
-        }
+        ) {}
     }
 
     // *************************************************************************
@@ -243,6 +296,7 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
+        /// Creates a listing order.
         fn _create_listing_order(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
@@ -258,19 +312,19 @@ mod orderbook {
                     if (current_order_status == OrderStatus::Fulfilled) {
                         panic_with_felt252(orderbook_errors::ORDER_FULFILLED);
                     } else {
-                        // change old order status to cancelled
+                        // change previous order status to cancelled
                         order_status_write(
                             current_listing_orderhash, OrderStatus::CancelledByNewOrder
                         );
                     }
                 } else {
                     // if order status is not found, panic
-                    panic_with_felt252(orderbook_errors::STATUS_NOT_FOUND);
+                    panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
                 }
             }
-            // Associate order_hash to token_hash on the storage
-            order_write(order_hash, order_type, order);
             // Write new order with status open
+            order_write(order_hash, order_type, order);
+            // Associate token_hash to order_hash on the storage
             self.token_listings.write(token_hash, order_hash);
             self
                 .emit(
@@ -283,6 +337,7 @@ mod orderbook {
                     }
                 );
         }
+        /// Creates an auction order.
         fn _create_auction(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
@@ -297,6 +352,7 @@ mod orderbook {
                     }
                 );
         }
+        /// Creates an offer order.
         fn _create_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
@@ -311,6 +367,7 @@ mod orderbook {
                     }
                 );
         }
+        /// Creates a collection offer order.
         fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
