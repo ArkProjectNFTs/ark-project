@@ -69,10 +69,15 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             }
         }
 
+        // Salt must be non-zero.
+        if (*self.salt).is_zero() {
+            return Result::Err(OrderValidationError::InvalidSalt);
+        }
+
         let end_date = *self.end_date;
 
-        // End date -> block_ts + 30 days.
-        let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
+        // End date -> start_date + 30 days.
+        let max_end_date = *self.start_date + (30 * 24 * 60 * 60);
 
         if end_date < block_timestamp {
             return Result::Err(OrderValidationError::EndDateInThePast);
@@ -134,16 +139,11 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         Result::Err(OrderValidationError::InvalidContent)
     }
 
-    fn compute_ressource_hash(self: @OrderV1) -> felt252 {
-        let mut buf = array![];
-        let (high, low) = keccak::u128_split(*self.token_id.low);
-        buf.append(high.into());
-        buf.append(low.into());
-        let (high, low) = keccak::u128_split(*self.token_id.high);
-        buf.append(high.into());
-        buf.append(low.into());
-        let felt_token_address = contract_address_to_felt252(*self.token_address);
-        buf.append(felt_token_address);
+    fn compute_token_hash(self: @OrderV1) -> felt252 {
+        let mut buf: Array<felt252> = array![];
+        buf.append((*self.token_id.low).into());
+        buf.append((*self.token_id.high).into());
+        buf.append((*self.token_address).into());
         buf.append(*self.token_chain_id);
         starknet_keccak(buf.span())
     }

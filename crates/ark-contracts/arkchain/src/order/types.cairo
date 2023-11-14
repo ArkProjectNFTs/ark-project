@@ -10,6 +10,33 @@ enum OrderType {
     CollectionOffer,
 }
 
+impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
+    fn into(self: OrderType) -> felt252 {
+        match self {
+            OrderType::Listing => 'LISTING',
+            OrderType::Auction => 'AUCTION',
+            OrderType::Offer => 'OFFER',
+            OrderType::CollectionOffer => 'COLLECTION_OFFER',
+        }
+    }
+}
+
+impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
+    fn try_into(self: felt252) -> Option<OrderType> {
+        if self == 'LISTING' {
+            Option::Some(OrderType::Listing)
+        } else if self == 'AUCTION' {
+            Option::Some(OrderType::Auction)
+        } else if self == 'OFFER' {
+            Option::Some(OrderType::Offer)
+        } else if self == 'COLLECTION_OFFER' {
+            Option::Some(OrderType::CollectionOffer)
+        } else {
+            Option::None
+        }
+    }
+}
+
 /// Order validation status.
 /// This enum is returned by the `validate_data` in order
 /// to have details on what's wrong with the order.
@@ -21,6 +48,43 @@ enum OrderValidationError {
     EndDateTooFar,
     AdditionalDataTooLong,
     InvalidContent,
+    InvalidSalt
+}
+
+impl OrderValidationErrorIntoFelt252 of Into<OrderValidationError, felt252> {
+    fn into(self: OrderValidationError) -> felt252 {
+        match self {
+            OrderValidationError::StartDateAfterEndDate => 'START_DATE_AFTER_END_DATE',
+            OrderValidationError::StartDateInThePast => 'START_DATE_IN_THE_PAST',
+            OrderValidationError::EndDateInThePast => 'END_DATE_IN_THE_PAST',
+            OrderValidationError::EndDateTooFar => 'END_DATE_TOO_FAR',
+            OrderValidationError::AdditionalDataTooLong => 'ADDITIONAL_DATA_TOO_LONG',
+            OrderValidationError::InvalidContent => 'INVALID_CONTENT',
+            OrderValidationError::InvalidSalt => 'INVALID_SALT',
+        }
+    }
+}
+
+impl Felt252TryIntoOrderValidationError of TryInto<felt252, OrderValidationError> {
+    fn try_into(self: felt252) -> Option<OrderValidationError> {
+        if self == 'START_DATE_AFTER_END_DATE' {
+            Option::Some(OrderValidationError::StartDateAfterEndDate)
+        } else if self == 'START_DATE_IN_THE_PAST' {
+            Option::Some(OrderValidationError::StartDateInThePast)
+        } else if self == 'END_DATE_IN_THE_PAST' {
+            Option::Some(OrderValidationError::EndDateInThePast)
+        } else if self == 'END_DATE_TOO_FAR' {
+            Option::Some(OrderValidationError::EndDateTooFar)
+        } else if self == 'ADDITIONAL_DATA_TOO_LONG' {
+            Option::Some(OrderValidationError::AdditionalDataTooLong)
+        } else if self == 'INVALID_CONTENT' {
+            Option::Some(OrderValidationError::InvalidContent)
+        } else if self == 'INVALID_SALT' {
+            Option::Some(OrderValidationError::InvalidSalt)
+        } else {
+            Option::None
+        }
+    }
 }
 
 /// A trait to describe order capability.
@@ -37,7 +101,7 @@ trait OrderTrait<T, +Serde<T>, +Drop<T>> {
     /// Every field of the order that must be signed
     /// must be considered in the computation of this hash.
     fn compute_order_hash(self: @T) -> felt252;
-    fn compute_ressource_hash(self: @T) -> felt252;
+    fn compute_token_hash(self: @T) -> felt252;
 }
 
 /// Status of an order, that may be defined from
@@ -48,6 +112,7 @@ enum OrderStatus {
     Fulfilled,
     Executed,
     CancelledUser,
+    CancelledByNewOrder,
     CancelledAssetFault,
 }
 
@@ -58,6 +123,7 @@ impl OrderStatusIntoFelt252 of Into<OrderStatus, felt252> {
             OrderStatus::Fulfilled => 'FULFILLED',
             OrderStatus::Executed => 'EXECUTED',
             OrderStatus::CancelledUser => 'CANCELLED_USER',
+            OrderStatus::CancelledByNewOrder => 'CANCELLED_NEW_ORDER',
             OrderStatus::CancelledAssetFault => 'CANCELLED_ASSET_FAULT',
         }
     }
@@ -73,6 +139,8 @@ impl Felt252TryIntoOrderStatus of TryInto<felt252, OrderStatus> {
             Option::Some(OrderStatus::Fulfilled)
         } else if self == 'CANCELLED_USER' {
             Option::Some(OrderStatus::CancelledUser)
+        } else if self == 'CANCELLED_NEW_ORDER' {
+            Option::Some(OrderStatus::CancelledByNewOrder)
         } else if self == 'CANCELLED_ASSET_FAULT' {
             Option::Some(OrderStatus::CancelledAssetFault)
         } else {
