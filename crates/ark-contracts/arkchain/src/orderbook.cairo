@@ -474,15 +474,15 @@ mod orderbook {
         fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
-            order_write(order_hash, order_type, order);
 
             // let ressource_hash = order.compute_ressource_hash();
-
-            // TODO: if ressource_hash has already an order
-            // get order hash from resource hash
-            // if some() and if order is auction type
-            // get auction nonce from auction storage
-            // add offer order hash to auction_offers_nonce storage
+            // let (auction_order_hash, auction_end_date) = self.auctions.read(ressource_hash);
+            // if auction_order_hash.is_non_zero() {
+            //     let auction_order = self.auction_offers.read(order_hash);
+            //     assert(auction_order.is_zero(), 'already existing auction offer');
+            //     self.auction_offers.write(order_hash, auction_order_hash);
+            // }
+            // order_write(order_hash, order);
 
             self
                 .emit(
