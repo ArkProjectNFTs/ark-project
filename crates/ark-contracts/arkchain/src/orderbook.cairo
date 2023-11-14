@@ -107,6 +107,7 @@ mod orderbook {
         order_version: felt252,
         #[key]
         order_type: OrderType,
+        // The order that was cancelled by this order.
         cancelled_order_hash: felt252,
         // The full order serialized.
         order: OrderV1,
@@ -269,8 +270,6 @@ mod orderbook {
             }
             // Associate order_hash to token_hash on the storage
             order_write(order_hash, order_type, order);
-            // Change order status to fulfilled
-            order_status_write(current_listing_orderhash, OrderStatus::Fulfilled);
             // Write new order with status open
             self.token_listings.write(token_hash, order_hash);
             self

@@ -10,3 +10,4 @@ mod crypto {
 }
 
 mod orderbook;
+mod tests_lib;
