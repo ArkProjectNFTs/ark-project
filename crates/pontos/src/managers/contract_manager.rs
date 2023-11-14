@@ -185,8 +185,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         calldata: Vec<FieldElement>,
         block: BlockId,
     ) -> Result<Vec<FieldElement>, StarknetClientError> {
-        Ok(self
-            .client
+        self.client
             .call_contract(
                 contract_address,
                 get_selector_from_name(selector_name).map_err(|_| {
@@ -195,7 +194,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                 calldata,
                 block,
             )
-            .await?)
+            .await
     }
 
     pub async fn get_contract_property_string(
