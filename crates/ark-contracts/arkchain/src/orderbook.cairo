@@ -455,6 +455,7 @@ mod orderbook {
                     }
                 );
         }
+        
         /// Creates an offer order.
         fn _create_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
@@ -469,7 +470,7 @@ mod orderbook {
             // }
 
             // order_write(order_hash, order);
-            
+
             self
                 .emit(
                     OrderPlaced {
