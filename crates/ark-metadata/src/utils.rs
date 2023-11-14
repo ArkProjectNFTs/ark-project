@@ -12,6 +12,7 @@ pub async fn get_token_metadata(
     uri: &str,
     ipfs_gateway_uri: &str,
     request_timeout_duration: Duration,
+    request_referrer: &str,
 ) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
     let metadata = match metadata_type {
@@ -19,11 +20,23 @@ pub async fn get_token_metadata(
             let ipfs_hash = uri.trim_start_matches("ipfs://");
             let complete_uri = format!("{}{}", ipfs_gateway_uri, ipfs_hash);
             trace!("Fetching metadata from IPFS: {}", complete_uri.as_str());
-            fetch_metadata(complete_uri.as_str(), client, request_timeout_duration).await?
+            fetch_metadata(
+                complete_uri.as_str(),
+                client,
+                request_timeout_duration,
+                request_referrer,
+            )
+            .await?
         }
         MetadataType::Http(uri) => {
             trace!("Fetching metadata from HTTPS: {}", uri.as_str());
-            fetch_metadata(&uri, client, request_timeout_duration).await?
+            fetch_metadata(
+                &uri.replace("https", "http"),
+                client,
+                request_timeout_duration,
+                request_referrer,
+            )
+            .await?
         }
         MetadataType::OnChain(uri) => {
             trace!("Fetching on-chain metadata: {}", uri);
@@ -47,15 +60,21 @@ async fn fetch_metadata(
     uri: &str,
     client: &Client,
     request_timeout_duration: Duration,
+    referrer: &str,
 ) -> Result<TokenMetadata> {
-    let request = client.get(uri).timeout(request_timeout_duration);
+    let request = client
+        .get(uri)
+        .header("User-Agent", "Mozilla/5.0 (compatible; YourClient/1.0)")
+        .header("Referrer", referrer)
+        .timeout(request_timeout_duration);
+
     let response = request.send().await;
 
     match response {
         Ok(response) => {
+            debug!("Response status: {}", response.status());
             if response.status().is_success() {
                 let raw_metadata = response.text().await?;
-
                 let metadata =
                     match serde_json::from_str::<NormalizedMetadata>(raw_metadata.as_str()) {
                         Ok(v) => v,
@@ -70,13 +89,13 @@ async fn fetch_metadata(
                     metadata_updated_at: Some(now.timestamp()),
                 })
             } else {
-                error!("Failed to get ipfs metadata. URI: {}", uri);
-                Err(anyhow!("Failed to get ipfs metadata"))
+                error!("Request Failed. URI: {}", uri);
+                Err(anyhow!("Request Failed"))
             }
         }
         Err(e) => {
-            error!("Failed to get ipfs metadata: {:?}", e);
-            Err(anyhow!("Failed to get ipfs metadata"))
+            error!("Request Failed: {:?}", e);
+            Err(anyhow!("Request Failed. URI: {}", uri))
         }
     }
 }
@@ -246,13 +265,16 @@ mod tests {
     async fn test_fetch_metadata() {
         let client = Client::new();
         let uri = "https://example.com";
+        let request_referrer = "https://arkproject.dev";
         let request_timeout_duration = Duration::from_secs(10);
 
-        let metadata = fetch_metadata(uri, &client, request_timeout_duration).await;
+        let metadata =
+            fetch_metadata(uri, &client, request_timeout_duration, request_referrer).await;
         assert!(metadata.is_ok());
 
         let uri = "invalid_uri";
-        let metadata = fetch_metadata(uri, &client, request_timeout_duration).await;
+        let metadata =
+            fetch_metadata(uri, &client, request_timeout_duration, request_referrer).await;
         assert!(metadata.is_err());
     }
 }
