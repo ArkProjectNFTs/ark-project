@@ -85,6 +85,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
+        request_referrer: &str,
     ) -> Result<(), MetadataError> {
         trace!(
             "refresh_token_metadata(contract_address=0x{:064x}, token_id={})",
@@ -104,6 +105,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             token_uri.as_str(),
             ipfs_gateway_uri,
             image_timeout,
+            request_referrer,
         )
         .await
         .map_err(|err| MetadataError::RequestTokenUriError(err.to_string()))?;
@@ -188,6 +190,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
+        request_referrer: &str,
     ) -> Result<(), MetadataError> {
         let results = self
             .storage
@@ -202,6 +205,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 cache,
                 ipfs_gateway_uri,
                 image_timeout,
+                request_referrer,
             )
             .await?;
         }
@@ -459,6 +463,7 @@ mod tests {
 
         let contract_address = FieldElement::ONE;
         let ipfs_gateway_uri = "https://ipfs.example.com";
+        let request_referrer = "https://arkproject.dev";
 
         // Mocking expected behaviors
         mock_storage
@@ -496,6 +501,7 @@ mod tests {
                 ImageCacheOption::DoNotSave,
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
+                request_referrer,
             )
             .await;
 
