@@ -475,6 +475,7 @@ mod orderbook {
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
 
+            // Manage auction offer
             // let ressource_hash = order.compute_ressource_hash();
             // let (auction_order_hash, auction_end_date) = self.auctions.read(ressource_hash);
             // if auction_order_hash.is_non_zero() {
