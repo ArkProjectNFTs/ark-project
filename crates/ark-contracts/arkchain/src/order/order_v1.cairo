@@ -121,7 +121,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             }
             // Auction order.
             if (*self.start_amount) > 0
-                && (*self.start_amount) >= (*self.end_amount)
+                && (*self.end_amount) >= (*self.start_amount)
                 && (*self.route) == RouteType::Erc721ToErc20 {
                 return Result::Ok(OrderType::Auction);
             }
