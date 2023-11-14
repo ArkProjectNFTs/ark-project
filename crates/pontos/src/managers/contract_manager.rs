@@ -104,7 +104,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         let token_id = vec![FieldElement::ONE, FieldElement::ZERO]; // u256.
 
         match self
-            .get_contract_property_string(contract_address, "ownerOf", token_id.clone(), block)
+            .get_contract_response(contract_address, "ownerOf", token_id.clone(), block)
             .await
         {
             Ok(_) => return Ok(true),
@@ -123,7 +123,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         };
 
         match self
-            .get_contract_property_string(contract_address, "owner_of", token_id, block)
+            .get_contract_response(contract_address, "owner_of", token_id, block)
             .await
         {
             Ok(_) => Ok(true),
@@ -149,7 +149,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         let address_and_token_id = vec![FieldElement::ZERO, FieldElement::ONE, FieldElement::ZERO];
 
         match self
-            .get_contract_property_string(
+            .get_contract_response(
                 contract_address,
                 "balanceOf",
                 address_and_token_id.clone(),
@@ -166,12 +166,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         };
 
         match self
-            .get_contract_property_string(
-                contract_address,
-                "balance_of",
-                address_and_token_id,
-                block,
-            )
+            .get_contract_response(contract_address, "balance_of", address_and_token_id, block)
             .await
         {
             Ok(_) => Ok(true),
@@ -181,6 +176,26 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                 _ => Ok(false),
             },
         }
+    }
+
+    pub async fn get_contract_response(
+        &self,
+        contract_address: FieldElement,
+        selector_name: &str,
+        calldata: Vec<FieldElement>,
+        block: BlockId,
+    ) -> Result<Vec<FieldElement>, StarknetClientError> {
+        Ok(self
+            .client
+            .call_contract(
+                contract_address,
+                get_selector_from_name(selector_name).map_err(|_| {
+                    StarknetClientError::Other(format!("Invalid selector: {}", selector_name))
+                })?,
+                calldata,
+                block,
+            )
+            .await?)
     }
 
     pub async fn get_contract_property_string(
