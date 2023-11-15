@@ -7,8 +7,9 @@ use arkchain::order::order_v1::OrderTraitOrderV1;
 use arkchain::order::types::OrderType;
 use snforge_std::PrintTrait;
 use arkchain::order::types::RouteType;
+
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
-use arkchain::tests_lib::setup_orders;
+use super::super::super::common::setup::setup_orders;
 
 // *********************************************************
 // validate_common_data
@@ -67,7 +68,7 @@ fn should_returns_invalid_order_with_zero_token_id() {
     let block_timestmap: u64 = 1699556828;
 
     let mut invalid_order = order_listing.clone();
-    invalid_order.token_id = 0;
+    invalid_order.token_id = Option::None;
     let result = invalid_order.validate_common_data(block_timestmap);
     assert(!result.is_ok(), 'zero token id');
 }

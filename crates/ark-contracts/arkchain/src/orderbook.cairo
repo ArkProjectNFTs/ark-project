@@ -82,6 +82,7 @@ mod orderbook_errors {
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
     const ORDER_FULFILLED: felt252 = 'OB: order fulfilled';
+    const ORDER_NOT_CANCELLABLE: felt252 = 'OB: order not cancellable';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -119,7 +120,7 @@ mod orderbook {
         /// Mapping of token hashes to order hashes.
         token_listings: LegacyMap<felt252, felt252>,
         /// Mapping of token hashes to auction details (order hash and end date, auction offer count).
-        auctions: LegacyMap<felt252, (felt252, felt252, u256)>,
+        auctions: LegacyMap<felt252, (felt252, u64, u256)>,
         /// Mapping of auction offer order hashes to auction listing order hashes.
         auction_offers: LegacyMap<felt252, felt252>,
     }
@@ -148,7 +149,7 @@ mod orderbook {
         #[key]
         order_type: OrderType,
         // The order that was cancelled by this order.
-        cancelled_order_hash: felt252,
+        cancelled_order_hash: Option<felt252>,
         // The full order serialized.
         order: OrderV1,
     }
@@ -281,7 +282,7 @@ mod orderbook {
 
         fn cancel_order(ref self: ContractState, order_hash: felt252, signer: Signer) {
             SignerValidator::verify(order_hash, signer);
-
+            // TODO: if cancel an auction check if there are offers if true we can't cancel
             let status = match order_status_read(order_hash) {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
@@ -301,31 +302,102 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
+        /// get previous order 
+        ///
+        /// # Arguments
+        /// * `token_hash` - The token hash of the order.
+        ///
+        /// # Return option of (order hash: felt252, is_order_expired: bool, order: OrderV1)
+        /// * order_hash
+        /// * is_order_expired
+        /// * order 
+        fn _get_previous_order(
+            self: @ContractState, token_hash: felt252
+        ) -> Option<(felt252, bool, OrderV1)> {
+            let current_listing_orderhash = self.token_listings.read(token_hash);
+            let (current_auction_orderhash, auction_end_date, auction_offers_count) = self
+                .auctions
+                .read(token_hash);
+            let mut current_orderhash = 0;
+
+            if (current_listing_orderhash.is_non_zero()) {
+                current_orderhash = current_listing_orderhash;
+                let current_order: Option<OrderV1> = order_read(current_orderhash)
+                    .expect('Order must exist');
+                let current_order = current_order.unwrap();
+                return Option::Some(
+                    (
+                        current_orderhash,
+                        current_order.end_date < starknet::get_block_timestamp(),
+                        current_order
+                    )
+                );
+            }
+            if (current_auction_orderhash.is_non_zero()) {
+                current_orderhash = current_listing_orderhash;
+                let current_order: Option<OrderV1> = order_read(current_orderhash)
+                    .expect('Order must exist');
+                let current_order = current_order.unwrap();
+                let (_, auction_end_date, _) = self.auctions.read(token_hash);
+                return Option::Some(
+                    (
+                        current_orderhash,
+                        auction_end_date < starknet::get_block_timestamp(),
+                        current_order
+                    )
+                );
+            } else {
+                return Option::None;
+            }
+        }
+
+        /// Process previous order
+        ///
+        /// # Arguments
+        /// * `token_hash` - The token hash of the order.
+        ///
+        fn _process_previous_order(
+            ref self: ContractState, token_hash: felt252, offerer: ContractAddress
+        ) -> Option<felt252> {
+            let previous_order = self._get_previous_order(token_hash);
+
+            // Check of previous order exists
+            if (previous_order.is_some()) {
+                let (previous_orderhash, previous_order_is_expired, previous_order) = previous_order
+                    .unwrap();
+                let previous_order_status = order_status_read(previous_orderhash)
+                    .expect('Invalid Order status');
+                let previous_order_type = order_type_read(previous_orderhash)
+                    .expect('Invalid Order type');
+
+                // verify offerer is the same
+                if (previous_order.offerer == offerer) {
+                    // check previous order is not expired
+                    assert(previous_order_is_expired, orderbook_errors::ORDER_NOT_CANCELLABLE);
+                    // if previous_order is expired we can cancel it
+                    order_status_write(previous_orderhash, OrderStatus::CancelledByNewOrder);
+                    return Option::Some(previous_orderhash);
+                } else {
+                    // check if previous order is fulfilled
+                    assert(
+                        previous_order_status == OrderStatus::Fulfilled,
+                        orderbook_errors::ORDER_FULFILLED
+                    );
+                    // if status is not fulfilled, we can cancel the order
+                    order_status_write(previous_orderhash, OrderStatus::CancelledByNewOrder);
+                    return Option::Some(previous_orderhash);
+                }
+            }
+            return Option::None;
+        }
+
+        /// Creates a listing order.
         fn _create_listing_order(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             let token_hash = order.compute_token_hash();
-            let current_listing_orderhash = self.token_listings.read(token_hash);
-            let current_order_status = order_status_read(current_listing_orderhash);
-            // if there is an order already, we need to cancel it
-            if current_listing_orderhash.is_non_zero() {
-                // if current order has a status, we need to cancel it
-                if current_order_status.is_some() {
-                    let current_order_status = current_order_status.unwrap();
-                    // if order is already fulfilled, we cannot cancel it
-                    if (current_order_status == OrderStatus::Fulfilled) {
-                        panic_with_felt252(orderbook_errors::ORDER_FULFILLED);
-                    } else {
-                        // change previous order status to cancelled
-                        order_status_write(
-                            current_listing_orderhash, OrderStatus::CancelledByNewOrder
-                        );
-                    }
-                } else {
-                    // if order status is not found, panic
-                    panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
-                }
-            }
+            let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
+
             // Write new order with status open
             order_write(order_hash, order_type, order);
             // Associate token_hash to order_hash on the storage
@@ -336,62 +408,22 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        cancelled_order_hash: current_listing_orderhash,
+                        cancelled_order_hash,
                         order: order
                     }
                 );
         }
+
         /// Creates an auction order.
         fn _create_auction(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
-            /// TODO
-            /// * check that a auction order is not already in place with an existing auction offer order
-            /// * cancel previous order if it exists, 
-            /// * cancel auction order if the a new auction order is placed & if the offerer is not the same, meaning the token has been transferred
-            /// * check that the auction order is open
             let token_hash = order.compute_token_hash();
-            let current_listing_orderhash = self.token_listings.read(token_hash);
-            let current_listing_order_status = order_status_read(current_listing_orderhash);
-            let current_listing_ordertype = order_type_read(current_listing_orderhash).unwrap();
+            let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
 
-            // if an order exist for that token hash process to cancellation flow
-            if (current_listing_order_status.is_some()) {
-                // unwrap the order status since we know it exists
-                let current_listing_order_status = current_listing_order_status.unwrap();
-                // if ordertype is listing and order status is open, we need to cancel it
-                if (current_listing_ordertype == OrderType::Listing) {
-                    if (current_listing_order_status == OrderStatus::Fulfilled) {
-                        // if ordertype is listing and order status is fulfilled, we need to panic user cannot cancel fulfilled order and create a new order
-                        panic_with_felt252(orderbook_errors::ORDER_FULFILLED);
-                    } else if (current_listing_order_status == OrderStatus::Open) {
-                        // if ordertype is listing and order status is open, we need to cancel it
-                        order_status_write(
-                            current_listing_orderhash, OrderStatus::CancelledByNewOrder
-                        );
-                    }
-                }
-                /// if ordertype is auction, order status is open and offer_count <= 0, we need to cancel it
-                if (current_listing_ordertype == OrderType::Auction) {
-                    if (current_listing_order_status == OrderStatus::Fulfilled) {
-                        // if ordertype is auction and order status is fulfilled, we need to panic user cannot cancel fulfilled order and create a new order
-                        panic_with_felt252(orderbook_errors::ORDER_FULFILLED);
-                    } else if (current_listing_order_status == OrderStatus::Open) {
-                        let (_, _, offer_count) = self.auctions.read(token_hash);
-                        /// if the auction has less than 1 offer, we can cancel the auction
-                        if (offer_count <= 0) {
-                            order_status_write(
-                                current_listing_orderhash, OrderStatus::CancelledByNewOrder
-                            );
-                        }
-                    }
-                }
-            }
-
-            /// if order is not found or the previous is cancelled we create one and set the status to open
             /// we create an auction on the storage
             order_write(order_hash, order_type, order);
-            self.auctions.write(token_hash, (order_hash, order.end_date.into(), 0));
+            self.auctions.write(token_hash, (order_hash, order.end_date, 0));
 
             self
                 .emit(
@@ -399,7 +431,7 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        cancelled_order_hash: 0,
+                        cancelled_order_hash,
                         order: order,
                     }
                 );
@@ -414,7 +446,7 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        cancelled_order_hash: 0,
+                        cancelled_order_hash: Option::None,
                         order: order,
                     }
                 );
@@ -429,7 +461,7 @@ mod orderbook {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        cancelled_order_hash: 0,
+                        cancelled_order_hash: Option::None,
                         order: order,
                     }
                 );

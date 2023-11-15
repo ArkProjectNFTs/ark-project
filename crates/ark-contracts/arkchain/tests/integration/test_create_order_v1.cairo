@@ -11,7 +11,13 @@ use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
+<<<<<<< HEAD
 use arkchain::tests_lib::setup_listing_order_with_sign;
+=======
+use snforge_std::PrintTrait;
+
+use super::super::common::setup::setup_listing_order_with_sign;
+>>>>>>> 6fde401 (feat(listing): update auction & listing orders creating logic & verifications, need tests adjustement)
 
 #[test]
 fn test_create_listing_order() {
@@ -29,7 +35,8 @@ fn test_create_listing_order() {
     let order_hash = dispatcher.get_order_hash(token_hash);
 
     assert(order.broker_id == 123, 'Broker id is not equal');
-    assert(order.token_id == 10, 'Token id is not equal');
+    assert(order.token_id.is_some(), 'No Token id');
+    assert(order.token_id.unwrap() == 10, 'Token id is not equal');
     assert(
         order
             .token_address == 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672

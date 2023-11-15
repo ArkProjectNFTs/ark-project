@@ -14,7 +14,7 @@ use snforge_std::{
     test_address
 };
 use array::ArrayTrait;
-use arkchain::tests_lib::setup_listing_order;
+use super::super::common::setup::setup_listing_order;
 
 const ORDER_VERSION_V1: felt252 = 'v1';
 
@@ -51,7 +51,7 @@ fn test_recreate_listing() {
                     orderbook::Event::OrderPlaced(
                         orderbook::OrderPlaced {
                             order_hash: order_hash_1,
-                            cancelled_order_hash: 0,
+                            cancelled_order_hash: Option::None,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::Listing,
                             order: order_listing_1
@@ -80,4 +80,9 @@ fn test_recreate_listing() {
     let order2_status = order_status_read(order_hash_2);
     let order2_type = order_type_read(order_hash_2);
     assert(order2.start_amount == order_listing_2.start_amount, 'price does not match');
+}
+
+#[test]
+fn test_create_auction() {
+    assert(true, '');
 }
