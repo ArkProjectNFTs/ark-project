@@ -88,7 +88,7 @@ async fn fetch_metadata(
             debug!("Response status: {}", response.status());
             if response.status().is_success() {
                 let raw_metadata = response.text().await?;
-                let metadata = match normalize_metadata(&raw_metadata.as_str()) {
+                let metadata = match normalize_metadata(raw_metadata.as_str()) {
                     Ok(metadata) => metadata,
                     Err(_) => NormalizedMetadata::default(),
                 };
