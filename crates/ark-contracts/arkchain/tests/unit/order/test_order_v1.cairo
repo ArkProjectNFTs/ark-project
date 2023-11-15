@@ -8,6 +8,7 @@ use arkchain::order::types::OrderType;
 use snforge_std::PrintTrait;
 use arkchain::order::types::RouteType;
 use arkchain::tests_lib::setup;
+use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
 // *********************************************************
 // validate_common_data
@@ -19,6 +20,23 @@ fn test_validate_common_data_with_valid_order() {
     let block_timestmap: u64 = 1699556828;
     let result = order_listing.validate_common_data(block_timestmap);
     assert(result.is_ok(), 'Invalid result');
+}
+
+#[test]
+fn test_order_signature() {
+    let block_timestamp = 1700069210;
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+
+    let order_hash = order_listing.compute_order_hash();
+
+    let signer = Signer::WEIERSTRESS_STARKNET(
+        SignInfo {
+            user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
+            user_sig_s: 1685260564698117654452144632567173071720151007987166386157497995988704157198,
+            user_sig_r: 775902149230454063100679677026163788131722686098855256081344196566630275657
+        }
+    );
+    SignerValidator::verify(order_hash, signer);
 }
 
 #[test]

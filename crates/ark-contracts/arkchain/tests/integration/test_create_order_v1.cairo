@@ -5,7 +5,7 @@ use snforge_std::{PrintTrait, declare, ContractClassTrait};
 use arkchain::orderbook::Orderbook;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::RouteType;
-use arkchain::crypto::signer::{SignInfo, SignType};
+use arkchain::crypto::signer::{Signer, SignInfo};
 use arkchain::order::order_v1::OrderTrait;
 use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
@@ -14,17 +14,14 @@ use starknet::deploy_syscall;
 
 #[test]
 fn test_create_listing_order() {
-    let (order_listing, sign_info, _order_hash, token_hash) = setup();
+    let block_timestamp = starknet::get_block_timestamp();
+    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
-
     let dispatcher = OrderbookDispatcher { contract_address };
 
-    let order = dispatcher
-        .create_order(
-            order: order_listing, sign_type: SignType::WEIERSTRESS_STARKNET, sign_info: sign_info
-        );
+    let order = dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
     let order_type = dispatcher.get_order_type(_order_hash);
@@ -66,11 +63,11 @@ fn test_create_listing_order() {
     assert(order_status == OrderStatus::Open.into(), 'Order status is not open');
 }
 
-fn setup() -> (OrderV1, SignInfo, felt252, felt252) {
-    let block_timestamp = starknet::get_block_timestamp();
+fn setup(block_timestamp: u64) -> (OrderV1, Signer, felt252, felt252) {
     let end_date = block_timestamp + (30 * 24 * 60 * 60);
     let data = array![];
     let data_span = data.span();
+
     let order_listing = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
@@ -94,14 +91,17 @@ fn setup() -> (OrderV1, SignInfo, felt252, felt252) {
         broker_id: 123,
         additional_data: data_span,
     };
+
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
 
-    let sign_info = SignInfo {
-        user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-        user_sig_r: 795355584245701380516954032982332187758823962146902955336678325098859735838,
-        user_sig_s: 730750469387310131418907876439976557990001687280948049867922965495028111701,
-    };
+    let signer = Signer::WEIERSTRESS_STARKNET(
+        SignInfo {
+            user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
+            user_sig_s: 1685260564698117654452144632567173071720151007987166386157497995988704157198,
+            user_sig_r: 775902149230454063100679677026163788131722686098855256081344196566630275657
+        }
+    );
 
-    (order_listing, sign_info, order_hash, token_hash)
+    (order_listing, signer, order_hash, token_hash)
 }

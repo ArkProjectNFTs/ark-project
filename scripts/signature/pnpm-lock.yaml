@@ -5,6 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@scure/starknet':
+    specifier: ^0.3.0
+    version: 0.3.0
+  sha3:
+    specifier: link:@noble/hashes/sha3
+    version: link:@noble/hashes/sha3
   starknet:
     specifier: ^5.24.1
     version: 5.24.1
