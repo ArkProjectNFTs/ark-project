@@ -118,8 +118,8 @@ mod orderbook {
         brokers: LegacyMap<felt252, felt252>,
         /// Mapping of token hashes to order hashes.
         token_listings: LegacyMap<felt252, felt252>,
-        /// Mapping of token hashes to auction details (order hash and end date).
-        auctions: LegacyMap<felt252, (felt252, felt252)>,
+        /// Mapping of token hashes to auction details (order hash and end date, auction offer count).
+        auctions: LegacyMap<felt252, (felt252, felt252, u256)>,
         /// Mapping of auction offer order hashes to auction listing order hashes.
         auction_offers: LegacyMap<felt252, felt252>,
     }
@@ -345,6 +345,54 @@ mod orderbook {
         fn _create_auction(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
+            /// TODO
+            /// * check that a auction order is not already in place with an existing auction offer order
+            /// * cancel previous order if it exists, 
+            /// * cancel auction order if the a new auction order is placed & if the offerer is not the same, meaning the token has been transferred
+            /// * check that the auction order is open
+            let token_hash = order.compute_token_hash();
+            let current_listing_orderhash = self.token_listings.read(token_hash);
+            let current_listing_order_status = order_status_read(current_listing_orderhash);
+            let current_listing_ordertype = order_type_read(current_listing_orderhash).unwrap();
+
+            // if an order exist for that token hash process to cancellation flow
+            if (current_listing_order_status.is_some()) {
+                // unwrap the order status since we know it exists
+                let current_listing_order_status = current_listing_order_status.unwrap();
+                // if ordertype is listing and order status is open, we need to cancel it
+                if (current_listing_ordertype == OrderType::Listing) {
+                    if (current_listing_order_status == OrderStatus::Fulfilled) {
+                        // if ordertype is listing and order status is fulfilled, we need to panic user cannot cancel fulfilled order and create a new order
+                        panic_with_felt252(orderbook_errors::ORDER_FULFILLED);
+                    } else if (current_listing_order_status == OrderStatus::Open) {
+                        // if ordertype is listing and order status is open, we need to cancel it
+                        order_status_write(
+                            current_listing_orderhash, OrderStatus::CancelledByNewOrder
+                        );
+                    }
+                }
+                /// if ordertype is auction, order status is open and offer_count <= 0, we need to cancel it
+                if (current_listing_ordertype == OrderType::Auction) {
+                    if (current_listing_order_status == OrderStatus::Fulfilled) {
+                        // if ordertype is auction and order status is fulfilled, we need to panic user cannot cancel fulfilled order and create a new order
+                        panic_with_felt252(orderbook_errors::ORDER_FULFILLED);
+                    } else if (current_listing_order_status == OrderStatus::Open) {
+                        let (_, _, offer_count) = self.auctions.read(token_hash);
+                        /// if the auction has less than 1 offer, we can cancel the auction
+                        if (offer_count <= 0) {
+                            order_status_write(
+                                current_listing_orderhash, OrderStatus::CancelledByNewOrder
+                            );
+                        }
+                    }
+                }
+            }
+
+            /// if order is not found or the previous is cancelled we create one and set the status to open
+            /// we create an auction on the storage
+            order_write(order_hash, order_type, order);
+            self.auctions.write(token_hash, (order_hash, order.end_date.into(), 0));
+
             self
                 .emit(
                     OrderPlaced {

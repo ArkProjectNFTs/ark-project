@@ -11,6 +11,7 @@ use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
+use arkchain::tests_lib::setup_listing_order_with_sign;
 
 #[test]
 fn test_create_listing_order() {

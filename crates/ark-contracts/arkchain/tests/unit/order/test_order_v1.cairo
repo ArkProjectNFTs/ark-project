@@ -7,8 +7,8 @@ use arkchain::order::order_v1::OrderTraitOrderV1;
 use arkchain::order::types::OrderType;
 use snforge_std::PrintTrait;
 use arkchain::order::types::RouteType;
-use arkchain::tests_lib::setup;
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
+use arkchain::tests_lib::setup_orders;
 
 // *********************************************************
 // validate_common_data
@@ -16,7 +16,7 @@ use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
 #[test]
 fn test_validate_common_data_with_valid_order() {
-    let (order_listing, _, _, _) = setup();
+    let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
     let result = order_listing.validate_common_data(block_timestmap);
     assert(result.is_ok(), 'Invalid result');
@@ -41,7 +41,7 @@ fn test_order_signature() {
 
 #[test]
 fn should_returns_invalid_order_with_zero_quantity() {
-    let (order_listing, _, _, _) = setup();
+    let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
 
     let mut invalid_order = order_listing.clone();
@@ -52,7 +52,7 @@ fn should_returns_invalid_order_with_zero_quantity() {
 
 #[test]
 fn should_returns_invalid_order_with_zero_salt() {
-    let (order_listing, _, _, _) = setup();
+    let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
 
     let mut invalid_order = order_listing.clone();
@@ -63,7 +63,7 @@ fn should_returns_invalid_order_with_zero_salt() {
 
 #[test]
 fn should_returns_invalid_order_with_zero_token_id() {
-    let (order_listing, _, _, _) = setup();
+    let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
 
     let mut invalid_order = order_listing.clone();
@@ -74,7 +74,7 @@ fn should_returns_invalid_order_with_zero_token_id() {
 
 #[test]
 fn should_returns_invalid_order_with_invalid_token_address() {
-    let (order_listing, _, _, _) = setup();
+    let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
 
     let mut invalid_order = order_listing.clone();
@@ -85,7 +85,7 @@ fn should_returns_invalid_order_with_invalid_token_address() {
 
 #[test]
 fn should_returns_invalid_order_with_invalid_dates() {
-    let (order_listing, _, _, _) = setup();
+    let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
 
     let mut invalid_order = order_listing.clone();
@@ -110,7 +110,7 @@ fn should_returns_invalid_order_with_invalid_dates() {
 
 #[test]
 fn test_validate_order_listing() {
-    let (order_listing, _, _, _) = setup();
+    let (order_listing, _, _, _) = setup_orders();
     let validated_order = order_listing.validate_order_type();
     // test for order type detection validity
     assert(validated_order.is_ok(), 'Fail to validate order type');
@@ -119,7 +119,7 @@ fn test_validate_order_listing() {
 
 #[test]
 fn test_validate_order_offer() {
-    let (_, order_offer, _, _) = setup();
+    let (_, order_offer, _, _) = setup_orders();
     let validated_order = order_offer.validate_order_type();
     // test for order type detection validity
     assert(validated_order.is_ok(), 'Fail to validate order type');
@@ -128,7 +128,7 @@ fn test_validate_order_offer() {
 
 #[test]
 fn test_validate_order_auction() {
-    let (_, _, order_auction, _) = setup();
+    let (_, _, order_auction, _) = setup_orders();
     let validated_order = order_auction.validate_order_type();
     // test for order type detection validity
     assert(validated_order.is_ok(), 'Fail to validate order type');
@@ -137,7 +137,7 @@ fn test_validate_order_auction() {
 
 #[test]
 fn test_validate_order_collection_offer() {
-    let (_, _, _, order_collection_offer) = setup();
+    let (_, _, _, order_collection_offer) = setup_orders();
     let validated_order = order_collection_offer.validate_order_type();
     // test for order type detection validity
     assert(validated_order.is_ok(), 'Fail to validate order type');
