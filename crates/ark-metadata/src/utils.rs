@@ -230,11 +230,11 @@ mod tests {
             "booklet_id":"ducks_everywhere/FirefighterDuck"
         }"#;
 
-        let normalized_metadata = normalize_metadata(raw_metadata);
-        assert!(normalized_metadata.is_ok());
+        let normalized_metadata =
+            normalize_metadata(raw_metadata).expect("failed metadata parsing");
 
         assert_eq!(
-            normalized_metadata.unwrap().image,
+            normalized_metadata.image,
             Some(
                 "https://api.briq.construction/v1/preview/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000.png".to_string()
             )
