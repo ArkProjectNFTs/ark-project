@@ -56,6 +56,19 @@ pub fn get_metadata_type(uri: &str) -> MetadataType {
     }
 }
 
+fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
+    match serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
+        Ok(v) => {
+            trace!("Successfully parsed metadata");
+            Ok(v)
+        }
+        Err(e) => {
+            error!("Failed to parse metadata: {:?}", e);
+            Err(anyhow!("Failed to parse metadata"))
+        }
+    }
+}
+
 async fn fetch_metadata(
     uri: &str,
     client: &Client,
@@ -75,11 +88,10 @@ async fn fetch_metadata(
             debug!("Response status: {}", response.status());
             if response.status().is_success() {
                 let raw_metadata = response.text().await?;
-                let metadata =
-                    match serde_json::from_str::<NormalizedMetadata>(raw_metadata.as_str()) {
-                        Ok(v) => v,
-                        Err(_) => NormalizedMetadata::default(),
-                    };
+                let metadata = match normalize_metadata(&raw_metadata.as_str()) {
+                    Ok(metadata) => metadata,
+                    Err(_) => NormalizedMetadata::default(),
+                };
 
                 let now = Utc::now();
 
@@ -186,8 +198,48 @@ pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, u64
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use reqwest::header::{HeaderMap, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
+
+    #[test]
+    fn normalize_metadata_with_array_value() {
+        let raw_metadata = r#"{
+            "id":"0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000",
+            "name":"FirefighterDuck",
+            "description":"So much water pressure in my mouth I could extinguish the sun",
+            "version":1,
+            "regionSize":100000,
+            "image":"https://api.briq.construction/v1/preview/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000.png",
+            "animation_url":"https://api.briq.construction/v1/model/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000.glb",
+            "external_url":"https://briq.construction/set/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000",
+            "background_color":"65529c",
+            "created_at":1676104065.0,
+            "attributes":[
+                {
+                    "trait_type":"Number of briqs",
+                    "value":116
+                },
+                {"display_type":"date","trait_type":"Creation Date","value":"2023-02-11"},
+                {"trait_type":"Collections","value":["Ducks Everywhere"]},
+                {"trait_type":"Ducks Everywhere","value":true},
+                {"trait_type":"Artist","value":"OutSmth"},
+                {"trait_type":"Date","value":"2023-02-13"},
+                {"trait_type":"Number of steps","value":17}
+            ],
+            "booklet_id":"ducks_everywhere/FirefighterDuck"
+        }"#;
+
+        let normalized_metadata = normalize_metadata(raw_metadata);
+        assert!(normalized_metadata.is_ok());
+
+        assert_eq!(
+            normalized_metadata.unwrap().image,
+            Some(
+                "https://api.briq.construction/v1/preview/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000.png".to_string()
+            )
+        );
+    }
 
     #[test]
     fn test_file_extension_from_mime_type() {

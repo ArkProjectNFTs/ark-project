@@ -52,6 +52,7 @@ impl fmt::Display for DisplayType {
 pub enum MetadataTraitValue {
     String(String),
     Number(Number),
+    Array(Vec<String>),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
