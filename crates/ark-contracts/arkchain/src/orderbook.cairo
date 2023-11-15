@@ -292,11 +292,28 @@ mod orderbook {
 
         fn cancel_order(ref self: ContractState, order_hash: felt252, signer: Signer) {
             SignerValidator::verify(order_hash, signer);
-            // TODO: if cancel an auction check if there are offers if true we can't cancel
-            let status = match order_status_read(order_hash) {
-                Option::Some(s) => s,
-                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
-            };
+
+            // // TODO: if cancel an auction check if there are offers if true we can't cancel
+            // let status = match order_status_read(order_hash) {
+            //     Option::Some(s) => s,
+            //     Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            // };
+
+            let order_option = order_read::<OrderV1>(order_hash);
+            assert(order_option.is_some(), 'order is not exists');
+
+            let order = order_option.unwrap();
+            let caller_address = starknet::get_caller_address();
+            assert(order.offerer == caller_address, 'only owner can cancel the order');
+            order_status_write(order_hash, arkchain::order::types::OrderStatus::CancelledUser);
+
+            self
+                .emit(
+                    OrderCancelled {
+                        order_hash,
+                        reason: arkchain::order::types::OrderStatus::CancelledUser.into()
+                    }
+                );
         }
 
         fn fullfil_order(
