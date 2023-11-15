@@ -7,7 +7,7 @@
 
 use arkchain::order::types::ExecutionInfo;
 use arkchain::order::order_v1::OrderV1;
-use arkchain::crypto::signer::{SignInfo, SignType};
+use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
@@ -26,7 +26,7 @@ trait Orderbook<T> {
     ///
     /// * `order` - The order to be placed.
     /// * `sign_info` - The signing info of the `order`.
-    fn create_order(ref self: T, order: OrderV1, sign_type: SignType, sign_info: SignInfo);
+    fn create_order(ref self: T, order: OrderV1, signer: Signer);
 
     /// Cancels an existing order in the orderbook.
     ///
@@ -34,7 +34,7 @@ trait Orderbook<T> {
     ///
     /// * `order_hash` - The order to be cancelled.
     /// * `sign_info` - The signing information associated with the order cancellation.
-    fn cancel_order(ref self: T, order_hash: felt252, sign_type: SignType, sign_info: SignInfo);
+    fn cancel_order(ref self: T, order_hash: felt252, signer: Signer);
 
     /// Fulfils an existing order in the orderbook.
     ///
@@ -43,15 +43,7 @@ trait Orderbook<T> {
     /// * `order_hash` - The order to be fulfil.
     /// * `sign_info` - The signing information associated with the order fulfillment.
     fn fullfil_order(
-        ref self: T,
-        order_hash: felt252,
-        execution_info: ExecutionInfo,
-        sign_type: SignType,
-        sign_info: SignInfo
-    );
-
-    fn validate_order_signature(
-        ref self: T, hash: felt252, sign_type: SignType, sign_info: SignInfo
+        ref self: T, order_hash: felt252, execution_info: ExecutionInfo, signer: Signer
     );
 
     /// Retrieves the type of an order using its hash.
@@ -108,7 +100,7 @@ mod orderbook {
     use arkchain::order::database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
-    use arkchain::crypto::signer::{SignInfo, SignType, WeierstrassSignatureChecker};
+    use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
 
     /// Storage struct for the Orderbook contract.
@@ -260,10 +252,9 @@ mod orderbook {
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
-        fn create_order(
-            ref self: ContractState, order: OrderV1, sign_type: SignType, sign_info: SignInfo
-        ) {
-            self.validate_order_signature(0, sign_type, sign_info);
+        fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
+            let order_hash = order.compute_order_hash();
+            SignerValidator::verify(order_hash, signer);
 
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
@@ -288,10 +279,8 @@ mod orderbook {
             }
         }
 
-        fn cancel_order(
-            ref self: ContractState, order_hash: felt252, sign_type: SignType, sign_info: SignInfo
-        ) {
-            self.validate_order_signature(0, sign_type, sign_info);
+        fn cancel_order(ref self: ContractState, order_hash: felt252, signer: Signer) {
+            SignerValidator::verify(order_hash, signer);
 
             let status = match order_status_read(order_hash) {
                 Option::Some(s) => s,
@@ -303,19 +292,8 @@ mod orderbook {
             ref self: ContractState,
             order_hash: felt252,
             execution_info: ExecutionInfo,
-            sign_type: SignType,
-            sign_info: SignInfo
+            signer: Signer
         ) {}
-
-        fn validate_order_signature(
-            ref self: ContractState, hash: felt252, sign_type: SignType, sign_info: SignInfo
-        ) {
-            match sign_type {
-                SignType::WEIERSTRESS_STARKNET => {
-                    WeierstrassSignatureChecker::verify(hash, sign_info);
-                },
-            };
-        }
     }
 
     // *************************************************************************

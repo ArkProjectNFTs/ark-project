@@ -1,7 +1,7 @@
 use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
-use snforge_std::{start_mock_call, PrintTrait, declare, ContractClassTrait};
+use snforge_std::{PrintTrait, declare, ContractClassTrait};
 use arkchain::orderbook::Orderbook;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::RouteType;
@@ -18,7 +18,6 @@ fn test_create_listing_order() {
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
-    start_mock_call(contract_address, 'validate_order_signature', 0);
 
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -97,6 +96,12 @@ fn setup() -> (OrderV1, SignInfo, felt252, felt252) {
     };
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let sign_info = SignInfo { user_pubkey: 0, user_sig_r: 0, user_sig_s: 0, };
+
+    let sign_info = SignInfo {
+        user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
+        user_sig_r: 795355584245701380516954032982332187758823962146902955336678325098859735838,
+        user_sig_s: 730750469387310131418907876439976557990001687280948049867922965495028111701,
+    };
+
     (order_listing, sign_info, order_hash, token_hash)
 }
