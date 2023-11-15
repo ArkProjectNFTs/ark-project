@@ -7,7 +7,7 @@
 
 use arkchain::order::types::ExecutionInfo;
 use arkchain::order::order_v1::OrderV1;
-use arkchain::crypto::signer::SignInfo;
+use arkchain::crypto::signer::{SignInfo, SignType};
 
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
@@ -26,7 +26,7 @@ trait Orderbook<T> {
     ///
     /// * `order` - The order to be placed.
     /// * `sign_info` - The signing info of the `order`.
-    fn create_order(ref self: T, order: OrderV1, sign_info: SignInfo);
+    fn create_order(ref self: T, order: OrderV1, sign_type: SignType, sign_info: SignInfo);
 
     /// Cancels an existing order in the orderbook.
     ///
@@ -34,7 +34,7 @@ trait Orderbook<T> {
     ///
     /// * `order_hash` - The order to be cancelled.
     /// * `sign_info` - The signing information associated with the order cancellation.
-    fn cancel_order(ref self: T, order_hash: felt252, sign_info: SignInfo);
+    fn cancel_order(ref self: T, order_hash: felt252, sign_type: SignType, sign_info: SignInfo);
 
     /// Fulfils an existing order in the orderbook.
     ///
@@ -43,7 +43,15 @@ trait Orderbook<T> {
     /// * `order_hash` - The order to be fulfil.
     /// * `sign_info` - The signing information associated with the order fulfillment.
     fn fullfil_order(
-        ref self: T, order_hash: felt252, execution_info: ExecutionInfo, sign_info: SignInfo
+        ref self: T,
+        order_hash: felt252,
+        execution_info: ExecutionInfo,
+        sign_type: SignType,
+        sign_info: SignInfo
+    );
+
+    fn validate_order_signature(
+        ref self: T, hash: felt252, sign_type: SignType, sign_info: SignInfo
     );
 
     /// Retrieves the type of an order using its hash.
@@ -100,7 +108,7 @@ mod orderbook {
     use arkchain::order::database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
-    use arkchain::crypto::signer::SignInfo;
+    use arkchain::crypto::signer::{SignInfo, SignType, WeierstrassSignatureChecker};
     use arkchain::order::types::OrderStatus;
 
     /// Storage struct for the Orderbook contract.
@@ -252,8 +260,10 @@ mod orderbook {
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
-        fn create_order(ref self: ContractState, order: OrderV1, sign_info: SignInfo) {
-            self._validate_order_signature(0, sign_info);
+        fn create_order(
+            ref self: ContractState, order: OrderV1, sign_type: SignType, sign_info: SignInfo
+        ) {
+            self.validate_order_signature(0, sign_type, sign_info);
 
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
@@ -278,8 +288,10 @@ mod orderbook {
             }
         }
 
-        fn cancel_order(ref self: ContractState, order_hash: felt252, sign_info: SignInfo) {
-            self._validate_order_signature(0, sign_info);
+        fn cancel_order(
+            ref self: ContractState, order_hash: felt252, sign_type: SignType, sign_info: SignInfo
+        ) {
+            self.validate_order_signature(0, sign_type, sign_info);
 
             let status = match order_status_read(order_hash) {
                 Option::Some(s) => s,
@@ -291,8 +303,19 @@ mod orderbook {
             ref self: ContractState,
             order_hash: felt252,
             execution_info: ExecutionInfo,
+            sign_type: SignType,
             sign_info: SignInfo
         ) {}
+
+        fn validate_order_signature(
+            ref self: ContractState, hash: felt252, sign_type: SignType, sign_info: SignInfo
+        ) {
+            match sign_type {
+                SignType::WEIERSTRESS_STARKNET => {
+                    WeierstrassSignatureChecker::verify(hash, sign_info);
+                },
+            };
+        }
     }
 
     // *************************************************************************
@@ -300,18 +323,6 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
-        fn _validate_order_signature(ref self: ContractState, hash: felt252, sign_info: SignInfo) {
-            // Questions: 
-            // - should we add signature type?
-            // - where can I get the hash ?
-
-            //   message_hash: felt252, public_key: felt252, signature_r: felt252, signature_s: felt252
-            let is_valid = ecdsa::check_ecdsa_signature(
-                hash, sign_info.user_pubkey, sign_info.user_sig_r, sign_info.user_sig_s
-            );
-            assert(is_valid, 'INVALID_SIGNATURE',);
-        }
-
         fn _create_listing_order(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {

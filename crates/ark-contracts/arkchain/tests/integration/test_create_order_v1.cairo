@@ -1,17 +1,16 @@
 use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
-use snforge_std::{declare, ContractClassTrait};
+use snforge_std::{start_mock_call, PrintTrait, declare, ContractClassTrait};
 use arkchain::orderbook::Orderbook;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::RouteType;
-use arkchain::crypto::signer::SignInfo;
+use arkchain::crypto::signer::{SignInfo, SignType};
 use arkchain::order::order_v1::OrderTrait;
 use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
-use snforge_std::PrintTrait;
 
 #[test]
 fn test_create_listing_order() {
@@ -19,8 +18,14 @@ fn test_create_listing_order() {
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
+    start_mock_call(contract_address, 'validate_order_signature', 0);
+
     let dispatcher = OrderbookDispatcher { contract_address };
-    let order = dispatcher.create_order(order: order_listing, sign_info: sign_info);
+
+    let order = dispatcher
+        .create_order(
+            order: order_listing, sign_type: SignType::WEIERSTRESS_STARKNET, sign_info: sign_info
+        );
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
     let order_type = dispatcher.get_order_type(_order_hash);

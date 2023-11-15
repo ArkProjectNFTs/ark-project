@@ -2,20 +2,21 @@
 //!
 
 trait SignatureChecker {
-    fn verify(hash: felt252, sign_info: SignatureInfo) -> bool;
+    fn verify(hash: felt252, sign_info: SignInfo);
 }
 
 impl WeierstrassSignatureChecker of SignatureChecker {
-    fn verify(hash: felt252, sign_info: SignatureInfo) {
-            let is_valid = ecdsa::check_ecdsa_signature(
-                hash, sign_info.user_pubkey, sign_info.user_sig_r, sign_info.user_sig_s
-            );
-            assert(is_valid, 'INVALID_SIGNATURE',);
+    fn verify(hash: felt252, sign_info: SignInfo) {
+        let is_valid = ecdsa::check_ecdsa_signature(
+            hash, sign_info.user_pubkey, sign_info.user_sig_r, sign_info.user_sig_s
+        );
+        assert(is_valid, 'INVALID_SIGNATURE',);
     }
 }
 
-enum SignatureInfo {
-   WEIERSTRESS_STARKNET(SignInfo)
+#[derive(Serde, Copy, Drop)]
+enum SignType {
+    WEIERSTRESS_STARKNET
 }
 
 /// The info about a data hash that has been signed.
