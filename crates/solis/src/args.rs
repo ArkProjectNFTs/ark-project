@@ -1,5 +1,3 @@
-
-
 use clap::{Args, Parser, Subcommand};
 use clap_complete::Shell;
 use katana_core::backend::config::{Environment, StarknetConfig};
@@ -13,7 +11,6 @@ use katana_rpc::config::ServerConfig;
 use tracing::Subscriber;
 use tracing_subscriber::{fmt, EnvFilter};
 
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -26,14 +23,15 @@ pub struct KatanaArgs {
     #[arg(long)]
     pub dev: bool,
 
-    #[cfg(feature = "messaging")]
     #[arg(long)]
     #[arg(value_name = "PATH")]
     #[arg(value_parser = katana_core::service::messaging::MessagingConfig::parse)]
     #[arg(help = "Configure the messaging with an other chain.")]
-    #[arg(long_help = "Configure the messaging to allow Katana listening/sending messages on a \
+    #[arg(
+        long_help = "Configure the messaging to allow Katana listening/sending messages on a \
                        settlement chain that can be Ethereum or an other Starknet sequencer. \
-                       The configuration file details and examples can be found here: TODO.")]
+                       The configuration file details and examples can be found here: TODO."
+    )]
     pub messaging: Option<katana_core::service::messaging::MessagingConfig>,
 
     #[command(flatten)]
@@ -132,7 +130,6 @@ impl KatanaArgs {
         SequencerConfig {
             block_time: self.block_time,
             no_mining: false,
-            #[cfg(feature = "messaging")]
             messaging: self.messaging.clone(),
         }
     }
@@ -162,7 +159,11 @@ impl KatanaArgs {
             fork_block_number: None,
             env: Environment {
                 chain_id: self.starknet.environment.chain_id.clone(),
-                gas_price: self.starknet.environment.gas_price.unwrap_or(DEFAULT_GAS_PRICE),
+                gas_price: self
+                    .starknet
+                    .environment
+                    .gas_price
+                    .unwrap_or(DEFAULT_GAS_PRICE),
                 invoke_max_steps: self
                     .starknet
                     .environment
@@ -185,7 +186,9 @@ fn parse_seed(seed: &str) -> [u8; 32] {
         unsafe { *(seed[..32].as_ptr() as *const [u8; 32]) }
     } else {
         let mut actual_seed = [0u8; 32];
-        seed.iter().enumerate().for_each(|(i, b)| actual_seed[i] = *b);
+        seed.iter()
+            .enumerate()
+            .for_each(|(i, b)| actual_seed[i] = *b);
         actual_seed
     }
 }
@@ -200,8 +203,14 @@ mod test {
         let block_context = args.starknet_config().block_context();
         assert_eq!(block_context.gas_price, DEFAULT_GAS_PRICE);
         assert_eq!(block_context.chain_id.0, "KATANA".to_string());
-        assert_eq!(block_context.validate_max_n_steps, DEFAULT_VALIDATE_MAX_STEPS);
-        assert_eq!(block_context.invoke_tx_max_n_steps, DEFAULT_INVOKE_MAX_STEPS);
+        assert_eq!(
+            block_context.validate_max_n_steps,
+            DEFAULT_VALIDATE_MAX_STEPS
+        );
+        assert_eq!(
+            block_context.invoke_tx_max_n_steps,
+            DEFAULT_INVOKE_MAX_STEPS
+        );
     }
 
     #[test]
@@ -226,4 +235,3 @@ mod test {
         assert_eq!(block_context.invoke_tx_max_n_steps, 200);
     }
 }
-
