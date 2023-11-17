@@ -24,8 +24,8 @@ function main() {
     quantity: { high: 1, low: 0 },
     startAmount: { high: 600000000000000000, low: 0 },
     endAmount: { high: 0, low: 0 },
-    startDate: 1699643228,
-    endDate: 1700420828,
+    startDate: 1699556828,
+    endDate: 1702148828,
     brokerId: 123,
     additionalData: [],
   };
