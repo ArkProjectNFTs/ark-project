@@ -1,4 +1,3 @@
-use core::debug::PrintTrait;
 use core::option::OptionTrait;
 use arkchain::order::types::OrderTrait;
 use core::result::ResultTrait;
@@ -8,7 +7,7 @@ use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::OrderTraitOrderV1;
 use arkchain::order::types::OrderType;
 use arkchain::order::types::RouteType;
-
+use debug::PrintTrait;
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 use super::super::super::common::setup::setup_orders;
 
@@ -34,10 +33,12 @@ fn test_order_signature() {
     let signer = Signer::WEIERSTRESS_STARKNET(
         SignInfo {
             user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-            user_sig_s: 1685260564698117654452144632567173071720151007987166386157497995988704157198,
-            user_sig_r: 775902149230454063100679677026163788131722686098855256081344196566630275657
+            user_sig_r: 1489698813778371355144251950338771124997774846063061621537328046839877802074,
+            user_sig_s: 3108595483860555652530443442785498132521754673633088480599648397307624361634,
         }
     );
+
+    order_hash.print();
     SignerValidator::verify(order_hash, signer);
 }
 

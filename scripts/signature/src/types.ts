@@ -8,7 +8,7 @@ export type OrderV1 = {
   currencyChainId: BigNumberish;
   tokenChainId: BigNumberish;
   tokenAddress: BigNumberish;
-  tokenId: Uint256;
+  tokenId?: Uint256;
   quantity: Uint256;
   startAmount: Uint256;
   endAmount: Uint256;

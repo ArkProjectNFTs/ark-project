@@ -25,8 +25,13 @@ export function hashOrder(order: OrderV1): string {
     ...bigNumberishToUint8Array(order.offerer),
     ...bigNumberishToUint8Array(order.tokenChainId),
     ...bigNumberishToUint8Array(order.tokenAddress),
-    ...bigNumberishToUint8Array(order.tokenId.low),
-    ...bigNumberishToUint8Array(order.tokenId.high),
+    ...(order.tokenId
+      ? [
+          ...bigNumberishToUint8Array(0),
+          ...bigNumberishToUint8Array(order.tokenId.low),
+          ...bigNumberishToUint8Array(order.tokenId.high),
+        ]
+      : [...bigNumberishToUint8Array(1)]),
     ...bigNumberishToUint8Array(order.quantity.low),
     ...bigNumberishToUint8Array(order.quantity.high),
     ...bigNumberishToUint8Array(order.startAmount.low),

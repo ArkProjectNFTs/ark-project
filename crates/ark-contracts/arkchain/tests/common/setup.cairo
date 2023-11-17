@@ -34,8 +34,8 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 0,
-        start_date: 1699643228,
-        end_date: 1700420828,
+        start_date: 1699556828,
+        end_date: 1702148828,
         broker_id: 123,
         additional_data: data_span,
     };
@@ -273,8 +273,8 @@ fn setup(block_timestamp: u64) -> (OrderV1, Signer, felt252, felt252) {
     let signer = Signer::WEIERSTRESS_STARKNET(
         SignInfo {
             user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-            user_sig_s: 2002183686227392431291655286012605841000867232983156743245162872729965254511,
-            user_sig_r: 1931487909678821646066898054890254502623510667594888599224414019481722659060
+            user_sig_r: 1489698813778371355144251950338771124997774846063061621537328046839877802074,
+            user_sig_s: 3108595483860555652530443442785498132521754673633088480599648397307624361634
         }
     );
 
