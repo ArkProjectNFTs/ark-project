@@ -102,7 +102,7 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
         ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1), order_type.into()
     );
 
-    // At offset 1, we always have the length.
+    // At offset 2, we always have the length.
     let mut buf = array![];
     order.serialize(ref buf);
 
