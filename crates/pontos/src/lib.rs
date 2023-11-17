@@ -259,6 +259,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
         let from_u64 = current_u64;
 
+        let max_attempt = 5;
+        let mut attempt = 0;
+
         loop {
             trace!("Indexing block range: {} {}", current_u64, to_u64);
 
@@ -267,7 +270,21 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 break;
             }
 
-            let block_ts = self.client.block_time(BlockId::Number(current_u64)).await?;
+            let block_ts = match self.client.block_time(BlockId::Number(current_u64)).await {
+                Ok(ts) => ts,
+                Err(e) => {
+                    error!("Attempt #{} - Couldn't get timestamp for block {}: {:?}", attempt + 1, current_u64, e);
+                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                    attempt += 1;
+
+                    if attempt > max_attempt {
+                        warn!("Skipping block {} as timestamp is not available", current_u64);
+                        current_u64 += 1;
+                    }
+
+                    continue;
+                }
+            };
 
             if self
                 .block_manager
