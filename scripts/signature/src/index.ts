@@ -20,12 +20,12 @@ function main() {
     tokenChainId: "0x534e5f4d41494e",
     tokenAddress:
       "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-    tokenId: { high: 10, low: 0 },
-    quantity: { high: 1, low: 0 },
-    startAmount: { high: 600000000000000000, low: 0 },
+    tokenId: { high: 0, low: 10 },
+    quantity: { high: 0, low: 1 },
+    startAmount: { high: 0, low: 600000000000000000 },
     endAmount: { high: 0, low: 0 },
-    startDate: 1699643228,
-    endDate: 1700420828,
+    startDate: 1699556828,
+    endDate: 1702148828,
     brokerId: 123,
     additionalData: [],
   };

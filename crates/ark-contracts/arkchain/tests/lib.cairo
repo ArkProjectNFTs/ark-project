@@ -1,3 +1,7 @@
+mod common {
+    mod setup;
+}
+
 mod integration {
     mod test_create_order_v1;
 }
