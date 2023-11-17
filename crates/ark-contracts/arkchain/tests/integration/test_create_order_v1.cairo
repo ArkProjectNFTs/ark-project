@@ -11,13 +11,8 @@ use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
-<<<<<<< HEAD
-use arkchain::tests_lib::setup_listing_order_with_sign;
-=======
-use snforge_std::PrintTrait;
 
-use super::super::common::setup::setup_listing_order_with_sign;
->>>>>>> 6fde401 (feat(listing): update auction & listing orders creating logic & verifications, need tests adjustement)
+use super::super::common::setup::{setup, setup_listing_order_with_sign};
 
 #[test]
 fn test_create_listing_order() {
@@ -66,47 +61,4 @@ fn test_create_listing_order() {
     assert(order_hash == _order_hash, 'Order hash is not equal');
     assert(order_type == OrderType::Listing.into(), 'Order type is not listing');
     assert(order_status == OrderStatus::Open.into(), 'Order status is not open');
-}
-
-fn setup(block_timestamp: u64) -> (OrderV1, Signer, felt252, felt252) {
-    let end_date = block_timestamp + (30 * 24 * 60 * 60);
-    let data = array![];
-    let data_span = data.span();
-
-    let order_listing = OrderV1 {
-        route: RouteType::Erc721ToErc20.into(),
-        currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
-            .try_into()
-            .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
-        salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
-        token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
-            .try_into()
-            .unwrap(),
-        token_id: 10,
-        quantity: 1,
-        start_amount: 600000000000000000,
-        end_amount: 0,
-        start_date: block_timestamp,
-        end_date: end_date,
-        broker_id: 123,
-        additional_data: data_span,
-    };
-
-    let order_hash = order_listing.compute_order_hash();
-    let token_hash = order_listing.compute_token_hash();
-
-    let signer = Signer::WEIERSTRESS_STARKNET(
-        SignInfo {
-            user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-            user_sig_s: 1931487909678821646066898054890254502623510667594888599224414019481722659060,
-            user_sig_r: 2002183686227392431291655286012605841000867232983156743245162872729965254511
-        }
-    );
-
-    (order_listing, signer, order_hash, token_hash)
 }

@@ -27,7 +27,7 @@ fn test_validate_common_data_with_valid_order() {
 #[test]
 fn test_order_signature() {
     let block_timestamp = 1700069210;
-    let (order_listing, order_offer, order_auction, order_collection_offer) = setup();
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
 
     let order_hash = order_listing.compute_order_hash();
 
