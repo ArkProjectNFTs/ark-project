@@ -2,9 +2,10 @@
   "name": "signature",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "npx ts-node ./src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +14,8 @@
     "@scure/starknet": "^0.3.0",
     "sha3": "link:@noble/hashes/sha3",
     "starknet": "^5.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
   }
 }

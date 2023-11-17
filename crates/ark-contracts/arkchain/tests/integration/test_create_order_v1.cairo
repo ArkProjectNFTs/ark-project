@@ -14,7 +14,7 @@ use starknet::deploy_syscall;
 
 #[test]
 fn test_create_listing_order() {
-    let block_timestamp = starknet::get_block_timestamp();
+    let block_timestamp = 1699556828; // starknet::get_block_timestamp();
     let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
@@ -46,11 +46,8 @@ fn test_create_listing_order() {
     assert(order.quantity == 1, 'Quantity is not equal');
     assert(order.start_amount == 600000000000000000, 'Start amount is not equal');
     assert(order.end_amount == 0, 'End amount is not equal');
-    assert(order.start_date == starknet::get_block_timestamp(), 'Start date is not equal');
-    assert(
-        order.end_date == starknet::get_block_timestamp() + (30 * 24 * 60 * 60),
-        'End date is not equal'
-    );
+    assert(order.start_date == block_timestamp, 'Start date is not equal');
+    assert(order.end_date == block_timestamp + (30 * 24 * 60 * 60), 'End date is not equal');
     assert(
         order
             .offerer == 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
@@ -98,8 +95,8 @@ fn setup(block_timestamp: u64) -> (OrderV1, Signer, felt252, felt252) {
     let signer = Signer::WEIERSTRESS_STARKNET(
         SignInfo {
             user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-            user_sig_s: 1685260564698117654452144632567173071720151007987166386157497995988704157198,
-            user_sig_r: 775902149230454063100679677026163788131722686098855256081344196566630275657
+            user_sig_s: 1931487909678821646066898054890254502623510667594888599224414019481722659060,
+            user_sig_r: 2002183686227392431291655286012605841000867232983156743245162872729965254511
         }
     );
 
