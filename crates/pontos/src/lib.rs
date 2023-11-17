@@ -273,12 +273,20 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             let block_ts = match self.client.block_time(BlockId::Number(current_u64)).await {
                 Ok(ts) => ts,
                 Err(e) => {
-                    error!("Attempt #{} - Couldn't get timestamp for block {}: {:?}", attempt + 1, current_u64, e);
+                    error!(
+                        "Attempt #{} - Couldn't get timestamp for block {}: {:?}",
+                        attempt + 1,
+                        current_u64,
+                        e
+                    );
                     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                     attempt += 1;
 
                     if attempt > max_attempt {
-                        warn!("Skipping block {} as timestamp is not available", current_u64);
+                        warn!(
+                            "Skipping block {} as timestamp is not available",
+                            current_u64
+                        );
                         current_u64 += 1;
                     }
 
