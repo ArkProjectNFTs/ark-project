@@ -1,3 +1,5 @@
+use core::debug::PrintTrait;
+use core::option::OptionTrait;
 use arkchain::order::types::OrderTrait;
 use core::result::ResultTrait;
 use core::traits::Into;
@@ -5,7 +7,6 @@ use core::traits::TryInto;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::OrderTraitOrderV1;
 use arkchain::order::types::OrderType;
-use snforge_std::PrintTrait;
 use arkchain::order::types::RouteType;
 
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
@@ -63,14 +64,15 @@ fn should_returns_invalid_order_with_zero_salt() {
 }
 
 #[test]
-fn should_returns_invalid_order_with_zero_token_id() {
+fn should_returns_invalid_order_with_no_token_id() {
     let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
 
     let mut invalid_order = order_listing.clone();
     invalid_order.token_id = Option::None;
+    assert(invalid_order.token_id.is_none(), 'token_id should be none');
     let result = invalid_order.validate_common_data(block_timestmap);
-    assert(!result.is_ok(), 'zero token id');
+    assert(result.is_ok(), 'Result should be valid');
 }
 
 #[test]
@@ -146,4 +148,3 @@ fn test_validate_order_collection_offer() {
         validated_order.unwrap() == OrderType::CollectionOffer, 'Fail for type collection offer'
     );
 }
-

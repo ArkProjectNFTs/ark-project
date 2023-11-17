@@ -128,8 +128,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             }
         } else {
             // Collection Offer order.
-            if (*self.token_id).is_some()
-                && (*self.start_amount) > 0
+            if (*self.start_amount) > 0
                 && (*self.end_amount).is_zero()
                 && (*self.route) == RouteType::Erc20ToErc721 {
                 return Result::Ok(OrderType::CollectionOffer);
