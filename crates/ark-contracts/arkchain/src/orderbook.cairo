@@ -106,6 +106,8 @@ mod orderbook {
     use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
 
+    const EXTENSION_TIME_IN_SECONDS: u64 = 600;
+
     /// Storage struct for the Orderbook contract.
     #[storage]
     struct Storage {
@@ -455,22 +457,42 @@ mod orderbook {
                 );
         }
 
+        fn _manage_auction_offer(ref self: ContractState, order: OrderV1, order_hash: felt252) {
+            let token_hash = order.compute_token_hash();
+            let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                .auctions
+                .read(token_hash);
+
+            let current_block_timestamp = starknet::get_block_timestamp();
+            // Determine if the auction end date has passed, indicating that the auction is still ongoing.
+            let auction_is_pending = current_block_timestamp >= auction_end_date;
+
+            if auction_is_pending {
+                // If the auction is still pending, record the new offer by linking it to the 
+                // auction order hash in the 'auction_offers' mapping.
+                self.auction_offers.write(order_hash, auction_order_hash);
+
+                // Increment the number of offers for this auction and extend the auction 
+                // end date by the predefined extension time to allow for additional offers.
+                self
+                    .auctions
+                    .write(
+                        token_hash,
+                        (
+                            auction_order_hash,
+                            auction_end_date + EXTENSION_TIME_IN_SECONDS,
+                            auction_offer_count + 1
+                        )
+                    );
+            }
+        }
+
         /// Creates an offer order.
         fn _create_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
-            // TODO:  Manage auction offer
-
-            // let token_hash = order.compute_token_hash();
-            // let (auction_order_hash, auction_end_date) = self.auctions.read(token_hash);
-            // if auction_order_hash.is_non_zero() {
-            //     let auction_order = self.auction_offers.read(order_hash);
-            //     assert(auction_order.is_zero(), orderbook_errors::OFFER_ALREADY_EXISTS);
-            //     self.auction_offers.write(order_hash, auction_order_hash);
-            // }
-
+            self._manage_auction_offer(order, order_hash);
             order_write(order_hash, order_type, order);
-
             self
                 .emit(
                     OrderPlaced {
@@ -482,22 +504,12 @@ mod orderbook {
                     }
                 );
         }
+
         /// Creates a collection offer order.
         fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
-            // TODO: Manage auction offer
-
-            // let ressource_hash = order.compute_ressource_hash();
-            // let (auction_order_hash, auction_end_date) = self.auctions.read(ressource_hash);
-            // if auction_order_hash.is_non_zero() {
-            //     let auction_order = self.auction_offers.read(order_hash);
-            //     assert(auction_order.is_zero(), 'already existing auction offer');
-            //     self.auction_offers.write(order_hash, auction_order_hash);
-            // }
-
             order_write(order_hash, order_type, order);
-
             self
                 .emit(
                     OrderPlaced {

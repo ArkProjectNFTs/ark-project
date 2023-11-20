@@ -204,9 +204,9 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
 ///
 /// # Returns a tuple of the different orders data
 ///
-fn setup_auction_order(start_price: felt252, end_price: felt252) -> (OrderV1, felt252, felt252) {
-    let block_timestamp = starknet::get_block_timestamp();
-    let end_date = block_timestamp + (30 * 24 * 60 * 60);
+fn setup_auction_order(
+    start_date: u64, end_date: u64, start_price: felt252, end_price: felt252
+) -> (OrderV1, Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
     let order_listing = OrderV1 {
@@ -226,15 +226,25 @@ fn setup_auction_order(start_price: felt252, end_price: felt252) -> (OrderV1, fe
         token_id: Option::Some(10),
         quantity: 1,
         start_amount: start_price.into(),
-        end_amount: start_price.into(),
-        start_date: block_timestamp,
-        end_date: end_date,
+        end_amount: end_price.into(),
+        start_date,
+        end_date,
         broker_id: 123,
         additional_data: data_span,
     };
+    
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    (order_listing, order_hash, token_hash)
+
+    let signer = Signer::WEIERSTRESS_STARKNET(
+        SignInfo {
+            user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
+            user_sig_r: 2250666424576291071933677815934144947957790701477784088017437881568685103403,
+            user_sig_s: 1452991953805583768962800340049289975216995156032868449259533666391808286858
+        }
+    );
+
+    (order_listing, signer, order_hash, token_hash)
 }
 
 

@@ -37,8 +37,6 @@ fn test_order_signature() {
             user_sig_s: 3108595483860555652530443442785498132521754673633088480599648397307624361634,
         }
     );
-
-    order_hash.print();
     SignerValidator::verify(order_hash, signer);
 }
 

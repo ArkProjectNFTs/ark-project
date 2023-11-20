@@ -32,7 +32,7 @@ const ORDER_DB_BASE_KEY: felt252 = 'order database';
 /// # Arguments
 ///
 /// * `order_hash` - Hash of the order used as key.
-fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt252,) -> Option<T> {
+fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt252) -> Option<T> {
     let key = array![ORDER_DB_BASE_KEY, order_hash];
 
     let base = starknet::storage_base_address_from_felt252(
