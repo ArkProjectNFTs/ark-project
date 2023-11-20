@@ -465,7 +465,7 @@ mod orderbook {
 
             let current_block_timestamp = starknet::get_block_timestamp();
             // Determine if the auction end date has passed, indicating that the auction is still ongoing.
-            let auction_is_pending = current_block_timestamp >= auction_end_date;
+            let auction_is_pending = current_block_timestamp < auction_end_date;
 
             if auction_is_pending {
                 // If the auction is still pending, record the new offer by linking it to the 
