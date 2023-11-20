@@ -3,6 +3,9 @@ use arkchain::order::types::OrderTrait;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::types::RouteType;
 use arkchain::crypto::signer::{Signer, SignInfo};
+use snforge_std::signature::{
+    StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer as SNSigner, Verifier
+};
 
 /// Utility function to setup orders for test environment.
 ///
@@ -206,7 +209,7 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
 ///
 fn setup_auction_order(
     start_date: u64, end_date: u64, start_price: felt252, end_price: felt252
-) -> (OrderV1, Signer, felt252, felt252) {
+) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
     let order_listing = OrderV1 {
@@ -232,23 +235,15 @@ fn setup_auction_order(
         broker_id: 123,
         additional_data: data_span,
     };
-    
+
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-
-    let signer = Signer::WEIERSTRESS_STARKNET(
-        SignInfo {
-            user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-            user_sig_r: 2250666424576291071933677815934144947957790701477784088017437881568685103403,
-            user_sig_s: 1452991953805583768962800340049289975216995156032868449259533666391808286858
-        }
-    );
+    let signer = sign_mock(order_hash);
 
     (order_listing, signer, order_hash, token_hash)
 }
 
-
-fn setup(block_timestamp: u64) -> (OrderV1, Signer, felt252, felt252) {
+fn setup(block_timestamp: u64) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
     let end_date = block_timestamp + (30 * 24 * 60 * 60);
     let data = array![];
     let data_span = data.span();
@@ -279,14 +274,18 @@ fn setup(block_timestamp: u64) -> (OrderV1, Signer, felt252, felt252) {
 
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-
-    let signer = Signer::WEIERSTRESS_STARKNET(
-        SignInfo {
-            user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-            user_sig_r: 1489698813778371355144251950338771124997774846063061621537328046839877802074,
-            user_sig_s: 3108595483860555652530443442785498132521754673633088480599648397307624361634
-        }
-    );
-
+    let signer = sign_mock(order_hash);
+    
     (order_listing, signer, order_hash, token_hash)
+}
+
+
+fn sign_mock(message_hash: felt252) -> Signer {
+    let private_key: felt252 = 0x1234567890987654321;
+    let mut key_pair = StarkCurveKeyPairTrait::from_private_key(private_key);
+    let (r, s) = key_pair.sign(message_hash).unwrap();
+
+    Signer::WEIERSTRESS_STARKNET(
+        SignInfo { user_pubkey: key_pair.public_key, user_sig_r: r, user_sig_s: s, }
+    )
 }

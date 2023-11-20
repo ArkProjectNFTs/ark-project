@@ -11,13 +11,14 @@ use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
+use snforge_std::signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier};
 
-use super::super::common::setup::{setup_auction_order};
+use super::super::common::setup::{setup_auction_order, setup, sign_mock};
 
 #[test]
 fn test_create_valid_auction_offer() {
     let start_date = 1699556828;
-    let end_date = start_date + (30 * 24 * 60 * 60);
+    let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
         start_date, end_date, 1, 10
@@ -29,5 +30,9 @@ fn test_create_valid_auction_offer() {
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
-    // TODO: create auction offer
+    let (offer_order, _, order_hash, token_hash) = setup(start_date + 50);
+
+    let signer = sign_mock(order_hash);
+    dispatcher.create_order(order: offer_order, signer: signer);
+// TODO: create auction offer
 }
