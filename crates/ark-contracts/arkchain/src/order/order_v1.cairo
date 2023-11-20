@@ -8,6 +8,7 @@ use starknet::ContractAddress;
 use starknet::contract_address_to_felt252;
 use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType, RouteType};
 use arkchain::crypto::hash::starknet_keccak;
+use arkchain::order::types::FulfillInfo;
 
 const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).

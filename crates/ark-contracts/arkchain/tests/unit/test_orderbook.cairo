@@ -1,22 +1,20 @@
-use arkchain::order::types::OrderTrait;
 use core::debug::PrintTrait;
 use core::option::OptionTrait;
 use arkchain::orderbook::orderbook;
 use arkchain::order::order_v1::OrderV1;
-use arkchain::order::types::RouteType;
 use core::traits::Into;
 use core::traits::TryInto;
-use arkchain::order::types::OrderType;
+use arkchain::order::types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
 use arkchain::order::database::{order_read, order_status_read, order_status_write, order_type_read};
-use arkchain::order::types::OrderStatus;
 use snforge_std::{
     declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions, Event, SpyOn,
     test_address
 };
 use arkchain::orderbook::orderbook_errors;
 use array::ArrayTrait;
-use super::super::common::setup::setup_listing_order;
+use super::super::common::setup::{setup_listing_order, get_offer_order};
 const ORDER_VERSION_V1: felt252 = 'v1';
+use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
 #[test]
 fn test_create_listing() {
@@ -295,30 +293,66 @@ fn test_create_collection_offer() {
         );
 }
 
-fn get_offer_order() -> OrderV1 {
-    let data = array![];
-    let data_span = data.span();
-    OrderV1 {
-        route: RouteType::Erc20ToErc721.into(),
-        currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+
+#[test]
+fn test_create_listing_order_and_fulfill_the_order() {
+    let (mut order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
+    let contract_address = test_address();
+    let mut state = orderbook::contract_state_for_testing();
+    orderbook::InternalFunctions::_create_listing_order(
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
+    );
+
+    let execute_info = FulfillInfo {
+        order_hash: order_hash_1,
+        related_order_hash: Option::None,
+        fulfiller: 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
-        salt: 0,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
-        token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
-            .try_into()
-            .unwrap(),
-        token_id: Option::Some(1),
-        quantity: 1,
-        start_amount: 600000000000000000,
-        end_amount: 0,
-        start_date: 1699525884797,
-        end_date: 1702117884797,
-        broker_id: 123,
-        additional_data: data_span,
-    }
+        token_chain_id: order_listing_1.token_chain_id,
+        token_address: order_listing_1.token_address,
+        token_id: order_listing_1.token_id,
+    };
+
+    // Try to fulfill the order
+    orderbook::InternalFunctions::_fulfill_listing_order(ref state, execute_info, order_listing_1,);
+
+    // assert order1 is fulfilled
+    let order_option = order_read::<OrderV1>(order_hash_1);
+    let order_status = order_status_read(order_hash_1);
+    let order_type = order_type_read(order_hash_1);
+    assert(order_option.is_some(), 'storage order');
+    let order = order_option.unwrap();
+    assert(order_status.is_some(), 'storage order');
+    assert(order_status.unwrap() == OrderStatus::Fulfilled, 'order status');
 }
+
+// another test trying to fulfill an expired order: should fail
+#[should_panic(expected: ('OB: order expired',))]
+#[test]
+fn test_create_listing_order_and_fulfill_the_order_expired() {
+    let (mut order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
+    let contract_address = test_address();
+    let mut state = orderbook::contract_state_for_testing();
+    order_listing_1
+        .end_date =
+            starknet::get_block_timestamp(); // we use the current block timestamp to make the order expired because if we substract it will be negative
+    orderbook::InternalFunctions::_create_listing_order(
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
+    );
+
+    let execute_info = FulfillInfo {
+        order_hash: order_hash_1,
+        related_order_hash: Option::None,
+        fulfiller: 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+            .try_into()
+            .unwrap(),
+        token_chain_id: order_listing_1.token_chain_id,
+        token_address: order_listing_1.token_address,
+        token_id: order_listing_1.token_id,
+    };
+
+    // Try to fulfill the order
+    orderbook::InternalFunctions::_fulfill_listing_order(ref state, execute_info, order_listing_1,);
+}
+

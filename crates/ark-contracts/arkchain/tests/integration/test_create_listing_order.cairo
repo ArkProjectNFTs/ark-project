@@ -18,7 +18,7 @@ use super::super::common::setup::{setup, setup_listing_order_with_sign};
 #[should_panic(expected: ('OB: order already exists',))]
 fn test_create_existing_order() {
     let block_timestamp = 1699556828; // starknet::get_block_timestamp();
-    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp);
+    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp, false);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -30,13 +30,13 @@ fn test_create_existing_order() {
 #[test]
 fn test_create_listing_order() {
     let block_timestamp = 1699556828; // starknet::get_block_timestamp();
-    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp);
+    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp, false);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
-    let order = dispatcher.create_order(order: order_listing, signer: signer);
+    dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
     let order_type = dispatcher.get_order_type(_order_hash);

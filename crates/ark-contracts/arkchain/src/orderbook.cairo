@@ -3,9 +3,9 @@
 //! This module defines the structure and functionalities of an orderbook contract. It includes
 //! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external functions, 
 //! and internal functions. The primary functionalities include broker whitelisting, order management 
-//! (creation, cancellation, execution), and order queries.
+//! (creation, cancellation, fulfillment), and order queries.
 
-use arkchain::order::types::{ExecutionInfo, OrderType, OrderStatus};
+use arkchain::order::types::{FulfillInfo, OrderType, OrderStatus};
 use arkchain::order::order_v1::OrderV1;
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
@@ -42,9 +42,7 @@ trait Orderbook<T> {
     ///
     /// * `order_hash` - The order to be fulfil.
     /// * `sign_info` - The signing information associated with the order fulfillment.
-    fn fullfil_order(
-        ref self: T, order_hash: felt252, execution_info: ExecutionInfo, signer: Signer
-    );
+    fn fulfill_order(ref self: T, fulfill_info: FulfillInfo, signer: Signer);
 
     /// Retrieves the type of an order using its hash.
     ///
@@ -81,15 +79,19 @@ mod orderbook_errors {
     const ORDER_INVALID_DATA: felt252 = 'OB: order invalid data';
     const ORDER_ALREADY_EXISTS: felt252 = 'OB: order already exists';
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
+    const ORDER_NOT_FULFILLABLE: felt252 = 'OB: order not fulfillable';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
     const ORDER_FULFILLED: felt252 = 'OB: order fulfilled';
     const ORDER_NOT_CANCELLABLE: felt252 = 'OB: order not cancellable';
+    const ORDER_EXPIRED: felt252 = 'OB: order expired';
+    const ORDER_SAME_OFFERER: felt252 = 'OB: order has same offerer';
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
 }
 
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
+    use arkchain::order::types::FulfillInfoTrait;
     use core::traits::TryInto;
     use core::result::ResultTrait;
     use core::zeroable::Zeroable;
@@ -98,13 +100,15 @@ mod orderbook {
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
     use starknet::ContractAddress;
-    use arkchain::order::types::{OrderTrait, OrderType, ExecutionInfo, FulfillmentInfo};
+    use arkchain::order::types::{OrderTrait, OrderType, FulfillInfo, FulfillmentInfo};
     use arkchain::order::order_v1::OrderV1;
     use arkchain::order::database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
     use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
+    use arkchain::crypto::hash::starknet_keccak;
+    use debug::PrintTrait;
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
 
@@ -165,7 +169,7 @@ mod orderbook {
     struct OrderExecuted {
         #[key]
         order_hash: felt252,
-        info: ExecutionInfo,
+    // info: ExecutionInfo,
     }
 
     /// Event for when an order is cancelled.
@@ -183,7 +187,7 @@ mod orderbook {
         #[key]
         order_hash: felt252,
         #[key]
-        transaction_hash_settlement: felt252,
+        fulfiller: ContractAddress,
     }
 
     // *************************************************************************
@@ -329,12 +333,32 @@ mod orderbook {
             self.emit(OrderCancelled { order_hash, reason: OrderStatus::CancelledUser.into() });
         }
 
-        fn fullfil_order(
-            ref self: ContractState,
-            order_hash: felt252,
-            execution_info: ExecutionInfo,
-            signer: Signer
-        ) {}
+        fn fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo, signer: Signer) {
+            let order_hash = fulfill_info.order_hash;
+            let execution_hash = fulfill_info.hash();
+            SignerValidator::verify(execution_hash, signer);
+            let order: OrderV1 = match order_read(order_hash) {
+                Option::Some(o) => o,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            let status = match order_status_read(order_hash) {
+                Option::Some(s) => s,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            assert(status == OrderStatus::Open, orderbook_errors::ORDER_NOT_FULFILLABLE);
+            let order_type = match order_type_read(order_hash) {
+                Option::Some(s) => s,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            match order_type {
+                OrderType::Listing => { self._fulfill_listing_order(fulfill_info, order); },
+                OrderType::Auction => { panic_with_felt252('Auction not implemented'); },
+                OrderType::Offer => { panic_with_felt252('Offer not implemented'); },
+                OrderType::CollectionOffer => {
+                    panic_with_felt252('CollectionOffer not implemented');
+                },
+            }
+        }
     }
 
     // *************************************************************************
@@ -342,6 +366,28 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
+        /// Fulfill order
+        ///
+        /// # Arguments
+        /// * `fulfill_info` - The execution info of the order.
+        /// * `order_type` - The type of the order.
+        ///
+        fn _fulfill_listing_order(
+            ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
+        ) {
+            assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
+            assert(
+                order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
+            );
+            order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
+            self
+                .emit(
+                    OrderFulfilled {
+                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                    }
+                );
+        }
+
         /// Get order hash from token hash
         ///
         /// # Arguments
@@ -351,7 +397,7 @@ mod orderbook {
             self.token_listings.read(token_hash)
         }
 
-        /// get previous order 
+        /// get previous order
         ///
         /// # Arguments
         /// * `token_hash` - The token hash of the order.
@@ -359,7 +405,7 @@ mod orderbook {
         /// # Return option of (order hash: felt252, is_order_expired: bool, order: OrderV1)
         /// * order_hash
         /// * is_order_expired
-        /// * order 
+        /// * order
         fn _get_previous_order(
             self: @ContractState, token_hash: felt252
         ) -> Option<(felt252, bool, OrderV1)> {
@@ -371,7 +417,6 @@ mod orderbook {
                 .auctions
                 .read(token_hash);
             let mut previous_orderhash = 0;
-
             if (previous_listing_orderhash.is_non_zero()) {
                 previous_orderhash = previous_listing_orderhash;
                 let previous_order: Option<OrderV1> = order_read(previous_orderhash);
@@ -412,8 +457,6 @@ mod orderbook {
             ref self: ContractState, token_hash: felt252, offerer: ContractAddress
         ) -> Option<felt252> {
             let previous_order = self._get_previous_order(token_hash);
-
-            // Check of previous order exists
             if (previous_order.is_some()) {
                 let (previous_orderhash, previous_order_is_expired, previous_order) = previous_order
                     .unwrap();
@@ -421,20 +464,13 @@ mod orderbook {
                     .expect('Invalid Order status');
                 let previous_order_type = order_type_read(previous_orderhash)
                     .expect('Invalid Order type');
-
-                // check if previous order is fulfilled
                 assert(
                     previous_order_status != OrderStatus::Fulfilled,
                     orderbook_errors::ORDER_FULFILLED
                 );
-
-                // verify offerer is the same
                 if (previous_order.offerer == offerer) {
-                    // check previous order is expired
                     assert(previous_order_is_expired, orderbook_errors::ORDER_NOT_CANCELLABLE);
                 }
-
-                // cancel previous order
                 order_status_write(previous_orderhash, OrderStatus::CancelledByNewOrder);
                 return Option::Some(previous_orderhash);
             }
@@ -446,11 +482,8 @@ mod orderbook {
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) -> Option<felt252> {
             let token_hash = order.compute_token_hash();
-            // Check if there is a previous order and cancel it if needed
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
-            // Write new order with status open
             order_write(order_hash, order_type, order);
-            // Associate token_hash to order_hash on the storage
             self.token_listings.write(token_hash, order_hash);
             self
                 .emit(
@@ -470,9 +503,7 @@ mod orderbook {
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             let token_hash = order.compute_token_hash();
-            // Check if there is a previous order and cancel it if needed
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
-            /// we create an auction on the storage
             order_write(order_hash, order_type, order);
             self.auctions.write(token_hash, (order_hash, order.end_date, 0));
             self
