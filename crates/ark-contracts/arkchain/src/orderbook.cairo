@@ -273,10 +273,8 @@ mod orderbook {
 
             let order_hash = order.compute_order_hash();
 
-            // TODO
-
-            // let order_read_option = order_read::<OrderV1>(order_hash);
-            // assert(order_read_option.is_some(), orderbook_errors::ORDER_ALREADY_EXISTS);
+            // Check if order already exists
+            assert(order_status_read(order_hash).is_none(), orderbook_errors::ORDER_ALREADY_EXISTS);
 
             match order_type {
                 OrderType::Listing => {
@@ -456,12 +454,13 @@ mod orderbook {
                     }
                 );
         }
-        
+
         /// Creates an offer order.
         fn _create_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
-            // // Manage auction offer
+            // TODO:  Manage auction offer
+
             // let token_hash = order.compute_token_hash();
             // let (auction_order_hash, auction_end_date) = self.auctions.read(token_hash);
             // if auction_order_hash.is_non_zero() {
@@ -469,6 +468,8 @@ mod orderbook {
             //     assert(auction_order.is_zero(), orderbook_errors::OFFER_ALREADY_EXISTS);
             //     self.auction_offers.write(order_hash, auction_order_hash);
             // }
+
+            order_write(order_hash, order_type, order);
 
             self
                 .emit(
@@ -485,8 +486,8 @@ mod orderbook {
         fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
+            // TODO: Manage auction offer
 
-            // Manage auction offer
             // let ressource_hash = order.compute_ressource_hash();
             // let (auction_order_hash, auction_end_date) = self.auctions.read(ressource_hash);
             // if auction_order_hash.is_non_zero() {
@@ -494,7 +495,8 @@ mod orderbook {
             //     assert(auction_order.is_zero(), 'already existing auction offer');
             //     self.auction_offers.write(order_hash, auction_order_hash);
             // }
-            // order_write(order_hash, order);
+
+            order_write(order_hash, order_type, order);
 
             self
                 .emit(

@@ -1,6 +1,5 @@
 use core::debug::PrintTrait;
 use core::option::OptionTrait;
-use arkchain::orderbook::orderbook::ordersContractMemberStateTrait;
 use arkchain::orderbook::orderbook;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::types::RouteType;
@@ -32,8 +31,7 @@ fn test_create_offer() {
 
     let order_option = order_read::<OrderV1>(order_hash);
     assert(order_option.is_some(), 'storage order');
-    let (order_status, order) = order_option.unwrap();
-    assert(order_status == OrderStatus::Open, 'order status');
+    let order = order_option.unwrap();
     assert(order.token_address == offer_order.token_address, 'token address does not match');
 
     spy
@@ -46,7 +44,8 @@ fn test_create_offer() {
                             order_hash,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::Offer,
-                            order: offer_order
+                            order: offer_order,
+                            cancelled_order_hash: Option::None
                         }
                     )
                 )
@@ -64,14 +63,13 @@ fn test_create_collection_offer() {
     let order_hash = '123';
 
     let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::_create_offer(
+    orderbook::InternalFunctions::_create_collection_offer(
         ref state, offer_order, OrderType::CollectionOffer, order_hash
     );
 
     let order_option = order_read::<OrderV1>(order_hash);
     assert(order_option.is_some(), 'storage order');
-    let (order_status, order) = order_option.unwrap();
-    assert(order_status == OrderStatus::Open, 'order status');
+    let order = order_option.unwrap();
     assert(order.token_address == offer_order.token_address, 'token address does not match');
 
     spy
@@ -84,7 +82,8 @@ fn test_create_collection_offer() {
                             order_hash,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::CollectionOffer,
-                            order: offer_order
+                            order: offer_order,
+                            cancelled_order_hash: Option::None
                         }
                     )
                 )
