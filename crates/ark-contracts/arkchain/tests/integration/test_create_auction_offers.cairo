@@ -56,10 +56,12 @@ fn test_accept_auction_after_expiration() {
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
-    let (auction_offer, signer, order_hash, token_hash) = setup_auction_offer(
+    let (auction_offer, signer, auction_offer_order_hash, token_hash) = setup_auction_offer(
         end_date + 10, end_date + 30
     );
     dispatcher.create_order(order: auction_offer, signer: signer);
+    let auction_expiration_date = dispatcher.get_auction_expiration(auction_offer_order_hash);
+    assert(auction_expiration_date == end_date + 600, 'expiration is not correct');
 
     start_warp(contract_address, end_date + 20);
 // TODO: fullfil_order

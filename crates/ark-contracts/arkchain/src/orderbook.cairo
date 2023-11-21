@@ -5,7 +5,7 @@
 //! and internal functions. The primary functionalities include broker whitelisting, order management 
 //! (creation, cancellation, fulfillment), and order queries.
 
-use arkchain::order::types::{FulfillInfo, OrderType, OrderStatus};
+use arkchain::order::types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
 use arkchain::order::order_v1::OrderV1;
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
@@ -32,9 +32,9 @@ trait Orderbook<T> {
     ///
     /// # Arguments
     ///
-    /// * `order_hash` - The order to be cancelled.
+    /// * `cancel_info` - information about the order to be cancelled.
     /// * `sign_info` - The signing information associated with the order cancellation.
-    fn cancel_order(ref self: T, order_hash: felt252, signer: Signer);
+    fn cancel_order(ref self: T, cancel_info: CancelInfo, signer: Signer);
 
     /// Fulfils an existing order in the orderbook.
     ///
@@ -48,7 +48,7 @@ trait Orderbook<T> {
     ///
     /// # Arguments
     /// * `order_hash` - The order hash of order.
-    fn get_order_type(self: @T, order_hash: felt252) -> felt252;
+    fn get_order_type(self: @T, order_hash: felt252) -> OrderType;
 
     /// Retrieves the status of an order using its hash.
     ///
@@ -99,7 +99,6 @@ mod orderbook_errors {
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
-    use arkchain::order::types::FulfillInfoTrait;
     use core::traits::TryInto;
     use core::result::ResultTrait;
     use core::zeroable::Zeroable;
@@ -108,14 +107,15 @@ mod orderbook {
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
     use starknet::ContractAddress;
-    use arkchain::order::types::{OrderTrait, OrderType, FulfillInfo, FulfillmentInfo};
+    use arkchain::order::types::{OrderTrait, OrderType, CancelInfo, FulfillInfo, FulfillmentInfo};
     use arkchain::order::order_v1::OrderV1;
     use arkchain::order::database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
     use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
-    use arkchain::crypto::hash::starknet_keccak;
+    use arkchain::crypto::hash::{starknet_keccak, serialized_hash};
+
     use debug::PrintTrait;
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
@@ -225,8 +225,12 @@ mod orderbook {
     impl ImplOrderbook of Orderbook<ContractState> {
         /// Retrieves the type of an order using its hash.
         /// # View
-        fn get_order_type(self: @ContractState, order_hash: felt252) -> felt252 {
-            order_type_read(order_hash).unwrap().into()
+        fn get_order_type(self: @ContractState, order_hash: felt252) -> OrderType {
+            let order_type_option = order_type_read(order_hash);
+            if order_type_option.is_none() {
+                panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+            }
+            order_type_option.unwrap().into()
         }
 
         /// Retrieves the status of an order using its hash.
@@ -314,11 +318,12 @@ mod orderbook {
             }
         }
 
-        fn cancel_order(ref self: ContractState, order_hash: felt252, signer: Signer) {
-            SignerValidator::verify(order_hash, signer);
+        fn cancel_order(ref self: ContractState, cancel_info: CancelInfo, signer: Signer) {
+            // SignerValidator::verify(order_hash, signer);
 
             // Check if order exists
 
+            let order_hash = cancel_info.order_hash;
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
@@ -361,7 +366,7 @@ mod orderbook {
 
         fn fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo, signer: Signer) {
             let order_hash = fulfill_info.order_hash;
-            let execution_hash = fulfill_info.hash();
+            let execution_hash = serialized_hash(fulfill_info);
             SignerValidator::verify(execution_hash, signer);
             let order: OrderV1 = match order_read(order_hash) {
                 Option::Some(o) => o,
