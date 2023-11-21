@@ -280,13 +280,8 @@ fn setup_auction_order(
     (order_listing, signer, order_hash, token_hash)
 }
 
-fn setup(
-    block_timestamp: u64, is_expired: bool
-) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
+fn setup(block_timestamp: u64) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
     let mut end_date = block_timestamp + (30 * 24 * 60 * 60);
-    if (is_expired) {
-        end_date = block_timestamp;
-    }
     let data = array![];
     let data_span = data.span();
 

@@ -91,6 +91,7 @@ mod orderbook_errors {
     const ORDER_NOT_CANCELLABLE: felt252 = 'OB: order not cancellable';
     const ORDER_EXPIRED: felt252 = 'OB: order expired';
     const ORDER_SAME_OFFERER: felt252 = 'OB: order has same offerer';
+    const ORDER_NOT_SAME_OFFERER: felt252 = 'OB: order has not same offerer';
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
     const ORDER_IS_EXPIRED: felt252 = 'OB: order is expired';
     const AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
@@ -311,10 +312,10 @@ mod orderbook {
                 OrderType::Listing => {
                     self._create_listing_order(order, order_type, order_hash, user_pubkey);
                 },
-                OrderType::Auction => { self._create_auction(order, order_type, order_hash); },
-                OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
+                OrderType::Auction => { self._create_auction(order, order_type, order_hash, signer); },
+                OrderType::Offer => { self._create_offer(order, order_type, order_hash, signer); },
                 OrderType::CollectionOffer => {
-                    self._create_collection_offer(order, order_type, order_hash);
+                    self._create_collection_offer(order, order_type, order_hash, signer);
                 },
             }
         }
@@ -388,7 +389,7 @@ mod orderbook {
             };
             match order_type {
                 OrderType::Listing => { self._fulfill_listing_order(fulfill_info, order); },
-                OrderType::Auction => { panic_with_felt252('Auction not implemented'); },
+                OrderType::Auction => { self._fulfill_auction_order(fulfill_info, order) },
                 OrderType::Offer => { panic_with_felt252('Offer not implemented'); },
                 OrderType::CollectionOffer => {
                     panic_with_felt252('CollectionOffer not implemented');
@@ -402,7 +403,33 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
-        /// Fulfill order
+        /// Fulfill auction order
+        ///
+        /// # Arguments
+        /// * `fulfill_info` - The execution info of the order.
+        /// * `order_type` - The type of the order.
+        ///
+        fn _fulfill_auction_order(
+            ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
+        ) {
+            assert(
+                order.offerer == fulfill_info.fulfiller, orderbook_errors::ORDER_NOT_SAME_OFFERER
+            );
+            assert(
+                order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
+            );
+            fulfill_info.related_order_hash.expect('Invalid related order hash');
+            order_status_write(fulfill_info.related_order_hash.unwrap(), OrderStatus::Fulfilled);
+            order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
+            self
+                .emit(
+                    OrderFulfilled {
+                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                    }
+                );
+        }
+
+        /// Fulfill listing order
         ///
         /// # Arguments
         /// * `fulfill_info` - The execution info of the order.
@@ -542,7 +569,7 @@ mod orderbook {
 
         /// Creates an auction order.
         fn _create_auction(
-            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252, signer: Signer
         ) {
             let token_hash = order.compute_token_hash();
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
@@ -601,7 +628,7 @@ mod orderbook {
 
         /// Creates an offer order.
         fn _create_offer(
-            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252, signer: Signer
         ) {
             self._manage_auction_offer(order, order_hash);
             order_write(order_hash, order_type, order);
@@ -619,7 +646,7 @@ mod orderbook {
 
         /// Creates a collection offer order.
         fn _create_collection_offer(
-            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252, signer: Signer
         ) {
             order_write(order_hash, order_type, order);
             self

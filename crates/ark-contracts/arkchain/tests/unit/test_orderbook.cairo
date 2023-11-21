@@ -223,7 +223,6 @@ fn test_recreate_listing_same_owner_old_order_expired() {
     assert(order.token_address == order_listing_2.token_address, 'token address does not match');
 }
 
-
 #[test]
 fn test_create_offer() {
     let offer_order = get_offer_order();
@@ -299,7 +298,6 @@ fn test_create_collection_offer() {
         );
 }
 
-
 #[test]
 fn test_create_listing_order_and_fulfill_the_order() {
     let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
@@ -310,7 +308,7 @@ fn test_create_listing_order_and_fulfill_the_order() {
         ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
     );
 
-    let execute_info = FulfillInfo {
+    let fulfill_info = FulfillInfo {
         order_hash: order_hash_1,
         related_order_hash: Option::None,
         fulfiller: 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
@@ -322,7 +320,7 @@ fn test_create_listing_order_and_fulfill_the_order() {
     };
 
     // Try to fulfill the order
-    orderbook::InternalFunctions::_fulfill_listing_order(ref state, execute_info, order_listing_1,);
+    orderbook::InternalFunctions::_fulfill_listing_order(ref state, fulfill_info, order_listing_1,);
 
     // assert order1 is fulfilled
     let order_option = order_read::<OrderV1>(order_hash_1);
@@ -349,7 +347,7 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
         ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
     );
 
-    let execute_info = FulfillInfo {
+    let fulfill_info = FulfillInfo {
         order_hash: order_hash_1,
         related_order_hash: Option::None,
         fulfiller: 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
@@ -361,6 +359,11 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
     };
 
     // Try to fulfill the order
+<<<<<<< HEAD
     orderbook::InternalFunctions::_fulfill_listing_order(ref state, execute_info, order_listing_1);
 }
 
+=======
+    orderbook::InternalFunctions::_fulfill_listing_order(ref state, fulfill_info, order_listing_1,);
+}
+>>>>>>> 95aa15b (fix(orderbook): add fix for tests & orderbook)
