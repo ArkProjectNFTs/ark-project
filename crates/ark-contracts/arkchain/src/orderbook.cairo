@@ -56,6 +56,12 @@ trait Orderbook<T> {
     /// * `order_hash` - The order hash of order.
     fn get_order_status(self: @T, order_hash: felt252) -> felt252;
 
+    /// Retrieves the auction end date.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
+    fn get_auction_expiration(self: @T, order_hash: felt252) -> u64;
+
     /// Retrieves the order using its hash.
     ///
     /// # Arguments
@@ -86,6 +92,8 @@ mod orderbook_errors {
     const ORDER_EXPIRED: felt252 = 'OB: order expired';
     const ORDER_SAME_OFFERER: felt252 = 'OB: order has same offerer';
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
+    const ORDER_IS_EXPIRED: felt252 = 'OB: order is expired';
+    const AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -231,6 +239,18 @@ mod orderbook {
             status.unwrap().into()
         }
 
+        /// Retrieves the auction end date
+        /// # View
+        fn get_auction_expiration(self: @ContractState, order_hash: felt252) -> u64 {
+            let order = order_read::<OrderV1>(order_hash);
+            if (order.is_none()) {
+                panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+            }
+            let token_hash = order.unwrap().compute_token_hash();
+            let (_, auction_end_date, _) = self.auctions.read(token_hash);
+            auction_end_date
+        }
+
         /// Retrieves the order using its hash.
         /// # View
         fn get_order(self: @ContractState, order_hash: felt252) -> OrderV1 {
@@ -300,7 +320,7 @@ mod orderbook {
             // Check if order exists
 
             let order_option = order_read::<OrderV1>(order_hash);
-            assert(order_option.is_some(), 'order is not exists');
+            assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
 
             // Check order status
@@ -312,17 +332,23 @@ mod orderbook {
 
             // Check expiration date
             let block_ts = starknet::get_block_timestamp();
-            assert(block_ts < order.end_date, 'order is expired');
 
             // Check the order type
             match order_type_read(order_hash) {
                 Option::Some(order_type) => {
-                    if order_type == OrderType::Listing {
-                        // Set order hash to 0 for listings for the TOKEN_HASH
-                        self.token_listings.write(order.compute_token_hash(), 0);
-                    } else if order_type == OrderType::Auction {
-                        // Set to 0 the order_hash for the TOKEN_HASH
-                        self.auctions.write(order.compute_token_hash(), (0, 0, 0));
+                    if order_type == OrderType::Auction {
+                        let auction_token_hash = order.compute_token_hash();
+                        let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                            .auctions
+                            .read(auction_token_hash);
+
+                        assert(block_ts <= auction_end_date, orderbook_errors::AUCTION_IS_EXPIRED);
+                        self.auctions.write(auction_token_hash, (0, 0, 0));
+                    } else {
+                        assert(block_ts < order.end_date, orderbook_errors::ORDER_IS_EXPIRED);
+                        if order_type == OrderType::Listing {
+                            self.token_listings.write(order.compute_token_hash(), 0);
+                        }
                     }
                 },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),

@@ -34,7 +34,9 @@ fn test_create_valid_auction_offer() {
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
-    let (auction_offer, signer) = setup_auction_offer(start_date + 10, start_date + 50);
+    let (auction_offer, signer, order_hash, token_hash) = setup_auction_offer(
+        start_date + 10, start_date + 50
+    );
     dispatcher.create_order(order: auction_offer, signer: signer);
 }
 
@@ -54,10 +56,12 @@ fn test_accept_auction_after_expiration() {
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
-    let (auction_offer, signer) = setup_auction_offer(start_date + 10, start_date + 30);
+    let (auction_offer, signer, order_hash, token_hash) = setup_auction_offer(
+        end_date + 10, end_date + 30
+    );
     dispatcher.create_order(order: auction_offer, signer: signer);
 
-    start_warp(contract_address, end_date + 10);
+    start_warp(contract_address, end_date + 20);
 // TODO: fullfil_order
 // dispatcher.fullfil_order(auction_offer.compute_order_hash(), ExecutionInfo {}, );
 }
