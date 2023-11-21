@@ -259,6 +259,13 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
         let from_u64 = current_u64;
 
+        // Some contracts are causing too much recursion for the Cairo VM.
+        // This is restarting the full node (Juno) as it is OOM and is shutdown by the OS.
+        // To mitigate this problem before scaling the full node up,
+        // we setup a `max_attempt` to reach the full node before skipping
+        // the entire block.
+        // Currently, we observed that the node almost always reponds after the
+        // second attempt.
         let max_attempt = 5;
         let mut attempt = 0;
 
