@@ -485,6 +485,17 @@ mod orderbook {
                                 auction_offer_count + 1
                             )
                         );
+                } else {
+                    self
+                        .auctions
+                        .write(
+                            token_hash,
+                            (
+                                auction_order_hash,
+                                auction_end_date,
+                                auction_offer_count + 1
+                            )
+                        );
                 }
             }
         }
