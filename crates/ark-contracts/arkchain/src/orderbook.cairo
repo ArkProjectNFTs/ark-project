@@ -99,6 +99,7 @@ mod orderbook_errors {
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
+    use arkchain::crypto::signer::SignerTrait;
     use core::traits::TryInto;
     use core::result::ResultTrait;
     use core::zeroable::Zeroable;
@@ -289,7 +290,7 @@ mod orderbook {
         /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
             let order_hash = order.compute_order_hash();
-            SignerValidator::verify(order_hash, signer);
+            let user_pubkey = SignerValidator::verify(order_hash, signer);
 
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
@@ -308,7 +309,7 @@ mod orderbook {
 
             match order_type {
                 OrderType::Listing => {
-                    self._create_listing_order(order, order_type, order_hash);
+                    self._create_listing_order(order, order_type, order_hash, user_pubkey);
                 },
                 OrderType::Auction => { self._create_auction(order, order_type, order_hash); },
                 OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
@@ -319,7 +320,9 @@ mod orderbook {
         }
 
         fn cancel_order(ref self: ContractState, cancel_info: CancelInfo, signer: Signer) {
-            // SignerValidator::verify(order_hash, signer);
+            let mut generated_signer = signer.clone();
+            generated_signer.set_public_key(self.order_signers.read(cancel_info.order_hash));
+            SignerValidator::verify(cancel_info.order_hash, generated_signer);
 
             // Check if order exists
 
@@ -327,6 +330,8 @@ mod orderbook {
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
+
+            assert(order.offerer == cancel_info.canceller, 'not the same offerrer'); // TODO
 
             // Check order status
 
@@ -510,10 +515,16 @@ mod orderbook {
 
         /// Creates a listing order.
         fn _create_listing_order(
-            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+            ref self: ContractState,
+            order: OrderV1,
+            order_type: OrderType,
+            order_hash: felt252,
+            user_pubkey: felt252
         ) -> Option<felt252> {
             let token_hash = order.compute_token_hash();
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
+
+            self.order_signers.write(order_hash, user_pubkey);
             order_write(order_hash, order_type, order);
             self.token_listings.write(token_hash, order_hash);
             self

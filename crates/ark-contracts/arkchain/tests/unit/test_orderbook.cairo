@@ -24,7 +24,7 @@ fn test_create_listing() {
     let mut spy = spy_events(SpyOn::One(contract_address));
 
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1
+        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
     );
 
     let order_option = order_read::<OrderV1>(order_hash_1);
