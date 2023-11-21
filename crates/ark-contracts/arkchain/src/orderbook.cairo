@@ -311,17 +311,18 @@ mod orderbook {
             assert(block_ts < order.end_date, 'order is expired');
 
             // Check the order type
-            let order_type = order
-                .validate_order_type()
-                .expect(orderbook_errors::ORDER_INVALID_DATA);
-
-            if order_type == OrderType::Listing {
-                // Set order hash to 0 for listings for the TOKEN_HASH
-                self.token_listings.write(order.compute_token_hash(), 0);
-            } else if order_type == OrderType::Auction {
-                // Set to 0 the order_hash for the TOKEN_HASH
-                self.auctions.write(order.compute_token_hash(), (0, 0, 0));
-            }
+            match order_type_read(order_hash) {
+                Option::Some(order_type) => {
+                    if order_type == OrderType::Listing {
+                        // Set order hash to 0 for listings for the TOKEN_HASH
+                        self.token_listings.write(order.compute_token_hash(), 0);
+                    } else if order_type == OrderType::Auction {
+                        // Set to 0 the order_hash for the TOKEN_HASH
+                        self.auctions.write(order.compute_token_hash(), (0, 0, 0));
+                    }
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
 
             // Cancel order
             order_status_write(order_hash, OrderStatus::CancelledUser);
