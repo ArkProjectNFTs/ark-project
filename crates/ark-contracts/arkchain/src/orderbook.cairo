@@ -5,7 +5,7 @@
 //! and internal functions. The primary functionalities include broker whitelisting, order management 
 //! (creation, cancellation, execution), and order queries.
 
-use arkchain::order::types::ExecutionInfo;
+use arkchain::order::types::{ExecutionInfo, OrderType, OrderStatus};
 use arkchain::order::order_v1::OrderV1;
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
@@ -293,20 +293,38 @@ mod orderbook {
         fn cancel_order(ref self: ContractState, order_hash: felt252, signer: Signer) {
             SignerValidator::verify(order_hash, signer);
 
-            // // TODO: if cancel an auction check if there are offers if true we can't cancel
-            // let status = match order_status_read(order_hash) {
-            //     Option::Some(s) => s,
-            //     Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
-            // };
+            // Check if order exists
 
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), 'order is not exists');
-
             let order = order_option.unwrap();
-            let caller_address = starknet::get_caller_address();
-            assert(order.offerer == caller_address, 'only owner can cancel the order');
-            order_status_write(order_hash, arkchain::order::types::OrderStatus::CancelledUser);
 
+            // Check order status
+
+            let status = match order_status_read(order_hash) {
+                Option::Some(s) => s,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+
+            // Check expiration date
+            let block_ts = starknet::get_block_timestamp();
+            assert(block_ts < order.end_date, 'order is expired');
+
+            // Check the order type
+            let order_type = order
+                .validate_order_type()
+                .expect(orderbook_errors::ORDER_INVALID_DATA);
+
+            if order_type == OrderType::Listing {
+                // Set order hash to 0 for listings for the TOKEN_HASH
+                self.token_listings.write(order.compute_token_hash(), 0);
+            } else if order_type == OrderType::Auction {
+                // Set to 0 the order_hash for the TOKEN_HASH
+                self.auctions.write(order.compute_token_hash(), (0, 0, 0));
+            }
+
+            // Cancel order
+            order_status_write(order_hash, arkchain::order::types::OrderStatus::CancelledUser);
             self
                 .emit(
                     OrderCancelled {
