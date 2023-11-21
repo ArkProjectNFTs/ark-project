@@ -58,7 +58,6 @@ fn test_accept_auction_after_expiration() {
     dispatcher.create_order(order: auction_offer, signer: signer);
 
     start_warp(contract_address, end_date + 10);
-    
 // TODO: fullfil_order
 // dispatcher.fullfil_order(auction_offer.compute_order_hash(), ExecutionInfo {}, );
 }
