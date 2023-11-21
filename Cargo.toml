@@ -28,7 +28,8 @@ ark-metadata = { path = "./crates/ark-metadata" }
 pontos = { path = "./crates/pontos" }
 diri = { path = "./crates/diri" }
 async-trait = "0.1.73"
-starknet = { git = "https://github.com/ArkProjectNFTs/starknet-rs", branch = "fix/contract-error" }
+starknet = { git = "https://github.com/ArkProjectNFTs/starknet-rs", tag = "v0.7.2" }
+#starknet = { path = "../starknet-rs" }
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
@@ -52,7 +53,7 @@ tracing-log = "0.1"
 sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
 
 [patch."https://github.com/starkware-libs/blockifier"]
-blockifier = { git = "https://github.com/dojoengine/blockifier", rev = "c794d1b" }
+blockifier = { git = "https://github.com/dojoengine/blockifier", rev = "3357e69" }
 
 [patch.crates-io]
 cairo-felt = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "262b7eb4b11ab165a2a936a5f914e78aa732d4a2" }
