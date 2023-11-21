@@ -490,11 +490,7 @@ mod orderbook {
                         .auctions
                         .write(
                             token_hash,
-                            (
-                                auction_order_hash,
-                                auction_end_date,
-                                auction_offer_count + 1
-                            )
+                            (auction_order_hash, auction_end_date, auction_offer_count + 1)
                         );
                 }
             }
