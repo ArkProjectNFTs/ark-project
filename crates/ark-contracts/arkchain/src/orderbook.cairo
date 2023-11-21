@@ -312,12 +312,13 @@ mod orderbook {
                 OrderType::Listing => {
                     self._create_listing_order(order, order_type, order_hash, user_pubkey);
                 },
-                OrderType::Auction => { self._create_auction(order, order_type, order_hash, signer); },
-                OrderType::Offer => { self._create_offer(order, order_type, order_hash, signer); },
+                OrderType::Auction => { self._create_auction(order, order_type, order_hash); },
+                OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
                 OrderType::CollectionOffer => {
-                    self._create_collection_offer(order, order_type, order_hash, signer);
+                    self._create_collection_offer(order, order_type, order_hash);
                 },
             }
+
         }
 
         fn cancel_order(ref self: ContractState, cancel_info: CancelInfo, signer: Signer) {
@@ -569,7 +570,7 @@ mod orderbook {
 
         /// Creates an auction order.
         fn _create_auction(
-            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252, signer: Signer
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             let token_hash = order.compute_token_hash();
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
@@ -628,7 +629,7 @@ mod orderbook {
 
         /// Creates an offer order.
         fn _create_offer(
-            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252, signer: Signer
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             self._manage_auction_offer(order, order_hash);
             order_write(order_hash, order_type, order);
@@ -646,7 +647,7 @@ mod orderbook {
 
         /// Creates a collection offer order.
         fn _create_collection_offer(
-            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252, signer: Signer
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
             order_write(order_hash, order_type, order);
             self
