@@ -116,6 +116,40 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
     (order_listing, order_offer, order_auction, order_collection_offer)
 }
 
+fn setup_auction_offer(start_date: u64, end_date: u64) -> (OrderV1, Signer) {
+    let data = array![];
+    let data_span = data.span();
+
+    let order_offer = OrderV1 {
+        route: RouteType::Erc20ToErc721.into(),
+        currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+            .try_into()
+            .unwrap(),
+        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        salt: 1,
+        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+            .try_into()
+            .unwrap(),
+        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
+            .try_into()
+            .unwrap(),
+        token_id: Option::Some(10),
+        quantity: 1,
+        start_amount: 600000000000000000,
+        end_amount: 0,
+        start_date,
+        end_date,
+        broker_id: 123,
+        additional_data: data_span,
+    };
+
+    let order_hash = order_offer.compute_order_hash();
+    let signer = sign_mock(order_hash);
+
+    (order_offer, signer)
+}
+
 /// Utility function to setup a listing order for test environment.
 ///
 /// # Arguments
@@ -275,7 +309,7 @@ fn setup(block_timestamp: u64) -> (OrderV1, arkchain::crypto::signer::Signer, fe
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
     let signer = sign_mock(order_hash);
-    
+
     (order_listing, signer, order_hash, token_hash)
 }
 
