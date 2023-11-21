@@ -18,6 +18,15 @@ export type OrderV1 = {
   additionalData: BigNumberish[];
 };
 
+export type ExecutionInfo = {
+  orderHash: BigNumberish;
+  fulfiller: BigNumberish;
+  offerHash?: BigNumberish;
+  tokenChainId: BigNumberish;
+  tokenAddress: BigNumberish;
+  tokenId?: Uint256;
+};
+
 export enum RouteType {
   Erc20ToErc721 = 0,
   Erc721ToErc20 = 1,

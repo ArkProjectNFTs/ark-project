@@ -1,5 +1,6 @@
 //! Order generic variables.
 use starknet::ContractAddress;
+use arkchain::crypto::hash::starknet_keccak;
 
 /// Order types.
 #[derive(Serde, Drop, PartialEq, Copy)]
@@ -149,11 +150,13 @@ impl Felt252TryIntoOrderStatus of TryInto<felt252, OrderStatus> {
     }
 }
 
-/// The info related to the execution of an order.
+/// The info related to the fulfill of an order.
 #[derive(starknet::Store, Serde, Copy, Drop)]
-struct ExecutionInfo {
-    // The hash of the order to execute.
+struct FulfillInfo {
+    // The hash of the order to fulfill.
     order_hash: felt252,
+    // Related order hash in case of an auction for exemple.
+    related_order_hash: Option<felt252>,
     // Address of the fulfiller of the order.
     fulfiller: ContractAddress,
     // The token chain id.
@@ -161,7 +164,19 @@ struct ExecutionInfo {
     // The token contract address.
     token_address: ContractAddress,
     // Token token id.
-    token_id: felt252,
+    token_id: Option<u256>,
+}
+
+trait FulfillInfoTrait {
+    fn hash(self: FulfillInfo) -> felt252;
+}
+
+impl FulfillInfoImpl of FulfillInfoTrait {
+    fn hash(self: FulfillInfo) -> felt252 {
+        let mut buf = array![];
+        self.serialize(ref buf);
+        starknet_keccak(buf.span())
+    }
 }
 
 /// The info related to the fulfillment an order.
