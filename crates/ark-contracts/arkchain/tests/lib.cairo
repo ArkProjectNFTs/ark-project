@@ -3,7 +3,8 @@ mod common {
 }
 
 mod integration {
-    mod test_create_order_v1;
+    mod test_create_listing_order;
+    mod test_create_auction_offers;
 }
 
 mod unit {
@@ -12,3 +13,5 @@ mod unit {
     }
     mod test_orderbook;
 }
+
+mod test_orderbook;

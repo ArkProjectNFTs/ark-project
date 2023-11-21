@@ -76,13 +76,12 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
 
         let end_date = *self.end_date;
 
-        // End date -> start_date + 30 days.
-        let max_end_date = *self.start_date + (30 * 24 * 60 * 60);
-
         if end_date < block_timestamp {
             return Result::Err(OrderValidationError::EndDateInThePast);
         }
 
+        // End date -> block_ts + 30 days.
+        let max_end_date = *self.start_date + (30 * 24 * 60 * 60);
         if end_date > max_end_date {
             return Result::Err(OrderValidationError::EndDateTooFar);
         }
@@ -122,7 +121,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             }
             // Auction order.
             if (*self.start_amount) > 0
-                && (*self.start_amount) >= (*self.end_amount)
+                && (*self.end_amount) >= (*self.start_amount)
                 && (*self.route) == RouteType::Erc721ToErc20 {
                 return Result::Ok(OrderType::Auction);
             }
@@ -134,6 +133,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
                 return Result::Ok(OrderType::CollectionOffer);
             }
         }
+
         // Other order types are not supported.
         Result::Err(OrderValidationError::InvalidContent)
     }

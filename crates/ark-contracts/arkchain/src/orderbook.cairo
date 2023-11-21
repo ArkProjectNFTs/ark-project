@@ -79,10 +79,12 @@ trait Orderbook<T> {
 mod orderbook_errors {
     const BROKER_UNREGISTERED: felt252 = 'OB: unregistered broker';
     const ORDER_INVALID_DATA: felt252 = 'OB: order invalid data';
+    const ORDER_ALREADY_EXISTS: felt252 = 'OB: order already exists';
     const ORDER_ALREADY_EXEC: felt252 = 'OB: order already executed';
     const ORDER_NOT_FOUND: felt252 = 'OB: order not found';
     const ORDER_FULFILLED: felt252 = 'OB: order fulfilled';
     const ORDER_NOT_CANCELLABLE: felt252 = 'OB: order not cancellable';
+    const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -103,6 +105,8 @@ mod orderbook {
     };
     use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
+
+    const EXTENSION_TIME_IN_SECONDS: u64 = 600;
 
     /// Storage struct for the Orderbook contract.
     #[storage]
@@ -270,6 +274,10 @@ mod orderbook {
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
 
             let order_hash = order.compute_order_hash();
+
+            // Check if order already exists
+            assert(order_status_read(order_hash).is_none(), orderbook_errors::ORDER_ALREADY_EXISTS);
+
             match order_type {
                 OrderType::Listing => {
                     self._create_listing_order(order, order_type, order_hash);
@@ -448,10 +456,52 @@ mod orderbook {
                     }
                 );
         }
+
+        fn _manage_auction_offer(ref self: ContractState, order: OrderV1, order_hash: felt252) {
+            let token_hash = order.compute_token_hash();
+            let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                .auctions
+                .read(token_hash);
+
+            let current_block_timestamp = starknet::get_block_timestamp();
+            // Determine if the auction end date has passed, indicating that the auction is still ongoing.
+            let auction_is_pending = current_block_timestamp < auction_end_date;
+
+            if auction_is_pending {
+                // If the auction is still pending, record the new offer by linking it to the 
+                // auction order hash in the 'auction_offers' mapping.
+                self.auction_offers.write(order_hash, auction_order_hash);
+
+                if auction_end_date - current_block_timestamp < EXTENSION_TIME_IN_SECONDS {
+                    // Increment the number of offers for this auction and extend the auction 
+                    // end date by the predefined extension time to allow for additional offers.
+                    self
+                        .auctions
+                        .write(
+                            token_hash,
+                            (
+                                auction_order_hash,
+                                auction_end_date + EXTENSION_TIME_IN_SECONDS,
+                                auction_offer_count + 1
+                            )
+                        );
+                } else {
+                    self
+                        .auctions
+                        .write(
+                            token_hash,
+                            (auction_order_hash, auction_end_date, auction_offer_count + 1)
+                        );
+                }
+            }
+        }
+
         /// Creates an offer order.
         fn _create_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
+            self._manage_auction_offer(order, order_hash);
+            order_write(order_hash, order_type, order);
             self
                 .emit(
                     OrderPlaced {
@@ -463,10 +513,12 @@ mod orderbook {
                     }
                 );
         }
+
         /// Creates a collection offer order.
         fn _create_collection_offer(
             ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
         ) {
+            order_write(order_hash, order_type, order);
             self
                 .emit(
                     OrderPlaced {
