@@ -324,14 +324,8 @@ mod orderbook {
             }
 
             // Cancel order
-            order_status_write(order_hash, arkchain::order::types::OrderStatus::CancelledUser);
-            self
-                .emit(
-                    OrderCancelled {
-                        order_hash,
-                        reason: arkchain::order::types::OrderStatus::CancelledUser.into()
-                    }
-                );
+            order_status_write(order_hash, OrderStatus::CancelledUser);
+            self.emit(OrderCancelled { order_hash, reason: OrderStatus::CancelledUser.into() });
         }
 
         fn fullfil_order(
