@@ -472,18 +472,20 @@ mod orderbook {
                 // auction order hash in the 'auction_offers' mapping.
                 self.auction_offers.write(order_hash, auction_order_hash);
 
-                // Increment the number of offers for this auction and extend the auction 
-                // end date by the predefined extension time to allow for additional offers.
-                self
-                    .auctions
-                    .write(
-                        token_hash,
-                        (
-                            auction_order_hash,
-                            auction_end_date + EXTENSION_TIME_IN_SECONDS,
-                            auction_offer_count + 1
-                        )
-                    );
+                if auction_end_date - current_block_timestamp < EXTENSION_TIME_IN_SECONDS {
+                    // Increment the number of offers for this auction and extend the auction 
+                    // end date by the predefined extension time to allow for additional offers.
+                    self
+                        .auctions
+                        .write(
+                            token_hash,
+                            (
+                                auction_order_hash,
+                                auction_end_date + EXTENSION_TIME_IN_SECONDS,
+                                auction_offer_count + 1
+                            )
+                        );
+                }
             }
         }
 
