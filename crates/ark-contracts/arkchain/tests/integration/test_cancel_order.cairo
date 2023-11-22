@@ -113,39 +113,50 @@ fn test_invalid_cancel_auction_order() {
     dispatcher.cancel_order(cancel_info, signer: cancel_signer);
 }
 
-// #[test]
-// fn test_auction_order_with_extended_time_order() {
-//     let start_date = 1699556828;
-//     let end_date = start_date + (10 * 24 * 60 * 60);
+#[test]
+fn test_cancel_auction_during_the_extended_time() {
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
 
-//     let (auction_listing_order, auction_listing_signer, order_hash, token_hash) =
-//         setup_auction_order(
-//         start_date, end_date, 1, 10
-//     );
+    let (auction_listing_order, auction_listing_signer, order_hash, token_hash) =
+        setup_auction_order(
+        start_date, end_date, 1, 10
+    );
 
-//     let contract = declare('orderbook');
-//     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
-//     let contract_address = contract.deploy(@contract_data).unwrap();
+    let contract = declare('orderbook');
+    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let contract_address = contract.deploy(@contract_data).unwrap();
 
-//     let dispatcher = OrderbookDispatcher { contract_address };
-//     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
+    let dispatcher = OrderbookDispatcher { contract_address };
+    dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
 
-//     let order_type = dispatcher.get_order_type(order_hash);
-//     assert(order_type == OrderType::Auction.into(), 'order is not auction');
+    let order_type = dispatcher.get_order_type(order_hash);
+    assert(order_type == OrderType::Auction.into(), 'order is not auction');
 
-//     start_warp(contract_address, end_date - 1);
-//     let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_auction_offer(
-//         end_date - 1, end_date + 1200
-//     );
-//     dispatcher.create_order(order: auction_offer, signer: signer);
-//     let order_expiration_date = dispatcher.get_auction_expiration(auction_order_hash);
+    start_warp(contract_address, end_date - 1);
+    let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_auction_offer(
+        end_date - 1, end_date + 1200
+    );
+    dispatcher.create_order(order: auction_offer, signer: signer);
+    let order_expiration_date = dispatcher.get_auction_expiration(auction_order_hash);
 
-//     let expected_end_date = end_date + 600;
-//     assert(order_expiration_date == expected_end_date, 'order end date is not correct');
+    let expected_end_date = end_date + 600;
+    assert(order_expiration_date == expected_end_date, 'order end date is not correct');
 
-// // start_warp(contract_address, end_date + 5);
-// // let order_hash = auction_listing_order.compute_order_hash();
-// // dispatcher.cancel_order(order_hash: order_hash, signer: auction_listing_signer);
-// }
+    start_warp(contract_address, end_date + 5);
 
+    let cancel_info = CancelInfo {
+        order_hash: order_hash,
+        canceller: auction_listing_order.offerer,
+        token_chain_id: auction_listing_order.token_chain_id,
+        token_address: auction_listing_order.token_address,
+        token_id: auction_listing_order.token_id
+    };
+
+    let cancel_info_hash = serialized_hash(cancel_info);
+    let fulfill_signer = sign_mock(cancel_info_hash);
+    let cancel_signer = sign_mock(order_hash);
+
+    dispatcher.cancel_order(cancel_info, signer: auction_listing_signer);
+}
 
