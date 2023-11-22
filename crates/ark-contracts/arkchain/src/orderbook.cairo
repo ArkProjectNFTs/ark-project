@@ -444,7 +444,7 @@ mod orderbook {
                 assert(
                     related_offer_auction == fulfill_info.order_hash, 'order_hash does not match'
                 );
-            } else {// order is not related to auction so we can fulfill it but before we need to check its expiration date
+            } else { // order is not related to auction so we can fulfill it but before we need to check its expiration date
                 assert(
                     related_order.end_date > starknet::get_block_timestamp(),
                     orderbook_errors::ORDER_EXPIRED

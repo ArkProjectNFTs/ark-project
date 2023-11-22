@@ -21,7 +21,7 @@ use super::super::common::setup::{setup, setup_listing_order_with_sign};
 #[should_panic(expected: ('OB: order not found',))]
 #[test]
 fn test_create_listing_order_and_fulfill_non_existing_order() {
-    let block_timestamp = 1699556828; 
+    let block_timestamp = 1699556828;
     let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
