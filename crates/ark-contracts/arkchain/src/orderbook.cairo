@@ -391,10 +391,8 @@ mod orderbook {
                     SignerValidator::verify(fulfill_hash, origin_signer);
                     self._fulfill_auction_order(fulfill_info, order)
                 },
-                OrderType::Offer => { panic_with_felt252('Offer not implemented'); },
-                OrderType::CollectionOffer => {
-                    panic_with_felt252('CollectionOffer not implemented');
-                },
+                OrderType::Offer => { self._fulfill_offer(fulfill_info, order); },
+                OrderType::CollectionOffer => { self._fulfill_offer(fulfill_info, order); }
             }
         }
     }
@@ -482,6 +480,33 @@ mod orderbook {
                         order_hash: fulfill_info.order_hash,
                         fulfiller: fulfill_info.fulfiller,
                         related_order_hash: Option::Some(related_order_hash)
+                    }
+                );
+        }
+
+        /// Fulfill offer order
+        ///
+        /// # Arguments
+        /// * `fulfill_info` - The execution info of the order.
+        /// * `order_type` - The type of the order.
+        ///
+        fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
+            let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                .auctions
+                .read(order.compute_token_hash());
+
+            assert(auction_order_hash.is_zero(), 'must use _fulfill_auction');
+
+            assert(
+                order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
+            );
+            order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
+            self
+                .emit(
+                    OrderFulfilled {
+                        order_hash: fulfill_info.order_hash,
+                        fulfiller: fulfill_info.fulfiller,
+                        related_order_hash: Option::None
                     }
                 );
         }

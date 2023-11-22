@@ -12,7 +12,7 @@ use snforge_std::{
 };
 use arkchain::orderbook::orderbook_errors;
 use array::ArrayTrait;
-use super::super::common::setup::{setup_listing_order, get_offer_order};
+use super::super::common::setup::{setup_listing_order, get_offer_order, setup_orders};
 const ORDER_VERSION_V1: felt252 = 'v1';
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
@@ -352,4 +352,46 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
 
     // Try to fulfill the order
     orderbook::InternalFunctions::_fulfill_listing_order(ref state, fulfill_info, order_listing_1,);
+}
+
+#[test]
+fn test_fulfill_classic_token_offer() {
+    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
+
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
+    let contract_address = test_address();
+    let mut state = orderbook::contract_state_for_testing();
+
+    let fulfill_info = FulfillInfo {
+        order_hash: order_listing.compute_order_hash(),
+        related_order_hash: Option::Some(order_offer.compute_order_hash()),
+        fulfiller: order_listing.offerer,
+        token_chain_id: order_listing.token_chain_id,
+        token_address: order_listing.token_address,
+        token_id: order_listing.token_id
+    };
+
+    orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
+}
+
+#[test]
+fn test_fulfill_classic_collection_offer() {
+    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
+
+    let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
+    let contract_address = test_address();
+    let mut state = orderbook::contract_state_for_testing();
+
+    order_offer.token_id = Option::None;
+
+    let fulfill_info = FulfillInfo {
+        order_hash: order_listing.compute_order_hash(),
+        related_order_hash: Option::Some(order_offer.compute_order_hash()),
+        fulfiller: order_listing.offerer,
+        token_chain_id: order_listing.token_chain_id,
+        token_address: order_listing.token_address,
+        token_id: Option::None
+    };
+
+    orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
 }
