@@ -292,25 +292,19 @@ mod orderbook {
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
             let order_hash = order.compute_order_hash();
             let user_pubkey = SignerValidator::verify(order_hash, signer);
-
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
             if validation.is_err() {
                 panic_with_felt252(validation.unwrap_err().into());
             }
-
             let order_type = order
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
-
             let order_hash = order.compute_order_hash();
-
-            // Check if order already exists
             assert(order_status_read(order_hash).is_none(), orderbook_errors::ORDER_ALREADY_EXISTS);
-
             match order_type {
                 OrderType::Listing => {
-                    self._create_listing_order(order, order_type, order_hash, user_pubkey);
+                    self._create_listing_order(order, order_type, order_hash);
                 },
                 OrderType::Auction => { self._create_auction(order, order_type, order_hash); },
                 OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
@@ -318,7 +312,7 @@ mod orderbook {
                     self._create_collection_offer(order, order_type, order_hash);
                 },
             }
-
+            self.order_signers.write(order_hash, user_pubkey);
         }
 
         fn cancel_order(ref self: ContractState, cancel_info: CancelInfo, signer: Signer) {
@@ -416,10 +410,46 @@ mod orderbook {
             assert(
                 order.offerer == fulfill_info.fulfiller, orderbook_errors::ORDER_NOT_SAME_OFFERER
             );
+            let AUCTION_ACCEPTING_TIME: u64 = 86400;
             assert(
-                order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
+                order.end_date + AUCTION_ACCEPTING_TIME > starknet::get_block_timestamp(),
+                orderbook_errors::ORDER_EXPIRED
             );
-            fulfill_info.related_order_hash.expect('Invalid related order hash');
+            let related_order_hash = fulfill_info
+                .related_order_hash
+                .expect(orderbook_errors::ORDER_NOT_FOUND);
+            match order_type_read(related_order_hash) {
+                Option::Some(order_type) => {
+                    assert(
+                        order_type == OrderType::Offer || order_type == OrderType::CollectionOffer,
+                        orderbook_errors::ORDER_NOT_FULFILLABLE
+                    );
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            }
+            let related_order_status = match order_status_read(related_order_hash) {
+                Option::Some(s) => {
+                    assert(s == OrderStatus::Open, orderbook_errors::ORDER_NOT_FULFILLABLE);
+                    s
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            let related_order = match order_read::<OrderV1>(related_order_hash) {
+                Option::Some(o) => o,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            let related_offer_auction = self.auction_offers.read(related_order_hash);
+            if related_offer_auction.is_non_zero() {
+                // order is related to auction so we need to check if it match the auction order
+                assert(
+                    related_offer_auction == fulfill_info.order_hash, 'order_hash does not match'
+                );
+            } else {// order is not related to auction so we can fulfill it but before we need to check its expiration date
+                assert(
+                    related_order.end_date > starknet::get_block_timestamp(),
+                    orderbook_errors::ORDER_EXPIRED
+                );
+            }
             order_status_write(fulfill_info.related_order_hash.unwrap(), OrderStatus::Fulfilled);
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
             self
@@ -543,16 +573,10 @@ mod orderbook {
 
         /// Creates a listing order.
         fn _create_listing_order(
-            ref self: ContractState,
-            order: OrderV1,
-            order_type: OrderType,
-            order_hash: felt252,
-            user_pubkey: felt252
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252,
         ) -> Option<felt252> {
             let token_hash = order.compute_token_hash();
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
-
-            self.order_signers.write(order_hash, user_pubkey);
             order_write(order_hash, order_type, order);
             self.token_listings.write(token_hash, order_hash);
             self

@@ -22,10 +22,9 @@ fn test_create_listing() {
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     let mut spy = spy_events(SpyOn::One(contract_address));
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
 
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 
     let order_option = order_read::<OrderV1>(order_hash_1);
@@ -72,12 +71,11 @@ fn test_create_listing() {
 #[should_panic(expected: ('OB: order not cancellable',))]
 #[test]
 fn test_recreate_listing_same_owner() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
     let (order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     // check is first order is fulfilled
     let order_status = order_status_read(order_hash_1);
@@ -85,19 +83,18 @@ fn test_recreate_listing_same_owner() {
     // create a second order over the first one same ressource hash different price
     let (order_listing_2, order_hash_2, token_hash_2) = setup_listing_order(500000000000000000);
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_2, OrderType::Listing, order_hash_2, user_pubkey
+        ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 }
 
 #[should_panic(expected: ('OB: order fulfilled',))]
 #[test]
 fn test_recreate_listing_different_offerer_fulfilled() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
     let (order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     let order_option = order_read::<OrderV1>(order_hash_1);
     let order_status = order_status_read(order_hash_1);
@@ -115,19 +112,18 @@ fn test_recreate_listing_different_offerer_fulfilled() {
         .try_into()
         .unwrap();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_2, OrderType::Listing, order_hash_2, user_pubkey
+        ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 }
 
 #[should_panic(expected: ('OB: order fulfilled',))]
 #[test]
 fn test_recreate_listing_same_offerer_fulfilled() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
     let (order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     let order_option = order_read::<OrderV1>(order_hash_1);
     let order_status = order_status_read(order_hash_1);
@@ -145,18 +141,17 @@ fn test_recreate_listing_same_offerer_fulfilled() {
         .try_into()
         .unwrap();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_2, OrderType::Listing, order_hash_2, user_pubkey
+        ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 }
 
 #[test]
 fn test_recreate_listing_new_owner() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
     let (order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     // create a second order over the first one same ressource hash different price, different owner it should work and cancel the previous one
     let (mut order_listing_2, order_hash_2, token_hash_2) = setup_listing_order(500000000000000000);
@@ -165,7 +160,7 @@ fn test_recreate_listing_new_owner() {
         .try_into()
         .unwrap();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_2, OrderType::Listing, order_hash_2, user_pubkey
+        ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 
     // assert order1 is cancelled
@@ -189,19 +184,18 @@ fn test_recreate_listing_new_owner() {
 
 #[test]
 fn test_recreate_listing_same_owner_old_order_expired() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
     let (mut order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     order_listing_1.end_date = starknet::get_block_timestamp();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     // create a second order over the first one same ressource hash different price, different owner it should work and cancel the previous one
     let (order_listing_2, order_hash_2, token_hash_2) = setup_listing_order(500000000000000000);
 
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_2, OrderType::Listing, order_hash_2, user_pubkey
+        ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 
     // assert order1 is cancelled
@@ -300,12 +294,11 @@ fn test_create_collection_offer() {
 
 #[test]
 fn test_create_listing_order_and_fulfill_the_order() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
     let (mut order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 
     let fulfill_info = FulfillInfo {
@@ -336,7 +329,6 @@ fn test_create_listing_order_and_fulfill_the_order() {
 #[should_panic(expected: ('OB: order expired',))]
 #[test]
 fn test_create_listing_order_and_fulfill_the_order_expired() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
     let (mut order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
@@ -344,7 +336,7 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
         .end_date =
             starknet::get_block_timestamp(); // we use the current block timestamp to make the order expired because if we substract it will be negative
     orderbook::InternalFunctions::_create_listing_order(
-        ref state, order_listing_1, OrderType::Listing, order_hash_1, user_pubkey
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 
     let fulfill_info = FulfillInfo {
@@ -359,11 +351,5 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
     };
 
     // Try to fulfill the order
-<<<<<<< HEAD
-    orderbook::InternalFunctions::_fulfill_listing_order(ref state, execute_info, order_listing_1);
-}
-
-=======
     orderbook::InternalFunctions::_fulfill_listing_order(ref state, fulfill_info, order_listing_1,);
 }
->>>>>>> 95aa15b (fix(orderbook): add fix for tests & orderbook)
