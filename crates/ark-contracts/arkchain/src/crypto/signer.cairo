@@ -2,7 +2,6 @@
 //!
 
 trait SignatureChecker {
-    // fn verify_raw(hash: felt252, signer_r: felt252, signer_s: felt252, signer_pubkey: felt252);
     fn verify(hash: felt252, signer: Signer) -> felt252;
 }
 
