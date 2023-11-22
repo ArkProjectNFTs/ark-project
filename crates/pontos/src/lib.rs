@@ -366,6 +366,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 Ok(events) => events,
                 Err(e) => {
                     error!("Error while fetching events: {:?}", e);
+                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                     continue;
                 }
             };
