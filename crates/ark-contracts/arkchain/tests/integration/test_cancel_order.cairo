@@ -4,7 +4,7 @@ use core::option::OptionTrait;
 use arkchain::orderbook::Orderbook;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::RouteType;
-use arkchain::crypto::signer::{Signer, SignInfo};
+use arkchain::crypto::{signer::{Signer, SignInfo}, hash::serialized_hash};
 use arkchain::order::order_v1::{OrderTrait, OrderType};
 use arkchain::order::types::{OrderStatus, CancelInfo};
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
@@ -34,18 +34,12 @@ fn test_cancel_auction() {
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
-    let order_hash = auction_listing_order.compute_order_hash();
-
     let cancel_info = CancelInfo {
         order_hash: order_hash,
-        canceller: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
-        token_chain_id: 0,
-        token_address: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
-        token_id: Option::Some(1),
+        canceller: auction_listing_order.offerer,
+        token_chain_id: auction_listing_order.token_chain_id,
+        token_address: auction_listing_order.token_address,
+        token_id: auction_listing_order.token_id,
     };
 
     dispatcher.cancel_order(cancel_info, signer: signer);
@@ -104,20 +98,21 @@ fn test_invalid_cancel_auction_order() {
 
     let cancel_info = CancelInfo {
         order_hash: order_hash,
-        canceller: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
-        token_chain_id: 0,
-        token_address: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
-        token_id: Option::Some(1),
+        canceller: auction_listing_order.offerer,
+        token_chain_id: auction_listing_order.token_chain_id,
+        token_address: auction_listing_order.token_address,
+        token_id: auction_listing_order.token_id
     };
 
     start_warp(contract_address, end_date + 10);
     let order_hash = auction_listing_order.compute_order_hash();
-    dispatcher.cancel_order(cancel_info, signer: signer);
+
+    let cancel_info_hash = serialized_hash(cancel_info);
+    let fulfill_signer = sign_mock(cancel_info_hash);
+    let cancel_signer = sign_mock(order_hash);
+    dispatcher.cancel_order(cancel_info, signer: cancel_signer);
 }
+
 // #[test]
 // fn test_auction_order_with_extended_time_order() {
 //     let start_date = 1699556828;

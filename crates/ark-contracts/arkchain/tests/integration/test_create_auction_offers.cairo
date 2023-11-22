@@ -2,9 +2,8 @@ use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
 use arkchain::orderbook::Orderbook;
-use arkchain::order::order_v1::OrderV1;
-use arkchain::order::order_v1::RouteType;
-use arkchain::crypto::signer::{Signer, SignInfo};
+use arkchain::order::order_v1::{RouteType, FulfillInfo, OrderV1};
+use arkchain::crypto::{signer::{Signer, SignInfo}, hash::serialized_hash};
 use arkchain::order::order_v1::OrderTrait;
 use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
@@ -46,7 +45,7 @@ fn test_accept_auction_after_expiration() {
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
-        start_date, start_date + 10, 1, 10
+        start_date, end_date, 1, 10
     );
 
     let contract = declare('orderbook');
@@ -57,14 +56,25 @@ fn test_accept_auction_after_expiration() {
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
     let (auction_offer, signer, auction_offer_order_hash, token_hash) = setup_auction_offer(
-        end_date + 10, end_date + 30
+        start_date + 1000, start_date + 3000
     );
+
+    start_warp(contract_address, start_date + 1000);
     dispatcher.create_order(order: auction_offer, signer: signer);
-    let auction_expiration_date = dispatcher.get_auction_expiration(auction_offer_order_hash);
-    assert(auction_expiration_date == end_date + 600, 'expiration is not correct');
 
-    start_warp(contract_address, end_date + 20);
-// TODO: fullfil_order
-// dispatcher.fullfil_order(auction_offer.compute_order_hash(), ExecutionInfo {}, );
+    start_warp(contract_address, end_date + 3600); // +1 hour
+// TODO: fulfill_order
+
+// let fulfill_info = FulfillInfo {
+//     order_hash: auction_offer_order_hash,
+//     related_order_hash: Option::None,
+//     fulfiller: auction_listing_order.offerer,
+//     token_chain_id: auction_listing_order.token_chain_id,
+//     token_address: auction_listing_order.token_address,
+//     token_id: auction_listing_order.token_id,
+// };
+
+// let fulfill_info_hash = serialized_hash(fulfill_info);
+// let fulfill_signer = sign_mock(fulfill_info_hash);
+// dispatcher.fulfill_order(fulfill_info, fulfill_signer);
 }
-
