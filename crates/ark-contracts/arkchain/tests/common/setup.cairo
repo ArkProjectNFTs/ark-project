@@ -118,7 +118,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
     (order_listing, order_offer, order_auction, order_collection_offer)
 }
 
-fn setup_auction_offer(start_date: u64, end_date: u64) -> (OrderV1, Signer) {
+fn setup_auction_offer(start_date: u64, end_date: u64) -> (OrderV1, Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
 
@@ -147,9 +147,10 @@ fn setup_auction_offer(start_date: u64, end_date: u64) -> (OrderV1, Signer) {
     };
 
     let order_hash = order_offer.compute_order_hash();
+    let token_hash = order_offer.compute_token_hash();
     let signer = sign_mock(order_hash);
 
-    (order_offer, signer)
+    (order_offer, signer, order_hash, token_hash)
 }
 
 /// Utility function to setup a listing order for test environment.

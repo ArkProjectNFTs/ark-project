@@ -1,4 +1,3 @@
-use arkchain::order::types::FulfillInfoTrait;
 use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
@@ -7,7 +6,7 @@ use arkchain::orderbook::Orderbook;
 use arkchain::orderbook::orderbook;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::RouteType;
-use arkchain::crypto::signer::{Signer, SignInfo};
+use arkchain::crypto::{hash::{serialized_hash}, signer::{Signer, SignInfo}};
 use arkchain::order::order_v1::OrderTrait;
 use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::{OrderStatus, FulfillInfo};
@@ -43,7 +42,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
         token_id: Option::Some(8),
     };
 
-    let fulfill_info_hash = fulfill_info.hash();
+    let fulfill_info_hash = serialized_hash(fulfill_info);
     let signer = sign_mock(fulfill_info_hash);
 
     dispatcher.fulfill_order(fulfill_info, signer);
@@ -75,7 +74,7 @@ fn test_create_listing_order_and_fulfill() {
         token_id: Option::Some(10),
     };
 
-    let fulfill_info_hash = fulfill_info.hash();
+    let fulfill_info_hash = serialized_hash(fulfill_info);
     let signer = sign_mock(fulfill_info_hash);
 
     dispatcher.fulfill_order(fulfill_info, signer);
@@ -113,7 +112,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
         token_id: Option::Some(10),
     };
 
-    let fulfill_info_hash = fulfill_info.hash();
+    let fulfill_info_hash = serialized_hash(fulfill_info);
     let signer = sign_mock(fulfill_info_hash);
 
     dispatcher.fulfill_order(fulfill_info, signer);
@@ -142,7 +141,7 @@ fn test_fulfill_already_fulfilled_order() {
             .unwrap(),
         token_id: Option::Some(10),
     };
-    let fulfill_info_hash = fulfill_info.hash();
+    let fulfill_info_hash = serialized_hash(fulfill_info);
     let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
     dispatcher.fulfill_order(fulfill_info, signer);
@@ -173,7 +172,7 @@ fn test_fulfill_expired_order() {
             .unwrap(),
         token_id: Option::Some(10),
     };
-    let fulfill_info_hash = fulfill_info.hash();
+    let fulfill_info_hash = serialized_hash(fulfill_info);
     let fulfill_signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, fulfill_signer);
 }

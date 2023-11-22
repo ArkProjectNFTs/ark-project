@@ -150,6 +150,16 @@ impl Felt252TryIntoOrderStatus of TryInto<felt252, OrderStatus> {
     }
 }
 
+#[derive(starknet::Store, Serde, Copy, Drop)]
+struct CancelInfo {
+    order_hash: felt252,
+    canceller: ContractAddress,
+    token_chain_id: felt252,
+    token_address: ContractAddress,
+    token_id: Option<u256>,
+}
+
+
 /// The info related to the fulfill of an order.
 #[derive(starknet::Store, Serde, Copy, Drop)]
 struct FulfillInfo {
@@ -165,18 +175,6 @@ struct FulfillInfo {
     token_address: ContractAddress,
     // Token token id.
     token_id: Option<u256>,
-}
-
-trait FulfillInfoTrait {
-    fn hash(self: FulfillInfo) -> felt252;
-}
-
-impl FulfillInfoImpl of FulfillInfoTrait {
-    fn hash(self: FulfillInfo) -> felt252 {
-        let mut buf = array![];
-        self.serialize(ref buf);
-        starknet_keccak(buf.span())
-    }
 }
 
 /// The info related to the fulfillment an order.
