@@ -97,6 +97,7 @@ mod orderbook_errors {
     const AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
 }
 
+
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
@@ -121,7 +122,7 @@ mod orderbook {
     use debug::PrintTrait;
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
-
+    const AUCTION_ACCEPTING_TIME: u64 = 172800;
     /// Storage struct for the Orderbook contract.
     #[storage]
     struct Storage {
@@ -410,9 +411,10 @@ mod orderbook {
             assert(
                 order.offerer == fulfill_info.fulfiller, orderbook_errors::ORDER_NOT_SAME_OFFERER
             );
-            let AUCTION_ACCEPTING_TIME: u64 = 86400;
+            // get auction end date from storage
+            let (_, end_date, _) = self.auctions.read(order.compute_token_hash());
             assert(
-                order.end_date + AUCTION_ACCEPTING_TIME > starknet::get_block_timestamp(),
+                end_date + AUCTION_ACCEPTING_TIME > starknet::get_block_timestamp(),
                 orderbook_errors::ORDER_EXPIRED
             );
             let related_order_hash = fulfill_info
