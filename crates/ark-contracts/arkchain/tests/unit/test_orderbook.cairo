@@ -7,8 +7,8 @@ use core::traits::TryInto;
 use arkchain::order::types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
 use arkchain::order::database::{order_read, order_status_read, order_status_write, order_type_read};
 use snforge_std::{
-    declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions, Event, SpyOn,
-    test_address
+    start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
+    Event, SpyOn, test_address
 };
 use arkchain::orderbook::orderbook_errors;
 use array::ArrayTrait;
@@ -362,8 +362,11 @@ fn test_fulfill_classic_token_offer() {
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
 
+    let mut spy = spy_events(SpyOn::One(contract_address));
+    let order_hash = order_listing.compute_order_hash();
+
     let fulfill_info = FulfillInfo {
-        order_hash: order_listing.compute_order_hash(),
+        order_hash,
         related_order_hash: Option::Some(order_offer.compute_order_hash()),
         fulfiller: order_listing.offerer,
         token_chain_id: order_listing.token_chain_id,
@@ -372,6 +375,20 @@ fn test_fulfill_classic_token_offer() {
     };
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    orderbook::Event::OrderFulfilled(
+                        orderbook::OrderFulfilled {
+                            order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                        }
+                    )
+                )
+            ]
+        );
 }
 
 #[test]
@@ -380,6 +397,7 @@ fn test_fulfill_classic_collection_offer() {
 
     let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
     let contract_address = test_address();
+    let mut spy = spy_events(SpyOn::One(contract_address));
     let mut state = orderbook::contract_state_for_testing();
 
     order_offer.token_id = Option::None;
@@ -391,6 +409,43 @@ fn test_fulfill_classic_collection_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: Option::None
+    };
+
+    orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    orderbook::Event::OrderFulfilled(
+                        orderbook::OrderFulfilled {
+                            order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                        }
+                    )
+                )
+            ]
+        );
+}
+
+#[test]
+#[should_panic(expected: ('OB: order expired',))]
+fn test_fulfill_expired_offer() {
+    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
+
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
+    let contract_address = test_address();
+    let mut state = orderbook::contract_state_for_testing();
+
+    start_warp(contract_address, order_listing.end_date + 3600); // +1 hour
+
+    let fulfill_info = FulfillInfo {
+        order_hash: order_listing.compute_order_hash(),
+        related_order_hash: Option::Some(order_offer.compute_order_hash()),
+        fulfiller: order_listing.offerer,
+        token_chain_id: order_listing.token_chain_id,
+        token_address: order_listing.token_address,
+        token_id: order_listing.token_id
     };
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
