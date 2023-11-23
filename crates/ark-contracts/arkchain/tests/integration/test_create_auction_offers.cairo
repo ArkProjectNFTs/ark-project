@@ -63,7 +63,6 @@ fn test_accept_auction_after_expiration() {
     dispatcher.create_order(order: auction_offer, signer: signer);
 
     start_warp(contract_address, end_date + 3600); // +1 hour
-// TODO: fulfill_order
 
 // let fulfill_info = FulfillInfo {
 //     order_hash: auction_offer_order_hash,

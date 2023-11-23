@@ -367,9 +367,10 @@ mod orderbook {
         }
 
         fn fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo, signer: Signer) {
+            let fulfill_hash = serialized_hash(fulfill_info);
+            SignerValidator::verify(fulfill_hash, signer);
+
             let order_hash = fulfill_info.order_hash;
-            let execution_hash = serialized_hash(fulfill_info);
-            SignerValidator::verify(execution_hash, signer);
             let order: OrderV1 = match order_read(order_hash) {
                 Option::Some(o) => o,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
