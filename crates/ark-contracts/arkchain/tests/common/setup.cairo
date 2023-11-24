@@ -118,7 +118,16 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
     (order_listing, order_offer, order_auction, order_collection_offer)
 }
 
-fn setup_auction_offer(start_date: u64, end_date: u64) -> (OrderV1, Signer, felt252, felt252) {
+/// Utility function to setup offer for test environment.
+///
+/// # Returns a tuple of the different orders
+/// * order_offer - An offer order of type OrderV1
+/// * signer - A signer of type Signer
+/// * order_hash - The order hash of type felt252
+/// * token_hash - The token hash of type felt252
+fn setup_offer(
+    start_date: u64, end_date: u64, pk: Option<felt252>
+) -> (OrderV1, Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
 
@@ -129,7 +138,7 @@ fn setup_auction_offer(start_date: u64, end_date: u64) -> (OrderV1, Signer, felt
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd042
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
@@ -148,10 +157,12 @@ fn setup_auction_offer(start_date: u64, end_date: u64) -> (OrderV1, Signer, felt
 
     let order_hash = order_offer.compute_order_hash();
     let token_hash = order_offer.compute_token_hash();
-    let signer = sign_mock(order_hash);
+    
+    let signer = sign_mock(order_hash, pk);
 
     (order_offer, signer, order_hash, token_hash)
 }
+
 
 /// Utility function to setup a listing order for test environment.
 ///
@@ -245,7 +256,7 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
 /// # Returns a tuple of the different orders data
 ///
 fn setup_auction_order(
-    start_date: u64, end_date: u64, start_price: felt252, end_price: felt252
+    start_date: u64, end_date: u64, start_price: felt252, end_price: felt252, pk: Option<felt252>
 ) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
@@ -275,12 +286,12 @@ fn setup_auction_order(
 
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let signer = sign_mock(order_hash);
+    let signer = sign_mock(order_hash, pk);
 
     (order_listing, signer, order_hash, token_hash)
 }
 
-fn setup(block_timestamp: u64) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
+fn setup(block_timestamp: u64, pk: Option<felt252>) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
     let mut end_date = block_timestamp + (30 * 24 * 60 * 60);
     let data = array![];
     let data_span = data.span();
@@ -311,7 +322,7 @@ fn setup(block_timestamp: u64) -> (OrderV1, arkchain::crypto::signer::Signer, fe
 
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let signer = sign_mock(order_hash);
+    let signer = sign_mock(order_hash, pk);
     (order_listing, signer, order_hash, token_hash)
 }
 

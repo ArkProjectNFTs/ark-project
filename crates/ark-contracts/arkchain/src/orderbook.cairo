@@ -91,7 +91,7 @@ mod orderbook_errors {
     const ORDER_NOT_CANCELLABLE: felt252 = 'OB: order not cancellable';
     const ORDER_EXPIRED: felt252 = 'OB: order expired';
     const ORDER_SAME_OFFERER: felt252 = 'OB: order has same offerer';
-    const ORDER_NOT_SAME_OFFERER: felt252 = 'OB: order has not same offerer';
+    const ORDER_NOT_SAME_OFFERER: felt252 = 'OB: fulfiller is not offerer';
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
     const ORDER_IS_EXPIRED: felt252 = 'OB: order is expired';
     const AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
@@ -118,8 +118,6 @@ mod orderbook {
     use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
     use arkchain::crypto::hash::{starknet_keccak, serialized_hash};
-
-    use debug::PrintTrait;
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME: u64 = 172800;
@@ -386,7 +384,18 @@ mod orderbook {
             };
             match order_type {
                 OrderType::Listing => { self._fulfill_listing_order(fulfill_info, order); },
-                OrderType::Auction => { self._fulfill_auction_order(fulfill_info, order) },
+                OrderType::Auction => {
+
+                    let original_signer_public_key = self.order_signers.read(fulfill_info.order_hash);
+
+                    let mut origin_signer = signer.clone();
+                    
+                    origin_signer.set_public_key(original_signer_public_key);
+
+                    SignerValidator::verify(fulfill_info.order_hash, origin_signer);
+
+                    self._fulfill_auction_order(fulfill_info, order)
+                },
                 OrderType::Offer => { panic_with_felt252('Offer not implemented'); },
                 OrderType::CollectionOffer => {
                     panic_with_felt252('CollectionOffer not implemented');
@@ -442,12 +451,12 @@ mod orderbook {
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
             let related_offer_auction = self.auction_offers.read(related_order_hash);
+
             if related_offer_auction.is_non_zero() {
-                // order is related to auction so we need to check if it match the auction order
                 assert(
                     related_offer_auction == fulfill_info.order_hash, 'order_hash does not match'
                 );
-            } else { // order is not related to auction so we can fulfill it but before we need to check its expiration date
+            } else {
                 assert(
                     related_order.end_date > starknet::get_block_timestamp(),
                     orderbook_errors::ORDER_EXPIRED

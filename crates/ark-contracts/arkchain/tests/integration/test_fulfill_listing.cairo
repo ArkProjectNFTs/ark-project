@@ -22,7 +22,7 @@ use super::super::common::setup::{setup, setup_listing_order_with_sign};
 #[test]
 fn test_create_listing_order_and_fulfill_non_existing_order() {
     let block_timestamp = 1699556828;
-    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp);
+    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp, Option::None);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -45,7 +45,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, Option::None);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -54,7 +54,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
 #[test]
 fn test_create_listing_order_and_fulfill() {
     let block_timestamp = 1699556828;
-    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp);
+    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -77,7 +77,7 @@ fn test_create_listing_order_and_fulfill() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, Option::None);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 
@@ -92,7 +92,7 @@ fn test_create_listing_order_and_fulfill() {
 #[test]
 fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
     let block_timestamp = 1699556828;
-    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp);
+    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -115,7 +115,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, Option::None);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -124,7 +124,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
 #[test]
 fn test_fulfill_already_fulfilled_order() {
     let block_timestamp = 1699556828;
-    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp);
+    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -144,7 +144,7 @@ fn test_fulfill_already_fulfilled_order() {
         token_id: Option::Some(10),
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, Option::None);
     dispatcher.fulfill_order(fulfill_info, signer);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -153,7 +153,7 @@ fn test_fulfill_already_fulfilled_order() {
 #[test]
 fn test_fulfill_expired_order() {
     let block_timestamp = 1699556828;
-    let (mut order_listing, signer, order_hash, token_hash) = setup(block_timestamp);
+    let (mut order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -175,6 +175,6 @@ fn test_fulfill_expired_order() {
         token_id: Option::Some(10),
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let fulfill_signer = sign_mock(fulfill_info_hash);
+    let fulfill_signer = sign_mock(fulfill_info_hash, Option::None);
     dispatcher.fulfill_order(fulfill_info, fulfill_signer);
 }

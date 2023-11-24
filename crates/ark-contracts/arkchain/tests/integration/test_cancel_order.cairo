@@ -15,7 +15,7 @@ use snforge_std::{
     signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
 use super::super::common::setup::{
-    setup_auction_order, setup, sign_mock, setup_orders, setup_auction_offer
+    setup_auction_order, setup, sign_mock, setup_orders, setup_offer
 };
 
 #[test]
@@ -24,7 +24,7 @@ fn test_cancel_auction() {
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
-        start_date, end_date, 1, 10
+        start_date, end_date, 1, 10, Option::None
     );
 
     let contract = declare('orderbook');
@@ -52,7 +52,7 @@ fn test_cancel_non_existing_order() {
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
-        start_date, end_date, 1, 10
+        start_date, end_date, 1, 10, Option::None
     );
     let order_hash = auction_listing_order.compute_order_hash();
 
@@ -83,7 +83,7 @@ fn test_invalid_cancel_auction_order() {
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
-        start_date, end_date, 1, 10
+        start_date, end_date, 1, 10, Option::None
     );
 
     let contract = declare('orderbook');
@@ -108,8 +108,8 @@ fn test_invalid_cancel_auction_order() {
     let order_hash = auction_listing_order.compute_order_hash();
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let fulfill_signer = sign_mock(cancel_info_hash);
-    let cancel_signer = sign_mock(order_hash);
+    let fulfill_signer = sign_mock(cancel_info_hash, Option::None);
+    let cancel_signer = sign_mock(order_hash, Option::None);
     dispatcher.cancel_order(cancel_info, signer: cancel_signer);
 }
 
@@ -120,7 +120,7 @@ fn test_cancel_auction_during_the_extended_time() {
 
     let (auction_listing_order, auction_listing_signer, order_hash, token_hash) =
         setup_auction_order(
-        start_date, end_date, 1, 10
+        start_date, end_date, 1, 10, Option::None
     );
 
     let contract = declare('orderbook');
@@ -134,8 +134,8 @@ fn test_cancel_auction_during_the_extended_time() {
     assert(order_type == OrderType::Auction.into(), 'order is not auction');
 
     start_warp(contract_address, end_date - 1);
-    let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_auction_offer(
-        end_date - 1, end_date + 1200
+    let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_offer(
+        end_date - 1, end_date + 1200, Option::None
     );
     dispatcher.create_order(order: auction_offer, signer: signer);
     let order_expiration_date = dispatcher.get_auction_expiration(auction_order_hash);
@@ -154,8 +154,8 @@ fn test_cancel_auction_during_the_extended_time() {
     };
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let fulfill_signer = sign_mock(cancel_info_hash);
-    let cancel_signer = sign_mock(order_hash);
+    let fulfill_signer = sign_mock(cancel_info_hash, Option::None);
+    let cancel_signer = sign_mock(order_hash, Option::None);
 
     dispatcher.cancel_order(cancel_info, signer: auction_listing_signer);
 }
