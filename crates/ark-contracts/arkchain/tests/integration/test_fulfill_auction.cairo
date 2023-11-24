@@ -1,3 +1,4 @@
+use core::debug::PrintTrait;
 use arkchain::crypto::signer::SignerTrait;
 use core::traits::TryInto;
 use core::traits::Into;
@@ -68,45 +69,58 @@ fn test_fulfill_auction() {
 ///
 /// Create one offer one auction and fulfill the auction with a classic offer.
 ///
-// #[test]
-// fn test_fulfill_auction_with_non_auction_offer() {
-//     // contract declaration
-//     let contract = declare('orderbook');
-//     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
-//     let contract_address = contract.deploy(@contract_data).unwrap();
-//     let dispatcher = OrderbookDispatcher { contract_address };
+#[test]
+fn test_fulfill_auction_with_non_auction_offer() {
+    // contract declaration
+    let contract = declare('orderbook');
+    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let contract_address = contract.deploy(@contract_data).unwrap();
+    let dispatcher = OrderbookDispatcher { contract_address };
 
-//     // Create an offer
-//     let offer_start_date = 1699556828;
-//     let offer_end_date = offer_start_date + (10 * 24 * 60 * 60);
-//     let (offer_order, offer_signer, offer_order_hash, offer_order_token_hash) =
-//         setup_offer(
-//         offer_start_date, offer_end_date, Option::None
-//     );
-//     dispatcher.create_order(order: offer_order, signer: offer_signer);
+    // Create an offer
+    let offer_start_date = 1699556828;
+    let offer_end_date = offer_start_date + (10 * 24 * 60 * 60);
+    let (offer_order, offer_signer, offer_order_hash, offer_order_token_hash) = setup_offer(
+        offer_start_date, offer_end_date, Option::None
+    );
+    dispatcher.create_order(order: offer_order, signer: offer_signer);
 
-//     // Create an auction
-//     // let start_date = 1699556828;
-//     // let end_date = start_date + (10 * 24 * 60 * 60);
-//     // let (auction_listing_order, auction_signer, order_hash, token_hash) = setup_auction_order(
-//     //     start_date, end_date, 1, 10, Option::None
-//     // );
-//     // dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
+    // Create an auction
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (auction_listing_order, auction_signer, order_hash, token_hash) = setup_auction_order(
+        start_date, end_date, 1, 10, Option::None
+    );
+    dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
 
-//     // let fulfill_info = FulfillInfo {
-//     //     order_hash: order_hash,
-//     //     related_order_hash: Option::Some(related_order_hash),
-//     //     fulfiller: auction_listing_order.offerer,
-//     //     token_chain_id: auction_listing_order.token_chain_id,
-//     //     token_address: auction_listing_order.token_address,
-//     //     token_id: Option::Some(10),
-//     // };
+    let fulfill_info = FulfillInfo {
+        order_hash: order_hash,
+        related_order_hash: Option::Some(offer_order_hash),
+        fulfiller: auction_listing_order.offerer,
+        token_chain_id: auction_listing_order.token_chain_id,
+        token_address: auction_listing_order.token_address,
+        token_id: Option::Some(10),
+    };
 
-//     // let fulfill_info_hash = serialized_hash(fulfill_info);
-//     // let signer = sign_mock(fulfill_info_hash, Option::None);
-//     // dispatcher.fulfill_order(fulfill_info, signer);
-//     // let auction_status = dispatcher.get_order_status(order_hash);
-//     // let offer_status = dispatcher.get_order_status(related_order_hash);
-//     // assert(auction_status == OrderStatus::Fulfilled.into(), 'Auction status is not fulfilled');
-//     // assert(offer_status == OrderStatus::Fulfilled.into(), 'Offer status is not fulfilled');
-// }
+    let fulfill_info_hash = serialized_hash(fulfill_info);
+    let signer = sign_mock(fulfill_info_hash, Option::None);
+    dispatcher.fulfill_order(fulfill_info, signer);
+    let auction_status = dispatcher.get_order_status(order_hash);
+    let offer_status = dispatcher.get_order_status(offer_order_hash);
+    assert(auction_status == OrderStatus::Fulfilled.into(), 'Auction status is not fulfilled');
+    assert(offer_status == OrderStatus::Fulfilled.into(), 'Offer status is not fulfilled');
+}
+
+// try to fulfill auction with classic offer but with a start date in the future
+
+// try to fulfill expired offer for a token when fulfilling an auction
+
+// try to fullfill an expired auction
+
+// try to fulfill an auction with an offer that is not for the same token
+
+// try to fulfill an auction with a non existing related order hash
+
+// try to fulfill an auction with an order that is not an offer
+
+// try to fulfill an auction with a non open offer

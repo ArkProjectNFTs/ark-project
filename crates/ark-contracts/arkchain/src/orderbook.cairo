@@ -318,27 +318,16 @@ mod orderbook {
             let mut generated_signer = signer.clone();
             generated_signer.set_public_key(self.order_signers.read(cancel_info.order_hash));
             SignerValidator::verify(cancel_info.order_hash, generated_signer);
-
-            // Check if order exists
-
             let order_hash = cancel_info.order_hash;
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
-
             assert(order.offerer == cancel_info.canceller, 'not the same offerrer'); // TODO
-
-            // Check order status
-
             let status = match order_status_read(order_hash) {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
-
-            // Check expiration date
             let block_ts = starknet::get_block_timestamp();
-
-            // Check the order type
             match order_type_read(order_hash) {
                 Option::Some(order_type) => {
                     if order_type == OrderType::Auction {
@@ -367,7 +356,6 @@ mod orderbook {
         fn fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo, signer: Signer) {
             let fulfill_hash = serialized_hash(fulfill_info);
             SignerValidator::verify(fulfill_hash, signer);
-
             let order_hash = fulfill_info.order_hash;
             let order: OrderV1 = match order_read(order_hash) {
                 Option::Some(o) => o,
@@ -389,7 +377,6 @@ mod orderbook {
                     let mut origin_signer = signer.clone();
                     origin_signer.set_public_key(original_signer_public_key);
                     SignerValidator::verify(fulfill_hash, origin_signer);
-
                     self._fulfill_auction_order(fulfill_info, order)
                 },
                 OrderType::Offer => { panic_with_felt252('Offer not implemented'); },
