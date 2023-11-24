@@ -365,6 +365,8 @@ fn test_fulfill_classic_token_offer() {
     let mut spy = spy_events(SpyOn::One(contract_address));
     let order_hash = order_listing.compute_order_hash();
 
+    start_warp(contract_address, order_listing.start_date);
+
     let fulfill_info = FulfillInfo {
         order_hash,
         related_order_hash: Option::Some(order_offer.compute_order_hash()),
@@ -403,6 +405,10 @@ fn test_fulfill_classic_collection_offer() {
     let mut state = orderbook::contract_state_for_testing();
 
     order_offer.token_id = Option::None;
+    order_offer.start_date = order_listing.start_date + 100;
+    order_offer.end_date = order_listing.start_date + 100;
+
+    start_warp(contract_address, order_offer.start_date);
 
     let fulfill_info = FulfillInfo {
         order_hash: order_listing.compute_order_hash(),

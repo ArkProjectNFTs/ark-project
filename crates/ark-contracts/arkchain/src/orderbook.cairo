@@ -103,6 +103,7 @@ mod orderbook_errors {
     const ORDER_NOT_AN_OFFER: felt252 = 'OB: order is not an offer';
     const ORDER_NOT_OPEN: felt252 = 'OB: order is not open';
     const USE_FULFILL_AUCTION: felt252 = 'OB: must use fulfill auction';
+    const OFFER_NOT_STARTED: felt252 = 'OB: offer is not started';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -492,14 +493,18 @@ mod orderbook {
         /// * `order_type` - The type of the order.
         ///
         fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
-            let (auction_order_hash, auction_end_date, auction_offer_count) = self
-                .auctions
-                .read(order.compute_token_hash());
+            if order.token_id.is_some() {
+                let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                    .auctions
+                    .read(order.compute_token_hash());
 
-            assert(auction_order_hash.is_zero(), orderbook_errors::USE_FULFILL_AUCTION);
-            assert(
-                order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
-            );
+                assert(auction_order_hash.is_zero(), orderbook_errors::USE_FULFILL_AUCTION);
+            }
+
+            let current_date = starknet::get_block_timestamp();
+            assert(current_date >= order.start_date, orderbook_errors::OFFER_NOT_STARTED);
+            assert(order.end_date > current_date, orderbook_errors::ORDER_EXPIRED);
+
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
             self
                 .emit(
