@@ -373,7 +373,9 @@ mod orderbook {
             match order_type {
                 OrderType::Listing => { self._fulfill_listing_order(fulfill_info, order); },
                 OrderType::Auction => {
-                    let original_signer_public_key = self.order_signers.read(fulfill_info.order_hash);
+                    let original_signer_public_key = self
+                        .order_signers
+                        .read(fulfill_info.order_hash);
                     let mut origin_signer = signer.clone();
                     origin_signer.set_public_key(original_signer_public_key);
                     SignerValidator::verify(fulfill_hash, origin_signer);

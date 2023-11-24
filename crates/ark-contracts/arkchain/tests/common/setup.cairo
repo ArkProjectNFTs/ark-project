@@ -157,7 +157,7 @@ fn setup_offer(
 
     let order_hash = order_offer.compute_order_hash();
     let token_hash = order_offer.compute_token_hash();
-    
+
     let signer = sign_mock(order_hash, pk);
 
     (order_offer, signer, order_hash, token_hash)
@@ -291,7 +291,9 @@ fn setup_auction_order(
     (order_listing, signer, order_hash, token_hash)
 }
 
-fn setup(block_timestamp: u64, pk: Option<felt252>) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
+fn setup(
+    block_timestamp: u64, pk: Option<felt252>
+) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
     let mut end_date = block_timestamp + (30 * 24 * 60 * 60);
     let data = array![];
     let data_span = data.span();

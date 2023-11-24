@@ -110,7 +110,6 @@ fn test_fulfill_auction_with_non_auction_offer() {
     assert(auction_status == OrderStatus::Fulfilled.into(), 'Auction status is not fulfilled');
     assert(offer_status == OrderStatus::Fulfilled.into(), 'Offer status is not fulfilled');
 }
-
 // try to fulfill auction with classic offer but with a start date in the future
 
 // try to fulfill expired offer for a token when fulfilling an auction
@@ -124,3 +123,4 @@ fn test_fulfill_auction_with_non_auction_offer() {
 // try to fulfill an auction with an order that is not an offer
 
 // try to fulfill an auction with a non open offer
+

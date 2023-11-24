@@ -13,9 +13,7 @@ use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
     Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{
-    setup_auction_order, setup, sign_mock, setup_orders, setup_offer
-};
+use super::super::common::setup::{setup_auction_order, setup, sign_mock, setup_orders, setup_offer};
 
 #[test]
 fn test_create_valid_auction_offer() {
@@ -63,17 +61,16 @@ fn test_accept_auction_after_expiration() {
     dispatcher.create_order(order: auction_offer, signer: signer);
 
     start_warp(contract_address, end_date + 3600); // +1 hour
+// let fulfill_info = FulfillInfo {
+//     order_hash: auction_offer_order_hash,
+//     related_order_hash: Option::None,
+//     fulfiller: auction_listing_order.offerer,
+//     token_chain_id: auction_listing_order.token_chain_id,
+//     token_address: auction_listing_order.token_address,
+//     token_id: auction_listing_order.token_id,
+// };
 
-    // let fulfill_info = FulfillInfo {
-    //     order_hash: auction_offer_order_hash,
-    //     related_order_hash: Option::None,
-    //     fulfiller: auction_listing_order.offerer,
-    //     token_chain_id: auction_listing_order.token_chain_id,
-    //     token_address: auction_listing_order.token_address,
-    //     token_id: auction_listing_order.token_id,
-    // };
-
-    // let fulfill_info_hash = serialized_hash(fulfill_info);
-    // let fulfill_signer = sign_mock(fulfill_info_hash);
-    // dispatcher.fulfill_order(fulfill_info, fulfill_signer);
+// let fulfill_info_hash = serialized_hash(fulfill_info);
+// let fulfill_signer = sign_mock(fulfill_info_hash);
+// dispatcher.fulfill_order(fulfill_info, fulfill_signer);
 }
