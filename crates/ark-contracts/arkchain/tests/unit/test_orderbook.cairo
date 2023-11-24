@@ -383,7 +383,9 @@ fn test_fulfill_classic_token_offer() {
                     contract_address,
                     orderbook::Event::OrderFulfilled(
                         orderbook::OrderFulfilled {
-                            order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                            order_hash: fulfill_info.order_hash,
+                            fulfiller: fulfill_info.fulfiller,
+                            related_order_hash: Option::None
                         }
                     )
                 )
@@ -420,7 +422,9 @@ fn test_fulfill_classic_collection_offer() {
                     contract_address,
                     orderbook::Event::OrderFulfilled(
                         orderbook::OrderFulfilled {
-                            order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                            order_hash: fulfill_info.order_hash,
+                            fulfiller: fulfill_info.fulfiller,
+                            related_order_hash: Option::None
                         }
                     )
                 )

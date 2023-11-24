@@ -50,7 +50,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
             .try_into()
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
-        salt: 0,
+        salt: 1,
         offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
             .try_into()
             .unwrap(),

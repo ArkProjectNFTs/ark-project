@@ -102,6 +102,7 @@ mod orderbook_errors {
     const ORDER_TOKEN_HASH_DOES_NOT_MATCH: felt252 = 'OB: token hash does not match';
     const ORDER_NOT_AN_OFFER: felt252 = 'OB: order is not an offer';
     const ORDER_NOT_OPEN: felt252 = 'OB: order is not open';
+    const USE_FULFILL_AUCTION: felt252 = 'OB: must use fulfill auction';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -495,8 +496,7 @@ mod orderbook {
                 .auctions
                 .read(order.compute_token_hash());
 
-            assert(auction_order_hash.is_zero(), 'must use _fulfill_auction');
-
+            assert(auction_order_hash.is_zero(), orderbook_errors::USE_FULFILL_AUCTION);
             assert(
                 order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
             );
