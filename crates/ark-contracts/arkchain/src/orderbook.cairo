@@ -95,9 +95,14 @@ mod orderbook_errors {
     const ORDER_NOT_SAME_OFFERER: felt252 = 'OB: fulfiller is not offerer';
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
     const ORDER_IS_EXPIRED: felt252 = 'OB: order is expired';
-    const AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
+    const ORDER_AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
+    const ORDER_MISSING_RELATED_ORDER: felt252 = 'OB: order missing related order';
+    const ORDER_HASH_DOES_NOT_MATCH: felt252 = 'OB: order hash does not match';
+    const ORDER_TOKEN_ID_DOES_NOT_MATCH: felt252 = 'OB: token id does not match';
+    const ORDER_TOKEN_HASH_DOES_NOT_MATCH: felt252 = 'OB: token hash does not match';
+    const ORDER_NOT_AN_OFFER: felt252 = 'OB: order is not an offer';
+    const ORDER_NOT_OPEN: felt252 = 'OB: order is not open';
 }
-
 
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
@@ -121,7 +126,7 @@ mod orderbook {
     use arkchain::crypto::hash::{starknet_keccak, serialized_hash};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
-    const AUCTION_ACCEPTING_TIME: u64 = 172800;
+    const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
     /// Storage struct for the Orderbook contract.
     #[storage]
     struct Storage {
@@ -198,6 +203,8 @@ mod orderbook {
         order_hash: felt252,
         #[key]
         fulfiller: ContractAddress,
+        #[key]
+        related_order_hash: Option<felt252>,
     }
 
     // *************************************************************************
@@ -337,7 +344,9 @@ mod orderbook {
                             .auctions
                             .read(auction_token_hash);
 
-                        assert(block_ts <= auction_end_date, orderbook_errors::AUCTION_IS_EXPIRED);
+                        assert(
+                            block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
+                        );
                         self.auctions.write(auction_token_hash, (0, 0, 0));
                     } else {
                         assert(block_ts < order.end_date, orderbook_errors::ORDER_IS_EXPIRED);
@@ -404,25 +413,26 @@ mod orderbook {
         fn _fulfill_auction_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
+            let block_timestamp = starknet::get_block_timestamp();
             assert(
                 order.offerer == fulfill_info.fulfiller, orderbook_errors::ORDER_NOT_SAME_OFFERER
             );
             // get auction end date from storage
             let (_, end_date, _) = self.auctions.read(order.compute_token_hash());
             assert(
-                end_date + AUCTION_ACCEPTING_TIME > starknet::get_block_timestamp(),
+                end_date + AUCTION_ACCEPTING_TIME_SECS > block_timestamp,
                 orderbook_errors::ORDER_EXPIRED
             );
 
             let related_order_hash = fulfill_info
                 .related_order_hash
-                .expect(orderbook_errors::ORDER_NOT_FOUND);
+                .expect(orderbook_errors::ORDER_MISSING_RELATED_ORDER);
 
             match order_type_read(related_order_hash) {
                 Option::Some(order_type) => {
                     assert(
                         order_type == OrderType::Offer || order_type == OrderType::CollectionOffer,
-                        orderbook_errors::ORDER_NOT_FULFILLABLE
+                        orderbook_errors::ORDER_NOT_AN_OFFER
                     );
                 },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
@@ -430,7 +440,7 @@ mod orderbook {
 
             let related_order_status = match order_status_read(related_order_hash) {
                 Option::Some(s) => {
-                    assert(s == OrderStatus::Open, orderbook_errors::ORDER_NOT_FULFILLABLE);
+                    assert(s == OrderStatus::Open, orderbook_errors::ORDER_NOT_OPEN);
                     s
                 },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
@@ -445,26 +455,32 @@ mod orderbook {
 
             if related_offer_auction.is_non_zero() {
                 assert(
-                    related_offer_auction == fulfill_info.order_hash, 'order_hash does not match'
+                    related_offer_auction == fulfill_info.order_hash,
+                    orderbook_errors::ORDER_HASH_DOES_NOT_MATCH
                 );
             } else {
                 assert(
-                    related_order.start_date < starknet::get_block_timestamp(),
-                    orderbook_errors::ORDER_NOT_STARTED
+                    related_order.start_date < block_timestamp, orderbook_errors::ORDER_NOT_STARTED
                 );
-                assert(
-                    related_order.end_date > starknet::get_block_timestamp(),
-                    orderbook_errors::ORDER_EXPIRED
-                );
+                assert(related_order.end_date > block_timestamp, orderbook_errors::ORDER_EXPIRED);
             }
-            assert(related_order.token_id == order.token_id, 'token_id does not match');
+            let related_order_token_hash = related_order.compute_token_hash();
+            assert(
+                related_order_token_hash == order.compute_token_hash(),
+                orderbook_errors::ORDER_TOKEN_HASH_DOES_NOT_MATCH
+            );
+            assert(
+                related_order.token_id == order.token_id,
+                orderbook_errors::ORDER_TOKEN_ID_DOES_NOT_MATCH
+            );
 
-            order_status_write(fulfill_info.related_order_hash.unwrap(), OrderStatus::Fulfilled);
+            order_status_write(related_order_hash, OrderStatus::Fulfilled);
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
             self
                 .emit(
                     OrderFulfilled {
-                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller,
+                        related_order_hash: Option::Some(related_order_hash)
                     }
                 );
         }
@@ -486,7 +502,8 @@ mod orderbook {
             self
                 .emit(
                     OrderFulfilled {
-                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller
+                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller,
+                        related_order_hash: Option::None
                     }
                 );
         }

@@ -247,7 +247,7 @@ fn test_fulfill_expired_auction() {
 }
 
 // try to fulfill an auction with an offer that is not for the same token
-#[should_panic(expected: ('token_id does not match',))]
+#[should_panic(expected: ('OB: token hash does not match',))]
 #[test]
 fn test_fulfill_auction_with_offer_for_different_token() {
     // contract declaration
