@@ -20,6 +20,9 @@ trait Orderbook<T> {
     /// * `broker_id` - ID of the broker.
     fn whitelist_broker(ref self: T, broker_id: felt252);
 
+    fn whitelist_creator_broker(ref self: T, broker_id: felt252);
+    fn whitelist_fulfiller_broker(ref self: T, broker_id: felt252);
+
     /// Submits and places an order to the orderbook if the order is valid.
     ///
     /// # Arguments
@@ -95,7 +98,7 @@ mod orderbook {
     use core::starknet::event::EventEmitter;
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
-    use starknet::ContractAddress;
+    use starknet::{ContractAddress, get_caller_address,};
     use arkchain::order::types::{OrderTrait, OrderType, ExecutionInfo, FulfillmentInfo};
     use arkchain::order::order_v1::OrderV1;
     use arkchain::order::database::{
@@ -117,6 +120,8 @@ mod orderbook {
         /// Mapping of broker addresses to their whitelisted status.
         /// Represented as felt252, set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
+        creator_brokers: LegacyMap<felt252, felt252>,
+        fulfiller_brokers: LegacyMap<felt252, felt252>,
         /// Mapping of token_hash to order_hash.
         token_listings: LegacyMap<felt252, felt252>,
         /// Mapping of token_hash to auction details (order_hash and end_date, auction_offer_count).
@@ -254,8 +259,46 @@ mod orderbook {
             self.brokers.write(broker_id, 1);
         }
 
+        fn whitelist_creator_broker(ref self: ContractState, broker_id: felt252) {
+            /// todo: change this error to a more specific one
+            // TODO: check components with OZ when ready for ownable.
+            assert(
+                self.admin.read() == starknet::get_caller_address(),
+                orderbook_errors::BROKER_UNREGISTERED
+            );
+
+            if self.creator_brokers.read(broker_id) == 1 {
+                self.creator_brokers.write(broker_id, 0);
+            } else {
+                self.creator_brokers.write(broker_id, 1);
+            }
+        }
+
+        fn whitelist_fulfiller_broker(ref self: ContractState, broker_id: felt252) {
+            /// todo: change this error to a more specific one
+            // TODO: check components with OZ when ready for ownable.
+
+            assert(
+                self.admin.read() == starknet::get_caller_address(),
+                orderbook_errors::BROKER_UNREGISTERED
+            );
+
+            if self.fulfiller_brokers.read(broker_id) == 1 {
+                self.fulfiller_brokers.write(broker_id, 0);
+            } else {
+                self.fulfiller_brokers.write(broker_id, 1);
+            }
+        }
+
+
         /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
+            /// validate caller is whitelisted as creator_broker
+            assert(
+                self.creator_brokers.read(starknet::get_caller_address().into()) == 1,
+                orderbook_errors::BROKER_UNREGISTERED
+            );
+
             let order_hash = order.compute_order_hash();
             SignerValidator::verify(order_hash, signer);
 

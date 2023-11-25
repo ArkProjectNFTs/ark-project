@@ -1,5 +1,3 @@
-use core::traits::TryInto;
-use core::traits::Into;
 use core::option::OptionTrait;
 use snforge_std::{PrintTrait, declare, ContractClassTrait};
 use arkchain::orderbook::Orderbook;
@@ -10,8 +8,12 @@ use arkchain::order::order_v1::OrderTrait;
 use arkchain::order::order_v1::OrderType;
 use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
-use starknet::deploy_syscall;
-
+use starknet::{
+    deploy_syscall, contract_address_const, ContractAddress, ContractAddressIntoFelt252,
+    testing::{set_caller_address, set_contract_address, set_block_timestamp}
+};
+use traits::{Into, TryInto};
+use snforge_std::{CheatTarget, start_prank, stop_prank};
 use super::super::common::setup::{setup, setup_listing_order_with_sign};
 
 #[test]
@@ -23,7 +25,14 @@ fn test_create_listing_order() {
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
+    /// whitelist broker 
+    whitelist_creator_broker(123, dispatcher);
+
+    /// create order as broker
+    start_prank(CheatTarget::All(()), 123.try_into().unwrap());
     let order = dispatcher.create_order(order: order_listing, signer: signer);
+    stop_prank(CheatTarget::All(()));
+
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
     let order_type = dispatcher.get_order_type(_order_hash);
@@ -61,4 +70,31 @@ fn test_create_listing_order() {
     assert(order_hash == _order_hash, 'Order hash is not equal');
     assert(order_type == OrderType::Listing.into(), 'Order type is not listing');
     assert(order_status == OrderStatus::Open.into(), 'Order status is not open');
+}
+
+#[test]
+#[should_panic(expected: ('OB: unregistered broker',))]
+fn test_create_listing_order_not_whitelisted() {
+    let block_timestamp = 1699556828; // starknet::get_block_timestamp();
+    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp);
+    let contract = declare('orderbook');
+    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let contract_address = contract.deploy(@contract_data).unwrap();
+    let dispatcher = OrderbookDispatcher { contract_address };
+
+    /// create order as broker, not whitelisted
+    start_prank(CheatTarget::All(()), 123.try_into().unwrap());
+    let order = dispatcher.create_order(order: order_listing, signer: signer);
+    stop_prank(CheatTarget::All(()));
+}
+
+
+/// Helpers 
+fn whitelist_creator_broker(broker_id: felt252, dispatcher: OrderbookDispatcher) {
+    start_prank(
+        CheatTarget::All(()),
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078.try_into().unwrap()
+    );
+    dispatcher.whitelist_creator_broker(broker_id);
+    stop_prank(CheatTarget::All(()));
 }
