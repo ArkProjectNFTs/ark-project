@@ -14,7 +14,7 @@ use snforge_std::{
     EventAssertions, Event, SpyOn, test_address,
     signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{setup_auction_order, setup, sign_mock, setup_orders, setup_offer};
+use super::super::common::setup::{setup_auction_order, sign_mock, setup_orders, setup_offer};
 
 #[test]
 fn test_cancel_auction() {

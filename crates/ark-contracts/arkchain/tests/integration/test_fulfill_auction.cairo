@@ -15,7 +15,7 @@ use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
     Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{setup_auction_order, setup, sign_mock, setup_orders, setup_offer};
+use super::super::common::setup::{setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer};
 
 /// Test
 ///
@@ -323,7 +323,7 @@ fn test_fulfill_auction_with_non_existing_related_order_hash() {
 }
 
 // try to fulfill an auction with an order that is not an offer (a listing order)
-#[should_panic(expected: ('OB: order not an offer',))]
+#[should_panic(expected: ('OB: order not fulfillable',))]
 #[test]
 fn test_fulfill_auction_with_listing_order() {
     // contract declaration
@@ -341,9 +341,11 @@ fn test_fulfill_auction_with_listing_order() {
     dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
 
     //create a listing order 
-    let (listing_order, listing_signer, listing_order_hash, listing_order_token_hash) = setup_offer(
-        start_date, end_date, Option::None, Option::None
+    let (listing_order, listing_signer, listing_order_hash, listing_order_token_hash) =
+        setup_listing(
+        start_date, end_date, Option::Some(123)
     );
+    dispatcher.create_order(order: listing_order, signer: listing_signer);
 
     start_warp(contract_address, start_date + 3600);
 
@@ -360,6 +362,7 @@ fn test_fulfill_auction_with_listing_order() {
     let signer = sign_mock(fulfill_info_hash, Option::None);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
+
 // TODO update this test when https://github.com/ArkProjectNFTs/ark-project/pull/188 is merged
 // try to fulfill an auction with a non open offer
 // #[should_panic(expected: ('OB: order not open',))]

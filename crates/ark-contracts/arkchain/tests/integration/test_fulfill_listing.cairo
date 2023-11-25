@@ -15,14 +15,17 @@ use starknet::deploy_syscall;
 use snforge_std::start_warp;
 
 use super::super::common::signer::sign_mock;
-use super::super::common::setup::{setup, setup_listing_order_with_sign};
+use super::super::common::setup::{setup_listing, setup_listing_order_with_sign};
 
 // try to fulfill an order that doesn't exist
 #[should_panic(expected: ('OB: order not found',))]
 #[test]
 fn test_create_listing_order_and_fulfill_non_existing_order() {
-    let block_timestamp = 1699556828;
-    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp, Option::None);
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, _order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(123)
+    );
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -53,8 +56,11 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
 // create and order & fulfill it
 #[test]
 fn test_create_listing_order_and_fulfill() {
-    let block_timestamp = 1699556828;
-    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(123)
+    );
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -91,8 +97,11 @@ fn test_create_listing_order_and_fulfill() {
 #[should_panic(expected: ('OB: order has same offerer',))]
 #[test]
 fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
-    let block_timestamp = 1699556828;
-    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(123)
+    );
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -123,8 +132,11 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
 #[should_panic(expected: ('OB: order not fulfillable',))]
 #[test]
 fn test_fulfill_already_fulfilled_order() {
-    let block_timestamp = 1699556828;
-    let (order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(123)
+    );
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -152,8 +164,11 @@ fn test_fulfill_already_fulfilled_order() {
 #[should_panic(expected: ('OB: order expired',))]
 #[test]
 fn test_fulfill_expired_order() {
-    let block_timestamp = 1699556828;
-    let (mut order_listing, signer, order_hash, token_hash) = setup(block_timestamp, Option::None);
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(123)
+    );
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();

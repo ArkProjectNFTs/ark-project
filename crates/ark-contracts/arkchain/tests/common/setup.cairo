@@ -295,10 +295,9 @@ fn setup_auction_order(
     (order_listing, signer, order_hash, token_hash)
 }
 
-fn setup(
-    block_timestamp: u64, pk: Option<felt252>
+fn setup_listing(
+    start_date: u64, end_date: u64, token_id: Option<u256>
 ) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
-    let mut end_date = block_timestamp + (30 * 24 * 60 * 60);
     let data = array![];
     let data_span = data.span();
 
@@ -316,11 +315,11 @@ fn setup(
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
-        token_id: Option::Some(10),
+        token_id: token_id,
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 0,
-        start_date: block_timestamp,
+        start_date: start_date,
         end_date: end_date,
         broker_id: 123,
         additional_data: data_span,
@@ -328,7 +327,7 @@ fn setup(
 
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let signer = sign_mock(order_hash, pk);
+    let signer = sign_mock(order_hash, Option::None);
     (order_listing, signer, order_hash, token_hash)
 }
 

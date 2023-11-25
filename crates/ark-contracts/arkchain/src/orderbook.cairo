@@ -96,7 +96,6 @@ mod orderbook_errors {
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
     const ORDER_IS_EXPIRED: felt252 = 'OB: order is expired';
     const AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
-    const ORDER_NOT_OFFER: felt252 = 'OB: order is not offer';
 }
 
 
@@ -414,9 +413,11 @@ mod orderbook {
                 end_date + AUCTION_ACCEPTING_TIME > starknet::get_block_timestamp(),
                 orderbook_errors::ORDER_EXPIRED
             );
+
             let related_order_hash = fulfill_info
                 .related_order_hash
                 .expect(orderbook_errors::ORDER_NOT_FOUND);
+
             match order_type_read(related_order_hash) {
                 Option::Some(order_type) => {
                     assert(
@@ -426,6 +427,7 @@ mod orderbook {
                 },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             }
+
             let related_order_status = match order_status_read(related_order_hash) {
                 Option::Some(s) => {
                     assert(s == OrderStatus::Open, orderbook_errors::ORDER_NOT_FULFILLABLE);
@@ -433,21 +435,14 @@ mod orderbook {
                 },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
-            let related_order_type = match order_type_read(related_order_hash) {
-                Option::Some(s) => {
-                    assert(
-                        s == OrderType::Offer || s == OrderType::CollectionOffer,
-                        orderbook_errors::ORDER_NOT_FULFILLABLE
-                    );
-                    s
-                },
-                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
-            };
+
             let related_order = match order_read::<OrderV1>(related_order_hash) {
                 Option::Some(o) => o,
-                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_OFFER),
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
+
             let related_offer_auction = self.auction_offers.read(related_order_hash);
+
             if related_offer_auction.is_non_zero() {
                 assert(
                     related_offer_auction == fulfill_info.order_hash, 'order_hash does not match'
@@ -463,7 +458,7 @@ mod orderbook {
                 );
             }
             assert(related_order.token_id == order.token_id, 'token_id does not match');
-
+            
             order_status_write(fulfill_info.related_order_hash.unwrap(), OrderStatus::Fulfilled);
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
             self
