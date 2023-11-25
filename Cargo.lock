@@ -6880,6 +6880,8 @@ dependencies = [
  "serde_with 2.3.3",
  "smol_str",
  "starknet 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-abigen-macros",
+ "starknet-abigen-parser",
  "starknet-crypto 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "starknet_api",
  "test-log",
@@ -7161,6 +7163,29 @@ dependencies = [
  "starknet-macros 0.1.4 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
  "starknet-providers 0.7.0 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
  "starknet-signers 0.5.0 (git+https://github.com/ArkProjectNFTs/starknet-rs?branch=fix/contract-error)",
+]
+
+[[package]]
+name = "starknet-abigen-macros"
+version = "0.1.0"
+source = "git+https://github.com/glihm/starknet-abigen-rs?tag=v0.1.4-beta5#d293f0b49fcb171a0312b20d4639426852b043b9"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "serde_json",
+ "starknet 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-abigen-parser",
+ "syn 2.0.39",
+]
+
+[[package]]
+name = "starknet-abigen-parser"
+version = "0.1.0"
+source = "git+https://github.com/glihm/starknet-abigen-rs?tag=v0.1.4-beta5#d293f0b49fcb171a0312b20d4639426852b043b9"
+dependencies = [
+ "starknet 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror",
 ]
 
 [[package]]

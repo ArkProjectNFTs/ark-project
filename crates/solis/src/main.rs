@@ -1,42 +1,25 @@
 use anyhow::Result;
-use async_trait::async_trait;
 use clap::Parser;
 use console::Style;
 use katana_core::hooker::KatanaHooker;
 use katana_core::sequencer::KatanaSequencer;
 use katana_rpc::{spawn, NodeHandle};
 use starknet::accounts::Call;
-use starknet::core::types::BroadcastedInvokeTransaction;
+use starknet::core::types::{BroadcastedInvokeTransaction, FieldElement};
 use std::sync::Arc;
 use tokio::signal::ctrl_c;
 
 use tracing_subscriber::fmt;
 
 mod args;
+mod contracts;
+mod error;
+mod hooker;
 
-use args::KatanaArgs;
-
-pub struct SolisHooker {}
-
-#[async_trait]
-impl KatanaHooker for SolisHooker {
-    async fn verify_invoke_tx_before_pool(
-        &self,
-        transaction: BroadcastedInvokeTransaction,
-    ) -> bool {
-        println!("verify invoke tx before pool: {:?}", transaction);
-        true
-    }
-
-    async fn verify_message_to_starknet_before_tx(&self, call: Call) -> bool {
-        println!("verify message to starknet before tx: {:?}", call);
-        true
-    }
-
-    async fn react_on_starknet_tx_failed(&self, call: Call) {
-        println!("Starknet tx failed: {:?}", call);
-    }
-}
+use crate::args::KatanaArgs;
+use crate::contracts::orderbook::OrderV1;
+use crate::contracts::starknet_utils::StarknetUtilsReader;
+use crate::hooker::SolisHooker;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -44,7 +27,7 @@ async fn main() -> Result<()> {
         fmt::Subscriber::builder()
             .with_env_filter(
                 "info,executor=trace,server=debug,katana_core=trace,blockifier=off,\
-                 jsonrpsee_server=off,hyper=off",
+                 jsonrpsee_server=off,hyper=off,solis=trace",
             )
             .finish(),
     )
@@ -52,7 +35,27 @@ async fn main() -> Result<()> {
 
     let config = KatanaArgs::parse();
 
-    let hooker = Arc::new(SolisHooker {});
+    let sn_utils_reader = contracts::starknet_utils::new_starknet_utils_reader(
+        FieldElement::ZERO,
+        "http://0.0.0.0:5050",
+    );
+
+    let orderbook_address = FieldElement::from_hex_be("0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7").unwrap();
+
+    let hooker = Arc::new(SolisHooker { sn_utils_reader, orderbook_address });
+
+    // Private key + account address + rpc can come from ENV.
+    let private_key =
+        FieldElement::from_hex_be("0x1800000000300000180000000000030000000000003006001800006600")
+            .unwrap();
+    let account_address = FieldElement::from_hex_be(
+        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
+    )
+    .unwrap();
+
+    let account =
+        contracts::account::new_account("http://0.0.0.0:5050", account_address, private_key).await;
+    let orderbook = contracts::orderbook::new_orderbook(orderbook_address, account);
 
     let server_config = config.server_config();
     let sequencer_config = config.sequencer_config();
