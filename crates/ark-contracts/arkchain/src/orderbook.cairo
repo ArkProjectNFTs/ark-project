@@ -479,7 +479,8 @@ mod orderbook {
             self
                 .emit(
                     OrderFulfilled {
-                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller,
+                        order_hash: fulfill_info.order_hash,
+                        fulfiller: fulfill_info.fulfiller,
                         related_order_hash: Option::Some(related_order_hash)
                     }
                 );
@@ -502,7 +503,8 @@ mod orderbook {
             self
                 .emit(
                     OrderFulfilled {
-                        order_hash: fulfill_info.order_hash, fulfiller: fulfill_info.fulfiller,
+                        order_hash: fulfill_info.order_hash,
+                        fulfiller: fulfill_info.fulfiller,
                         related_order_hash: Option::None
                     }
                 );
