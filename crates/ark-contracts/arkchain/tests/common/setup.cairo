@@ -126,8 +126,13 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
 /// * order_hash - The order hash of type felt252
 /// * token_hash - The token hash of type felt252
 fn setup_offer(
-    start_date: u64, end_date: u64, pk: Option<felt252>
+    start_date: u64, end_date: u64, pk: Option<felt252>, token_id: Option<u256>
 ) -> (OrderV1, Signer, felt252, felt252) {
+    let mut _token_id = 10;
+    if token_id.is_some() {
+        _token_id = token_id.unwrap();
+    }
+
     let data = array![];
     let data_span = data.span();
 
@@ -145,7 +150,7 @@ fn setup_offer(
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
-        token_id: Option::Some(10),
+        token_id: Option::Some(_token_id),
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 0,
@@ -162,7 +167,6 @@ fn setup_offer(
 
     (order_offer, signer, order_hash, token_hash)
 }
-
 
 /// Utility function to setup a listing order for test environment.
 ///

@@ -90,11 +90,13 @@ mod orderbook_errors {
     const ORDER_FULFILLED: felt252 = 'OB: order fulfilled';
     const ORDER_NOT_CANCELLABLE: felt252 = 'OB: order not cancellable';
     const ORDER_EXPIRED: felt252 = 'OB: order expired';
+    const ORDER_NOT_STARTED: felt252 = 'OB: order not started';
     const ORDER_SAME_OFFERER: felt252 = 'OB: order has same offerer';
     const ORDER_NOT_SAME_OFFERER: felt252 = 'OB: fulfiller is not offerer';
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
     const ORDER_IS_EXPIRED: felt252 = 'OB: order is expired';
     const AUCTION_IS_EXPIRED: felt252 = 'OB: auction is expired';
+    const ORDER_NOT_OFFER: felt252 = 'OB: order is not offer';
 }
 
 
@@ -431,22 +433,37 @@ mod orderbook {
                 },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
-            let related_order = match order_read::<OrderV1>(related_order_hash) {
-                Option::Some(o) => o,
+            let related_order_type = match order_type_read(related_order_hash) {
+                Option::Some(s) => {
+                    assert(
+                        s == OrderType::Offer || s == OrderType::CollectionOffer,
+                        orderbook_errors::ORDER_NOT_FULFILLABLE
+                    );
+                    s
+                },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
+            let related_order = match order_read::<OrderV1>(related_order_hash) {
+                Option::Some(o) => o,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_OFFER),
+            };
             let related_offer_auction = self.auction_offers.read(related_order_hash);
-
             if related_offer_auction.is_non_zero() {
                 assert(
                     related_offer_auction == fulfill_info.order_hash, 'order_hash does not match'
                 );
             } else {
                 assert(
+                    related_order.start_date < starknet::get_block_timestamp(),
+                    orderbook_errors::ORDER_NOT_STARTED
+                );
+                assert(
                     related_order.end_date > starknet::get_block_timestamp(),
                     orderbook_errors::ORDER_EXPIRED
                 );
             }
+            assert(related_order.token_id == order.token_id, 'token_id does not match');
+
             order_status_write(fulfill_info.related_order_hash.unwrap(), OrderStatus::Fulfilled);
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
             self

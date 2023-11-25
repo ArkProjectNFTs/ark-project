@@ -101,7 +101,7 @@ fn test_auction_order_with_extended_time_order() {
 
     start_warp(contract_address, end_date - 1);
     let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_offer(
-        end_date - 1, end_date + 1200, Option::None
+        end_date - 1, end_date + 1200, Option::None, Option::None
     );
     dispatcher.create_order(order: auction_offer, signer: signer);
     let order_expiration_date = dispatcher.get_auction_expiration(auction_order_hash);

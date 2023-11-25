@@ -32,7 +32,7 @@ fn test_create_valid_auction_offer() {
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
     let (auction_offer, signer, order_hash, token_hash) = setup_offer(
-        start_date + 10, start_date + 50, Option::None
+        start_date + 10, start_date + 50, Option::None, Option::None
     );
     dispatcher.create_order(order: auction_offer, signer: signer);
 }
@@ -54,7 +54,7 @@ fn test_accept_auction_after_expiration() {
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
     let (auction_offer, signer, auction_offer_order_hash, token_hash) = setup_offer(
-        start_date + 1000, start_date + 3000, Option::None
+        start_date + 1000, start_date + 3000, Option::None, Option::None
     );
 
     start_warp(contract_address, start_date + 1000);
