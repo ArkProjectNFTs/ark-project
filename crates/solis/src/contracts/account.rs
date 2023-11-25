@@ -1,11 +1,10 @@
 use starknet::{
-    accounts::{Account, ConnectedAccount, ExecutionEncoding, SingleOwnerAccount},
-    core::types::{BlockId, BlockTag, FieldElement},
+    accounts::{ExecutionEncoding, SingleOwnerAccount},
+    core::types::FieldElement,
     providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider},
     signers::{LocalWallet, SigningKey},
 };
-use starknet_abigen_macros::abigen;
-use starknet_abigen_parser::call::TransactionStatus;
+
 use url::Url;
 
 /// Initializes a new account to interact with Starknet.

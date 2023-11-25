@@ -1,10 +1,9 @@
 use starknet::{
-    accounts::{Account, ConnectedAccount, ExecutionEncoding, SingleOwnerAccount},
-    core::types::{BlockId, BlockTag, FieldElement},
-    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider},
+    core::types::FieldElement,
+    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient},
 };
 use starknet_abigen_macros::abigen;
-use starknet_abigen_parser::call::TransactionStatus;
+
 use url::Url;
 
 abigen!(StarknetUtils, "./artifacts/starknet_utils.json");

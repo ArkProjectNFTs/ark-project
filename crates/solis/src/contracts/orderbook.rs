@@ -1,12 +1,5 @@
-use starknet::{
-    accounts::{Account, ConnectedAccount, ExecutionEncoding, SingleOwnerAccount},
-    core::types::{BlockId, BlockTag, FieldElement},
-    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient},
-    signers::{LocalWallet, SigningKey},
-};
+use starknet::{accounts::ConnectedAccount, core::types::FieldElement};
 use starknet_abigen_macros::abigen;
-use starknet_abigen_parser::call::TransactionStatus;
-use url::Url;
 
 abigen!(OrderbookContract, "./artifacts/orderbook.json");
 

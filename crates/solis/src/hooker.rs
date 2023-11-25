@@ -5,9 +5,9 @@ use katana_core::hooker::KatanaHooker;
 use starknet::accounts::Call;
 use starknet::core::types::BroadcastedInvokeTransaction;
 use starknet::core::types::FieldElement;
+use starknet::macros::selector;
 use starknet::providers::Provider;
 use starknet_abigen_parser::CairoType;
-use starknet::macros::selector;
 
 use crate::contracts::orderbook::OrderV1;
 use crate::contracts::starknet_utils::StarknetUtilsReader;
@@ -97,7 +97,7 @@ fn calls_from_tx(tx_calldata: &[FieldElement]) -> SolisResult<Vec<Call>> {
 
     let n_call: u64 = tx_calldata[0]
         .try_into()
-        .map_err(|e| Error::FeltConversion("Failed to convert felt252 into u64".to_string()))?;
+        .map_err(|_e| Error::FeltConversion("Failed to convert felt252 into u64".to_string()))?;
 
     let mut offset = 1;
     loop {
@@ -123,9 +123,9 @@ fn calls_from_tx(tx_calldata: &[FieldElement]) -> SolisResult<Vec<Call>> {
 
         println!("offset before calldata len {}", offset);
         // Then we've the calldata len, same as new encoding.
-        let calldata_len: u64 = tx_calldata[offset]
-            .try_into()
-            .map_err(|e| Error::FeltConversion("Failed to convert felt252 into u64".to_string()))?;
+        let calldata_len: u64 = tx_calldata[offset].try_into().map_err(|_e| {
+            Error::FeltConversion("Failed to convert felt252 into u64".to_string())
+        })?;
         offset += 1;
 
         println!("offset {}", offset);

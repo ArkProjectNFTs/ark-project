@@ -1,11 +1,11 @@
 use anyhow::Result;
 use clap::Parser;
 use console::Style;
-use katana_core::hooker::KatanaHooker;
+
 use katana_core::sequencer::KatanaSequencer;
 use katana_rpc::{spawn, NodeHandle};
-use starknet::accounts::Call;
-use starknet::core::types::{BroadcastedInvokeTransaction, FieldElement};
+
+use starknet::core::types::FieldElement;
 use std::sync::Arc;
 use tokio::signal::ctrl_c;
 
@@ -17,8 +17,7 @@ mod error;
 mod hooker;
 
 use crate::args::KatanaArgs;
-use crate::contracts::orderbook::OrderV1;
-use crate::contracts::starknet_utils::StarknetUtilsReader;
+
 use crate::hooker::SolisHooker;
 
 #[tokio::main]
@@ -40,9 +39,15 @@ async fn main() -> Result<()> {
         "http://0.0.0.0:5050",
     );
 
-    let orderbook_address = FieldElement::from_hex_be("0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7").unwrap();
+    let orderbook_address = FieldElement::from_hex_be(
+        "0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7",
+    )
+    .unwrap();
 
-    let hooker = Arc::new(SolisHooker { sn_utils_reader, orderbook_address });
+    let hooker = Arc::new(SolisHooker {
+        sn_utils_reader,
+        orderbook_address,
+    });
 
     // Private key + account address + rpc can come from ENV.
     let private_key =
@@ -55,7 +60,7 @@ async fn main() -> Result<()> {
 
     let account =
         contracts::account::new_account("http://0.0.0.0:5050", account_address, private_key).await;
-    let orderbook = contracts::orderbook::new_orderbook(orderbook_address, account);
+    let _orderbook = contracts::orderbook::new_orderbook(orderbook_address, account);
 
     let server_config = config.server_config();
     let sequencer_config = config.sequencer_config();
