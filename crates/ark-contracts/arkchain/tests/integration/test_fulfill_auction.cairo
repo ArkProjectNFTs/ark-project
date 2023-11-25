@@ -325,7 +325,7 @@ fn test_fulfill_auction_with_non_existing_related_order_hash() {
 }
 
 // try to fulfill an auction with an order that is not an offer (a listing order)
-#[should_panic(expected: ('OB: order not fulfillable',))]
+#[should_panic(expected: ('OB: order is not an offer',))]
 #[test]
 fn test_fulfill_auction_with_listing_order() {
     // contract declaration
