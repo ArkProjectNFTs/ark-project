@@ -458,7 +458,7 @@ mod orderbook {
                 );
             }
             assert(related_order.token_id == order.token_id, 'token_id does not match');
-            
+
             order_status_write(fulfill_info.related_order_hash.unwrap(), OrderStatus::Fulfilled);
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
             self

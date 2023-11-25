@@ -15,7 +15,9 @@ use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
     Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer};
+use super::super::common::setup::{
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
+};
 
 /// Test
 ///
@@ -362,7 +364,6 @@ fn test_fulfill_auction_with_listing_order() {
     let signer = sign_mock(fulfill_info_hash, Option::None);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
-
 // TODO update this test when https://github.com/ArkProjectNFTs/ark-project/pull/188 is merged
 // try to fulfill an auction with a non open offer
 // #[should_panic(expected: ('OB: order not open',))]
