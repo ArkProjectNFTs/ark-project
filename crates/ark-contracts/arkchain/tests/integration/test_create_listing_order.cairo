@@ -11,19 +11,21 @@ use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use super::super::common::setup::{
-    setup_auction_order, setup, sign_mock, setup_orders, setup_auction_offer
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
 };
 use snforge_std::{
-    PrintTrait, start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-    EventAssertions, Event, SpyOn, test_address,
-    signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
+    start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
+    Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
 
 #[test]
 #[should_panic(expected: ('OB: order already exists',))]
 fn test_create_existing_order() {
-    let block_timestamp = 1699556828; // starknet::get_block_timestamp();
-    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp, false);
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, _order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(123)
+    );
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -34,8 +36,11 @@ fn test_create_existing_order() {
 
 #[test]
 fn test_create_listing_order() {
-    let block_timestamp = 1699556828; // starknet::get_block_timestamp();
-    let (order_listing, signer, _order_hash, token_hash) = setup(block_timestamp, false);
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, _order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(10)
+    );
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
@@ -67,8 +72,8 @@ fn test_create_listing_order() {
     assert(order.quantity == 1, 'Quantity is not equal');
     assert(order.start_amount == 600000000000000000, 'Start amount is not equal');
     assert(order.end_amount == 0, 'End amount is not equal');
-    assert(order.start_date == block_timestamp, 'Start date is not equal');
-    assert(order.end_date == block_timestamp + (30 * 24 * 60 * 60), 'End date is not equal');
+    assert(order.start_date == start_date, 'Start date is not equal');
+    assert(order.end_date == end_date, 'End date is not equal');
     assert(
         order
             .offerer == 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
@@ -89,7 +94,7 @@ fn test_auction_order_with_extended_time_order() {
 
     let (auction_listing_order, auction_listing_signer, order_hash, token_hash) =
         setup_auction_order(
-        start_date, end_date, 1, 10
+        start_date, end_date, 1, 10, Option::None
     );
 
     let contract = declare('orderbook');
@@ -103,8 +108,8 @@ fn test_auction_order_with_extended_time_order() {
     assert(order_type == OrderType::Auction.into(), 'order is not auction');
 
     start_warp(contract_address, end_date - 1);
-    let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_auction_offer(
-        end_date - 1, end_date + 1200
+    let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_offer(
+        end_date - 1, end_date + 1200, Option::None, Option::None
     );
     dispatcher.create_order(order: auction_offer, signer: signer);
     let order_expiration_date = dispatcher.get_auction_expiration(auction_order_hash);
