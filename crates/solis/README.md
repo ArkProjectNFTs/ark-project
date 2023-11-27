@@ -45,4 +45,24 @@ As you can see, the orderbook address must be known before Solis starts. To ensu
 
 * pre-funded accounts: dev accounts are for now limited to 2, and the seed used is the same as Katana (to ease the re-use of Starkli built-in accounts like `katana-0` and `katana-1`).
 
+## Work locally with Katana as Starknet node
 
+1. First, opens a terminal and start Katana:
+```bash
+dojoup -v nightly
+katana
+```
+2. Deploy the `appchain_messaging` contract on Katana:
+```bash
+make -C crates/ark-contracts/starknet/ setup_messaging_katana
+```
+3. Start Solis with `messaging.local.json`, already configured with the deployed `appchain_messaging` address:
+```bash
+cargo run -p solis -- \
+    --messaging crates/solis/messaging.local.json \
+    --orderbook-address 0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7
+```
+4. Deploy the `orderbook` contract on Katana with a pre-defined salt to have the same address as the one used to start Solis.
+```bash
+make -C crates/ark-contracts/arkchain/ setup_orderbook
+```

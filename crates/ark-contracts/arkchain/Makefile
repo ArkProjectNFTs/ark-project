@@ -3,15 +3,17 @@ config := --account katana-0 \
 
 ob_cl = $(shell starkli class-hash target/dev/arkchain_orderbook.contract_class.json)
 
-build:
+generate_artifacts:
 	scarb build
 	mkdir -p ../../../artifacts
 	jq .abi ./target/dev/arkchain_orderbook.contract_class.json > ../../../artifacts/orderbook.json
 
-setup:
+# Using max-fee 0 avoids starkli to run estimate_fee before actually sending the tx.
+# There are no fees on Solis.
+setup_orderbook:
 	scarb build
 	starkli declare target/dev/arkchain_orderbook.contract_class.json ${config}
-	starkli deploy ${ob_cl} 0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973 ${config} --salt 0x1234
+	starkli deploy ${ob_cl} 0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973 ${config} --max-fee 0 --salt 0x1234
 
 invoke_create_order:
 	starkli invoke \
