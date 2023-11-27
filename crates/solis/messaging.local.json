@@ -1,8 +1,9 @@
 {
+    "chain": "starknet",
     "rpc_url": "http://127.0.0.1:5050",
-    "contract_address": "0x... EXECUTOR on katana that simulates starknet",
+    "contract_address": "0x07a7c5998c847b43710a9ef093e0a456af17b86013e98eece7d8e83efff16e16",
     "sender_address": "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
     "private_key": "0x1800000000300000180000000000030000000000003006001800006600",
-    "fetch_interval": 2,
+    "interval": 2,
     "from_block": 0
 }

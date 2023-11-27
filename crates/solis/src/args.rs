@@ -32,7 +32,11 @@ pub struct KatanaArgs {
                        settlement chain that can be Ethereum or an other Starknet sequencer. \
                        The configuration file details and examples can be found here: TODO."
     )]
-    pub messaging: Option<katana_core::service::messaging::MessagingConfig>,
+    pub messaging: katana_core::service::messaging::MessagingConfig,
+
+    #[command(flatten)]
+    #[command(next_help_heading = "Solis options")]
+    pub solis: crate::solis_args::SolisOptions,
 
     #[command(flatten)]
     #[command(next_help_heading = "Server options")]
@@ -55,7 +59,7 @@ pub enum Commands {
 #[derive(Debug, Args, Clone)]
 pub struct ServerOptions {
     #[arg(short, long)]
-    #[arg(default_value = "5050")]
+    #[arg(default_value = "7777")]
     #[arg(help = "Port number to listen on.")]
     pub port: u16,
 
@@ -78,13 +82,14 @@ pub struct StarknetOptions {
 
     #[arg(long = "accounts")]
     #[arg(value_name = "NUM")]
-    #[arg(default_value = "10")]
+    #[arg(default_value = "2")]
     #[arg(help = "Number of pre-funded accounts to generate.")]
     pub total_accounts: u8,
 
-    #[arg(long)]
-    #[arg(help = "Disable charging fee for transactions.")]
-    pub disable_fee: bool,
+    // Fees are disabled for now on Solis.
+    // #[arg(long)]
+    // #[arg(help = "Disable charging fee for transactions.")]
+    // pub disable_fee: bool,
 
     #[command(flatten)]
     #[command(next_help_heading = "Environment options")]
@@ -95,7 +100,7 @@ pub struct StarknetOptions {
 pub struct EnvironmentOptions {
     #[arg(long)]
     #[arg(help = "The chain ID.")]
-    #[arg(default_value = "KATANA")]
+    #[arg(default_value = "SOLIS")]
     pub chain_id: String,
 
     #[arg(long)]
@@ -130,7 +135,7 @@ impl KatanaArgs {
         SequencerConfig {
             block_time: self.block_time,
             no_mining: false,
-            messaging: self.messaging.clone(),
+            messaging: Some(self.messaging.clone()),
         }
     }
 
@@ -153,7 +158,7 @@ impl KatanaArgs {
         StarknetConfig {
             total_accounts: self.starknet.total_accounts,
             seed: parse_seed(&self.starknet.seed),
-            disable_fee: self.starknet.disable_fee,
+            disable_fee: true,
             init_state: None,
             fork_rpc_url: None,
             fork_block_number: None,
