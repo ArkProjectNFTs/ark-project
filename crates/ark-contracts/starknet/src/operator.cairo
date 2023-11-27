@@ -13,8 +13,8 @@ mod operator {
         IOperator, IERCDispatcher, IERCDispatcherTrait, IUpgradable, OrderExecute
     };
 
-    use ark_operator::appchain_messaging::{
-        IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
+    use ark_operator::arkchain_messaging::{
+        IArkchainMessagingDispatcher, IArkchainMessagingDispatcherTrait,
     };
 
     #[storage]
@@ -114,12 +114,12 @@ mod operator {
             let block_timestamp = starknet::info::get_block_timestamp();
             self.emit(OrderExecuted { order_hash: order.order_hash, block_timestamp, });
 
-            let messaging = IAppchainMessagingDispatcher {
+            let messaging = IArkchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
 
             messaging
-                .send_message_to_appchain(
+                .send_message_to_arkchain(
                     self.arkchain_orderbook_address.read(),
                     // finalize_order_buy selector
                     0x00dc783263b4080fde14fad025c03978a991c3b64149cea7bb5e707b082a302f,
