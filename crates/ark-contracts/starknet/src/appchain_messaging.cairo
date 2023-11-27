@@ -1,18 +1,45 @@
-//! The messaging between the appchain and starknet
-//! is done using solis capabilities to execute a transaction on Starknet
-//! from a message sent by arkchain contracts.
+//! The messaging between an appchain and starknet
+//! is done in a smiliar way starknet interacts with ethereum.
 //!
-//! So, on Starknet, we can:
-//!   1. Traditionally consume a message sent from the arkchain.
-//!   2. A transaction can be fired directly from arkchain contract
-//!      to a starknet contract (like the operator does).
+//! This contract, deployed on starknet, will emit events.
+//! The sequencer of the appchain (solis in our case) will
+//! listen for those events. When an event with a message is gathered
+//! by Solis, if the message is validated by Solis,
+//! a L1 handler transaction is then created and added to the pool.
+//!
+//! For the appchain to send a message to starknet, the process can be done in two
+//! fashions:
+//!
+//!   1. The appchain register messages hashes exactly as starknet does. And then
+//!      a transaction on starknet must be issued to consume the message.
+//!
+//!   2. The sequencer (Solis) has also the capability of directly send
+//!      a transaction to "execute" the content of the message. In the appchain
+//!      context this is a very effective manner to have a more dynamic and real-time
+//!      messaging than manual consuming of a message.
+//!
 
+/// Trait for Appchain messaging. For now, the messaging only whitelist one
+/// appchain.
 #[starknet::interface]
 trait IAppchainMessaging<T> {
+    /// Update the account address (on starknet or any chain where this contract is
+    /// deployed) to accept messages.
+    ///
+    /// # Arguments
+    ///
+    /// * `appchain_address` - The address of the account contract of the appchain.
+    ///   Only this account will be able to send transactions to this contract.
     fn update_appchain_account_address(ref self: T, appchain_address: starknet::ContractAddress);
 
     /// Sends a message to an appchain by emitting an event.
     /// Returns the message hash and the nonce.
+    ///
+    /// # Arguments
+    ///
+    /// * `to_address` - The appchain contract to send the message to.
+    /// * `selector` - The function selector to call on the appchain contract.
+    /// * `payload` - The message payload.
     fn send_message_to_appchain(
         ref self: T,
         to_address: starknet::ContractAddress,
@@ -22,20 +49,36 @@ trait IAppchainMessaging<T> {
 
     /// Registers messages hashes as consumable.
     /// Usually, this function is only callable by the appchain developer/owner
-    /// that control the appchain sequencer (solis in our case).
-    fn register_messages_hashes(ref self: T, messages_hashes: Span<felt252>);
+    /// that control the appchain sequencer.
+    /// All registered messages can then be consumed manually.
+    ///
+    /// # Arguments
+    ///
+    /// * `messages_hashes` - Hashes of the messages to be registered as consumable.
+    fn add_messages_hashes_from_appchain(ref self: T, messages_hashes: Span<felt252>);
 
     /// Consumes a message registered as consumable by the appchain.
-    /// This is the traditional consuming as Starknet does.
+    /// This is the traditional consuming as done on ethereum.
+    /// Returnes the message hash on success.
+    ///
+    /// # Arguments
+    ///
+    /// * `from_address` - The contract address recipient of the message.
+    /// * `payload` - The message payload.
     fn consume_message_from_appchain(
-        ref self: T,
-        from_address: starknet::ContractAddress,
-        payload: Span<felt252>,
-    );
+        ref self: T, from_address: starknet::ContractAddress, payload: Span<felt252>,
+    ) -> felt252;
 
-    /// Executes a message send from the appchain. A message to execute
+    /// Executes a message sent from the appchain. A message to execute
     /// does not need to be registered as consumable. It is automatically
     /// consumed while executed.
+    ///
+    /// # Arguments
+    ///
+    /// * `from_address` - The appchain contract that sent the message.
+    /// * `to_address` - The contract recipient of the message.
+    /// * `selector` - The function selector to call on recipient contract.
+    /// * `payload` - The message payload.
     fn execute_message_from_appchain(
         ref self: T,
         from_address: starknet::ContractAddress,
@@ -43,7 +86,6 @@ trait IAppchainMessaging<T> {
         selector: felt252,
         payload: Span<felt252>,
     );
-
 }
 
 #[starknet::interface]
@@ -60,18 +102,16 @@ mod appchain_messaging {
 
     #[storage]
     struct Storage {
+        // Owner of this contract.
         owner: ContractAddress,
-        // The account used by the appchain sequencer to
-        // register messages hashes.
+        // The account on Starknet (or the chain where this contract is deployed)
+        // used by the appchain sequencer to register messages hashes / execute messages.
         appchain_account: ContractAddress,
-        // Abbreviated identifier of the appchain sending messaging
-        // with this contract.
-        appchain_name: felt252,
         // The nonce for messages sent from Starknet.
         sn_to_appc_nonce: felt252,
-        // Ledger of messages sent from Starknet to the appchain.
+        // Ledger of messages hashes sent from Starknet to the appchain.
         sn_to_appc_messages: LegacyMap::<felt252, felt252>,
-        // Records of messages registered from the appchain and a refcount
+        // Ledger of messages hashes registered from the appchain and a refcount
         // associated to it.
         appc_to_sn_messages: LegacyMap::<felt252, felt252>,
     }
@@ -83,7 +123,6 @@ mod appchain_messaging {
         MessagesRegisteredFromAppchain: MessagesRegisteredFromAppchain,
         MessageConsumed: MessageConsumed,
         MessageExecuted: MessageExecuted,
-        MessageExecutionError: MessageExecutionError,
         Upgraded: Upgraded,
     }
 
@@ -125,19 +164,6 @@ mod appchain_messaging {
         #[key]
         selector: felt252,
         payload: Span<felt252>,
-        // TODO: is the execution result interesting here?
-    }
-
-    #[derive(Drop, starknet::Event)]
-    struct MessageExecutionError {
-        #[key]
-        from_address: ContractAddress,
-        #[key]
-        to_address: ContractAddress,
-        #[key]
-        selector: felt252,
-        payload: Span<felt252>,
-        error: Span<felt252>,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -147,17 +173,13 @@ mod appchain_messaging {
 
     #[constructor]
     fn constructor(
-        ref self: ContractState,
-        owner: ContractAddress,
-        appchain_account: ContractAddress,
+        ref self: ContractState, owner: ContractAddress, appchain_account: ContractAddress,
     ) {
         self.owner.write(owner);
         self.appchain_account.write(appchain_account);
     }
 
-    /// Computes the starknet keccak.
-    /// TODO: must be ported in a package to have the same
-    /// function used on appchain and starknet.
+    /// Computes the starknet keccak to have a hash that fits in one felt.
     fn starknet_keccak(data: Span<felt252>) -> felt252 {
         let mut u256_data: Array<u256> = array![];
 
@@ -178,17 +200,13 @@ mod appchain_messaging {
         hash.try_into().expect('starknet keccak overflow')
     }
 
-    /// Computes message hash for consuming messages from appchain.
+    /// Computes message hash to consume messages from appchain.
     /// starknet_keccak(from_address, to_address, payload_len, payload).
     fn compute_hash_appc_to_sn(
-        from_address: ContractAddress,
-        to_address: ContractAddress,
-        payload: Span<felt252>
+        from_address: ContractAddress, to_address: ContractAddress, payload: Span<felt252>
     ) -> felt252 {
         let mut hash_data: Array<felt252> = array![
-            from_address.into(),
-            to_address.into(),
-            payload.len().into(),
+            from_address.into(), to_address.into(), payload.len().into(),
         ];
 
         let mut i = 0_usize;
@@ -203,19 +221,12 @@ mod appchain_messaging {
         starknet_keccak(hash_data.span())
     }
 
-    /// Computes message hash for sending messages to appchain.
+    /// Computes message hash to send messages to appchain.
     /// starknet_keccak(nonce, to_address, selector, payload).
     fn compute_hash_sn_to_appc(
-        nonce: felt252,
-        to_address: ContractAddress,
-        selector: felt252,
-        payload: Span<felt252>
+        nonce: felt252, to_address: ContractAddress, selector: felt252, payload: Span<felt252>
     ) -> felt252 {
-        let mut hash_data = array![
-            nonce,
-            to_address.into(),
-            selector,
-        ];
+        let mut hash_data = array![nonce, to_address.into(), selector,];
 
         let mut i = 0_usize;
         loop {
@@ -231,11 +242,9 @@ mod appchain_messaging {
 
     #[external(v0)]
     impl AppchainMessagingUpgradeImpl of IUpgradeable<ContractState> {
-
         fn upgrade(ref self: ContractState, class_hash: ClassHash) {
             assert(
-                starknet::get_caller_address() == self.owner.read(),
-                'Unauthorized replace class'
+                starknet::get_caller_address() == self.owner.read(), 'Unauthorized replace class'
             );
 
             match starknet::replace_class_syscall(class_hash) {
@@ -247,11 +256,10 @@ mod appchain_messaging {
 
     #[external(v0)]
     impl AppchainMessagingImpl of IAppchainMessaging<ContractState> {
-        fn update_appchain_account_address(ref self: ContractState, appchain_address: ContractAddress) {
-            assert(
-                starknet::get_caller_address() == self.owner.read(),
-                'Unauthorized update'
-            );
+        fn update_appchain_account_address(
+            ref self: ContractState, appchain_address: ContractAddress
+        ) {
+            assert(starknet::get_caller_address() == self.owner.read(), 'Unauthorized update');
 
             self.appchain_account.write(appchain_address);
         }
@@ -267,20 +275,25 @@ mod appchain_messaging {
 
             let msg_hash = compute_hash_sn_to_appc(nonce, to_address, selector, payload);
 
-            self.emit(MessageSentToAppchain {
-                message_hash: msg_hash,
-                from: starknet::get_caller_address(),
-                to: to_address,
-                selector,
-                nonce,
-                payload,
-            });
+            self
+                .emit(
+                    MessageSentToAppchain {
+                        message_hash: msg_hash,
+                        from: starknet::get_caller_address(),
+                        to: to_address,
+                        selector,
+                        nonce,
+                        payload,
+                    }
+                );
 
             self.sn_to_appc_messages.write(msg_hash, nonce);
             (msg_hash, nonce)
         }
 
-        fn register_messages_hashes(ref self: ContractState, messages_hashes: Span<felt252>) {
+        fn add_messages_hashes_from_appchain(
+            ref self: ContractState, messages_hashes: Span<felt252>
+        ) {
             assert(
                 self.appchain_account.read() == starknet::get_caller_address(),
                 'Unauthorized hashes registrar',
@@ -304,10 +317,8 @@ mod appchain_messaging {
         }
 
         fn consume_message_from_appchain(
-            ref self: ContractState,
-            from_address: ContractAddress,
-            payload: Span<felt252>
-        ) {
+            ref self: ContractState, from_address: ContractAddress, payload: Span<felt252>
+        ) -> felt252 {
             let to_address = starknet::get_caller_address();
 
             let msg_hash = compute_hash_appc_to_sn(from_address, to_address, payload);
@@ -315,14 +326,16 @@ mod appchain_messaging {
             let count = self.appc_to_sn_messages.read(msg_hash);
             assert(count.is_non_zero(), 'INVALID_MESSAGE_TO_CONSUME');
 
-            self.emit(MessageConsumed {
-                message_hash: msg_hash,
-                from: from_address,
-                to: to_address,
-                payload,
-            });
+            self
+                .emit(
+                    MessageConsumed {
+                        message_hash: msg_hash, from: from_address, to: to_address, payload,
+                    }
+                );
 
             self.appc_to_sn_messages.write(msg_hash, count - 1);
+
+            msg_hash
         }
 
         fn execute_message_from_appchain(
@@ -338,25 +351,13 @@ mod appchain_messaging {
             );
 
             match starknet::call_contract_syscall(to_address, selector, payload) {
-                Result::Ok(span) => self.emit(MessageExecuted {
-                    from_address,
-                    to_address,
-                    selector,
-                    payload,
-                }),
+                Result::Ok(span) => self
+                    .emit(MessageExecuted { from_address, to_address, selector, payload, }),
                 Result::Err(e) => {
-                    // TODO: Should we revert directly and the appchain will know the
-                    // message failed? Should we emit event with execution error?
-                    self.emit(MessageExecutionError {
-                        from_address,
-                        to_address,
-                        selector,
-                        payload,
-                        error: e.span()
-                    })
+                    panic(e)
                 }
             }
         }
-
     }
 }
+
