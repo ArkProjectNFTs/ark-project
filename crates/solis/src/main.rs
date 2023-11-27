@@ -2,13 +2,14 @@ use anyhow::Result;
 use clap::Parser;
 use console::Style;
 
+use katana_core::hooker::KatanaHooker;
 use katana_core::sequencer::KatanaSequencer;
 use katana_rpc::{spawn, NodeHandle};
 
 use starknet::core::types::FieldElement;
 use std::sync::Arc;
 use tokio::signal::ctrl_c;
-
+use tokio::sync::RwLock as AsyncRwLock;
 use tracing_subscriber::fmt;
 
 mod args;
@@ -34,20 +35,22 @@ async fn main() -> Result<()> {
 
     let config = KatanaArgs::parse();
 
+    // Take sn rpc url from messaging.
     let sn_utils_reader = contracts::starknet_utils::new_starknet_utils_reader(
         FieldElement::ZERO,
         "http://0.0.0.0:5050",
     );
 
+    // Need that from CLI/ENV.
     let orderbook_address = FieldElement::from_hex_be(
         "0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7",
     )
     .unwrap();
 
-    let hooker = Arc::new(SolisHooker {
+    let hooker = Arc::new(AsyncRwLock::new(SolisHooker::new(
         sn_utils_reader,
         orderbook_address,
-    });
+    )));
 
     // Private key + account address + rpc can come from ENV.
     let private_key =
@@ -58,6 +61,8 @@ async fn main() -> Result<()> {
     )
     .unwrap();
 
+    // Orderbook contract to cancel orders if there is asset fault.
+    // Need to send L1 handler transaction to talk with orderbook... Don't need an account then.
     let account =
         contracts::account::new_account("http://0.0.0.0:5050", account_address, private_key).await;
     let _orderbook = contracts::orderbook::new_orderbook(orderbook_address, account);
@@ -66,8 +71,11 @@ async fn main() -> Result<()> {
     let sequencer_config = config.sequencer_config();
     let starknet_config = config.starknet_config();
 
-    let sequencer = Arc::new(KatanaSequencer::new(sequencer_config, starknet_config, hooker).await);
+    let sequencer =
+        Arc::new(KatanaSequencer::new(sequencer_config, starknet_config, hooker.clone()).await);
     let NodeHandle { addr, handle, .. } = spawn(Arc::clone(&sequencer), server_config).await?;
+
+    hooker.write().await.set_sequencer(sequencer.clone());
 
     let accounts = sequencer
         .backend

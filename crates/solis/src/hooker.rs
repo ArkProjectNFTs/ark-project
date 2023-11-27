@@ -2,12 +2,26 @@
 //!
 use async_trait::async_trait;
 use katana_core::hooker::KatanaHooker;
+use katana_core::sequencer::KatanaSequencer;
 use starknet::accounts::Call;
 use starknet::core::types::BroadcastedInvokeTransaction;
 use starknet::core::types::FieldElement;
 use starknet::macros::selector;
 use starknet::providers::Provider;
 use starknet_abigen_parser::CairoType;
+use std::sync::Arc;
+
+use katana_core::backend::storage::transaction::L1HandlerTransaction;
+use katana_core::utils::transaction::compute_l1_handler_transaction_hash_felts;
+use katana_core::utils::transaction::stark_felt_to_field_element_array;
+use starknet_api::core::ContractAddress;
+use starknet_api::core::EntryPointSelector;
+use starknet_api::core::Nonce;
+use starknet_api::hash::StarkFelt;
+use starknet_api::stark_felt;
+use starknet_api::transaction::{
+    Calldata, L1HandlerTransaction as ApiL1HandlerTransaction, TransactionHash, TransactionVersion,
+};
 
 use crate::contracts::orderbook::OrderV1;
 use crate::contracts::starknet_utils::StarknetUtilsReader;
@@ -19,13 +33,48 @@ use crate::error::{Error, SolisResult};
 pub struct SolisHooker<P: Provider + Sync + Send + 'static> {
     pub orderbook_address: FieldElement,
     pub sn_utils_reader: StarknetUtilsReader<P>,
-    // TODO: init the orderbook contract too.
+    sequencer: Option<Arc<KatanaSequencer>>,
+}
+
+impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
+    /// Initializes a new instance.
+    pub fn new(sn_utils_reader: StarknetUtilsReader<P>, orderbook_address: FieldElement) -> Self {
+        Self {
+            orderbook_address,
+            sn_utils_reader,
+            sequencer: None,
+        }
+    }
+
+    /// Retrieves a reference to the sequencer.
+    pub fn sequencer_ref(&self) -> &Arc<KatanaSequencer> {
+        // The expect is used here as it must always be set by Katana core.
+        // If not set, the merge on Katana may be revised.
+        self.sequencer
+            .as_ref()
+            .expect("Sequencer must be set to get a reference to it")
+    }
 }
 
 /// Solis hooker relies on verifiers to inspect and verify
 /// the transaction and starknet state before acceptance.
 #[async_trait]
 impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
+    fn set_sequencer(&mut self, sequencer: Arc<KatanaSequencer>) {
+        self.sequencer = Some(sequencer);
+    }
+
+    /// Verifies if the message is directed to the orderbook and comes from
+    /// the expected contract on L2.
+    async fn verify_message_to_appchain(
+        &self,
+        _from: FieldElement,
+        _to: FieldElement,
+        _selector: FieldElement,
+    ) -> bool {
+        true
+    }
+
     /// Verifies an invoke transaction that is:
     /// 1. Directed to the orderbook only.
     /// 2. With the selector `create_order` only as the fulfill
@@ -72,6 +121,40 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
 
     async fn verify_message_to_starknet_before_tx(&self, call: Call) -> bool {
         println!("verify message to starknet before tx: {:?}", call);
+
+        // Need same address as contract on L1....! (can be taken from configuration, right?).
+        let from_address = selector!("from_address");
+        let to_address = selector!("to_address");
+        let selector = selector!("selector");
+        let chain_id = selector!("KATANA");
+        let nonce = FieldElement::ONE;
+        let calldata: Vec<StarkFelt> = vec![from_address.into(), FieldElement::THREE.into()];
+        let transaction_hash: FieldElement = compute_l1_handler_transaction_hash_felts(
+            FieldElement::ZERO,
+            to_address,
+            selector,
+            &stark_felt_to_field_element_array(&calldata),
+            chain_id,
+            nonce,
+        );
+
+        let tx = L1HandlerTransaction {
+            inner: ApiL1HandlerTransaction {
+                transaction_hash: TransactionHash(transaction_hash.into()),
+                version: TransactionVersion(stark_felt!(0_u32)),
+                nonce: Nonce(nonce.into()),
+                contract_address: ContractAddress::try_from(
+                    <FieldElement as Into<StarkFelt>>::into(to_address),
+                )
+                .unwrap(),
+                entry_point_selector: EntryPointSelector(selector.into()),
+                calldata: Calldata(calldata.into()),
+            },
+            paid_l1_fee: 30000_u128,
+        };
+
+        self.sequencer_ref().add_l1_handler_transaction(tx);
+
         true
     }
 
