@@ -29,9 +29,7 @@ fn test_create_listing_order() {
     whitelist_creator_broker(123, dispatcher);
 
     /// create order as broker
-    start_prank(CheatTarget::All(()), 123.try_into().unwrap());
     let order = dispatcher.create_order(order: order_listing, signer: signer);
-    stop_prank(CheatTarget::All(()));
 
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
@@ -82,10 +80,8 @@ fn test_create_listing_order_not_whitelisted() {
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
-    /// create order as broker, not whitelisted
-    start_prank(CheatTarget::All(()), 123.try_into().unwrap());
+    /// create order as non-whitelisted broker
     let order = dispatcher.create_order(order: order_listing, signer: signer);
-    stop_prank(CheatTarget::All(()));
 }
 
 
@@ -95,6 +91,6 @@ fn whitelist_creator_broker(broker_id: felt252, dispatcher: OrderbookDispatcher)
         CheatTarget::All(()),
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078.try_into().unwrap()
     );
-    dispatcher.whitelist_creator_broker(broker_id);
+    dispatcher.whitelist_broker(broker_id, 'CREATOR', 1);
     stop_prank(CheatTarget::All(()));
 }

@@ -95,10 +95,6 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             return Result::Err(OrderValidationError::AdditionalDataTooLong);
         }
 
-        if (*self.broker_id != starknet::get_caller_address().into()) {
-            return Result::Err(OrderValidationError::MismatchBroker);
-        }
-
         if (*self.offerer).is_zero()
             || (*self.token_address).is_zero()
             || (*self.start_amount).is_zero()
