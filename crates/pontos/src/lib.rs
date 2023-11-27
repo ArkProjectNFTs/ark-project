@@ -335,6 +335,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 )
                 .await?
             {
+                info!("Skipping block {}", current_u64);
                 current_u64 += 1;
                 continue;
             }
