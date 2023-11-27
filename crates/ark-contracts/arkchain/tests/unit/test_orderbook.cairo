@@ -7,12 +7,12 @@ use core::traits::TryInto;
 use arkchain::order::types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
 use arkchain::order::database::{order_read, order_status_read, order_status_write, order_type_read};
 use snforge_std::{
-    declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions, Event, SpyOn,
-    test_address
+    start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
+    Event, SpyOn, test_address
 };
 use arkchain::orderbook::orderbook_errors;
 use array::ArrayTrait;
-use super::super::common::setup::{setup_listing_order, get_offer_order};
+use super::super::common::setup::{setup_listing_order, get_offer_order, setup_orders};
 const ORDER_VERSION_V1: felt252 = 'v1';
 use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
@@ -352,4 +352,111 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
 
     // Try to fulfill the order
     orderbook::InternalFunctions::_fulfill_listing_order(ref state, fulfill_info, order_listing_1,);
+}
+
+#[test]
+fn test_fulfill_classic_token_offer() {
+    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
+
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
+    let contract_address = test_address();
+    let mut state = orderbook::contract_state_for_testing();
+
+    let mut spy = spy_events(SpyOn::One(contract_address));
+    let order_hash = order_listing.compute_order_hash();
+
+    start_warp(contract_address, order_listing.start_date);
+
+    let fulfill_info = FulfillInfo {
+        order_hash,
+        related_order_hash: Option::Some(order_offer.compute_order_hash()),
+        fulfiller: order_listing.offerer,
+        token_chain_id: order_listing.token_chain_id,
+        token_address: order_listing.token_address,
+        token_id: order_listing.token_id
+    };
+
+    orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    orderbook::Event::OrderFulfilled(
+                        orderbook::OrderFulfilled {
+                            order_hash: fulfill_info.order_hash,
+                            fulfiller: fulfill_info.fulfiller,
+                            related_order_hash: Option::None
+                        }
+                    )
+                )
+            ]
+        );
+}
+
+#[test]
+fn test_fulfill_classic_collection_offer() {
+    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
+
+    let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
+    let contract_address = test_address();
+    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut state = orderbook::contract_state_for_testing();
+
+    order_offer.token_id = Option::None;
+    order_offer.start_date = order_listing.start_date + 100;
+    order_offer.end_date = order_listing.start_date + 100;
+
+    start_warp(contract_address, order_offer.start_date);
+
+    let fulfill_info = FulfillInfo {
+        order_hash: order_listing.compute_order_hash(),
+        related_order_hash: Option::Some(order_offer.compute_order_hash()),
+        fulfiller: order_listing.offerer,
+        token_chain_id: order_listing.token_chain_id,
+        token_address: order_listing.token_address,
+        token_id: Option::None
+    };
+
+    orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    orderbook::Event::OrderFulfilled(
+                        orderbook::OrderFulfilled {
+                            order_hash: fulfill_info.order_hash,
+                            fulfiller: fulfill_info.fulfiller,
+                            related_order_hash: Option::None
+                        }
+                    )
+                )
+            ]
+        );
+}
+
+#[test]
+#[should_panic(expected: ('OB: order expired',))]
+fn test_fulfill_expired_offer() {
+    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
+
+    let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
+    let contract_address = test_address();
+    let mut state = orderbook::contract_state_for_testing();
+
+    start_warp(contract_address, order_listing.end_date + 3600); // +1 hour
+
+    let fulfill_info = FulfillInfo {
+        order_hash: order_listing.compute_order_hash(),
+        related_order_hash: Option::Some(order_offer.compute_order_hash()),
+        fulfiller: order_listing.offerer,
+        token_chain_id: order_listing.token_chain_id,
+        token_address: order_listing.token_address,
+        token_id: order_listing.token_id
+    };
+
+    orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
 }

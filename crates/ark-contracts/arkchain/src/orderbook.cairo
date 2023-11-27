@@ -102,6 +102,8 @@ mod orderbook_errors {
     const ORDER_TOKEN_HASH_DOES_NOT_MATCH: felt252 = 'OB: token hash does not match';
     const ORDER_NOT_AN_OFFER: felt252 = 'OB: order is not an offer';
     const ORDER_NOT_OPEN: felt252 = 'OB: order is not open';
+    const USE_FULFILL_AUCTION: felt252 = 'OB: must use fulfill auction';
+    const OFFER_NOT_STARTED: felt252 = 'OB: offer is not started';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -391,10 +393,8 @@ mod orderbook {
                     SignerValidator::verify(fulfill_hash, origin_signer);
                     self._fulfill_auction_order(fulfill_info, order)
                 },
-                OrderType::Offer => { panic_with_felt252('Offer not implemented'); },
-                OrderType::CollectionOffer => {
-                    panic_with_felt252('CollectionOffer not implemented');
-                },
+                OrderType::Offer => { self._fulfill_offer(fulfill_info, order); },
+                OrderType::CollectionOffer => { self._fulfill_offer(fulfill_info, order); }
             }
         }
     }
@@ -482,6 +482,36 @@ mod orderbook {
                         order_hash: fulfill_info.order_hash,
                         fulfiller: fulfill_info.fulfiller,
                         related_order_hash: Option::Some(related_order_hash)
+                    }
+                );
+        }
+
+        /// Fulfill offer order
+        ///
+        /// # Arguments
+        /// * `fulfill_info` - The execution info of the order.
+        /// * `order_type` - The type of the order.
+        ///
+        fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
+            if order.token_id.is_some() {
+                let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                    .auctions
+                    .read(order.compute_token_hash());
+
+                assert(auction_order_hash.is_zero(), orderbook_errors::USE_FULFILL_AUCTION);
+            }
+
+            let current_date = starknet::get_block_timestamp();
+            assert(current_date >= order.start_date, orderbook_errors::OFFER_NOT_STARTED);
+            assert(order.end_date > current_date, orderbook_errors::ORDER_EXPIRED);
+
+            order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
+            self
+                .emit(
+                    OrderFulfilled {
+                        order_hash: fulfill_info.order_hash,
+                        fulfiller: fulfill_info.fulfiller,
+                        related_order_hash: Option::None
                     }
                 );
         }
