@@ -26,22 +26,32 @@ use starknet_api::transaction::{
 use crate::contracts::orderbook::OrderV1;
 use crate::contracts::starknet_utils::StarknetUtilsReader;
 use crate::error::{Error, SolisResult};
+use crate::CHAIN_ID_SOLIS;
 
 /// Hooker struct, with already instanciated contracts/readers
 /// to avoid allocating them at each transaction that is being
 /// verified.
 pub struct SolisHooker<P: Provider + Sync + Send + 'static> {
+    // Solis interacts with the orderbook only via `L1HandlerTransaction`. Only the
+    // address is required.
     pub orderbook_address: FieldElement,
+    // TODO: replace this by the Executor Contract object!
+    pub sn_executor_address: FieldElement,
     pub sn_utils_reader: StarknetUtilsReader<P>,
     sequencer: Option<Arc<KatanaSequencer>>,
 }
 
 impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
     /// Initializes a new instance.
-    pub fn new(sn_utils_reader: StarknetUtilsReader<P>, orderbook_address: FieldElement) -> Self {
+    pub fn new(
+        sn_utils_reader: StarknetUtilsReader<P>,
+        orderbook_address: FieldElement,
+        sn_executor_address: FieldElement,
+    ) -> Self {
         Self {
             orderbook_address,
             sn_utils_reader,
+            sn_executor_address,
             sequencer: None,
         }
     }
@@ -54,6 +64,73 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
             .as_ref()
             .expect("Sequencer must be set to get a reference to it")
     }
+
+    /// Adds a `L1HandlerTransaction` to the transaction pool that is directed to the
+    /// orderbook only.
+    /// `L1HandlerTransaction` is a special type of transaction that can only be
+    /// sent by the sequencer itself. This transaction is not validated by any account.
+    ///
+    /// In the case of Solis, `L1HandlerTransaction` are sent by Solis for two purposes:
+    /// 1. A message was collected from the L2, and it must be executed.
+    /// 2. A transaction has been rejected by Solis (asset faults), and the order
+    ///    must then be updated.
+    ///
+    /// This function is used for the scenario 2. For this reason, the `from_address`
+    /// field is automatically filled up by the sequencer to use the executor address
+    /// deployed on L2 to avoid any attack by other contracts.
+    ///
+    /// # Arguments
+    ///
+    /// * `selector` - The selector of the recipient contract to execute.
+    /// * `payload` - The payload of the message.
+    pub fn add_l1_handler_transaction_for_orderbook(
+        &self,
+        selector: FieldElement,
+        payload: &[FieldElement],
+    ) -> L1HandlerTransaction {
+        let to_address = self.orderbook_address;
+        let from_address = self.sn_executor_address;
+        let chain_id = CHAIN_ID_SOLIS;
+
+        // The nonce is normally used by the messaging contract on Starknet. But in the
+        // case of those transaction, as they are only sent by Solis itself, we use 0.
+        // TODO: this value of 0 must be checked by the `l1_handler` function.
+        let nonce = FieldElement::ZERO;
+
+        // The calldata always starts with the from_address.
+        let mut calldata: Vec<StarkFelt> = vec![from_address.into()];
+        for p in payload.into_iter() {
+            calldata.push((*p).into());
+        }
+
+        let transaction_hash: FieldElement = compute_l1_handler_transaction_hash_felts(
+            // The version is only ZERO for now.
+            FieldElement::ZERO,
+            to_address,
+            selector,
+            &stark_felt_to_field_element_array(&calldata),
+            chain_id,
+            nonce,
+        );
+
+        L1HandlerTransaction {
+            inner: ApiL1HandlerTransaction {
+                transaction_hash: TransactionHash(transaction_hash.into()),
+                // Must be 0 for now as it's the only supported version.
+                version: TransactionVersion(stark_felt!(0_u32)),
+                nonce: Nonce(nonce.into()),
+                contract_address: ContractAddress::try_from(
+                    <FieldElement as Into<StarkFelt>>::into(to_address),
+                )
+                .unwrap(),
+                entry_point_selector: EntryPointSelector(selector.into()),
+                calldata: Calldata(calldata.into()),
+            },
+            // This fields has no relevance in the case of Solis. We use the default
+            // value that is normally charged on L1.
+            paid_l1_fee: 30000_u128,
+        }
+    }
 }
 
 /// Solis hooker relies on verifiers to inspect and verify
@@ -65,14 +142,18 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
     }
 
     /// Verifies if the message is directed to the orderbook and comes from
-    /// the expected contract on L2.
+    /// the executor contract on L2.
+    ///
+    /// Currently, only the `from` and `to` are checked.
+    /// More checks may be added on the selector, and the data.
     async fn verify_message_to_appchain(
         &self,
-        _from: FieldElement,
-        _to: FieldElement,
+        from: FieldElement,
+        to: FieldElement,
         _selector: FieldElement,
     ) -> bool {
-        true
+        // For now, only the from/to are checked.
+        from == self.sn_executor_address && to == self.orderbook_address
     }
 
     /// Verifies an invoke transaction that is:
@@ -114,6 +195,10 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
             };
 
             tracing::trace!("Order to verify: {:?}", order);
+
+            // TODO: check assets on starknet.
+            // TODO: if not valid, in some cases we want to send L1HandlerTransaction
+            // to change the status of the order. (entrypoint to be written).
         }
 
         true
@@ -122,44 +207,18 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
     async fn verify_message_to_starknet_before_tx(&self, call: Call) -> bool {
         println!("verify message to starknet before tx: {:?}", call);
 
-        // Need same address as contract on L1....! (can be taken from configuration, right?).
-        let from_address = selector!("from_address");
-        let to_address = selector!("to_address");
-        let selector = selector!("selector");
-        let chain_id = selector!("KATANA");
-        let nonce = FieldElement::ONE;
-        let calldata: Vec<StarkFelt> = vec![from_address.into(), FieldElement::THREE.into()];
-        let transaction_hash: FieldElement = compute_l1_handler_transaction_hash_felts(
-            FieldElement::ZERO,
-            to_address,
-            selector,
-            &stark_felt_to_field_element_array(&calldata),
-            chain_id,
-            nonce,
-        );
-
-        let tx = L1HandlerTransaction {
-            inner: ApiL1HandlerTransaction {
-                transaction_hash: TransactionHash(transaction_hash.into()),
-                version: TransactionVersion(stark_felt!(0_u32)),
-                nonce: Nonce(nonce.into()),
-                contract_address: ContractAddress::try_from(
-                    <FieldElement as Into<StarkFelt>>::into(to_address),
-                )
-                .unwrap(),
-                entry_point_selector: EntryPointSelector(selector.into()),
-                calldata: Calldata(calldata.into()),
-            },
-            paid_l1_fee: 30000_u128,
-        };
-
-        self.sequencer_ref().add_l1_handler_transaction(tx);
-
+        // TODO: Decode the ExecutionInfo from the calldata.
+        // Check that assets are still in the good location. When this function
+        // returns true, a transaction is fired on Starknet for the execution.
         true
     }
 
     async fn react_on_starknet_tx_failed(&self, call: Call) {
         println!("Starknet tx failed: {:?}", call);
+
+        // TODO: in the case a transaction reverts on Starknet for the ExecutionInfo
+        // being invalid (someone races Solis), some code may be run here
+        // to cancel / invalidate the order (if it applies).
     }
 }
 

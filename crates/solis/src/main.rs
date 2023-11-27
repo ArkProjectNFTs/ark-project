@@ -21,6 +21,14 @@ mod solis_args;
 use crate::args::KatanaArgs;
 use crate::hooker::SolisHooker;
 
+// Chain ID: 'SOLIS' cairo short string.
+pub const CHAIN_ID_SOLIS: FieldElement = FieldElement::from_mont([
+    18446732623703627169,
+    18446744073709551615,
+    18446744073709551615,
+    576266102202707888,
+]);
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing::subscriber::set_global_default(
@@ -40,12 +48,15 @@ async fn main() -> Result<()> {
         &config.messaging.rpc_url,
     );
 
+    let executor_address = FieldElement::from_hex_be(&config.solis.executor_address)
+        .expect("Invalid executor address");
     let orderbook_address = FieldElement::from_hex_be(&config.solis.orderbook_address)
         .expect("Invalid orderbook address");
 
     let hooker = Arc::new(AsyncRwLock::new(SolisHooker::new(
         sn_utils_reader,
         orderbook_address,
+        executor_address,
     )));
 
     let server_config = config.server_config();

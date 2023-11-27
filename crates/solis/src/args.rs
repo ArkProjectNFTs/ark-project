@@ -90,7 +90,6 @@ pub struct StarknetOptions {
     // #[arg(long)]
     // #[arg(help = "Disable charging fee for transactions.")]
     // pub disable_fee: bool,
-
     #[command(flatten)]
     #[command(next_help_heading = "Environment options")]
     pub environment: EnvironmentOptions,

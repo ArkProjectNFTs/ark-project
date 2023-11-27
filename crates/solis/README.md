@@ -60,7 +60,8 @@ make -C crates/ark-contracts/starknet/ setup_messaging_katana
 ```bash
 cargo run -p solis -- \
     --messaging crates/solis/messaging.local.json \
-    --orderbook-address 0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7
+    --orderbook-address 0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7 \
+    --executor-address 0x1234
 ```
 4. Deploy the `orderbook` contract on Katana with a pre-defined salt to have the same address as the one used to start Solis.
 ```bash
