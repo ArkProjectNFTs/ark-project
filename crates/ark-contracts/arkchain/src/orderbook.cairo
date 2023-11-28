@@ -131,8 +131,8 @@ mod orderbook {
     };
     use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
-    use arkchain::crypto::hash::{starknet_keccak, serialized_hash};
-
+    use arkchain::crypto::hash::{serialized_hash};
+    use poseidon::poseidon_hash_span;
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
     /// Storage struct for the Orderbook contract.
