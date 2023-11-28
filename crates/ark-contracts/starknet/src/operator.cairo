@@ -8,6 +8,7 @@
 /// Operator contract.
 #[starknet::contract]
 mod operator {
+    use core::box::BoxTrait;
     use starknet::{ContractAddress, ClassHash};
     use ark_operator::interfaces::{
         IOperator, IERCDispatcher, IERCDispatcherTrait, IUpgradable, ExecutionInfo, RouteType
@@ -20,7 +21,6 @@ mod operator {
     #[storage]
     struct Storage {
         admin_address: ContractAddress,
-        arkchain_sequencer_address: ContractAddress,
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
@@ -44,8 +44,6 @@ mod operator {
     fn constructor(
         ref self: ContractState,
         admin_address: ContractAddress,
-        // The account of starknet sending TX from the arkchain sequencer.
-        arkchain_sequencer_address: ContractAddress,
         // The orderbook contract on the arkchain, which will receive messages.
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
@@ -53,7 +51,6 @@ mod operator {
     ) {
         self.admin_address.write(admin_address);
         self.eth_contract_address.write(eth_contract_address);
-        self.arkchain_sequencer_address.write(arkchain_sequencer_address);
         self.arkchain_orderbook_address.write(arkchain_orderbook_address);
         self.messaging_address.write(messaging_address);
     }
@@ -101,6 +98,11 @@ mod operator {
 
     #[external(v0)]
     impl OperatorImpl of IOperator<ContractState> {
+        fn update_arkchain_sequencer_starknet_address(
+            ref self: ContractState, sequencer_starknet_address: ContractAddress
+        ) {
+        }
+
         fn update_messaging_address(ref self: ContractState, msger_address: ContractAddress) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
@@ -119,17 +121,6 @@ mod operator {
             self.eth_contract_address.write(eth_address);
         }
 
-        fn update_arkchain_sequencer_starknet_address(
-            ref self: ContractState, sequencer_starknet_address: ContractAddress
-        ) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
-
-            self.arkchain_sequencer_address.write(sequencer_starknet_address);
-        }
-
         fn update_orderbook_address(ref self: ContractState, orderbook_address: ContractAddress) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
@@ -141,7 +132,7 @@ mod operator {
 
         fn execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
             assert(
-                starknet::get_caller_address() == self.arkchain_sequencer_address.read(),
+                starknet::get_caller_address() == self.messaging_address.read(),
                 'Invalid msg sender'
             );
 
@@ -160,17 +151,16 @@ mod operator {
             let messaging = IArkchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
-        // TODO: replace by send_message_to_l1
-        // -> orderhash, transaction_hash
 
-        // messaging
-        //     .send_message_to_arkchain(
-        //         self.arkchain_orderbook_address.read(),
-        //         selector!(
-        //             "finalize_order_buy"
-        //         ), // 0x00dc783263b4080fde14fad025c03978a991c3b64149cea7bb5e707b082a302f,
-        //         array![order.order_hash, order.taker_address.into()].span(),
-        //     );
+            let tx_info = starknet::get_tx_info().unbox();
+            let transaction_hash = tx_info.transaction_hash;
+        // messaging.send_message_to_arkchain(
+        //     self.arkchain_orderbook_address.read(),
+        //     selector!(
+        //         "validate_order_execution"
+        //     ),
+        //     array![order.order_hash, transaction_hash].span(),
+        // );
         }
 
         fn update_arkchain_fee(ref self: ContractState, arkchain_fee: u256) {
