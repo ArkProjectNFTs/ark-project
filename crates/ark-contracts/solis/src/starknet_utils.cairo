@@ -19,12 +19,16 @@ mod starknet_utils {
     }
 
     #[external(v0)]
-    fn is_approved_for_all(self: @ContractState, owner: ContractAddress, operator: ContractAddress) -> bool {
+    fn is_approved_for_all(
+        self: @ContractState, owner: ContractAddress, operator: ContractAddress
+    ) -> bool {
         false
     }
 
     #[external(v0)]
-    fn isApprovedForAll(self: @ContractState, owner: ContractAddress, operator: ContractAddress) -> bool {
+    fn isApprovedForAll(
+        self: @ContractState, owner: ContractAddress, operator: ContractAddress
+    ) -> bool {
         false
     }
 

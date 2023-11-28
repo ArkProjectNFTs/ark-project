@@ -2,13 +2,24 @@
 version = 1
 
 [[package]]
-name = "ark_operator"
+name = "ark_common"
+version = "0.1.0"
+
+[[package]]
+name = "ark_starknet"
 version = "0.1.0"
 dependencies = [
+ "ark_common",
+ "openzeppelin",
  "snforge_std",
 ]
 
 [[package]]
+name = "openzeppelin"
+version = "0.8.0"
+source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.8.0#c23e8e96de60e6e3159b1ff8591a1187269c0eb7"
+
+[[package]]
 name = "snforge_std"
 version = "0.1.0"
-source = "git+https://github.com/foundry-rs/starknet-foundry.git?tag=v0.6.0#edd2e3562975ee3de69c0fe7b8af01414d2761c1"
+source = "git+https://github.com/foundry-rs/starknet-foundry.git?tag=v0.9.1#da085bd11e1b151d0592f43917136560d9b70d37"

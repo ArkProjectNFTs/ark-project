@@ -19,8 +19,8 @@
 //! 4. At base addresss + offset 2 => First felt of the serialized order.
 use starknet::SyscallResultTrait;
 
-use arkchain::order::types::OrderStatus;
-use arkchain::order::types::OrderType;
+use ark_common::protocol::order_types::OrderStatus;
+use ark_common::protocol::order_types::OrderType;
 
 /// Must remain equal to 0 for now.
 const ADDRESS_DOMAIN: u32 = 0;

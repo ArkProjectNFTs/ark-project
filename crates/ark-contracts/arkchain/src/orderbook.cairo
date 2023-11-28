@@ -5,9 +5,9 @@
 //! and internal functions. The primary functionalities include broker whitelisting, order management 
 //! (creation, cancellation, fulfillment), and order queries.
 
-use arkchain::order::types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
+use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
+use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use arkchain::order::order_v1::OrderV1;
-use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
@@ -115,7 +115,11 @@ mod orderbook_errors {
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
-    use arkchain::crypto::signer::SignerTrait;
+    use ark_common::crypto::signer::{SignInfo, Signer, SignerTrait, SignerValidator};
+    use ark_common::protocol::order_types::{
+        OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo
+    };
+    use ark_common::crypto::hash::{serialized_hash};
     use core::traits::TryInto;
     use core::result::ResultTrait;
     use core::zeroable::Zeroable;
@@ -124,15 +128,11 @@ mod orderbook {
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
     use starknet::ContractAddress;
-    use arkchain::order::types::{OrderTrait, OrderType, CancelInfo, FulfillInfo, FulfillmentInfo};
     use arkchain::order::order_v1::OrderV1;
     use arkchain::order::database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
-    use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
-    use arkchain::order::types::OrderStatus;
-    use arkchain::crypto::hash::{serialized_hash};
-    use poseidon::poseidon_hash_span;
+
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
     /// Storage struct for the Orderbook contract.
@@ -239,7 +239,11 @@ mod orderbook {
     /// * Verify it comes from Arkchain executor contract.
     /// * Check data + cancel / execute the order.
     #[l1_handler]
-    fn execute_order(ref self: ContractState, from_address: felt252, info: FulfillmentInfo) {}
+    fn validate_order_execution(
+        ref self: ContractState, _from_address: felt252, info: ExecutionValidationInfo
+    ) {// Solis already checks that ALL the messages are coming from the executor contract.
+    // TODO: anyway, it can be useful to have an extra check here.
+    }
 
     // *************************************************************************
     // EXTERNAL FUNCTIONS
