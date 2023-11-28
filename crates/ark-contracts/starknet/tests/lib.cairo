@@ -1,3 +1,7 @@
 mod integration {
-    mod test_operator;
+    mod operator;
+}
+
+mod unit {
+    mod operator;
 }

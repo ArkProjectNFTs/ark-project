@@ -10,7 +10,7 @@
 mod operator {
     use starknet::{ContractAddress, ClassHash};
     use ark_operator::interfaces::{
-        IOperator, IERCDispatcher, IERCDispatcherTrait, IUpgradable, OrderExecute
+        IOperator, IERCDispatcher, IERCDispatcherTrait, IUpgradable, ExecutionInfo, RouteType
     };
 
     use ark_operator::arkchain_messaging::{
@@ -24,6 +24,7 @@ mod operator {
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
+        arkchain_fee: u256
     }
 
     #[event]
@@ -57,6 +58,46 @@ mod operator {
         self.messaging_address.write(messaging_address);
     }
 
+    #[generate_trait]
+    impl InternalFunctions of InternalFunctionsTrait {
+        fn _transfer_royalties(
+            ref self: ContractState, execution_info: ExecutionInfo, eth_contract: IERCDispatcher
+        ) {
+            // Royalties distribution
+            let arkchain_fee = self.arkchain_fee.read();
+            let total_fees = execution_info.create_broker_fee
+                + execution_info.fulfill_broker_fee
+                + execution_info.creator_fee
+                + arkchain_fee;
+            assert(execution_info.price < total_fees, 'Invalid price');
+
+            match execution_info.route {
+                RouteType::Erc20ToErc721 => { // ...
+                },
+                RouteType::Erc721ToErc20 => {
+                    eth_contract
+                        .transfer_from(
+                            execution_info.offerer_address, self.admin_address.read(), arkchain_fee
+                        );
+                // eth_contract.transfer_from(execution_info.offerer_address, self.admin_address.read(), arkchain_fee);
+                },
+            };
+        // eth_contract
+        //     .transfer_from(execution_info.taker_address, execution_info.creator_address, execution_info.creator_fee);
+
+        // eth_contract
+        //     .transfer_from(
+        //         execution_info.taker_address, execution_info.create_broker_address, execution_info.create_broker_fee
+        //     );
+
+        // eth_contract
+        //     .transfer_from(
+        //         execution_info.taker_address, execution_info.fulfill_broker_address, execution_info.fulfill_broker_fee
+        //     );
+
+        // eth_contract.transferFrom(execution_info.taker_address, execution_info.maker_address, execution_info.price);
+        }
+    }
 
     #[external(v0)]
     impl OperatorImpl of IOperator<ContractState> {
@@ -78,13 +119,15 @@ mod operator {
             self.eth_contract_address.write(eth_address);
         }
 
-        fn update_sequencer_address(ref self: ContractState, sequencer_address: ContractAddress) {
+        fn update_arkchain_sequencer_starknet_address(
+            ref self: ContractState, sequencer_starknet_address: ContractAddress
+        ) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
 
-            self.arkchain_sequencer_address.write(sequencer_address);
+            self.arkchain_sequencer_address.write(sequencer_starknet_address);
         }
 
         fn update_orderbook_address(ref self: ContractState, orderbook_address: ContractAddress) {
@@ -96,35 +139,56 @@ mod operator {
             self.arkchain_orderbook_address.write(orderbook_address);
         }
 
-        fn execute_buy_order(ref self: ContractState, order: OrderExecute) {
+        fn execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
             assert(
                 starknet::get_caller_address() == self.arkchain_sequencer_address.read(),
                 'Invalid msg sender'
             );
 
-            let nft_contract = IERCDispatcher { contract_address: order.nft_address };
-            nft_contract.transfer_from(order.maker_address, order.taker_address, order.token_id);
-
             let eth_contract = IERCDispatcher {
                 contract_address: self.eth_contract_address.read()
             };
 
-            eth_contract.transferFrom(order.taker_address, order.maker_address, order.price);
+            //let nft_contract = IERCDispatcher { contract_address: execution_info.token_address };
+            //nft_contract.transfer_from(execution_info.maker_address, execution_info.taker_address, execution_info.token_id);
+
+            self._transfer_royalties(execution_info, eth_contract);
 
             let block_timestamp = starknet::info::get_block_timestamp();
-            self.emit(OrderExecuted { order_hash: order.order_hash, block_timestamp, });
+            self.emit(OrderExecuted { order_hash: execution_info.order_hash, block_timestamp });
 
             let messaging = IArkchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
+        // TODO: replace by send_message_to_l1
+        // -> orderhash, transaction_hash
 
-            messaging
-                .send_message_to_arkchain(
-                    self.arkchain_orderbook_address.read(),
-                    // finalize_order_buy selector
-                    0x00dc783263b4080fde14fad025c03978a991c3b64149cea7bb5e707b082a302f,
-                    array![order.order_hash, order.taker_address.into()].span(),
-                );
+        // messaging
+        //     .send_message_to_arkchain(
+        //         self.arkchain_orderbook_address.read(),
+        //         selector!(
+        //             "finalize_order_buy"
+        //         ), // 0x00dc783263b4080fde14fad025c03978a991c3b64149cea7bb5e707b082a302f,
+        //         array![order.order_hash, order.taker_address.into()].span(),
+        //     );
+        }
+
+        fn update_arkchain_fee(ref self: ContractState, arkchain_fee: u256) {
+            assert(
+                starknet::get_caller_address() == self.admin_address.read(),
+                'Unauthorized admin address'
+            );
+
+            self.arkchain_fee.write(arkchain_fee);
+        }
+
+        fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
+            assert(
+                starknet::get_caller_address() == self.admin_address.read(),
+                'Unauthorized admin address'
+            );
+
+            self.admin_address.write(admin_address);
         }
     }
 
@@ -140,15 +204,6 @@ mod operator {
                 Result::Ok(_) => (), // emit event
                 Result::Err(revert_reason) => panic(revert_reason),
             };
-        }
-
-        fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
-
-            self.admin_address.write(admin_address);
         }
     }
 }
