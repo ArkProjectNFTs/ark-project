@@ -1,6 +1,6 @@
 import { ec, encode } from "starknet";
 import { OrderV1, RouteType, ExecutionInfo } from "./types";
-import { hashOrder } from "./utils";
+import { poseidonHashOrder } from "./utils";
 
 function main() {
   const privateKey = "0x1234567890987654321";
@@ -24,16 +24,13 @@ function main() {
     quantity: { high: 0, low: 1 },
     startAmount: { high: 0, low: 600000000000000000 },
     endAmount: { high: 0, low: 0 },
-    startDate: 1699556878,
-    endDate: 1702148878,
+    startDate: 1699556828,
+    endDate: 1702148828,
     brokerId: 123,
     additionalData: [],
   };
 
-  const orderMessageHash =
-    "0x29afa196f733b4144e60776f854051c7a1dce4cb89c5408c5bc15318f0465c4"; // hashOrder(order);
-  // console.log("=> orderMessageHash", orderMessageHash);
-
+  const orderMessageHash = poseidonHashOrder(order);
   const signature = ec.starkCurve.sign(orderMessageHash, privateKey);
 
   console.log("Order Message Hash:", orderMessageHash);

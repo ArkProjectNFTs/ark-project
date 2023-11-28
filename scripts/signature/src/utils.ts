@@ -8,7 +8,7 @@ export function bigNumberishToUint8Array(value: BigNumberish): Uint8Array {
   return num.hexToBytes(`0x${hex}`);
 }
 
-export function hashOrder(order: OrderV1): string {
+export function poseidonHashOrder(order: OrderV1): string {
   const elements: bigint[] = [
     BigInt(order.route),
     BigInt(order.currencyAddress),
@@ -32,11 +32,7 @@ export function hashOrder(order: OrderV1): string {
     BigInt(order.additionalData.length),
   ];
 
-  // const generatedHash = hash.computeHashOnElements(elements);
-  // console.log("=> generatedHash", generatedHash);
-
   const generatedHash = starknet.poseidonHashMany(elements);
-  console.log("=> generatedHash", generatedHash);
   return num.toHex(generatedHash);
 }
 
@@ -46,48 +42,48 @@ export function hashOrder(order: OrderV1): string {
  * @param {OrderV1} order - The order to hash.
  * @returns {string} The Keccak hash of the order as a hex string.
  */
-// export function hashOrder(order: OrderV1): string {
-//   // Convert order properties to Uint8Array and concatenate them.
-//   // The array is initialized with a fixed set of properties.
-//   let results = Uint8Array.from([
-//     ...bigNumberishToUint8Array(order.route),
-//     ...bigNumberishToUint8Array(order.currencyAddress),
-//     ...bigNumberishToUint8Array(order.currencyChainId),
-//     ...bigNumberishToUint8Array(order.salt),
-//     ...bigNumberishToUint8Array(order.offerer),
-//     ...bigNumberishToUint8Array(order.tokenChainId),
-//     ...bigNumberishToUint8Array(order.tokenAddress),
-//     ...(order.tokenId
-//       ? [
-//           ...bigNumberishToUint8Array(0),
-//           ...bigNumberishToUint8Array(order.tokenId.low),
-//           ...bigNumberishToUint8Array(order.tokenId.high),
-//         ]
-//       : [...bigNumberishToUint8Array(1)]),
-//     ...bigNumberishToUint8Array(order.quantity.low),
-//     ...bigNumberishToUint8Array(order.quantity.high),
-//     ...bigNumberishToUint8Array(order.startAmount.low),
-//     ...bigNumberishToUint8Array(order.startAmount.high),
-//     ...bigNumberishToUint8Array(order.endAmount.low),
-//     ...bigNumberishToUint8Array(order.endAmount.high),
-//     ...bigNumberishToUint8Array(order.startDate),
-//     ...bigNumberishToUint8Array(order.endDate),
-//     ...bigNumberishToUint8Array(order.brokerId),
-//     ...bigNumberishToUint8Array(order.additionalData.length),
-//   ]);
+export function keccakHashOrder(order: OrderV1): string {
+  // Convert order properties to Uint8Array and concatenate them.
+  // The array is initialized with a fixed set of properties.
+  let results = Uint8Array.from([
+    ...bigNumberishToUint8Array(order.route),
+    ...bigNumberishToUint8Array(order.currencyAddress),
+    ...bigNumberishToUint8Array(order.currencyChainId),
+    ...bigNumberishToUint8Array(order.salt),
+    ...bigNumberishToUint8Array(order.offerer),
+    ...bigNumberishToUint8Array(order.tokenChainId),
+    ...bigNumberishToUint8Array(order.tokenAddress),
+    ...(order.tokenId
+      ? [
+          ...bigNumberishToUint8Array(0),
+          ...bigNumberishToUint8Array(order.tokenId.low),
+          ...bigNumberishToUint8Array(order.tokenId.high),
+        ]
+      : [...bigNumberishToUint8Array(1)]),
+    ...bigNumberishToUint8Array(order.quantity.low),
+    ...bigNumberishToUint8Array(order.quantity.high),
+    ...bigNumberishToUint8Array(order.startAmount.low),
+    ...bigNumberishToUint8Array(order.startAmount.high),
+    ...bigNumberishToUint8Array(order.endAmount.low),
+    ...bigNumberishToUint8Array(order.endAmount.high),
+    ...bigNumberishToUint8Array(order.startDate),
+    ...bigNumberishToUint8Array(order.endDate),
+    ...bigNumberishToUint8Array(order.brokerId),
+    ...bigNumberishToUint8Array(order.additionalData.length),
+  ]);
 
-//   // Concatenate additionalData items to the results array.
-//   order.additionalData.forEach((item) => {
-//     const additionalDataArray = bigNumberishToUint8Array(item);
-//     results = new Uint8Array([...results, ...additionalDataArray]);
-//   });
+  // Concatenate additionalData items to the results array.
+  order.additionalData.forEach((item) => {
+    const additionalDataArray = bigNumberishToUint8Array(item);
+    results = new Uint8Array([...results, ...additionalDataArray]);
+  });
 
-//   // Generate the hash from the concatenated Uint8Arrays.
-//   const generatedHash = starknet.keccak(results);
+  // Generate the hash from the concatenated Uint8Arrays.
+  const generatedHash = starknet.keccak(results);
 
-//   // Convert the generated hash to a hexadecimal string.
-//   return num.toHex(generatedHash);
-// }
+  // Convert the generated hash to a hexadecimal string.
+  return num.toHex(generatedHash);
+}
 
 /**
  * Constructs a Keccak hash from the order's properties.

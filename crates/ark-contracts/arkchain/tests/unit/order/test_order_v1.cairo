@@ -28,7 +28,6 @@ fn test_order_signature() {
     let block_timestamp = 1700069210;
     let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
     let order_hash = order_listing.compute_order_hash();
-
     let signer = Signer::WEIERSTRESS_STARKNET(
         SignInfo {
             user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
