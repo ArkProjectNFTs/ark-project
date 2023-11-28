@@ -303,6 +303,11 @@ mod test {
             felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"),
             // selector (transfert).
             felt!("0x83afd3f4caedc6eebf44246fe54e38c95e3179a5ec9ea81740eca5b482d12e"),
+            // data offset.
+            felt!("0x0"),
+            // data len.
+            felt!("0x0"),
+
             // Calldata len.
             FieldElement::THREE,
             felt!("0x06cdcce7333a7143ad0aebbaffe54a809cc53b65c0936ecfbebaecc0de099e8e"),
