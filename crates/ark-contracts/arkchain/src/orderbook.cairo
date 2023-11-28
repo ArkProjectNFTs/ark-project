@@ -73,6 +73,12 @@ trait Orderbook<T> {
     /// # Arguments
     /// * `token_hash` - The token hash of the order.
     fn get_order_hash(self: @T, token_hash: felt252) -> felt252;
+
+    /// Upgrades the contract to a new version.
+    ///
+    /// # Arguments
+    /// * `class_hash` - The class hash of the new contract version.
+    fn upgrade(ref self: T, class_hash: starknet::ClassHash);
 }
 
 // *************************************************************************
@@ -125,8 +131,8 @@ mod orderbook {
     };
     use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
     use arkchain::order::types::OrderStatus;
-    use arkchain::crypto::hash::{starknet_keccak, serialized_hash};
-
+    use arkchain::crypto::hash::{serialized_hash};
+    use poseidon::poseidon_hash_span;
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
     /// Storage struct for the Orderbook contract.
@@ -164,6 +170,7 @@ mod orderbook {
         OrderExecuted: OrderExecuted,
         OrderCancelled: OrderCancelled,
         OrderFulfilled: OrderFulfilled,
+        Upgraded: Upgraded,
     }
 
     /// Event for when an order is placed.
@@ -209,6 +216,11 @@ mod orderbook {
         related_order_hash: Option<felt252>,
     }
 
+    #[derive(Drop, starknet::Event)]
+    struct Upgraded {
+        class_hash: starknet::ClassHash,
+    }
+
     // *************************************************************************
     // CONSTRUCTOR
     // *************************************************************************
@@ -234,6 +246,17 @@ mod orderbook {
     // *************************************************************************
     #[external(v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
+        fn upgrade(ref self: ContractState, class_hash: starknet::ClassHash) {
+            assert(
+                starknet::get_caller_address() == self.admin.read(), 'Unauthorized replace class'
+            );
+
+            match starknet::replace_class_syscall(class_hash) {
+                Result::Ok(_) => self.emit(Upgraded { class_hash }),
+                Result::Err(revert_reason) => panic(revert_reason),
+            };
+        }
+
         /// Retrieves the type of an order using its hash.
         /// # View
         fn get_order_type(self: @ContractState, order_hash: felt252) -> OrderType {
