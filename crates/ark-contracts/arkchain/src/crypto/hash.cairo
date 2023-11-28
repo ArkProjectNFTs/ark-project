@@ -26,3 +26,9 @@ fn starknet_keccak(data: Span<felt252>) -> felt252 {
     hash = hash & 0x03ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff_u256;
     hash.try_into().expect('starknet keccak overflow')
 }
+
+fn serialized_hash<T, +Serde<T>, +Drop<T>>(value: T) -> felt252 {
+    let mut buf = array![];
+    value.serialize(ref buf);
+    starknet_keccak(buf.span())
+}

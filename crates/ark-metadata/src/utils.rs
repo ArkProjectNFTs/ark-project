@@ -12,6 +12,7 @@ pub async fn get_token_metadata(
     uri: &str,
     ipfs_gateway_uri: &str,
     request_timeout_duration: Duration,
+    request_referrer: &str,
 ) -> Result<TokenMetadata> {
     let metadata_type = get_metadata_type(uri);
     let metadata = match metadata_type {
@@ -19,11 +20,23 @@ pub async fn get_token_metadata(
             let ipfs_hash = uri.trim_start_matches("ipfs://");
             let complete_uri = format!("{}{}", ipfs_gateway_uri, ipfs_hash);
             trace!("Fetching metadata from IPFS: {}", complete_uri.as_str());
-            fetch_metadata(complete_uri.as_str(), client, request_timeout_duration).await?
+            fetch_metadata(
+                complete_uri.as_str(),
+                client,
+                request_timeout_duration,
+                request_referrer,
+            )
+            .await?
         }
         MetadataType::Http(uri) => {
             trace!("Fetching metadata from HTTPS: {}", uri.as_str());
-            fetch_metadata(&uri, client, request_timeout_duration).await?
+            fetch_metadata(
+                &uri.replace("https", "http"),
+                client,
+                request_timeout_duration,
+                request_referrer,
+            )
+            .await?
         }
         MetadataType::OnChain(uri) => {
             trace!("Fetching on-chain metadata: {}", uri);
@@ -43,24 +56,42 @@ pub fn get_metadata_type(uri: &str) -> MetadataType {
     }
 }
 
+fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
+    match serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
+        Ok(v) => {
+            trace!("Successfully parsed metadata");
+            Ok(v)
+        }
+        Err(e) => {
+            error!("Failed to parse metadata: {:?}", e);
+            Err(anyhow!("Failed to parse metadata"))
+        }
+    }
+}
+
 async fn fetch_metadata(
     uri: &str,
     client: &Client,
     request_timeout_duration: Duration,
+    referrer: &str,
 ) -> Result<TokenMetadata> {
-    let request = client.get(uri).timeout(request_timeout_duration);
+    let request = client
+        .get(uri)
+        .header("User-Agent", "Mozilla/5.0 (compatible; YourClient/1.0)")
+        .header("Referrer", referrer)
+        .timeout(request_timeout_duration);
+
     let response = request.send().await;
 
     match response {
         Ok(response) => {
+            debug!("Response status: {}", response.status());
             if response.status().is_success() {
                 let raw_metadata = response.text().await?;
-
-                let metadata =
-                    match serde_json::from_str::<NormalizedMetadata>(raw_metadata.as_str()) {
-                        Ok(v) => v,
-                        Err(_) => NormalizedMetadata::default(),
-                    };
+                let metadata = match normalize_metadata(raw_metadata.as_str()) {
+                    Ok(metadata) => metadata,
+                    Err(_) => NormalizedMetadata::default(),
+                };
 
                 let now = Utc::now();
 
@@ -70,13 +101,13 @@ async fn fetch_metadata(
                     metadata_updated_at: Some(now.timestamp()),
                 })
             } else {
-                error!("Failed to get ipfs metadata. URI: {}", uri);
-                Err(anyhow!("Failed to get ipfs metadata"))
+                error!("Request Failed. URI: {}", uri);
+                Err(anyhow!("Request Failed"))
             }
         }
         Err(e) => {
-            error!("Failed to get ipfs metadata: {:?}", e);
-            Err(anyhow!("Failed to get ipfs metadata"))
+            error!("Request Failed: {:?}", e);
+            Err(anyhow!("Request Failed. URI: {}", uri))
         }
     }
 }
@@ -167,8 +198,48 @@ pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, u64
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use reqwest::header::{HeaderMap, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
+
+    #[test]
+    fn normalize_metadata_with_array_value() {
+        let raw_metadata = r#"{
+            "id":"0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000",
+            "name":"FirefighterDuck",
+            "description":"So much water pressure in my mouth I could extinguish the sun",
+            "version":1,
+            "regionSize":100000,
+            "image":"https://api.briq.construction/v1/preview/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000.png",
+            "animation_url":"https://api.briq.construction/v1/model/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000.glb",
+            "external_url":"https://briq.construction/set/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000",
+            "background_color":"65529c",
+            "created_at":1676104065.0,
+            "attributes":[
+                {
+                    "trait_type":"Number of briqs",
+                    "value":116
+                },
+                {"display_type":"date","trait_type":"Creation Date","value":"2023-02-11"},
+                {"trait_type":"Collections","value":["Ducks Everywhere"]},
+                {"trait_type":"Ducks Everywhere","value":true},
+                {"trait_type":"Artist","value":"OutSmth"},
+                {"trait_type":"Date","value":"2023-02-13"},
+                {"trait_type":"Number of steps","value":17}
+            ],
+            "booklet_id":"ducks_everywhere/FirefighterDuck"
+        }"#;
+
+        let normalized_metadata =
+            normalize_metadata(raw_metadata).expect("failed metadata parsing");
+
+        assert_eq!(
+            normalized_metadata.image,
+            Some(
+                "https://api.briq.construction/v1/preview/starknet-mainnet/0x4b2260c9e06f14a11dc99f69eab0596f3858193d4a4ca34c800000000000000.png".to_string()
+            )
+        );
+    }
 
     #[test]
     fn test_file_extension_from_mime_type() {
@@ -246,13 +317,16 @@ mod tests {
     async fn test_fetch_metadata() {
         let client = Client::new();
         let uri = "https://example.com";
+        let request_referrer = "https://arkproject.dev";
         let request_timeout_duration = Duration::from_secs(10);
 
-        let metadata = fetch_metadata(uri, &client, request_timeout_duration).await;
+        let metadata =
+            fetch_metadata(uri, &client, request_timeout_duration, request_referrer).await;
         assert!(metadata.is_ok());
 
         let uri = "invalid_uri";
-        let metadata = fetch_metadata(uri, &client, request_timeout_duration).await;
+        let metadata =
+            fetch_metadata(uri, &client, request_timeout_duration, request_referrer).await;
         assert!(metadata.is_err());
     }
 }

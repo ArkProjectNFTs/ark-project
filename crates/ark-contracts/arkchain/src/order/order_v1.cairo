@@ -8,6 +8,7 @@ use starknet::ContractAddress;
 use starknet::contract_address_to_felt252;
 use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType, RouteType};
 use arkchain::crypto::hash::starknet_keccak;
+use arkchain::order::types::FulfillInfo;
 
 const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).
@@ -31,7 +32,7 @@ struct OrderV1 {
     // The token contract address.
     token_address: ContractAddress,
     // The token id.
-    token_id: u256,
+    token_id: Option<u256>,
     // The quantity of the token_id to be offerred (1 for NFTs).
     quantity: u256,
     // in wei. --> 10 | 10 | 10 |
@@ -69,15 +70,19 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             }
         }
 
-        let end_date = *self.end_date;
+        // Salt must be non-zero.
+        if (*self.salt).is_zero() {
+            return Result::Err(OrderValidationError::InvalidSalt);
+        }
 
-        // End date -> block_ts + 30 days.
-        let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
+        let end_date = *self.end_date;
 
         if end_date < block_timestamp {
             return Result::Err(OrderValidationError::EndDateInThePast);
         }
 
+        // End date -> block_ts + 30 days.
+        let max_end_date = *self.start_date + (30 * 24 * 60 * 60);
         if end_date > max_end_date {
             return Result::Err(OrderValidationError::EndDateTooFar);
         }
@@ -92,7 +97,6 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
 
         if (*self.offerer).is_zero()
             || (*self.token_address).is_zero()
-            || (*self.token_id).is_zero()
             || (*self.start_amount).is_zero()
             || (*self.salt).is_zero()
             || (*self.quantity).is_zero() {
@@ -103,47 +107,45 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
     }
 
     fn validate_order_type(self: @OrderV1) -> Result<OrderType, OrderValidationError> {
-        // Listing order.
-        if (*self.token_id) > 0
-            && (*self.start_amount) > 0
-            && (*self.end_amount).is_zero()
-            && (*self.route) == RouteType::Erc721ToErc20 {
-            return Result::Ok(OrderType::Listing);
+        if self.token_id.is_some() {
+            // Listing order.
+            if (*self.start_amount) > 0
+                && (*self.end_amount).is_zero()
+                && (*self.route) == RouteType::Erc721ToErc20 {
+                return Result::Ok(OrderType::Listing);
+            }
+            // Offer order.
+            if (*self.start_amount) > 0
+                && (*self.end_amount).is_zero()
+                && (*self.route) == RouteType::Erc20ToErc721 {
+                return Result::Ok(OrderType::Offer);
+            }
+            // Auction order.
+            if (*self.start_amount) > 0
+                && (*self.end_amount) >= (*self.start_amount)
+                && (*self.route) == RouteType::Erc721ToErc20 {
+                return Result::Ok(OrderType::Auction);
+            }
+        } else {
+            // Collection Offer order.
+            if (*self.start_amount) > 0
+                && (*self.end_amount).is_zero()
+                && (*self.route) == RouteType::Erc20ToErc721 {
+                return Result::Ok(OrderType::CollectionOffer);
+            }
         }
-        // Offer order.
-        if (*self.token_id) > 0
-            && (*self.start_amount) > 0
-            && (*self.end_amount).is_zero()
-            && (*self.route) == RouteType::Erc20ToErc721 {
-            return Result::Ok(OrderType::Offer);
-        }
-        // Auction order.
-        if (*self.token_id) > 0
-            && (*self.start_amount) > 0
-            && (*self.start_amount) >= (*self.end_amount)
-            && (*self.route) == RouteType::Erc721ToErc20 {
-            return Result::Ok(OrderType::Auction);
-        }
-        // Collection Offer order.
-        if (*self.token_id).is_zero()
-            && (*self.start_amount) > 0
-            && (*self.end_amount).is_zero()
-            && (*self.route) == RouteType::Erc20ToErc721 {
-            return Result::Ok(OrderType::CollectionOffer);
-        } // Other order types are not supported.
+
+        // Other order types are not supported.
         Result::Err(OrderValidationError::InvalidContent)
     }
 
-    fn compute_ressource_hash(self: @OrderV1) -> felt252 {
-        let mut buf = array![];
-        let (high, low) = keccak::u128_split(*self.token_id.low);
-        buf.append(high.into());
-        buf.append(low.into());
-        let (high, low) = keccak::u128_split(*self.token_id.high);
-        buf.append(high.into());
-        buf.append(low.into());
-        let felt_token_address = contract_address_to_felt252(*self.token_address);
-        buf.append(felt_token_address);
+    fn compute_token_hash(self: @OrderV1) -> felt252 {
+        assert(OptionTrait::is_some(self.token_id), 'Token ID expected');
+        let token_id = (*self.token_id).unwrap();
+        let mut buf: Array<felt252> = array![];
+        buf.append((token_id.low).into());
+        buf.append((token_id.high).into());
+        buf.append((*self.token_address).into());
         buf.append(*self.token_chain_id);
         starknet_keccak(buf.span())
     }
