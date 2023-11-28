@@ -1,6 +1,6 @@
 import { ec, encode } from "starknet";
 import { OrderV1, RouteType, ExecutionInfo } from "./types";
-import { hashOrder, hashExecutionInfo } from "./utils";
+import { poseidonHashOrder } from "./utils";
 
 function main() {
   const privateKey = "0x1234567890987654321";
@@ -24,13 +24,13 @@ function main() {
     quantity: { high: 0, low: 1 },
     startAmount: { high: 0, low: 600000000000000000 },
     endAmount: { high: 0, low: 0 },
-    startDate: 1699556878,
-    endDate: 1702148878,
+    startDate: 1699556828,
+    endDate: 1702148828,
     brokerId: 123,
     additionalData: [],
   };
 
-  const orderMessageHash = hashOrder(order);
+  const orderMessageHash = poseidonHashOrder(order);
   const signature = ec.starkCurve.sign(orderMessageHash, privateKey);
 
   console.log("Order Message Hash:", orderMessageHash);
@@ -40,35 +40,36 @@ function main() {
   console.log("Signature S:", signature.s.toString());
 }
 
-function execution() {
-  const privateKey = "0x1234567890987654321";
-  const starknetPublicKey = ec.starkCurve.getStarkKey(privateKey);
-  const fullPublicKey = encode.addHexPrefix(
-    encode.buf2hex(ec.starkCurve.getPublicKey(privateKey, false))
-  );
+// function execution() {
+//   const privateKey = "0x1234567890987654321";
+//   const starknetPublicKey = ec.starkCurve.getStarkKey(privateKey);
+//   const fullPublicKey = encode.addHexPrefix(
+//     encode.buf2hex(ec.starkCurve.getPublicKey(privateKey, false))
+//   );
 
-  const executionInfo: ExecutionInfo = {
-    orderHash:
-      "0x00E4769a444F7FF9C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078",
-    fulfiller:
-      "0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078",
-    tokenChainId: "0x534e5f4d41494e",
-    tokenAddress:
-      "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-    tokenId: { high: 0, low: 10 },
-  };
+//   const executionInfo: ExecutionInfo = {
+//     orderHash:
+//       "0x00E4769a444F7FF9C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078",
+//     fulfiller:
+//       "0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078",
+//     tokenChainId: "0x534e5f4d41494e",
+//     tokenAddress:
+//       "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
+//     tokenId: { high: 0, low: 10 },
+//   };
 
-  const executionInfoMessageHash = hashExecutionInfo(executionInfo);
-  const signature = ec.starkCurve.sign(executionInfoMessageHash, privateKey);
+//   const executionInfoMessageHash = hashExecutionInfo(executionInfo);
+//   const signature = ec.starkCurve.sign(executionInfoMessageHash, privateKey);
 
-  console.log("Order Message Hash:", executionInfoMessageHash);
-  console.log("StarkNet Public Key:", starknetPublicKey);
-  console.log("Full Public Key:", fullPublicKey);
-  console.log("Signature R:", signature.r.toString());
-  console.log("Signature S:", signature.s.toString());
-}
+//   console.log("Order Message Hash:", executionInfoMessageHash);
+//   console.log("StarkNet Public Key:", starknetPublicKey);
+//   console.log("Full Public Key:", fullPublicKey);
+//   console.log("Signature R:", signature.r.toString());
+//   console.log("Signature S:", signature.s.toString());
+// }
 
 console.log("------ ORDER -------");
 main();
-console.log("------ Execution ------");
-execution();
+
+// console.log("------ Execution ------");
+// execution();

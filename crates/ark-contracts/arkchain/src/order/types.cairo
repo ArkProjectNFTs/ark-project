@@ -1,6 +1,6 @@
 //! Order generic variables.
 use starknet::ContractAddress;
-use arkchain::crypto::hash::starknet_keccak;
+use poseidon::poseidon_hash_span;
 
 /// Order types.
 #[derive(Serde, Drop, PartialEq, Copy)]

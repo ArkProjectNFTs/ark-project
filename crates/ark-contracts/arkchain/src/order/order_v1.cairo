@@ -7,9 +7,8 @@ use core::option::OptionTrait;
 use starknet::ContractAddress;
 use starknet::contract_address_to_felt252;
 use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType, RouteType};
-use arkchain::crypto::hash::starknet_keccak;
 use arkchain::order::types::FulfillInfo;
-
+use poseidon::poseidon_hash_span;
 const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).
 // Auction -> ERC721_ERC20.
@@ -147,12 +146,12 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         buf.append((token_id.high).into());
         buf.append((*self.token_address).into());
         buf.append(*self.token_chain_id);
-        starknet_keccak(buf.span())
+        poseidon_hash_span(buf.span())
     }
 
     fn compute_order_hash(self: @OrderV1) -> felt252 {
         let mut buf = array![];
         self.serialize(ref buf);
-        starknet_keccak(buf.span())
+        poseidon_hash_span(buf.span())
     }
 }

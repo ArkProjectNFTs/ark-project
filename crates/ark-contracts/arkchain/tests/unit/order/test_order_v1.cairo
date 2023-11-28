@@ -27,14 +27,12 @@ fn test_validate_common_data_with_valid_order() {
 fn test_order_signature() {
     let block_timestamp = 1700069210;
     let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
-
     let order_hash = order_listing.compute_order_hash();
-
     let signer = Signer::WEIERSTRESS_STARKNET(
         SignInfo {
             user_pubkey: 0x20c29f1c98f3320d56f01c13372c923123c35828bce54f2153aa1cfe61c44f2,
-            user_sig_r: 1489698813778371355144251950338771124997774846063061621537328046839877802074,
-            user_sig_s: 3108595483860555652530443442785498132521754673633088480599648397307624361634,
+            user_sig_r: 1604505843266718300714627301508508239046631480436842114329682515156485708769,
+            user_sig_s: 61902183293821228744451698818869796262719190329925918953383999133206977961,
         }
     );
     SignerValidator::verify(order_hash, signer);
