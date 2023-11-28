@@ -204,7 +204,7 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
         true
     }
 
-    async fn verify_message_to_starknet_before_tx(&self, call: Call) -> bool {
+    async fn verify_tx_for_starknet(&self, call: Call) -> bool {
         println!("verify message to starknet before tx: {:?}", call);
 
         // TODO: Decode the ExecutionInfo from the calldata.
@@ -213,7 +213,7 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
         true
     }
 
-    async fn react_on_starknet_tx_failed(&self, call: Call) {
+    async fn on_starknet_tx_failed(&self, call: Call) {
         println!("Starknet tx failed: {:?}", call);
 
         // TODO: in the case a transaction reverts on Starknet for the ExecutionInfo
@@ -269,10 +269,6 @@ fn calls_from_tx(tx_calldata: &[FieldElement]) -> SolisResult<Vec<Call>> {
             Error::FeltConversion("Failed to convert felt252 into u64".to_string())
         })?;
         offset += 1;
-
-        println!("offset {}", offset);
-        println!("calldata_len {}", calldata_len);
-        println!("offset + calldata_len {}", offset + calldata_len as usize);
 
         let calldata = if calldata_len > 0 {
             tx_calldata[offset..offset + calldata_len as usize].to_vec()

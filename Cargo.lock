@@ -4463,6 +4463,7 @@ dependencies = [
 [[package]]
 name = "katana-core"
 version = "0.3.10"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.0-solis#d5f5b583e27ae9eaa05c54a49de1241db63dcba9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4492,6 +4493,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc"
 version = "0.3.10"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.0-solis#d5f5b583e27ae9eaa05c54a49de1241db63dcba9"
 dependencies = [
  "anyhow",
  "blockifier",

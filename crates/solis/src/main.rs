@@ -59,6 +59,9 @@ async fn main() -> Result<()> {
         executor_address,
     )));
 
+    // TODO: modify the RPC crate to not accept testing endpoints requests
+    // in production.
+
     let server_config = config.server_config();
     let sequencer_config = config.sequencer_config();
     let starknet_config = config.starknet_config();
@@ -71,6 +74,7 @@ async fn main() -> Result<()> {
     // to send `L1HandlerTransaction` to the orderbook.
     hooker.write().await.set_sequencer(sequencer.clone());
 
+    // TODO: in production, those accounts must be removed.
     let accounts = sequencer
         .backend
         .accounts
