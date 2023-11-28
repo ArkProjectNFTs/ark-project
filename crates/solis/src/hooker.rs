@@ -307,7 +307,6 @@ mod test {
             felt!("0x0"),
             // data len.
             felt!("0x0"),
-
             // Calldata len.
             FieldElement::THREE,
             felt!("0x06cdcce7333a7143ad0aebbaffe54a809cc53b65c0936ecfbebaecc0de099e8e"),
