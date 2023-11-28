@@ -17,9 +17,7 @@ trait IERC721LongString<T> {
     fn approve(ref self: T, to: ContractAddress, token_id: u256);
     fn set_approval_for_all(ref self: T, operator: ContractAddress, approved: bool);
     fn get_approved(self: @T, token_id: u256) -> ContractAddress;
-    fn is_approved_for_all(
-        self: @T, owner: ContractAddress, operator: ContractAddress
-    ) -> bool;
+    fn is_approved_for_all(self: @T, owner: ContractAddress, operator: ContractAddress) -> bool;
 }
 
 #[starknet::contract]
@@ -34,7 +32,7 @@ mod erc721_longstring {
 
     #[storage]
     struct Storage {
-        owners: LegacyMap<u256, ContractAddress>, 
+        owners: LegacyMap<u256, ContractAddress>,
         token_approvals: LegacyMap<u256, ContractAddress>,
         operator_approvals: LegacyMap<(ContractAddress, ContractAddress), bool>,
     }
@@ -165,14 +163,14 @@ mod erc721_longstring {
         // Update token_id owner
         self.owners.write(token_id, to);
 
-        self.emit(Transfer { from: Zeroable::zero(), to, token_id,  });
+        self.emit(Transfer { from: Zeroable::zero(), to, token_id, });
     }
 
     fn burn(ref self: ContractState, token_id: u256) {
         let owner = get_owner_of(@self, token_id);
         self.owners.write(token_id, Zeroable::zero());
 
-        self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id,  });
+        self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id, });
     }
 
     fn _approve(ref self: ContractState, to: ContractAddress, token_id: u256) {
@@ -184,10 +182,7 @@ mod erc721_longstring {
     }
 
     fn _set_approval_for_all(
-        ref self: ContractState,
-        owner: ContractAddress,
-        operator: ContractAddress,
-        approved: bool
+        ref self: ContractState, owner: ContractAddress, operator: ContractAddress, approved: bool
     ) {
         assert(owner != operator, 'ERC721: self approval');
         self.operator_approvals.write((owner, operator), approved);
