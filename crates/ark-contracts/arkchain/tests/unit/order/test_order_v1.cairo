@@ -1,14 +1,12 @@
 use core::option::OptionTrait;
-use arkchain::order::types::OrderTrait;
 use core::result::ResultTrait;
 use core::traits::Into;
 use core::traits::TryInto;
 use arkchain::order::order_v1::OrderV1;
 use arkchain::order::order_v1::OrderTraitOrderV1;
-use arkchain::order::types::OrderType;
-use arkchain::order::types::RouteType;
+use ark_common::protocol::order_types::{OrderType, OrderTrait, RouteType};
+use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use debug::PrintTrait;
-use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
 use super::super::super::common::setup::setup_orders;
 
 // *********************************************************

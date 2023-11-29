@@ -1,20 +1,22 @@
 use core::debug::PrintTrait;
 use core::option::OptionTrait;
-use arkchain::orderbook::orderbook;
+use arkchain::orderbook::{orderbook, orderbook_errors};
 use arkchain::order::order_v1::OrderV1;
 use core::traits::Into;
 use core::traits::TryInto;
-use arkchain::order::types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
+use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
+use ark_common::protocol::order_types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
 use arkchain::order::database::{order_read, order_status_read, order_status_write, order_type_read};
 use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
     Event, SpyOn, test_address
 };
-use arkchain::orderbook::orderbook_errors;
 use array::ArrayTrait;
+
 use super::super::common::setup::{setup_listing_order, get_offer_order, setup_orders};
+
 const ORDER_VERSION_V1: felt252 = 'v1';
-use arkchain::crypto::signer::{SignInfo, Signer, SignerValidator};
+
 
 #[test]
 fn test_create_listing() {
