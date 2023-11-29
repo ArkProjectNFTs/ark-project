@@ -109,4 +109,8 @@ impl EventHandler for DefaultEventHandler {
     async fn on_event_registered(&self, event: TokenEvent) {
         println!("pontos: event registered {:?}", event);
     }
+
+    async fn on_new_latest_block(&self, block_number: u64) {
+        println!("pontos: new latest block {:?}", block_number);
+    }
 }
