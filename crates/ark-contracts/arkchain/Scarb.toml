@@ -3,7 +3,8 @@ name = "arkchain"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=2.3.0"
+ark_common = { path = "../common" }
+starknet = "2.3.1"
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.9.1" }
 
 [[target.starknet-contract]]

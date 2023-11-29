@@ -1,26 +1,41 @@
-use std::fs;
-use std::process::exit;
-use std::sync::Arc;
-
+use anyhow::Result;
 use clap::Parser;
 use console::Style;
-use katana_core::sequencer::{KatanaSequencer, Sequencer};
-use katana_rpc::{spawn, KatanaApi, NodeHandle, StarknetApi};
+
+use katana_core::hooker::KatanaHooker;
+use katana_core::sequencer::KatanaSequencer;
+use katana_rpc::{spawn, NodeHandle};
+
+use starknet::core::types::FieldElement;
+use std::sync::Arc;
 use tokio::signal::ctrl_c;
-use tracing::{error, info};
+use tokio::sync::RwLock as AsyncRwLock;
 use tracing_subscriber::fmt;
 
 mod args;
+mod contracts;
+mod error;
+mod hooker;
+mod solis_args;
 
-use args::KatanaArgs;
+use crate::args::KatanaArgs;
+use crate::hooker::SolisHooker;
+
+// Chain ID: 'SOLIS' cairo short string.
+pub const CHAIN_ID_SOLIS: FieldElement = FieldElement::from_mont([
+    18446732623703627169,
+    18446744073709551615,
+    18446744073709551615,
+    576266102202707888,
+]);
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     tracing::subscriber::set_global_default(
         fmt::Subscriber::builder()
             .with_env_filter(
                 "info,executor=trace,server=debug,katana_core=trace,blockifier=off,\
-                 jsonrpsee_server=off,hyper=off",
+                 jsonrpsee_server=off,hyper=off,solis=trace",
             )
             .finish(),
     )
@@ -28,44 +43,60 @@ async fn main() {
 
     let config = KatanaArgs::parse();
 
+    let sn_utils_reader = contracts::starknet_utils::new_starknet_utils_reader(
+        FieldElement::ZERO,
+        &config.messaging.rpc_url,
+    );
+
+    let executor_address = FieldElement::from_hex_be(&config.solis.executor_address)
+        .expect("Invalid executor address");
+    let orderbook_address = FieldElement::from_hex_be(&config.solis.orderbook_address)
+        .expect("Invalid orderbook address");
+
+    let hooker = Arc::new(AsyncRwLock::new(SolisHooker::new(
+        sn_utils_reader,
+        orderbook_address,
+        executor_address,
+    )));
+
+    // TODO: modify the RPC crate to not accept testing endpoints requests
+    // in production.
+
     let server_config = config.server_config();
     let sequencer_config = config.sequencer_config();
     let starknet_config = config.starknet_config();
 
-    let sequencer = Arc::new(KatanaSequencer::new(sequencer_config, starknet_config).await);
-    let starknet_api = StarknetApi::new(sequencer.clone());
-    let katana_api = KatanaApi::new(sequencer.clone());
+    let sequencer =
+        Arc::new(KatanaSequencer::new(sequencer_config, starknet_config, hooker.clone()).await);
+    let NodeHandle { addr, handle, .. } = spawn(Arc::clone(&sequencer), server_config).await?;
 
-    match spawn(katana_api, starknet_api, server_config).await {
-        Ok(NodeHandle { addr, handle, .. }) => {
-            if !config.silent {
-                let accounts = sequencer
-                    .backend
-                    .accounts
-                    .iter()
-                    .map(|a| format!("{a}"))
-                    .collect::<Vec<_>>()
-                    .join("\n");
+    // Important to set the sequencer reference in the hooker, to allow the hooker
+    // to send `L1HandlerTransaction` to the orderbook.
+    hooker.write().await.set_sequencer(sequencer.clone());
 
-                print_intro(
-                    accounts,
-                    format!(
-                        "🚀 JSON-RPC server started: {}",
-                        Style::new().blue().apply_to(format!("http://{addr}"))
-                    ),
-                );
-            }
+    // TODO: in production, those accounts must be removed.
+    let accounts = sequencer
+        .backend
+        .accounts
+        .iter()
+        .map(|a| format!("{a}"))
+        .collect::<Vec<_>>()
+        .join("\n");
 
-            // Wait until Ctrl + C is pressed, then shutdown
-            ctrl_c().await.unwrap();
-            shutdown_handler(sequencer.clone(), config).await;
-            handle.stop().unwrap();
-        }
-        Err(err) => {
-            error! {"{err}"};
-            exit(1);
-        }
-    };
+    print_intro(
+        accounts,
+        format!(
+            "🚀 JSON-RPC server started: {}",
+            Style::new().blue().apply_to(format!("http://{addr}"))
+        ),
+    );
+
+    // Wait until Ctrl + C is pressed, then shutdown
+    ctrl_c().await?;
+    shutdown_handler(sequencer, config).await;
+    handle.stop()?;
+
+    Ok(())
 }
 
 fn print_intro(accounts: String, address: String) {
@@ -92,21 +123,6 @@ PREFUNDED ACCOUNTS
     println!("\n{address}\n\n");
 }
 
-pub async fn shutdown_handler(sequencer: Arc<impl Sequencer>, config: KatanaArgs) {
-    if let Some(path) = config.dump_state {
-        info!("Dumping state on shutdown");
-        let state = (*sequencer).backend().dump_state().await;
-        if let Ok(state) = state {
-            match fs::write(path.clone(), state) {
-                Ok(_) => {
-                    info!("Successfully dumped state")
-                }
-                Err(_) => {
-                    error!("Failed to write state dump to {:?}", path)
-                }
-            };
-        } else {
-            error!("Failed to fetch state dump.")
-        }
-    };
+pub async fn shutdown_handler(_sequencer: Arc<KatanaSequencer>, _config: KatanaArgs) {
+    // Do stuff before exit.
 }

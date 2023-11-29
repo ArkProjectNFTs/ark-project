@@ -1,0 +1,400 @@
+[
+  {
+    "type": "impl",
+    "name": "ImplOrderbook",
+    "interface_name": "arkchain::orderbook::Orderbook"
+  },
+  {
+    "type": "enum",
+    "name": "arkchain::order::types::RouteType",
+    "variants": [
+      {
+        "name": "Erc20ToErc721",
+        "type": "()"
+      },
+      {
+        "name": "Erc721ToErc20",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "type": "struct",
+    "name": "core::integer::u256",
+    "members": [
+      {
+        "name": "low",
+        "type": "core::integer::u128"
+      },
+      {
+        "name": "high",
+        "type": "core::integer::u128"
+      }
+    ]
+  },
+  {
+    "type": "struct",
+    "name": "core::array::Span::<core::felt252>",
+    "members": [
+      {
+        "name": "snapshot",
+        "type": "@core::array::Array::<core::felt252>"
+      }
+    ]
+  },
+  {
+    "type": "struct",
+    "name": "arkchain::order::order_v1::OrderV1",
+    "members": [
+      {
+        "name": "route",
+        "type": "arkchain::order::types::RouteType"
+      },
+      {
+        "name": "currency_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "currency_chain_id",
+        "type": "core::felt252"
+      },
+      {
+        "name": "salt",
+        "type": "core::felt252"
+      },
+      {
+        "name": "offerer",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "token_chain_id",
+        "type": "core::felt252"
+      },
+      {
+        "name": "token_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "token_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "quantity",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "start_amount",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "end_amount",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "start_date",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "end_date",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "broker_id",
+        "type": "core::felt252"
+      },
+      {
+        "name": "additional_data",
+        "type": "core::array::Span::<core::felt252>"
+      }
+    ]
+  },
+  {
+    "type": "struct",
+    "name": "arkchain::crypto::signer::SignInfo",
+    "members": [
+      {
+        "name": "user_pubkey",
+        "type": "core::felt252"
+      },
+      {
+        "name": "user_sig_r",
+        "type": "core::felt252"
+      },
+      {
+        "name": "user_sig_s",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "type": "struct",
+    "name": "arkchain::order::types::ExecutionInfo",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252"
+      },
+      {
+        "name": "fulfiller",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "token_chain_id",
+        "type": "core::felt252"
+      },
+      {
+        "name": "token_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "token_id",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "type": "interface",
+    "name": "arkchain::orderbook::Orderbook",
+    "items": [
+      {
+        "type": "function",
+        "name": "whitelist_broker",
+        "inputs": [
+          {
+            "name": "broker_id",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "type": "function",
+        "name": "create_order",
+        "inputs": [
+          {
+            "name": "order",
+            "type": "arkchain::order::order_v1::OrderV1"
+          },
+          {
+            "name": "sign_info",
+            "type": "arkchain::crypto::signer::SignInfo"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "type": "function",
+        "name": "cancel_order",
+        "inputs": [
+          {
+            "name": "order_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "sign_info",
+            "type": "arkchain::crypto::signer::SignInfo"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "type": "function",
+        "name": "execute_order",
+        "inputs": [
+          {
+            "name": "order_hash",
+            "type": "core::felt252"
+          },
+          {
+            "name": "execution_info",
+            "type": "arkchain::order::types::ExecutionInfo"
+          },
+          {
+            "name": "sign_info",
+            "type": "arkchain::crypto::signer::SignInfo"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      }
+    ]
+  },
+  {
+    "type": "constructor",
+    "name": "constructor",
+    "inputs": [
+      {
+        "name": "admin",
+        "type": "core::starknet::contract_address::ContractAddress"
+      }
+    ]
+  },
+  {
+    "type": "struct",
+    "name": "arkchain::order::types::FulfillmentInfo",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252"
+      },
+      {
+        "name": "error",
+        "type": "core::felt252"
+      },
+      {
+        "name": "transaction_hash_token",
+        "type": "core::felt252"
+      },
+      {
+        "name": "transaction_hash_currency",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "type": "l1_handler",
+    "name": "fulfill_order",
+    "inputs": [
+      {
+        "name": "from_address",
+        "type": "core::felt252"
+      },
+      {
+        "name": "info",
+        "type": "arkchain::order::types::FulfillmentInfo"
+      }
+    ],
+    "outputs": [],
+    "state_mutability": "external"
+  },
+  {
+    "type": "enum",
+    "name": "arkchain::order::types::OrderType",
+    "variants": [
+      {
+        "name": "Listing",
+        "type": "()"
+      },
+      {
+        "name": "Auction",
+        "type": "()"
+      },
+      {
+        "name": "Offer",
+        "type": "()"
+      },
+      {
+        "name": "CollectionOffer",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "arkchain::orderbook::orderbook::OrderPlaced",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "order_version",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "order_type",
+        "type": "arkchain::order::types::OrderType",
+        "kind": "key"
+      },
+      {
+        "name": "order",
+        "type": "arkchain::order::order_v1::OrderV1",
+        "kind": "data"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "arkchain::orderbook::orderbook::OrderExecuted",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "info",
+        "type": "arkchain::order::types::ExecutionInfo",
+        "kind": "data"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "arkchain::orderbook::orderbook::OrderCancelled",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "reason",
+        "type": "core::felt252",
+        "kind": "key"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "arkchain::orderbook::orderbook::OrderFulfilled",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "transaction_hash_settlement",
+        "type": "core::felt252",
+        "kind": "key"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "arkchain::orderbook::orderbook::Event",
+    "kind": "enum",
+    "variants": [
+      {
+        "name": "OrderPlaced",
+        "type": "arkchain::orderbook::orderbook::OrderPlaced",
+        "kind": "nested"
+      },
+      {
+        "name": "OrderExecuted",
+        "type": "arkchain::orderbook::orderbook::OrderExecuted",
+        "kind": "nested"
+      },
+      {
+        "name": "OrderCancelled",
+        "type": "arkchain::orderbook::orderbook::OrderCancelled",
+        "kind": "nested"
+      },
+      {
+        "name": "OrderFulfilled",
+        "type": "arkchain::orderbook::orderbook::OrderFulfilled",
+        "kind": "nested"
+      }
+    ]
+  }
+]

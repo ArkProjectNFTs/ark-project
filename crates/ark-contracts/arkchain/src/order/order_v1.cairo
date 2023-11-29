@@ -6,9 +6,10 @@ use core::option::OptionTrait;
 //!
 use starknet::ContractAddress;
 use starknet::contract_address_to_felt252;
-use arkchain::order::types::{OrderTrait, OrderValidationError, OrderType, RouteType};
-use arkchain::order::types::FulfillInfo;
+use ark_common::protocol::order_types::{OrderTrait, OrderValidationError, OrderType, RouteType};
+use ark_common::protocol::order_types::FulfillInfo;
 use poseidon::poseidon_hash_span;
+
 const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).
 // Auction -> ERC721_ERC20.

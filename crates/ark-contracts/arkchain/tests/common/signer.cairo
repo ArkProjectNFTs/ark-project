@@ -1,5 +1,5 @@
 use core::option::OptionTrait;
-use arkchain::crypto::signer::{Signer, SignInfo};
+use ark_common::crypto::signer::{Signer, SignInfo};
 use snforge_std::signature::{
     StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer as SNSigner, Verifier
 };

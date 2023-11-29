@@ -177,18 +177,33 @@ struct FulfillInfo {
     token_id: Option<u256>,
 }
 
-/// The info related to the fulfillment an order.
-#[derive(starknet::Store, Serde, Copy, Drop)]
-struct FulfillmentInfo {
-    // The hash of the order that has been fulfilled.
+/// The info sent from the Arkchain to Starknet
+/// to execute an order.
+#[derive(Drop, Serde, Copy)]
+struct ExecutionInfo {
+    route: RouteType,
     order_hash: felt252,
-    // Possible error on settlement (tx reverted funds/token fault).
-    error: felt252,
-    // Transaction hash of the fulfillment on the settlement layer.
-    // In the future, asset and funds may be transferred in different chains.
-    // If done on the same chain, the transaction hash is the same.
-    transaction_hash_token: felt252,
-    transaction_hash_currency: felt252,
+    token_address: ContractAddress,
+    token_id: u256,
+    quantity: u256,
+    offerer_address: ContractAddress,
+    fulfiller_address: ContractAddress,
+    price: u256,
+    creator_address: ContractAddress,
+    creator_fee: u256,
+    create_broker_address: ContractAddress,
+    create_broker_fee: u256,
+    fulfill_broker_address: ContractAddress,
+    fulfill_broker_fee: u256
+}
+
+/// The info sent from Starknet to the Arkchain to
+/// validate the execution of an order.
+#[derive(starknet::Store, Serde, Copy, Drop)]
+struct ExecutionValidationInfo {
+    order_hash: felt252,
+    transaction_hash: felt252,
+    starknet_block_timestamp: u64,
 }
 
 /// Type of an route, that may be defined from

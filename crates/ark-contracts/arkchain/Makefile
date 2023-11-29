@@ -1,30 +1,24 @@
-config := --account ../solis_account1.json \
-	--keystore ../solis_key1.json \
-	--rpc http://127.0.0.1:7070 \
-	--keystore-password 1234
+config := --account katana-0 \
+	  --rpc http://0.0.0.0:7777
 
-ob_cl = $(shell starkli class-hash target/dev/arkchain_orderbook.sierra.json)
-ob_addr := 0x008707b3296680b4f67430509ee8655f86ce3c844d7223cb52b01412a6c45eff
+ob_cl = $(shell starkli class-hash target/dev/arkchain_orderbook.contract_class.json)
 
-ark_executor_sn := 0x0573e38d2b37032172a1f9b370bd81954a0d44934e38154ff75a678700b73430
-
-# Solis accounts
-# has token 1 and 2
-solis_2 := 0x47abb77acbb2f65006a42b14fed3664bafb0d102c00a97be58618d49d5186ac
-# has token 3 and 4
-solis_3 := 0x4c077c4085945fa6ea7116ec3c4579de29b10bd65aaf77cf4cf4f85af3ef609
-# collection
-erc721_address := 0x044b07a8c955296dd52a9d7d31a400b16ad4f6f574aa57db79cac0e87eac48cd
-
-setup:
+generate_artifacts:
 	scarb build
-	starkli declare target/dev/arkchain_orderbook.sierra.json ${config}
-	starkli deploy ${ob_cl} 0x3ee9e18edc71a6df30ac3aca2e0b02a198fbce19b7480a63a0d71cbd76652e0 ${config} --salt 0x1234
-	starkli invoke ${ob_addr} set_executor_sn_address ${ark_executor_sn} ${config}
+	mkdir -p ../../../artifacts
+	jq .abi ./target/dev/arkchain_orderbook.contract_class.json > ../../../artifacts/orderbook.json
 
-	starkli invoke ${ob_addr} register_broker str:b1 1 str:starknet_testnet ${config}
+# Using max-fee 0 avoids starkli to run estimate_fee before actually sending the tx.
+# There are no fees on Solis.
+setup_orderbook:
+	scarb build
+	starkli declare target/dev/arkchain_orderbook.contract_class.json ${config}
+	starkli deploy ${ob_cl} 0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973 ${config} --max-fee 0 --salt 0x1234
 
-	starkli invoke ${ob_addr} add_order_listing ${solis_2} ${erc721_address} u256:1 u256:77 0 str:b1 0 0 ${config}
-
-	starkli invoke ${ob_addr} submit_order_buy 0x51a397add04213bb487668b635bedefdbbe5fb8f5b9d3aad6164031b60958b ${solis_3} str:b1 0 0 ${config}
-
+invoke_create_order:
+	starkli invoke \
+	0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7 \
+	create_order \
+	0 0x1 0x2 0x3 0x4 0x5 0x6 u256:0x7 u256:0x1 u256:0x1 u256:0x2 10000 20000 str:broker 0 \
+	0x1 0x2 0x3 \
+	--max-fee-raw 10581100000000000

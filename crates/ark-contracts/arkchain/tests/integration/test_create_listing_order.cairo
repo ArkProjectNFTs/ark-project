@@ -2,12 +2,9 @@ use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
 use arkchain::orderbook::Orderbook;
+use ark_common::crypto::{signer::{Signer, SignInfo}, hash::serialized_hash};
+use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use arkchain::order::order_v1::OrderV1;
-use arkchain::order::order_v1::RouteType;
-use arkchain::crypto::signer::{Signer, SignInfo};
-use arkchain::order::order_v1::OrderTrait;
-use arkchain::order::order_v1::OrderType;
-use arkchain::order::types::OrderStatus;
 use arkchain::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use super::super::common::setup::{

@@ -2,9 +2,14 @@
 version = 1
 
 [[package]]
+name = "ark_common"
+version = "0.1.0"
+
+[[package]]
 name = "arkchain"
 version = "0.1.0"
 dependencies = [
+ "ark_common",
  "snforge_std",
 ]
 

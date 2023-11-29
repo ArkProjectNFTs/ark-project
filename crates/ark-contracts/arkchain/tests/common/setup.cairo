@@ -1,9 +1,8 @@
 use core::option::OptionTrait;
 use core::traits::Into;
-use arkchain::order::types::OrderTrait;
+use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
+use ark_common::crypto::signer::{Signer, SignInfo};
 use arkchain::order::order_v1::OrderV1;
-use arkchain::order::types::RouteType;
-use arkchain::crypto::signer::{Signer, SignInfo};
 use snforge_std::signature::{
     StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer as SNSigner, Verifier
 };
@@ -261,7 +260,7 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
 ///
 fn setup_auction_order(
     start_date: u64, end_date: u64, start_price: felt252, end_price: felt252, pk: Option<felt252>
-) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
+) -> (OrderV1, Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
     let order_listing = OrderV1 {
@@ -297,7 +296,7 @@ fn setup_auction_order(
 
 fn setup_listing(
     start_date: u64, end_date: u64, token_id: Option<u256>
-) -> (OrderV1, arkchain::crypto::signer::Signer, felt252, felt252) {
+) -> (OrderV1, Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
 
