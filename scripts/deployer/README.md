@@ -4,6 +4,9 @@
 
 # Run the setup script
 
+0. Before starting the deployment, generate the artifacts:
+
+
 Open three terminals:
 1. Katana: to simulate Starknet network, and run:
 ```bash
