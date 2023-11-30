@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 pub mod types;
-use types::NewOrderData;
+use types::{CancelledData, ExecutedData, FulfilledData, PlacedData};
 
 pub type StorageResult<T> = Result<T, StorageError>;
 
@@ -15,7 +15,31 @@ pub enum StorageError {
 
 #[async_trait]
 pub trait Storage {
-    /// Adds to the storage a order newly placed.
-    /// This event happens exactly once for any order.
-    async fn add_new_order(&self, block_id: u64, block_timestamp: u64, order: &NewOrderData) -> StorageResult<()>;
+    async fn register_placed(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &PlacedData,
+    ) -> StorageResult<()>;
+
+    async fn register_cancelled(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &CancelledData,
+    ) -> StorageResult<()>;
+
+    async fn register_fulfilled(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &FulfilledData,
+    ) -> StorageResult<()>;
+
+    async fn register_executed(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &ExecutedData,
+    ) -> StorageResult<()>;
 }

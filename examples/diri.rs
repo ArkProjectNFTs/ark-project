@@ -3,11 +3,12 @@
 //! Can be run with `cargo run --example diri`.
 //!
 use anyhow::Result;
+use arkproject::diri::storage::types::{CancelledData, ExecutedData, FulfilledData, PlacedData};
 use arkproject::diri::{event_handler::EventHandler, storage::*, Diri};
 use async_trait::async_trait;
 use starknet::{
     core::types::BlockId,
-    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider},
+    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient},
 };
 use std::sync::Arc;
 use url::Url;
@@ -82,23 +83,39 @@ struct DefaultStorage;
 
 #[async_trait]
 impl Storage for DefaultStorage {
-    // async fn register_broker(&self, broker: BrokerData) -> StorageResult<()> {
-    //     println!("\n*** register broker\n{:?}", broker);
-    //     Ok(())
-    // }
+    async fn register_placed(
+        &self,
+        _block_id: u64,
+        _block_timestamp: u64,
+        _order: &PlacedData,
+    ) -> StorageResult<()> {
+        Ok(())
+    }
 
-    // async fn add_listing_order(&self, order: OrderListingData) -> StorageResult<()> {
-    //     println!("\n*** add listing order \n{:?}", order);
-    //     Ok(())
-    // }
+    async fn register_cancelled(
+        &self,
+        _block_id: u64,
+        _block_timestamp: u64,
+        _order: &CancelledData,
+    ) -> StorageResult<()> {
+        Ok(())
+    }
 
-    // async fn set_order_buy_executing(&self, order: OrderBuyExecutingData) -> StorageResult<()> {
-    //     println!("\n*** buy executing order \n{:?}", order);
-    //     Ok(())
-    // }
+    async fn register_fulfilled(
+        &self,
+        _block_id: u64,
+        _block_timestamp: u64,
+        _order: &FulfilledData,
+    ) -> StorageResult<()> {
+        Ok(())
+    }
 
-    // async fn set_order_finalized(&self, order: OrderFinalizedData) -> StorageResult<()> {
-    //     println!("\n*** order finalized \n{:?}", order);
-    //     Ok(())
-    // }
+    async fn register_executed(
+        &self,
+        _block_id: u64,
+        _block_timestamp: u64,
+        _order: &ExecutedData,
+    ) -> StorageResult<()> {
+        Ok(())
+    }
 }

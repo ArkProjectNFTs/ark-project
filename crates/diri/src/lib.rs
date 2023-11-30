@@ -6,19 +6,15 @@ use event_handler::EventHandler;
 
 mod orderbook;
 
-use starknet::core::types::{BlockId, EmittedEvent, EventFilter, FieldElement, MaybePendingBlockWithTxHashes};
-use starknet::macros::selector;
+use starknet::core::types::{
+    BlockId, EmittedEvent, EventFilter, FieldElement, MaybePendingBlockWithTxHashes,
+};
 use starknet::providers::{AnyProvider, Provider, ProviderError};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, trace, warn};
 
-use crate::orderbook::Event;
-
-// Those events must match the one implemented in the Orderbook (on the arkchain).
-const EV_ORDER_PLACED: FieldElement = selector!("OrderPlaced");
-
-const EVENT_SELECTORS: &[FieldElement; 1] = &[EV_ORDER_PLACED];
+use crate::orderbook::{Event, OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced};
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
@@ -66,7 +62,16 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         to_block: BlockId,
     ) -> IndexerResult<()> {
         let blocks_events = self
-            .fetch_events(from_block, to_block, Some(vec![EVENT_SELECTORS.to_vec()]))
+            .fetch_events(
+                from_block,
+                to_block,
+                Some(vec![vec![
+                    OrderPlaced::get_selector(),
+                    OrderFulfilled::get_selector(),
+                    OrderCancelled::get_selector(),
+                    OrderExecuted::get_selector(),
+                ]]),
+            )
             .await?;
 
         for (block_number, events) in blocks_events {
@@ -84,7 +89,27 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                 match orderbook_event {
                     Event::OrderPlaced(ev) => {
                         trace!("OrderPlaced found: {:?}", ev);
-                        self.storage.add_new_order(block_number, block_timestamp, &ev.into()).await?;
+                        self.storage
+                            .register_placed(block_number, block_timestamp, &ev.into())
+                            .await?;
+                    }
+                    Event::OrderCancelled(ev) => {
+                        trace!("OrderCancelled found: {:?}", ev);
+                        self.storage
+                            .register_cancelled(block_number, block_timestamp, &ev.into())
+                            .await?;
+                    }
+                    Event::OrderFulfilled(ev) => {
+                        trace!("OrderFulfilled found: {:?}", ev);
+                        self.storage
+                            .register_fulfilled(block_number, block_timestamp, &ev.into())
+                            .await?;
+                    }
+                    Event::OrderExecuted(ev) => {
+                        trace!("OrderExecuted found: {:?}", ev);
+                        self.storage
+                            .register_executed(block_number, block_timestamp, &ev.into())
+                            .await?;
                     }
                     _ => warn!("Orderbook event not handled: {:?}", orderbook_event),
                 };
@@ -153,10 +178,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
 
     /// Retrieves the timestamp of the given block.
     async fn block_time(&self, block: BlockId) -> Result<u64, IndexerError> {
-        let block = self
-            .provider
-            .get_block_with_tx_hashes(block)
-            .await?;
+        let block = self.provider.get_block_with_tx_hashes(block).await?;
 
         let timestamp = match block {
             MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
