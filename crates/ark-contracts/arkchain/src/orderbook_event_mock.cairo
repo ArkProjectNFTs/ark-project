@@ -74,19 +74,19 @@ mod orderbook_event_mock {
 
     #[external(v0)]
     fn emit_order_cancelled(ref self: ContractState) {
-        self.emit(OrderCancelled {
-            order_hash: 0x1,
-            reason: 'fail',
-        });
+        self.emit(OrderCancelled { order_hash: 0x1, reason: 'fail', });
     }
 
     #[external(v0)]
     fn emit_order_fulfilled(ref self: ContractState) {
-        self.emit(OrderFulfilled {
-            order_hash: 0x1,
-            fulfiller: 0x123.try_into().unwrap(),
-            related_order_hash: Option::Some(0x1111),
-        });
+        self
+            .emit(
+                OrderFulfilled {
+                    order_hash: 0x1,
+                    fulfiller: 0x123.try_into().unwrap(),
+                    related_order_hash: Option::Some(0x1111),
+                }
+            );
     }
 
     #[external(v0)]
