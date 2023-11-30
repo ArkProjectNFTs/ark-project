@@ -17,5 +17,5 @@ pub enum StorageError {
 pub trait Storage {
     /// Adds to the storage a order newly placed.
     /// This event happens exactly once for any order.
-    async fn add_new_order(&self, block_id: u64, order: &NewOrderData) -> StorageResult<()>;
+    async fn add_new_order(&self, block_id: u64, block_timestamp: u64, order: &NewOrderData) -> StorageResult<()>;
 }

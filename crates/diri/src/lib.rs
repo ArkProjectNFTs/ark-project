@@ -6,7 +6,7 @@ use event_handler::EventHandler;
 
 mod orderbook;
 
-use starknet::core::types::{BlockId, EmittedEvent, EventFilter, FieldElement};
+use starknet::core::types::{BlockId, EmittedEvent, EventFilter, FieldElement, MaybePendingBlockWithTxHashes};
 use starknet::macros::selector;
 use starknet::providers::{AnyProvider, Provider, ProviderError};
 use std::collections::HashMap;
@@ -70,6 +70,8 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
             .await?;
 
         for (block_number, events) in blocks_events {
+            let block_timestamp = self.block_time(BlockId::Number(block_number)).await?;
+
             for any_event in events {
                 let orderbook_event: Event = match any_event.try_into() {
                     Ok(ev) => ev,
@@ -82,7 +84,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                 match orderbook_event {
                     Event::OrderPlaced(ev) => {
                         trace!("OrderPlaced found: {:?}", ev);
-                        self.storage.add_new_order(block_number, &ev.into()).await?;
+                        self.storage.add_new_order(block_number, block_timestamp, &ev.into()).await?;
                     }
                     _ => warn!("Orderbook event not handled: {:?}", orderbook_event),
                 };
@@ -147,5 +149,20 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         }
 
         Ok(events)
+    }
+
+    /// Retrieves the timestamp of the given block.
+    async fn block_time(&self, block: BlockId) -> Result<u64, IndexerError> {
+        let block = self
+            .provider
+            .get_block_with_tx_hashes(block)
+            .await?;
+
+        let timestamp = match block {
+            MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
+            MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,
+        };
+
+        Ok(timestamp)
     }
 }
