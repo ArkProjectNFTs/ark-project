@@ -347,11 +347,12 @@ dependencies = [
  "mockall",
  "pontos",
  "sqlx",
- "starknet 0.7.0 (git+https://github.com/ArkProjectNFTs/starknet-rs?tag=v0.7.2)",
+ "starknet 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
  "tracing",
  "tracing-log 0.1.4",
  "tracing-subscriber",
+ "url",
 ]
 
 [[package]]
@@ -2061,7 +2062,6 @@ name = "diri"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ark-starknet",
  "async-trait",
  "clap",
  "dotenv",
@@ -2069,12 +2069,17 @@ dependencies = [
  "futures",
  "log",
  "mongodb",
+ "num-bigint",
+ "num-traits 0.2.17",
  "regex",
  "serde",
  "serde_json",
- "starknet 0.7.0 (git+https://github.com/ArkProjectNFTs/starknet-rs?tag=v0.7.2)",
+ "starknet 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-abigen-macros",
+ "starknet-abigen-parser",
  "thiserror",
  "tokio",
+ "tracing",
  "url",
 ]
 

@@ -4,28 +4,21 @@ use storage::*;
 pub mod event_handler;
 use event_handler::EventHandler;
 
-use ark_starknet::{
-    client::{StarknetClient, StarknetClientHttp},
-    format::to_hex_str,
-    CairoU256,
-};
-use log::{debug, trace};
-use starknet::core::types::{BlockId, FieldElement};
+mod orderbook;
+
+use starknet::core::types::{BlockId, EmittedEvent, EventFilter, FieldElement};
 use starknet::macros::selector;
+use starknet::providers::{AnyProvider, Provider, ProviderError};
+use std::collections::HashMap;
 use std::sync::Arc;
+use tracing::{error, trace, warn};
+
+use crate::orderbook::Event;
 
 // Those events must match the one implemented in the Orderbook (on the arkchain).
-const EV_BROKER_REGISTERED: FieldElement = selector!("BrokerRegistered");
-const EV_ORDER_LISTING_ADDED: FieldElement = selector!("OrderListingAdded");
-const EV_ORDER_BUY_EXECUTING: FieldElement = selector!("OrderBuyExecuting");
-const EV_ORDER_BUY_FINALIZED: FieldElement = selector!("OrderExecuted");
+const EV_ORDER_PLACED: FieldElement = selector!("OrderPlaced");
 
-const EVENT_SELECTORS: &[FieldElement; 4] = &[
-    EV_BROKER_REGISTERED,
-    EV_ORDER_LISTING_ADDED,
-    EV_ORDER_BUY_EXECUTING,
-    EV_ORDER_BUY_FINALIZED,
-];
+const EVENT_SELECTORS: &[FieldElement; 1] = &[EV_ORDER_PLACED];
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
@@ -33,10 +26,10 @@ pub type IndexerResult<T> = Result<T, IndexerError>;
 pub enum IndexerError {
     #[error("Event is not formatted as expected")]
     BadEventFormat,
-    #[error("Storage error occurred")]
+    #[error("Storage error occurred: {0}")]
     StorageError(StorageError),
-    #[error("Starknet client error")]
-    StarknetError(String),
+    #[error("Starknet provider error: {0}")]
+    StarknetError(#[from] ProviderError),
 }
 
 impl From<StorageError> for IndexerError {
@@ -46,73 +39,53 @@ impl From<StorageError> for IndexerError {
 }
 
 pub struct Diri<S: Storage, E: EventHandler> {
-    client: Arc<StarknetClientHttp>,
+    provider: Arc<AnyProvider>,
     storage: Arc<S>,
     event_handler: Arc<E>,
 }
 
 impl<S: Storage, E: EventHandler> Diri<S, E> {
     ///
-    pub fn new(client: Arc<StarknetClientHttp>, storage: Arc<S>, event_handler: Arc<E>) -> Self {
+    pub fn new(provider: Arc<AnyProvider>, storage: Arc<S>, event_handler: Arc<E>) -> Self {
         Diri {
-            client: Arc::clone(&client),
+            provider: Arc::clone(&provider),
             storage: Arc::clone(&storage),
             event_handler: Arc::clone(&event_handler),
         }
     }
 
+    /// Indexes a range of blocks, including `from` and `to` block.
     ///
+    /// # Arguments
+    ///
+    /// * `from_block` - The first block to index (included).
+    /// * `to_block` - The last block to index (included).
     pub async fn index_block_range(
         &self,
         from_block: BlockId,
         to_block: BlockId,
     ) -> IndexerResult<()> {
         let blocks_events = self
-            .client
             .fetch_events(from_block, to_block, Some(vec![EVENT_SELECTORS.to_vec()]))
-            .await
-            .map_err(|e| IndexerError::StarknetError(e.to_string()))?;
+            .await?;
 
         for (block_number, events) in blocks_events {
-            debug!("Block # {:?}", block_number);
+            for any_event in events {
+                let orderbook_event: Event = match any_event.try_into() {
+                    Ok(ev) => ev,
+                    Err(e) => {
+                        trace!("Event can't be deserialized: {e}");
+                        continue;
+                    }
+                };
 
-            for ev in events {
-                if ev.data.is_empty() || ev.keys.is_empty() {
-                    // Skip events with no data / no keys as all events has
-                    // them for now.
-                    continue;
-                }
-
-                let e_selector = ev.keys[0];
-                let _tx_hash_str = to_hex_str(&ev.transaction_hash);
-
-                if e_selector == EV_BROKER_REGISTERED {
-                    debug!("Broker register event");
-                    if let Some(d) = get_broker_data(&ev.keys, &ev.data) {
-                        self.storage.register_broker(d.clone()).await?;
-                        self.event_handler.on_broker_registered(d).await;
+                match orderbook_event {
+                    Event::OrderPlaced(ev) => {
+                        trace!("OrderPlaced found: {:?}", ev);
+                        self.storage.add_new_order(block_number, &ev.into()).await?;
                     }
-                } else if e_selector == EV_ORDER_LISTING_ADDED {
-                    debug!("Add order listing event");
-                    if let Some(d) = get_order_listing_data(&ev.keys, &ev.data) {
-                        self.storage.add_listing_order(d.clone()).await?;
-                        self.event_handler.on_order_listing_added(d).await;
-                    }
-                } else if e_selector == EV_ORDER_BUY_EXECUTING {
-                    debug!("Order buy executing");
-                    if let Some(d) = get_order_buy_data(&ev.keys, &ev.data) {
-                        self.storage.set_order_buy_executing(d.clone()).await?;
-                        self.event_handler.on_order_buy_executed(d).await;
-                    }
-                } else if e_selector == EV_ORDER_BUY_FINALIZED {
-                    debug!("Order finalized");
-                    if let Some(d) = get_order_finalized_data(&ev.keys, &ev.data) {
-                        self.storage.set_order_finalized(d.clone()).await?;
-                        self.event_handler.on_order_finalized(d).await;
-                    }
-                } else {
-                    unreachable!();
-                }
+                    _ => warn!("Orderbook event not handled: {:?}", orderbook_event),
+                };
             }
 
             self.event_handler.on_block_processed(block_number).await;
@@ -120,94 +93,59 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
 
         Ok(())
     }
-}
 
-fn get_broker_data(keys: &[FieldElement], data: &[FieldElement]) -> Option<BrokerData> {
-    if keys.len() < 3 || data.len() < 2 {
-        trace!(
-            "Broker register event bad format:\nkeys{:?}\ndata{:?}",
+    /// Fetches the events with the given keys filter.
+    /// This function fetches all the events by auto-following
+    /// the continuation token returned by the provider.
+    /// This ensures that all the events are returned for the
+    /// given block range.
+    ///
+    /// # Arguments
+    ///
+    /// * `provider` - The Starknet provider to get events from.
+    /// * `from_block` - First block (included) to get event.
+    /// * `to_block` - Last block (included) to get event.
+    /// * `keys` - The event keys to filter on.
+    pub async fn fetch_events(
+        &self,
+        from_block: BlockId,
+        to_block: BlockId,
+        keys: Option<Vec<Vec<FieldElement>>>,
+    ) -> Result<HashMap<u64, Vec<EmittedEvent>>, IndexerError> {
+        // TODO: setup key filtering here.
+
+        let mut events: HashMap<u64, Vec<EmittedEvent>> = HashMap::new();
+
+        let filter = EventFilter {
+            from_block: Some(from_block),
+            to_block: Some(to_block),
+            address: None,
             keys,
-            data
-        );
-        return None;
+        };
+
+        let chunk_size = 1000;
+        let mut continuation_token: Option<String> = None;
+
+        loop {
+            let event_page = self
+                .provider
+                .get_events(filter.clone(), continuation_token, chunk_size)
+                .await?;
+
+            event_page.events.iter().for_each(|e| {
+                events
+                    .entry(e.block_number)
+                    .and_modify(|v| v.push(e.clone()))
+                    .or_insert(vec![e.clone()]);
+            });
+
+            continuation_token = event_page.continuation_token;
+
+            if continuation_token.is_none() {
+                break;
+            }
+        }
+
+        Ok(events)
     }
-
-    Some(BrokerData {
-        name: keys[1],
-        chain_id: keys[2],
-        timestamp: data[0].try_into().unwrap_or(0),
-        public_key: data[1],
-    })
-}
-
-fn get_order_listing_data(
-    keys: &[FieldElement],
-    data: &[FieldElement],
-) -> Option<OrderListingData> {
-    if keys.len() != 4 || data.len() != 7 {
-        trace!(
-            "Add order listing event bad format:\nkeys{:?}\ndata{:?}",
-            keys,
-            data
-        );
-        return None;
-    }
-
-    Some(OrderListingData {
-        order_hash: keys[1],
-        broker_name: keys[2],
-        chain_id: keys[3],
-        timestamp: data[0].try_into().unwrap_or(0),
-        seller: data[1],
-        collection: data[2],
-        token_id: CairoU256 {
-            low: data[3].try_into().expect("u128 overflow"),
-            high: data[4].try_into().expect("u128 overflow"),
-        },
-        price: CairoU256 {
-            low: data[5].try_into().expect("u128 overflow"),
-            high: data[6].try_into().expect("u128 overflow"),
-        },
-    })
-}
-
-fn get_order_buy_data(
-    keys: &[FieldElement],
-    data: &[FieldElement],
-) -> Option<OrderBuyExecutingData> {
-    if keys.len() != 4 || data.len() != 8 {
-        trace!(
-            "Add order buy executing event bad format:\nkeys{:?}\ndata{:?}",
-            keys,
-            data
-        );
-        return None;
-    }
-
-    Some(OrderBuyExecutingData {
-        order_hash: keys[1],
-        broker_name: keys[2],
-        chain_id: keys[3],
-        timestamp: data[0].try_into().unwrap_or(0),
-        buyer: data[2],
-    })
-}
-
-fn get_order_finalized_data(
-    keys: &[FieldElement],
-    data: &[FieldElement],
-) -> Option<OrderFinalizedData> {
-    if keys.len() != 2 || data.len() != 8 {
-        trace!(
-            "Add order finalized event bad format:\nkeys{:?}\ndata{:?}",
-            keys,
-            data
-        );
-        return None;
-    }
-
-    Some(OrderFinalizedData {
-        order_hash: keys[1],
-        timestamp: data[0].try_into().unwrap_or(0),
-    })
 }

@@ -21,9 +21,16 @@ env_logger = "0.10.0"
 log = "0.4.17"
 dotenv = "0.15.0"
 thiserror = "1.0.32"
+# For now, Diri can't use the ark-starknet due to the dependency
+# on ArkProjectNFTs for of starknet-rs.
+starknet = "0.7.0"
+tracing = "0.1"
+num-bigint = "0.4.4"
+num-traits = "0.2.17"
+
+starknet-abigen-parser = { git = "https://github.com/glihm/starknet-abigen-rs", tag = "v0.1.4-beta5" }
+starknet-abigen-macros = { git = "https://github.com/glihm/starknet-abigen-rs", tag = "v0.1.4-beta5" }
 
 anyhow.workspace = true
 async-trait.workspace = true
 tokio.workspace = true
-starknet.workspace = true
-ark-starknet.workspace = true
