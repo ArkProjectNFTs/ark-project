@@ -1,0 +1,36 @@
+{
+  "name": "@ark-project/core",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "dev": "pnpm run type-check && pnpm run lint && pnpm run build && pnpm run test",
+    "build": "tsup src/index.ts --format cjs,esm --dts"
+  },
+  "dependencies": {
+    "@scure/starknet": "^0.3.0",
+    "@types/node": "^20.10.1",
+    "dotenv": "^16.3.1",
+    "starknet": "5.22.0"
+  },
+  "devDependencies": {
+    "@ark-project/eslint-config": "workspace:*",
+    "@ark-project/typescript-config": "workspace:*",
+    "eslint": "^8.48.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.1.6"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.4",
+    "viem": ">=0.3.35"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  }
+}

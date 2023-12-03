@@ -155,4 +155,3 @@ fn test_cancel_auction_during_the_extended_time() {
 
     dispatcher.cancel_order(cancel_info, signer: auction_listing_signer);
 }
-

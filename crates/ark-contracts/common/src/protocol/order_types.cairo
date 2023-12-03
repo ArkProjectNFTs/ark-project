@@ -159,7 +159,6 @@ struct CancelInfo {
     token_id: Option<u256>,
 }
 
-
 /// The info related to the fulfill of an order.
 #[derive(starknet::Store, Serde, Copy, Drop)]
 struct FulfillInfo {

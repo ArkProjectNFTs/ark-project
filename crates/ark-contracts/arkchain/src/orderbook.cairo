@@ -28,6 +28,7 @@ trait Orderbook<T> {
     /// * `sign_info` - The signing info of the `order`.
     fn create_order(ref self: T, order: OrderV1, signer: Signer);
 
+    fn test_order(ref self: T);
     /// Cancels an existing order in the orderbook.
     ///
     /// # Arguments
@@ -322,6 +323,10 @@ mod orderbook {
             );
 
             self.brokers.write(broker_id, 1);
+        }
+
+        fn test_order(ref self: ContractState) {
+
         }
 
         /// Submits and places an order to the orderbook if the order is valid.

@@ -83,7 +83,6 @@ fn test_create_listing_order() {
     assert(order_status == OrderStatus::Open.into(), 'Order status is not open');
 }
 
-
 #[test]
 fn test_auction_order_with_extended_time_order() {
     let start_date = 1699556828;

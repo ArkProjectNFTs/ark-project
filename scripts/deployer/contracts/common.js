@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from "fs";
 
 /**
  * Reads a file and parse it's content to a JSON.
@@ -6,13 +6,13 @@ import fs from 'fs';
  * @returns - A object with the JSON on success, exit otherwise.
  */
 function read_json(path) {
-    try {
-        const data = fs.readFileSync(path, 'utf8');
-        return JSON.parse(data);
-    } catch (err) {
-        console.error('Error:', err);
-        process.exit(1);
-    }
+  try {
+    const data = fs.readFileSync(path, "utf8");
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("Error:", err);
+    process.exit(1);
+  }
 }
 
 /**
@@ -22,11 +22,11 @@ function read_json(path) {
  * @returns - An object with `casm` and `sierra` objects.
  */
 export function load_artifacts(path, contract_name) {
-    const casm = "compiled_contract_class.json";
-    const sierra = "contract_class.json";
+  const casm = "compiled_contract_class.json";
+  const sierra = "contract_class.json";
 
-    return {
-        casm: read_json(`${path}/${contract_name}.${casm}`),
-        sierra: read_json(`${path}/${contract_name}.${sierra}`),
-    };
+  return {
+    casm: read_json(`${path}/${contract_name}.${casm}`),
+    sierra: read_json(`${path}/${contract_name}.${sierra}`)
+  };
 }

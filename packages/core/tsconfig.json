@@ -1,0 +1,14 @@
+{
+  "extends": "@ark-project/typescript-config/base.json",
+  "compilerOptions": {
+    "plugins": [
+      {}
+    ]
+  },
+  "include": [
+    "**/*.ts",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
