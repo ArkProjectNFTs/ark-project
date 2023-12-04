@@ -67,7 +67,7 @@ const createListing = async (
     additionalData: [45]
   };
 
-  createOrder(provider, account, order);
+  await createOrder(provider, account, order);
 };
 
 export { createListing };

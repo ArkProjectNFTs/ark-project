@@ -6,12 +6,11 @@ import {
   CairoOptionVariant,
   CallData,
   RpcProvider,
-  shortString,
   Uint256
 } from "starknet";
 
 import { ORDER_BOOK_ADDRESS } from "../constants";
-import { signMessage } from "../signer";
+import { signSingleMessage } from "../signer";
 import { CancelInfo, FullCancelInfo } from "../types";
 
 const cancelOrder = async (
@@ -19,11 +18,10 @@ const cancelOrder = async (
   account: Account,
   cancelInfo: CancelInfo
 ) => {
-  console.log(account);
   const fullCancelInfo: FullCancelInfo = {
     order_hash: cancelInfo.order_hash,
     canceller: account.address,
-    token_chain_id: shortString.encodeShortString("SN_MAIN"),
+    token_chain_id: "SN_MAIN",
     token_address: cancelInfo.token_address,
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
@@ -31,14 +29,8 @@ const cancelOrder = async (
     )
   };
 
-  // Compile the order data
-  let compiledOrder = CallData.compile({
-    fullCancelInfo
-  });
-  let compiledCancelOrder = compiledOrder.map(BigInt);
-
   // Sign the compiled order
-  const signInfo = signMessage(compiledCancelOrder);
+  const signInfo = signSingleMessage(fullCancelInfo.order_hash as bigint);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
   // Compile calldata for the create_order function

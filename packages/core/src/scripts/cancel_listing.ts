@@ -9,7 +9,7 @@ import { RpcProvider } from "starknet";
 import { createAccount } from "../account";
 import { cancelOrder } from "../cancelOrder";
 import { createListing } from "../createOrder/createListing";
-import { getOrderHash } from "../order/getOrderHash";
+import { getOrder, getOrderHash } from "../order";
 import { BaseOrderV1, RouteType } from "../types";
 
 // Initialize the RPC provider with the ArkChain node URL
@@ -34,7 +34,7 @@ const provider = new RpcProvider({
     brokerId: 123, // The broker ID
     tokenAddress:
       "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-    tokenId: 917, // The ID of the token
+    tokenId: 9251, // The ID of the token
     startAmount: 600000000000000000 // The starting amount for the order
   };
 
@@ -42,7 +42,7 @@ const provider = new RpcProvider({
   await createListing(provider, account, order);
 
   // wait 5 seconds for the transaction to be processed
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // Get the order hash
   const { orderHash } = await getOrderHash(
@@ -51,13 +51,19 @@ const provider = new RpcProvider({
     provider
   );
 
+  console.log("orderHash", orderHash);
+
+  const { order: orderDetails } = await getOrder(orderHash, provider);
+
+  console.log("orderDetails", orderDetails);
+
   // Define the cancel details
   const cancelInfo = {
     order_hash: orderHash,
     token_address: order.tokenAddress,
     token_id: order.tokenId
   };
-
+  console.log("cancelInfo", cancelInfo);
   // Cancel the order
   cancelOrder(provider, account, cancelInfo);
 })(provider);

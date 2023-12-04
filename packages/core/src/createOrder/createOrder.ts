@@ -27,6 +27,7 @@ const createOrder = async (
 
   // Sign the compiled order
   const signInfo = signMessage(compiletOrderBigInt);
+  console.log(signInfo);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
   // Compile calldata for the create_order function
@@ -44,7 +45,7 @@ const createOrder = async (
 
   // Wait for the transaction to be processed
   await provider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 100
+    retryInterval: 500
   });
 };
 

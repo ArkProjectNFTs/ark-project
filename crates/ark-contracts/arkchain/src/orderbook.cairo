@@ -28,7 +28,6 @@ trait Orderbook<T> {
     /// * `sign_info` - The signing info of the `order`.
     fn create_order(ref self: T, order: OrderV1, signer: Signer);
 
-    fn test_order(ref self: T);
     /// Cancels an existing order in the orderbook.
     ///
     /// # Arguments
@@ -325,10 +324,6 @@ mod orderbook {
             self.brokers.write(broker_id, 1);
         }
 
-        fn test_order(ref self: ContractState) {
-
-        }
-
         /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
             let order_hash = order.compute_order_hash();
@@ -364,7 +359,7 @@ mod orderbook {
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
-            assert(order.offerer == cancel_info.canceller, 'not the same offerrer'); // TODO
+            assert(order.offerer == cancel_info.canceller, 'not the same offerrer');
             let status = match order_status_read(order_hash) {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
@@ -377,7 +372,6 @@ mod orderbook {
                         let (auction_order_hash, auction_end_date, auction_offer_count) = self
                             .auctions
                             .read(auction_token_hash);
-
                         assert(
                             block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
                         );

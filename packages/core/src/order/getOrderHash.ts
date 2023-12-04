@@ -2,13 +2,10 @@ import * as starknet from "@scure/starknet";
 import {
   BigNumberish,
   cairo,
-  CairoOption,
-  CairoOptionVariant,
   CallData,
   Contract,
   RpcProvider,
-  shortString,
-  Uint256
+  shortString
 } from "starknet";
 
 import { ORDER_BOOK_ADDRESS } from "../constants";
