@@ -10,7 +10,7 @@ import {
 } from "starknet";
 
 import { ORDER_BOOK_ADDRESS } from "../constants";
-import { signSingleMessage } from "../signer";
+import { signMessage } from "../signer";
 import { CancelInfo, FullCancelInfo } from "../types";
 
 const cancelOrder = async (
@@ -30,9 +30,9 @@ const cancelOrder = async (
   };
 
   // Sign the compiled order
-  const signInfo = signSingleMessage(fullCancelInfo.order_hash as bigint);
+  const signInfo = signMessage([fullCancelInfo.order_hash] as bigint[]);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-
+  console.log("signer", signer);
   // Compile calldata for the create_order function
   let cancel_order_calldata = CallData.compile({
     cancel_info: fullCancelInfo,

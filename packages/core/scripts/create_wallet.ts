@@ -1,6 +1,6 @@
 import { RpcProvider } from "starknet";
 
-import { createAccount } from "../account";
+import { createAccount } from "../src/account";
 
 const provider = new RpcProvider({
   nodeUrl: "http://0.0.0.0:7777"

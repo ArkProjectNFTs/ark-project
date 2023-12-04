@@ -12,7 +12,8 @@ use snforge_std::{
     EventAssertions, Event, SpyOn, test_address,
     signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{setup_auction_order, sign_mock, setup_orders, setup_offer};
+
+use super::super::common::setup::{setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer};
 
 #[test]
 fn test_cancel_auction() {
@@ -40,6 +41,34 @@ fn test_cancel_auction() {
 
     dispatcher.cancel_order(cancel_info, signer: signer);
 }
+
+// #[test]
+// fn test_cancel_listing() {
+//     let start_date = 1699556828;
+//     let end_date = start_date + (10 * 24 * 60 * 60);
+
+//     let (order_listing, signer, _order_hash, token_hash) = setup_listing(
+//         start_date, end_date, Option::Some(123)
+//     );
+
+//     let contract = declare('orderbook');
+//     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+//     let contract_address = contract.deploy(@contract_data).unwrap();
+
+//     let dispatcher = OrderbookDispatcher { contract_address };
+//     dispatcher.create_order(order: auction_listing_order, signer: signer);
+
+//     let cancel_info = CancelInfo {
+//         order_hash: order_hash,
+//         canceller: auction_listing_order.offerer,
+//         token_chain_id: auction_listing_order.token_chain_id,
+//         token_address: auction_listing_order.token_address,
+//         token_id: auction_listing_order.token_id,
+//     };
+
+//     dispatcher.cancel_order(cancel_info, signer: signer);
+// }
+
 
 #[test]
 #[should_panic(expected: ('OB: order not found',))]

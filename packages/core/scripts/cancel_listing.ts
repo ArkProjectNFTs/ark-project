@@ -6,11 +6,11 @@
 
 import { RpcProvider } from "starknet";
 
-import { createAccount } from "../account";
-import { cancelOrder } from "../cancelOrder";
-import { createListing } from "../createOrder/createListing";
-import { getOrder, getOrderHash } from "../order";
-import { BaseOrderV1, RouteType } from "../types";
+import { createAccount } from "../src/account";
+import { cancelOrder } from "../src/cancelOrder";
+import { createListing } from "../src/createOrder/createListing";
+import { getOrder, getOrderHash } from "../src/order";
+import { BaseOrderV1, RouteType } from "../src/types";
 
 // Initialize the RPC provider with the ArkChain node URL
 const provider = new RpcProvider({
@@ -34,12 +34,12 @@ const provider = new RpcProvider({
     brokerId: 123, // The broker ID
     tokenAddress:
       "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-    tokenId: 9251, // The ID of the token
+    tokenId: 9256, // The ID of the token
     startAmount: 600000000000000000 // The starting amount for the order
   };
 
   // Create the listing on the arkchain using the order details
-  await createListing(provider, account, order);
+  // await createListing(provider, account, order);
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 1000));

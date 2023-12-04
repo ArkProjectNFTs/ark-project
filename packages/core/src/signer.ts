@@ -8,7 +8,8 @@ const signMessage = (data: bigint[]) => {
 
   const messageHash = starknet.poseidonHashMany(data);
   const signature = ec.starkCurve.sign(num.toHex(messageHash), privateKey);
-
+  console.log("messageHash", num.toHex(messageHash));
+  console.log("signature", signature);
   return {
     user_pubkey: starknetPublicKey,
     user_sig_r: signature.r.toString(),

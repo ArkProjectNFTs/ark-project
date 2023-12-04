@@ -347,7 +347,7 @@ mod orderbook {
                 OrderType::CollectionOffer => {
                     self._create_collection_offer(order, order_type, order_hash);
                 },
-            }
+            };
             self.order_signers.write(order_hash, user_pubkey);
         }
 

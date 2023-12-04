@@ -14,5 +14,5 @@
       "persistent": true
     }
   },
-  "globalEnv": ["ACCOUNT_CLASS_HASH"]
+  "globalEnv": ["ACCOUNT_CLASS_HASH", "ORDERBOOK_CONTRACT"]
 }

@@ -10,7 +10,7 @@ import {
 
 import { ORDER_BOOK_ADDRESS } from "../constants";
 import { BaseOrderV1, OrderV1, RouteType } from "../types";
-import { createOrder } from "./createOrder";
+import { createOrder } from "./_createOrder";
 
 /**
  * Creates a listing on the Arkchain.
