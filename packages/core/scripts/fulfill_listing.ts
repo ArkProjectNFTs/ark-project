@@ -4,12 +4,13 @@
  * submitting a listing order and cancelling it.
  */
 
-import { RpcProvider } from "starknet";
+import { RpcProvider, shortString } from "starknet";
 
 import { createAccount } from "../src/account";
 import { createListing } from "../src/createOrder/createListing";
 import { fulfillListing } from "../src/fulfillOrder";
 import { getOrderHash } from "../src/order";
+import { getOrderStatus } from "../src/order/getOrderStatus";
 import { BaseOrderV1, RouteType } from "../src/types";
 
 // Initialize the RPC provider with the ArkChain node URL
@@ -34,7 +35,7 @@ const provider = new RpcProvider({
     brokerId: 123, // The broker ID
     tokenAddress:
       "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-    tokenId: 6, // The ID of the token
+    tokenId: 16, // The ID of the token
     startAmount: 600000000000000000 // The starting amount for the order
   };
 
@@ -42,7 +43,7 @@ const provider = new RpcProvider({
   await createListing(provider, listing_account, order);
 
   // wait 5 seconds for the transaction to be processed
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // Get the order hash
   const { orderHash } = await getOrderHash(
@@ -50,6 +51,12 @@ const provider = new RpcProvider({
     order.tokenAddress,
     provider
   );
+
+  let { orderStatus: orderStatusBefore } = await getOrderStatus(
+    orderHash,
+    provider
+  );
+  console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
 
   // Create a new account for the listing using the provider
   const { account: fulfiller_account } = await createAccount(provider);
@@ -63,4 +70,12 @@ const provider = new RpcProvider({
 
   // Cancel the order
   fulfillListing(provider, fulfiller_account, fulfill_info);
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  let { orderStatus: orderStatusAfter } = await getOrderStatus(
+    orderHash,
+    provider
+  );
+  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
 })(provider);
