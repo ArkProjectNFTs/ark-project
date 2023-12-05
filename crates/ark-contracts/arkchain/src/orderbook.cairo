@@ -374,9 +374,9 @@ mod orderbook {
             let mut canceller_signer = signer.clone();
             canceller_signer.set_public_key(original_signer_public_key);
             let cancel_info_hash = serialized_hash(cancel_info);
-            cancel_info_hash.print();
-            let order_hash = cancel_info.order_hash;
             SignerValidator::verify(cancel_info_hash, canceller_signer);
+
+            let order_hash = cancel_info.order_hash;
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();

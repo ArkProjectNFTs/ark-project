@@ -13,7 +13,9 @@ use snforge_std::{
     signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
 
-use super::super::common::setup::{setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer};
+use super::super::common::setup::{
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
+};
 
 #[test]
 fn test_cancel_auction() {

@@ -48,3 +48,18 @@ export type FullCancelInfo = {
   token_address: BigNumberish;
   token_id: CairoOption<Uint256>;
 };
+
+export type FulfillInfo = {
+  order_hash: BigNumberish;
+  related_order_hash: CairoOption<BigNumberish>;
+  fulfiller: BigNumberish;
+  token_chain_id: BigNumberish;
+  token_address: BigNumberish;
+  token_id: CairoOption<Uint256>;
+};
+
+export type FulfillListingInfo = {
+  order_hash: BigNumberish;
+  token_address: BigNumberish;
+  token_id: BigNumberish;
+};
