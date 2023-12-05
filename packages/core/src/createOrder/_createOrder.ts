@@ -27,15 +27,14 @@ const createOrder = async (
 
   // Sign the compiled order
   const signInfo = signMessage(compiletOrderBigInt);
-  console.log(signInfo);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-
+  console.log("signer", signer);
   // Compile calldata for the create_order function
   let create_order_calldata = CallData.compile({
     order: order,
     signer: signer
   });
-
+  console.log("create_order_calldata", create_order_calldata);
   // Execute the transaction
   const result = await account.execute({
     contractAddress: ORDER_BOOK_ADDRESS,
@@ -45,7 +44,7 @@ const createOrder = async (
 
   // Wait for the transaction to be processed
   await provider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 500
+    retryInterval: 1000
   });
 };
 

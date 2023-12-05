@@ -25,7 +25,7 @@ fn sign_mock(message_hash: felt252, pk: Option<felt252>) -> Signer {
 
 #[test]
 fn test_create_listing() {
-    let order_hash = 1764615887178257798256857785248619434416610229900350535689529518115442866464;
+    let order_hash = 1187808578384236024063928606418651083953200617486980640350664202139369612009;
     let poseidon_hash = serialized_hash(order_hash);
     poseidon_hash.print();
     let signer = sign_mock(poseidon_hash, Option::None);

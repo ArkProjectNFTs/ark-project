@@ -8,7 +8,7 @@
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use arkchain::order::order_v1::OrderV1;
-
+use debug::PrintTrait;
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
 trait Orderbook<T> {
@@ -68,6 +68,12 @@ trait Orderbook<T> {
     /// * `order_hash` - The order hash of order.
     fn get_order(self: @T, order_hash: felt252) -> OrderV1;
 
+    /// Retrieves the order signer using its hash.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
+    fn get_order_signer(self: @T, order_hash: felt252) -> felt252;
+
     /// Retrieves the order hash using its token hash. 
     ///
     /// # Arguments
@@ -115,6 +121,7 @@ mod orderbook_errors {
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
+    use core::debug::PrintTrait;
     use ark_common::crypto::signer::{SignInfo, Signer, SignerTrait, SignerValidator};
     use ark_common::protocol::order_types::{
         OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo
@@ -303,6 +310,16 @@ mod orderbook {
             order.unwrap()
         }
 
+        /// Retrieves the order signer using its hash.
+        /// # View
+        fn get_order_signer(self: @ContractState, order_hash: felt252) -> felt252 {
+            let order_signer = self.order_signers.read(order_hash);
+            if (order_signer.is_zero()) {
+                panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+            }
+            order_signer
+        }
+
         /// Retrieves the order hash using its token hash.
         /// # View
         fn get_order_hash(self: @ContractState, token_hash: felt252) -> felt252 {
@@ -328,6 +345,7 @@ mod orderbook {
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
             let order_hash = order.compute_order_hash();
             let user_pubkey = SignerValidator::verify(order_hash, signer);
+
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
             if validation.is_err() {
@@ -352,10 +370,13 @@ mod orderbook {
         }
 
         fn cancel_order(ref self: ContractState, cancel_info: CancelInfo, signer: Signer) {
-            let mut generated_signer = signer.clone();
-            generated_signer.set_public_key(self.order_signers.read(cancel_info.order_hash));
-            SignerValidator::verify(cancel_info.order_hash, generated_signer);
+            let original_signer_public_key = self.order_signers.read(cancel_info.order_hash);
+            let mut canceller_signer = signer.clone();
+            canceller_signer.set_public_key(original_signer_public_key);
+            let cancel_info_hash = serialized_hash(cancel_info);
+            cancel_info_hash.print();
             let order_hash = cancel_info.order_hash;
+            SignerValidator::verify(cancel_info_hash, canceller_signer);
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();

@@ -64,7 +64,7 @@ const createListing = async (
     startDate: startDate,
     endDate: endDate,
     brokerId: baseOrder.brokerId,
-    additionalData: [45]
+    additionalData: []
   };
 
   await createOrder(provider, account, order);
