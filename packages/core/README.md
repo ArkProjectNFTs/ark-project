@@ -13,7 +13,7 @@ The ArkChain SDK is a comprehensive TypeScript/JavaScript library designed to in
 ## Installation
 
 ```bash
-npm install arkchain-sdk
+npm install @arkproject/core
 ```
 
 # Development
