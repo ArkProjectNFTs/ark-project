@@ -10,7 +10,6 @@ import {
   createAccount,
   createListing,
   fulfillOffer,
-  getOrderHash,
   getOrderStatus,
   OfferV1
 } from "../src";
