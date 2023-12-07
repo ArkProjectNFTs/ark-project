@@ -69,5 +69,6 @@ cargo run -p solis -- \
 3. Deploy the `contracts` contract on Katana:
 
 ```bash
-node scripts/deployer/index.js
+cd scripts/deployer
+node index.js
 ```

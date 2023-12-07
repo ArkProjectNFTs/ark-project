@@ -1,0 +1,5 @@
+# Ignore all node modules
+node_modules
+
+# Ignore various non-source directories
+packages
