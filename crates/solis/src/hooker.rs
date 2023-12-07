@@ -1,7 +1,7 @@
 //! Solis hooker on Katana transaction lifecycle.
 //!
 use async_trait::async_trait;
-use katana_core::hooker::KatanaHooker;
+use katana_core::hooker::{HookerAddresses, KatanaHooker};
 use katana_core::sequencer::KatanaSequencer;
 use starknet::accounts::Call;
 use starknet::core::types::BroadcastedInvokeTransaction;
@@ -57,6 +57,7 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
     }
 
     /// Retrieves a reference to the sequencer.
+    #[allow(dead_code)]
     pub fn sequencer_ref(&self) -> &Arc<KatanaSequencer> {
         // The expect is used here as it must always be set by Katana core.
         // If not set, the merge on Katana may be revised.
@@ -83,6 +84,7 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
     ///
     /// * `selector` - The selector of the recipient contract to execute.
     /// * `payload` - The payload of the message.
+    #[allow(dead_code)]
     pub fn add_l1_handler_transaction_for_orderbook(
         &self,
         selector: FieldElement,
@@ -139,6 +141,11 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
 impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
     fn set_sequencer(&mut self, sequencer: Arc<KatanaSequencer>) {
         self.sequencer = Some(sequencer);
+    }
+
+    fn set_addresses(&mut self, addresses: HookerAddresses) {
+        self.orderbook_address = addresses.orderbook_arkchain;
+        self.sn_executor_address = addresses.executor_starknet;
     }
 
     /// Verifies if the message is directed to the orderbook and comes from

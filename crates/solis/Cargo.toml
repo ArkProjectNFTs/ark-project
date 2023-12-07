@@ -71,8 +71,8 @@ url = "2.4.0"
 # katana-core = { path = "../../../dojo/crates/katana/core", features = ["messaging", "starknet-messaging"] }
 # katana-rpc = { path = "../../../dojo/crates/katana/rpc" }
 
-katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.1-solis", features = ["messaging", "starknet-messaging"] }
-katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.1-solis" }
+katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.4-solis", features = ["messaging", "starknet-messaging"] }
+katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.4-solis" }
 
 starknet-abigen-parser = { git = "https://github.com/glihm/starknet-abigen-rs", tag = "v0.1.4-beta5" }
 starknet-abigen-macros = { git = "https://github.com/glihm/starknet-abigen-rs", tag = "v0.1.4-beta5" }

@@ -3,6 +3,7 @@ use starknet_abigen_macros::abigen;
 
 abigen!(OrderbookContract, "./artifacts/orderbook.json");
 
+#[allow(dead_code)]
 pub fn new_orderbook<A: ConnectedAccount + Send + Sync + 'static>(
     contract_address: FieldElement,
     account: A,
