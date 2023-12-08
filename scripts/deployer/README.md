@@ -6,15 +6,17 @@
 
 0. Before starting the deployment, generate the artifacts:
 
-
 Open three terminals:
+
 1. Katana: to simulate Starknet network, and run:
+
 ```bash
 dojoup -v nightly
 katana
 ```
 
 2. Solis: to run the Arkchain:
+
 ```bash
 cd ark-project/
 
@@ -25,6 +27,7 @@ cargo run -p solis -- \
 ```
 
 3. One to execute the script:
+
 ```bash
 cd ark-project/scripts/deployer/
 npm install

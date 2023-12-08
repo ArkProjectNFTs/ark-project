@@ -1,0 +1,46 @@
+{
+  "name": "@ark-project/core",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "mocha --require ts-node/register --timeout 10000 'tests/**/*.ts'"
+  },
+  "dependencies": {
+    "@scure/starknet": "^0.3.0",
+    "@types/chai-as-promised": "^7.1.8",
+    "dotenv": "^16.3.1",
+    "i": "^0.3.7",
+    "npm": "^10.2.4",
+    "starknet": "5.22.0"
+  },
+  "devDependencies": {
+    "@ark-project/eslint-config": "workspace:*",
+    "@ark-project/typescript-config": "workspace:*",
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.1",
+    "chai": "^4.3.10",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^8.48.0",
+    "eslint-plugin-mocha": "^10.2.0",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.1.6"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.4",
+    "viem": ">=0.3.35"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  }
+}

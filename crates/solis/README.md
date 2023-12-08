@@ -22,6 +22,7 @@ There is a `args.rs` and `solis_args.rs` files. Those are related to `clap` argu
 ## How to run Solis
 
 To run, Solis requires some important information:
+
 1. A messaging configuration to interact with Starknet. You can choose between `messaging.json` and `messaging.local.json`. Those files contain all the configuration required by Katana to send/receive messages to/from a Starknet sequencer. This Starknet sequencer only required the `appchain_messaging` contract to be deployed. No other modifications.
    As this configuration also contains the RPC URL of the Starknet node, Solis will then be able to call some functions on the node to verify the orders content.
 
@@ -39,31 +40,34 @@ As you can see, the orderbook address must be known before Solis starts. To ensu
 
 ## Solis default
 
-* port: default port is `7777`, to refer to the Everai collection with 7777 Everais. So, in order to run a Starknet node with Katana, you can keep using the default port `5050` (be sure this Katana node is up and running before starting Solis).
+- port: default port is `7777`, to refer to the Everai collection with 7777 Everais. So, in order to run a Starknet node with Katana, you can keep using the default port `5050` (be sure this Katana node is up and running before starting Solis).
 
-* fees: by default, fees are currently disabled on Solis.
+- fees: by default, fees are currently disabled on Solis.
 
-* pre-funded accounts: dev accounts are for now limited to 2, and the seed used is the same as Katana (to ease the re-use of Starkli built-in accounts like `katana-0` and `katana-1`).
+- pre-funded accounts: dev accounts are for now limited to 2, and the seed used is the same as Katana (to ease the re-use of Starkli built-in accounts like `katana-0` and `katana-1`).
 
 ## Work locally with Katana as Starknet node
 
 1. First, opens a terminal and start Katana:
+
 ```bash
 dojoup -v nightly
 katana
 ```
-2. Deploy the `appchain_messaging` contract on Katana:
-```bash
-make -C crates/ark-contracts/starknet/ setup_messaging_katana
-```
-3. Start Solis with `messaging.local.json`, already configured with the deployed `appchain_messaging` address:
+
+(be aware if you have a previous version of Katana installed, you may have to remove the `~/.katana` folder)
+
+2. Start Solis with `messaging.local.json`, already configured with the deployed `appchain_messaging` address:
+
 ```bash
 cargo run -p solis -- \
     --messaging crates/solis/messaging.local.json \
     --orderbook-address 0x024df499c7b1b14c0e52ea237e26a7401ef70507cf72eaef105316dfb5a207a7 \
     --executor-address 0x1234
 ```
-4. Deploy the `orderbook` contract on Katana with a pre-defined salt to have the same address as the one used to start Solis.
+
+3. Deploy the `contracts` contract on Katana:
+
 ```bash
-make -C crates/ark-contracts/arkchain/ setup_orderbook
+node scripts/deployer/index.js
 ```

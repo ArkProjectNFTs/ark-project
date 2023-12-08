@@ -1,0 +1,3 @@
+{
+  "extends": "@ark-project/typescript-config/base.json"
+}

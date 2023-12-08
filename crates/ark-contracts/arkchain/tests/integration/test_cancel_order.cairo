@@ -12,7 +12,10 @@ use snforge_std::{
     EventAssertions, Event, SpyOn, test_address,
     signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{setup_auction_order, sign_mock, setup_orders, setup_offer};
+
+use super::super::common::setup::{
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
+};
 
 #[test]
 fn test_cancel_auction() {
@@ -38,7 +41,9 @@ fn test_cancel_auction() {
         token_id: auction_listing_order.token_id,
     };
 
-    dispatcher.cancel_order(cancel_info, signer: signer);
+    let cancel_info_hash = serialized_hash(cancel_info);
+    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
+    dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
 
 #[test]
@@ -68,8 +73,10 @@ fn test_cancel_non_existing_order() {
         token_id: Option::Some(1),
     };
 
+    let cancel_info_hash = serialized_hash(cancel_info);
+    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
     let dispatcher = OrderbookDispatcher { contract_address };
-    dispatcher.cancel_order(cancel_info, signer: signer);
+    dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
 
 #[test]
@@ -104,9 +111,8 @@ fn test_invalid_cancel_auction_order() {
     let order_hash = auction_listing_order.compute_order_hash();
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let fulfill_signer = sign_mock(cancel_info_hash, Option::None);
-    let cancel_signer = sign_mock(order_hash, Option::None);
-    dispatcher.cancel_order(cancel_info, signer: cancel_signer);
+    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
+    dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
 
 #[test]
@@ -150,9 +156,7 @@ fn test_cancel_auction_during_the_extended_time() {
     };
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let fulfill_signer = sign_mock(cancel_info_hash, Option::None);
-    let cancel_signer = sign_mock(order_hash, Option::None);
+    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
 
-    dispatcher.cancel_order(cancel_info, signer: auction_listing_signer);
+    dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
-
