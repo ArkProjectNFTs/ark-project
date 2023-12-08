@@ -140,11 +140,6 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
         to: FieldElement,
         _selector: FieldElement,
     ) -> bool {
-        println!(
-            "verify message to appchain: {:?} == {:?} && {:?} == {:?}",
-            from, self.sn_executor_address, to, self.orderbook_address
-        );
-
         // For now, only the from/to are checked.
         from == self.sn_executor_address && to == self.orderbook_address
     }

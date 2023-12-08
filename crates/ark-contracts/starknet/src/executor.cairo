@@ -123,9 +123,24 @@ mod executor {
             //     'Invalid msg sender'
             // );
 
-            let eth_contract = IERC20Dispatcher {
-                contract_address: self.eth_contract_address.read()
-            };
+            // Check if execution_info.currency_contract_address is whitelisted
+
+            assert(
+                execution_info.payment_currency_chain_id == 'SN_MAIN', 'Chain ID is not SN_MAIN'
+            );
+
+            // let currency_contract = IERC20Dispatcher {
+            //     contract_address: self
+            //         .eth_contract_address
+            //         .read() // execution_info.payment_currency_address
+            // };
+
+            // currency_contract
+            //     .transfer_from(
+            //         execution_info.payment_from,
+            //         execution_info.payment_to,
+            //         execution_info.payment_amount
+            //     );
 
             let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
             nft_contract

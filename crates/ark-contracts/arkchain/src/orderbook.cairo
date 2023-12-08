@@ -630,23 +630,13 @@ mod orderbook {
                     nft_from: order.offerer,
                     nft_to: fulfill_info.fulfiller,
                     nft_token_id: order.token_id.unwrap(),
-                    nft_address: order.token_address
-                // route: order.route,
-                // order_hash: order.compute_order_hash(),
-                // token_address: order.token_address,
-                // token_id: order.token_id.unwrap(),
-                // quantity: order.quantity,
-                // offerer_address: order.offerer,
-                // fulfiller_address: fulfill_info.fulfiller,
-                // price: 0,
-                // creator_address: 0x0.try_into().unwrap(),
-                // creator_fee: 0,
-                // create_broker_address: 0x0.try_into().unwrap(),
-                // create_broker_fee: 0,
-                // fulfill_broker_address: 0x0.try_into().unwrap(),
-                // fulfill_broker_fee: 0
+                    nft_address: order.token_address,
+                    payment_from: fulfill_info.fulfiller,
+                    payment_to: order.offerer,
+                    payment_amount: order.start_amount,
+                    payment_currency_address: order.currency_address,
+                    payment_currency_chain_id: order.currency_chain_id
                 };
-
                 execute_info.serialize(ref buf);
                 starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap_syscall();
             }

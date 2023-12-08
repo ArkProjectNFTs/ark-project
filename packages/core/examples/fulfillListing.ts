@@ -21,6 +21,7 @@ import { approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import {
+  STARKNET_ETH_ADDRESS,
   STARKNET_EXECUTOR_ADDRESS,
   STARKNET_NFT_ADDRESS
 } from "../src/constants";
@@ -128,7 +129,6 @@ async function freeMint(
     arkAccount,
     fulfill_info
   );
-
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   let { orderStatus: orderStatusAfter } = await getOrderStatus(

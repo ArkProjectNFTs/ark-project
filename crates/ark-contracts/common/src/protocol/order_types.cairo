@@ -181,10 +181,17 @@ struct FulfillInfo {
 #[derive(Drop, Serde, Copy)]
 struct ExecutionInfo {
     order_hash: felt252,
+
     nft_address: ContractAddress,
     nft_from: ContractAddress,
     nft_to: ContractAddress,
-    nft_token_id: u256
+    nft_token_id: u256,
+
+    payment_from: ContractAddress,
+    payment_to: ContractAddress,
+    payment_amount: u256,
+    payment_currency_address: ContractAddress,
+    payment_currency_chain_id: felt252,
 
     // route: RouteType,
     // order_hash: felt252,
