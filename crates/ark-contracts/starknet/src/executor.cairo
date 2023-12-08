@@ -135,7 +135,10 @@ mod executor {
             };
 
             let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
-            nft_contract.transfer_from(execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id);
+            nft_contract
+                .transfer_from(
+                    execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
+                );
 
             // self._transfer_royalties(execution_info, eth_contract);
 
@@ -186,45 +189,44 @@ mod executor {
             };
         }
     }
+// #[generate_trait]
+// impl InternalFunctions of InternalFunctionsTrait {
+//     fn _transfer_royalties(
+//         ref self: ContractState, execution_info: ExecutionInfo, eth_contract: IERC20Dispatcher
+//     ) {
+//         // Royalties distribution
+//         let arkchain_fee = self.arkchain_fee.read();
+//         let total_fees = execution_info.create_broker_fee
+//             + execution_info.fulfill_broker_fee
+//             + execution_info.creator_fee
+//             + arkchain_fee;
+//         assert(execution_info.price < total_fees, 'Invalid price');
 
-    // #[generate_trait]
-    // impl InternalFunctions of InternalFunctionsTrait {
-    //     fn _transfer_royalties(
-    //         ref self: ContractState, execution_info: ExecutionInfo, eth_contract: IERC20Dispatcher
-    //     ) {
-    //         // Royalties distribution
-    //         let arkchain_fee = self.arkchain_fee.read();
-    //         let total_fees = execution_info.create_broker_fee
-    //             + execution_info.fulfill_broker_fee
-    //             + execution_info.creator_fee
-    //             + arkchain_fee;
-    //         assert(execution_info.price < total_fees, 'Invalid price');
+//         match execution_info.route {
+//             RouteType::Erc20ToErc721 => { // ...
+//             },
+//             RouteType::Erc721ToErc20 => {
+//                 eth_contract
+//                     .transfer_from(
+//                         execution_info.offerer_address, self.admin_address.read(), arkchain_fee
+//                     );
+//             // eth_contract.transfer_from(execution_info.offerer_address, self.admin_address.read(), arkchain_fee);
+//             },
+//         };
+//     // eth_contract
+//     //     .transfer_from(execution_info.taker_address, execution_info.creator_address, execution_info.creator_fee);
 
-    //         match execution_info.route {
-    //             RouteType::Erc20ToErc721 => { // ...
-    //             },
-    //             RouteType::Erc721ToErc20 => {
-    //                 eth_contract
-    //                     .transfer_from(
-    //                         execution_info.offerer_address, self.admin_address.read(), arkchain_fee
-    //                     );
-    //             // eth_contract.transfer_from(execution_info.offerer_address, self.admin_address.read(), arkchain_fee);
-    //             },
-    //         };
-    //     // eth_contract
-    //     //     .transfer_from(execution_info.taker_address, execution_info.creator_address, execution_info.creator_fee);
+//     // eth_contract
+//     //     .transfer_from(
+//     //         execution_info.taker_address, execution_info.create_broker_address, execution_info.create_broker_fee
+//     //     );
 
-    //     // eth_contract
-    //     //     .transfer_from(
-    //     //         execution_info.taker_address, execution_info.create_broker_address, execution_info.create_broker_fee
-    //     //     );
+//     // eth_contract
+//     //     .transfer_from(
+//     //         execution_info.taker_address, execution_info.fulfill_broker_address, execution_info.fulfill_broker_fee
+//     //     );
 
-    //     // eth_contract
-    //     //     .transfer_from(
-    //     //         execution_info.taker_address, execution_info.fulfill_broker_address, execution_info.fulfill_broker_fee
-    //     //     );
-
-    //     // eth_contract.transferFrom(execution_info.taker_address, execution_info.maker_address, execution_info.price);
-    //     }
-    // }
+//     // eth_contract.transferFrom(execution_info.taker_address, execution_info.maker_address, execution_info.price);
+//     }
+// }
 }

@@ -628,27 +628,25 @@ mod orderbook {
 
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
-
                     order_hash: order.compute_order_hash(),
                     nft_from: order.offerer,
                     nft_to: fulfill_info.fulfiller,
                     nft_token_id: order.token_id.unwrap(),
                     nft_address: order.token_address
-    
-                    // route: order.route,
-                    // order_hash: order.compute_order_hash(),
-                    // token_address: order.token_address,
-                    // token_id: order.token_id.unwrap(),
-                    // quantity: order.quantity,
-                    // offerer_address: order.offerer,
-                    // fulfiller_address: fulfill_info.fulfiller,
-                    // price: 0,
-                    // creator_address: 0x0.try_into().unwrap(),
-                    // creator_fee: 0,
-                    // create_broker_address: 0x0.try_into().unwrap(),
-                    // create_broker_fee: 0,
-                    // fulfill_broker_address: 0x0.try_into().unwrap(),
-                    // fulfill_broker_fee: 0
+                // route: order.route,
+                // order_hash: order.compute_order_hash(),
+                // token_address: order.token_address,
+                // token_id: order.token_id.unwrap(),
+                // quantity: order.quantity,
+                // offerer_address: order.offerer,
+                // fulfiller_address: fulfill_info.fulfiller,
+                // price: 0,
+                // creator_address: 0x0.try_into().unwrap(),
+                // creator_fee: 0,
+                // create_broker_address: 0x0.try_into().unwrap(),
+                // create_broker_fee: 0,
+                // fulfill_broker_address: 0x0.try_into().unwrap(),
+                // fulfill_broker_fee: 0
                 };
 
                 execute_info.serialize(ref buf);
