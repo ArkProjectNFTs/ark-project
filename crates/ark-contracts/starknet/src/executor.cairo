@@ -30,8 +30,7 @@ mod executor {
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
-        arkchain_fee: u256,
-        test_address: ContractAddress
+        arkchain_fee: u256
     }
 
     #[event]
@@ -65,10 +64,6 @@ mod executor {
 
     #[external(v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
-        fn get_test_address(ref self: ContractState) -> ContractAddress {
-            self.test_address.read()
-        }
-
         fn get_messaging_address(ref self: ContractState) -> ContractAddress {
             self.messaging_address.read()
         }
@@ -123,8 +118,6 @@ mod executor {
         }
 
         fn execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
-            self.test_address.write(starknet::get_caller_address());
-
             // assert(
             //     starknet::get_caller_address() == self.messaging_address.read(),
             //     'Invalid msg sender'

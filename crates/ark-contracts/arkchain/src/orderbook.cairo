@@ -278,9 +278,7 @@ mod orderbook {
         }
 
         fn update_starknet_executor_address(ref self: ContractState, value: ContractAddress) {
-            // assert(
-            //     starknet::get_caller_address() == self.admin.read(), 'Unauthorized update'
-            // );
+            assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
             self.starknet_executor_address.write(value);
         }
 
