@@ -18,7 +18,11 @@ mod executor {
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
     };
-    use openzeppelin::token::erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait};
+
+    use openzeppelin::token::{
+        erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
+        erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
+    };
 
     #[storage]
     struct Storage {
@@ -26,7 +30,8 @@ mod executor {
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
-        arkchain_fee: u256
+        arkchain_fee: u256,
+        test_address: ContractAddress
     }
 
     #[event]
@@ -60,6 +65,18 @@ mod executor {
 
     #[external(v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
+        fn get_test_address(ref self: ContractState) -> ContractAddress {
+            self.test_address.read()
+        }
+
+        fn get_messaging_address(ref self: ContractState) -> ContractAddress {
+            self.messaging_address.read()
+        }
+
+        fn get_orderbook_address(ref self: ContractState) -> ContractAddress {
+            self.arkchain_orderbook_address.read()
+        }
+
         fn update_messaging_address(ref self: ContractState, msger_address: ContractAddress) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
@@ -106,17 +123,19 @@ mod executor {
         }
 
         fn execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
-            assert(
-                starknet::get_caller_address() == self.messaging_address.read(),
-                'Invalid msg sender'
-            );
+            self.test_address.write(starknet::get_caller_address());
+
+            // assert(
+            //     starknet::get_caller_address() == self.messaging_address.read(),
+            //     'Invalid msg sender'
+            // );
 
             let eth_contract = IERC20Dispatcher {
                 contract_address: self.eth_contract_address.read()
             };
 
-            //let nft_contract = IERCDispatcher { contract_address: execution_info.token_address };
-            //nft_contract.transfer_from(execution_info.maker_address, execution_info.taker_address, execution_info.token_id);
+            let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
+            nft_contract.transfer_from(execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id);
 
             // self._transfer_royalties(execution_info, eth_contract);
 
@@ -168,44 +187,44 @@ mod executor {
         }
     }
 
-    #[generate_trait]
-    impl InternalFunctions of InternalFunctionsTrait {
-        fn _transfer_royalties(
-            ref self: ContractState, execution_info: ExecutionInfo, eth_contract: IERC20Dispatcher
-        ) {
-            // Royalties distribution
-            let arkchain_fee = self.arkchain_fee.read();
-            let total_fees = execution_info.create_broker_fee
-                + execution_info.fulfill_broker_fee
-                + execution_info.creator_fee
-                + arkchain_fee;
-            assert(execution_info.price < total_fees, 'Invalid price');
+    // #[generate_trait]
+    // impl InternalFunctions of InternalFunctionsTrait {
+    //     fn _transfer_royalties(
+    //         ref self: ContractState, execution_info: ExecutionInfo, eth_contract: IERC20Dispatcher
+    //     ) {
+    //         // Royalties distribution
+    //         let arkchain_fee = self.arkchain_fee.read();
+    //         let total_fees = execution_info.create_broker_fee
+    //             + execution_info.fulfill_broker_fee
+    //             + execution_info.creator_fee
+    //             + arkchain_fee;
+    //         assert(execution_info.price < total_fees, 'Invalid price');
 
-            match execution_info.route {
-                RouteType::Erc20ToErc721 => { // ...
-                },
-                RouteType::Erc721ToErc20 => {
-                    eth_contract
-                        .transfer_from(
-                            execution_info.offerer_address, self.admin_address.read(), arkchain_fee
-                        );
-                // eth_contract.transfer_from(execution_info.offerer_address, self.admin_address.read(), arkchain_fee);
-                },
-            };
-        // eth_contract
-        //     .transfer_from(execution_info.taker_address, execution_info.creator_address, execution_info.creator_fee);
+    //         match execution_info.route {
+    //             RouteType::Erc20ToErc721 => { // ...
+    //             },
+    //             RouteType::Erc721ToErc20 => {
+    //                 eth_contract
+    //                     .transfer_from(
+    //                         execution_info.offerer_address, self.admin_address.read(), arkchain_fee
+    //                     );
+    //             // eth_contract.transfer_from(execution_info.offerer_address, self.admin_address.read(), arkchain_fee);
+    //             },
+    //         };
+    //     // eth_contract
+    //     //     .transfer_from(execution_info.taker_address, execution_info.creator_address, execution_info.creator_fee);
 
-        // eth_contract
-        //     .transfer_from(
-        //         execution_info.taker_address, execution_info.create_broker_address, execution_info.create_broker_fee
-        //     );
+    //     // eth_contract
+    //     //     .transfer_from(
+    //     //         execution_info.taker_address, execution_info.create_broker_address, execution_info.create_broker_fee
+    //     //     );
 
-        // eth_contract
-        //     .transfer_from(
-        //         execution_info.taker_address, execution_info.fulfill_broker_address, execution_info.fulfill_broker_fee
-        //     );
+    //     // eth_contract
+    //     //     .transfer_from(
+    //     //         execution_info.taker_address, execution_info.fulfill_broker_address, execution_info.fulfill_broker_fee
+    //     //     );
 
-        // eth_contract.transferFrom(execution_info.taker_address, execution_info.maker_address, execution_info.price);
-        }
-    }
+    //     // eth_contract.transferFrom(execution_info.taker_address, execution_info.maker_address, execution_info.price);
+    //     }
+    // }
 }

@@ -413,6 +413,18 @@
         ],
         "outputs": [],
         "state_mutability": "external"
+      },
+      {
+        "type": "function",
+        "name": "update_starknet_executor_address",
+        "inputs": [
+          {
+            "name": "value",
+            "type": "core::starknet::contract_address::ContractAddress"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
       }
     ]
   },

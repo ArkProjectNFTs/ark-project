@@ -9,3 +9,7 @@ mod crypto {
     mod constants;
     mod common;
 }
+
+mod tokens {
+    mod nft;
+}

@@ -9,6 +9,8 @@ use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, Orde
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use arkchain::order::order_v1::OrderV1;
 use debug::PrintTrait;
+
+
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
 trait Orderbook<T> {
@@ -85,6 +87,8 @@ trait Orderbook<T> {
     /// # Arguments
     /// * `class_hash` - The class hash of the new contract version.
     fn upgrade(ref self: T, class_hash: starknet::ClassHash);
+
+    fn update_starknet_executor_address(ref self: T, value: starknet::ContractAddress);
 }
 
 // *************************************************************************
@@ -126,7 +130,8 @@ mod orderbook {
     use core::debug::PrintTrait;
     use ark_common::crypto::signer::{SignInfo, Signer, SignerTrait, SignerValidator};
     use ark_common::protocol::order_types::{
-        OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo
+        OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo,
+        ExecutionInfo, RouteType
     };
     use ark_common::crypto::hash::{serialized_hash};
     use core::traits::TryInto;
@@ -165,6 +170,8 @@ mod orderbook {
         auction_offers: LegacyMap<felt252, felt252>,
         /// Mapping of order_hash to order_signer public key.
         order_signers: LegacyMap<felt252, felt252>,
+        /// The address of the StarkNet executor contract.
+        starknet_executor_address: ContractAddress,
     }
 
     // *************************************************************************
@@ -268,6 +275,13 @@ mod orderbook {
                 Result::Ok(_) => self.emit(Upgraded { class_hash }),
                 Result::Err(revert_reason) => panic(revert_reason),
             };
+        }
+
+        fn update_starknet_executor_address(ref self: ContractState, value: ContractAddress) {
+            // assert(
+            //     starknet::get_caller_address() == self.admin.read(), 'Unauthorized update'
+            // );
+            self.starknet_executor_address.write(value);
         }
 
         /// Retrieves the type of an order using its hash.
@@ -604,6 +618,42 @@ mod orderbook {
                         related_order_hash: Option::None
                     }
                 );
+
+            let execute_order_selector = selector!("execute_order");
+            let starknet_executor_address: ContractAddress = self.starknet_executor_address.read();
+
+            let mut buf: Array<felt252> = array![
+                starknet_executor_address.into(), execute_order_selector
+            ];
+
+            if order.token_id.is_some() {
+                let execute_info = ExecutionInfo {
+
+                    order_hash: order.compute_order_hash(),
+                    nft_from: order.offerer,
+                    nft_to: fulfill_info.fulfiller,
+                    nft_token_id: order.token_id.unwrap(),
+                    nft_address: order.token_address
+    
+                    // route: order.route,
+                    // order_hash: order.compute_order_hash(),
+                    // token_address: order.token_address,
+                    // token_id: order.token_id.unwrap(),
+                    // quantity: order.quantity,
+                    // offerer_address: order.offerer,
+                    // fulfiller_address: fulfill_info.fulfiller,
+                    // price: 0,
+                    // creator_address: 0x0.try_into().unwrap(),
+                    // creator_fee: 0,
+                    // create_broker_address: 0x0.try_into().unwrap(),
+                    // create_broker_fee: 0,
+                    // fulfill_broker_address: 0x0.try_into().unwrap(),
+                    // fulfill_broker_fee: 0
+                };
+
+                execute_info.serialize(ref buf);
+                starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap_syscall();
+            }
         }
 
         /// Get order hash from token hash

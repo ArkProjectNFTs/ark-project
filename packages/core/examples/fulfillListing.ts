@@ -107,7 +107,6 @@ async function freeMint(
     orderHash,
     arkProvider
   );
-  console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
 
   const starknetFulfillerAccount = await fetchOrCreateAccount(
     starknetProvider,
