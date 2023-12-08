@@ -48,10 +48,8 @@ async fn main() -> Result<()> {
         &config.messaging.rpc_url,
     );
 
-    let executor_address = FieldElement::from_hex_be(&config.solis.executor_address)
-        .expect("Invalid executor address");
-    let orderbook_address = FieldElement::from_hex_be(&config.solis.orderbook_address)
-        .expect("Invalid orderbook address");
+    let executor_address = FieldElement::ZERO;
+    let orderbook_address = FieldElement::ZERO;
 
     let hooker = Arc::new(AsyncRwLock::new(SolisHooker::new(
         sn_utils_reader,

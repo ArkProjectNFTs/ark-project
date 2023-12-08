@@ -14,6 +14,7 @@ use url::Url;
 /// * `provider_url` - Starknet provider's url.
 /// * `account_address` - Starknet account's address.
 /// * `private_key` - Private key associated to the Starknet account.
+#[allow(dead_code)]
 pub async fn new_account(
     provider_url: &str,
     account_address: FieldElement,
