@@ -15,4 +15,4 @@ cat >crates/solis/messaging.json <<EOF
 EOF
 
 # Then start your application
-exec ./target/release/solis --messaging crates/solis/messaging.json --orderbook-address "$ORDERBOOK_ADDRESS" --executor-address "$EXECUTOR_ADDRESS"
+exec ./target/release/solis --messaging crates/solis/messaging.json
