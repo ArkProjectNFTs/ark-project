@@ -1,32 +1,39 @@
-name: Deploy Solis
+name: Deploy Solis Stack with Custom Environment
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    types: [synchronize, opened, reopened]
+  workflow_dispatch:
+    inputs:
+      contractAddress:
+        description: "Contract Address"
+        required: true
+      executorAddress:
+        description: "Executor Address"
+        required: true
+      orderbookAddress:
+        description: "Orderbook Address"
+        required: true
 
 jobs:
-  build-and-push-solis-image:
-    runs-on: ubuntu-latest # This specifies the runner environment
+  deploy:
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          mask-password: true
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          node-version: "14"
 
-      - name: Build Solis, tag, and push image to Amazon ECR
-        run: |
-          docker buildx create --use --name ecr-deploy-builder-solis
-          docker buildx build --tag ${{ secrets.ECR_URL }}:solis-latest --file ./Dockerfile . --load --build-arg EXECUTOR_ADDRESS=${{ secrets.EXECUTOR_ADDRESS }} --build-arg ORDERBOOK_ADDRESS=${{ secrets.ORDERBOOK_ADDRESS }}
-          docker push ${{ secrets.ECR_URL }}:solis-latest
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy CDK Stack
+        env:
+          RPC_URL: ${{ secrets.RPC_URL }}
+          SENDER_ADDRESS: ${{ secrets.SENDER_ADDRESS }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          CONTRACT_ADDRESS: ${{ github.event.inputs.contractAddress }}
+          EXECUTOR_ADDRESS: ${{ github.event.inputs.executorAddress }}
+          ORDERBOOK_ADDRESS: ${{ github.event.inputs.orderbookAddress }}
+        run: npx cdk deploy --all --require-approval never
