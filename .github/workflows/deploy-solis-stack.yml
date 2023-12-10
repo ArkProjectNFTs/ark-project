@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: "14"
 
+      - name: Change to CDK directory
+        run: cd aws/cdk-solis-ecs
+
       - name: Install dependencies
         run: npm install
 
