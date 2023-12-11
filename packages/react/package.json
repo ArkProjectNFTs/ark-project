@@ -1,0 +1,24 @@
+{
+  "name": "@ark-project/react",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.tsx",
+  "types": "index.tsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ark-project/core": "workspace:*",
+    "react": "^18",
+    "starknet": "5.22.0"
+  },
+  "devDependencies": {
+    "@ark-project/eslint-config": "workspace:*",
+    "@ark-project/typescript-config": "workspace:*",
+    "@types/react": "^18",
+    "typescript": "^5.3.3"
+  }
+}
