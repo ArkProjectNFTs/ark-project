@@ -50,7 +50,6 @@ export function RpcProviderProvider(
 
   useEffect(() => {
     // TODO: Create burner if not already created
-    console.log("OUIII");
     createAccount(value.rpcProvider).then(
       ({ address, privateKey, publicKey, account }) => {
         console.log("address: " + address);
