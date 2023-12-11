@@ -23,15 +23,19 @@ use snforge_std::signature::{
 // }
 
 fn DOMAIN() -> Domain {
-    Domain { name: 'arkproject', version: '1', }
+    Domain { name: 'Ark', version: '1.1', }
 }
 
 fn SIGNER() -> starknet::ContractAddress {
-    0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b.try_into().unwrap()
+  starknet::contract_address_const::<'signer'>()
 }
 
 fn ORDER() -> Order {
-    Order { orderHash: 0x123 }
+    Order { order_hash: 1 }
+}
+
+fn ORDER_HASH() -> felt252 {
+  0x51cf3229352fd8c0265d8897fedf67f86d4b5ec580513f922b963ce47ae1a16
 }
 
 #[test]
@@ -39,6 +43,6 @@ fn ark_test_type_data() {
     let order = ORDER();
     let order_hash = order.compute_hash_from(from: SIGNER(), domain: DOMAIN());
     order_hash.print();
-    assert(true, 'true');
+    assert(order_hash == ORDER_HASH(), 'Invalid order hash');
     // let signer = sign_mock(order_hash);
 }
