@@ -121,6 +121,7 @@ mod orderbook_errors {
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
 mod orderbook {
+    use ark_common::crypto::typed_data::{OrderSign, TypedDataTrait};
     use core::debug::PrintTrait;
     use ark_common::crypto::signer::{SignInfo, Signer, SignerTrait, SignerValidator};
     use ark_common::protocol::order_types::{
@@ -344,8 +345,9 @@ mod orderbook {
         /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
             let order_hash = order.compute_order_hash();
-            let user_pubkey = SignerValidator::verify(order_hash, signer);
-
+            let order_sign = OrderSign { order_hash: order_hash };
+            let order_sign_hash = order_sign.compute_hash_from(from: order.offerer);
+            let user_pubkey = SignerValidator::verify(order_sign_hash, signer);
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
             if validation.is_err() {

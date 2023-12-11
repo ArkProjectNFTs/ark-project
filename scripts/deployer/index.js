@@ -15,9 +15,7 @@ const STARKGATE =
 // Deployer script for ark-project contracts.
 // Before running the script, both node must be running.
 const katana = new sn.RpcProvider({ nodeUrl: "http://127.0.0.1:5050" });
-const solis = new sn.RpcProvider({
-  nodeUrl: "https://staging.solis.arkproject.dev"
-});
+const solis = new sn.RpcProvider({ nodeUrl: "http://0.0.0.0:7777" });
 
 // Katana-0 account is used in both Katana and Solis as they use the same
 // seed to initialize accounts.
