@@ -15,7 +15,9 @@ const STARKGATE =
 // Deployer script for ark-project contracts.
 // Before running the script, both node must be running.
 const katana = new sn.RpcProvider({ nodeUrl: "http://127.0.0.1:5050" });
-const solis = new sn.RpcProvider({ nodeUrl: "http://0.0.0.0:7777" });
+const solis = new sn.RpcProvider({
+  nodeUrl: "https://staging.solis.arkproject.dev"
+});
 
 // Katana-0 account is used in both Katana and Solis as they use the same
 // seed to initialize accounts.
@@ -38,6 +40,8 @@ let appmsg_contract = await appmsg.declareDeploy(
     appchain_account: account0
   }
 );
+
+console.log("executor (sn)", appmsg_contract.address);
 
 let executor_contract = await executor.declareDeploy(
   sn_artifacts_path,
