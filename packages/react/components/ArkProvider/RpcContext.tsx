@@ -19,7 +19,8 @@ export enum Network {
 
 const NETWORK_TO_RPC_NODE_URL: Record<Network, string> = {
   [Network.Mainnet]: "https://solis.arkproject.dev/",
-  [Network.Testnet]: "https://staging.solis.arkproject.dev/"
+  // [Network.Testnet]: "https://staging.solis.arkproject.dev/"
+  [Network.Testnet]: "http://localhost:7777"
 };
 
 type RpcContextValue =
@@ -49,15 +50,20 @@ export function RpcProviderProvider(
   );
 
   useEffect(() => {
-    // TODO: Create burner if not already created
-    createAccount(value.rpcProvider).then(
-      ({ address, privateKey, publicKey, account }) => {
-        console.log("address: " + address);
-        console.log("privateKey: " + privateKey);
-        console.log("publicKey: " + publicKey);
-        console.log(account);
-      }
-    );
+    // If the burner account is not in the localstorage
+    if (
+      !localStorage.getItem("burner_address") &&
+      !localStorage.getItem("burner_private_key") &&
+      !localStorage.getItem("burner_public_key")
+    ) {
+      createAccount(value.rpcProvider).then(
+        ({ address, privateKey, publicKey }) => {
+          localStorage.setItem("burner_address", address);
+          localStorage.setItem("burner_private_key", privateKey);
+          localStorage.setItem("burner_public_key", publicKey);
+        }
+      );
+    }
   }, [value]);
 
   return <RpcContext.Provider value={value}>{children}</RpcContext.Provider>;

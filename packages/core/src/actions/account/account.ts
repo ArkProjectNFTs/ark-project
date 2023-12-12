@@ -2,6 +2,8 @@ import { Account, CallData, ec, hash, RpcProvider, stark } from "starknet";
 
 import "dotenv/config";
 
+import { ACCOUNT_CLASS_HASH } from "../../constants";
+
 /**
  * Creates a new account on the StarkNet testnet.
  * This function generates a private key, derives the corresponding public key,
@@ -26,7 +28,7 @@ import "dotenv/config";
  * });
  */
 const createAccount = async (provider: RpcProvider) => {
-  const accountClassHash = process.env.ACCOUNT_CLASS_HASH as string;
+  const accountClassHash = ACCOUNT_CLASS_HASH;
   const privateKey = stark.randomAddress();
   const publicKey = ec.starkCurve.getStarkKey(privateKey);
   const address = hash.calculateContractAddressFromHash(
