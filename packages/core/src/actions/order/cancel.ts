@@ -1,3 +1,4 @@
+import * as starknet from "@scure/starknet";
 import {
   Account,
   cairo,
@@ -11,7 +12,7 @@ import {
 } from "starknet";
 
 import { ORDER_BOOK_ADDRESS } from "../../constants";
-import { signMessage } from "../../signer";
+import { getSignInfos } from "../../signer";
 import { CancelInfo, FullCancelInfo } from "../../types";
 
 const cancelOrder = async (
@@ -35,13 +36,33 @@ const cancelOrder = async (
     fullCancelInfo
   });
   let compiledCancelInfo = compiledOrder.map(BigInt);
-  // Sign the compiled order
-  const signInfo = signMessage(compiledCancelInfo);
-  const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
+  // Sign the compiled order
+  const TypedOrderData = {
+    message: {
+      hash: starknet.poseidonHashMany(compiledCancelInfo)
+    },
+    domain: {
+      name: "Ark",
+      chainId: "SN_MAIN",
+      version: "1.1"
+    },
+    types: {
+      StarkNetDomain: [
+        { name: "name", type: "felt252" },
+        { name: "chainId", type: "felt252" },
+        { name: "version", type: "felt252" }
+      ],
+      Order: [{ name: "hash", type: "felt252" }]
+    },
+    primaryType: "Order"
+  };
+
+  const signInfo = await getSignInfos(TypedOrderData, account);
+  const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
   // Compile calldata for the create_order function
-  let cancel_order_calldata = CallData.compile({
-    cancel_info: fullCancelInfo,
+  let create_order_calldata = CallData.compile({
+    order: fullCancelInfo,
     signer: signer
   });
 
@@ -49,7 +70,7 @@ const cancelOrder = async (
   const result = await account.execute({
     contractAddress: ORDER_BOOK_ADDRESS,
     entrypoint: "cancel_order",
-    calldata: cancel_order_calldata
+    calldata: create_order_calldata
   });
 
   // Wait for the transaction to be processed

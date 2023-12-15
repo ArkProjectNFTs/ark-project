@@ -15,8 +15,8 @@ const provider = new RpcProvider({
 (async (provider: RpcProvider) => {
   const { account } = await createAccount(provider);
   console.log(account.address);
-  // const orderTypeHash = selector.starknetKeccak("Order(orderHash:felt252)");
-  // console.log("orderTypeHash: " + orderTypeHash);
+  const orderTypeHash = selector.starknetKeccak("Order(hash:felt252)");
+  console.log("orderTypeHash: " + orderTypeHash);
 
   const TypedOrderData = {
     message: {

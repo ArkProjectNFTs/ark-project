@@ -3,7 +3,7 @@ use box::BoxTrait;
 use snforge_std::PrintTrait;
 use super::constants;
 
-const ORDER_TYPE_HASH: felt252 = 0x228E77DF26991D8080A98C30BD722382C9A4EDB7F650C2FB62941186934573F;
+const ORDER_TYPE_HASH: felt252 = 0x3749634CC837ADA5AF76B97FC3197F05DFC376CF4B73199E76107754E39CA1D;
 
 #[derive(Serde, Copy, Drop)]
 struct Domain {
@@ -17,7 +17,7 @@ fn DOMAIN() -> Domain {
 
 #[derive(Serde, Copy, Drop)]
 struct OrderSign {
-    order_hash: felt252,
+    hash: felt252,
 }
 
 trait Message<T> {
@@ -28,7 +28,7 @@ impl OrderMessage of Message<OrderSign> {
     #[inline(always)]
     fn compute_hash(self: @OrderSign) -> felt252 {
         let mut hash = pedersen::pedersen(0, ORDER_TYPE_HASH);
-        hash = pedersen::pedersen(hash, *self.order_hash);
+        hash = pedersen::pedersen(hash, *self.hash);
         pedersen::pedersen(hash, 2)
     }
 }

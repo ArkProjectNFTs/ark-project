@@ -30,7 +30,7 @@ const createOrder = async (
   // Sign the compiled order
   const TypedOrderData = {
     message: {
-      orderHash: starknet.poseidonHashMany(compiletOrderBigInt)
+      hash: starknet.poseidonHashMany(compiletOrderBigInt)
     },
     domain: {
       name: "Ark",
@@ -43,14 +43,13 @@ const createOrder = async (
         { name: "chainId", type: "felt252" },
         { name: "version", type: "felt252" }
       ],
-      Order: [{ name: "orderHash", type: "felt252" }]
+      Order: [{ name: "hash", type: "felt252" }]
     },
     primaryType: "Order"
   };
 
   const signInfo = await getSignInfos(TypedOrderData, account);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-  console.log(signer);
   // Compile calldata for the create_order function
   let create_order_calldata = CallData.compile({
     order: order,

@@ -28,7 +28,7 @@ fn SIGNER() -> starknet::ContractAddress {
 }
 
 fn ORDER() -> OrderSign {
-    OrderSign { order_hash: 1 }
+    OrderSign { hash: 1 }
 }
 
 fn ORDER_HASH() -> felt252 {
