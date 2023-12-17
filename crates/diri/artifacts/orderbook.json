@@ -372,6 +372,22 @@
       },
       {
         "type": "function",
+        "name": "get_order_signer",
+        "inputs": [
+          {
+            "name": "order_hash",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::felt252"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "type": "function",
         "name": "get_order_hash",
         "inputs": [
           {

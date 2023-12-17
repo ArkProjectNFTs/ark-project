@@ -9,12 +9,13 @@ mod orderbook;
 use starknet::core::types::{
     BlockId, EmittedEvent, EventFilter, FieldElement, MaybePendingBlockWithTxHashes,
 };
+use starknet::macros::selector;
 use starknet::providers::{AnyProvider, Provider, ProviderError};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, trace, warn};
 
-use crate::orderbook::{Event, OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced};
+use crate::orderbook::Event;
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
@@ -66,10 +67,10 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                 from_block,
                 to_block,
                 Some(vec![vec![
-                    OrderPlaced::get_selector(),
-                    OrderFulfilled::get_selector(),
-                    OrderCancelled::get_selector(),
-                    OrderExecuted::get_selector(),
+                    selector!("OrderPlaced"),
+                    selector!("OrderFulfilled"),
+                    selector!("OrderCancelled"),
+                    selector!("OrderExecuted"),
                 ]]),
             )
             .await?;
