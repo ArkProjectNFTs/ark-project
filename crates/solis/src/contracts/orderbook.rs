@@ -1,5 +1,5 @@
+use cainome::rs::abigen;
 use starknet::{accounts::ConnectedAccount, core::types::FieldElement};
-use starknet_abigen_macros::abigen;
 
 abigen!(OrderbookContract, "./artifacts/orderbook.json");
 

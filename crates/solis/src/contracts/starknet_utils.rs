@@ -1,8 +1,8 @@
+use cainome::rs::abigen;
 use starknet::{
     core::types::FieldElement,
     providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient},
 };
-use starknet_abigen_macros::abigen;
 
 use url::Url;
 
