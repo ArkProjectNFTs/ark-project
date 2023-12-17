@@ -1,27 +1,18 @@
 //! Solis hooker on Katana transaction lifecycle.
 //!
 use async_trait::async_trait;
+use cainome::cairo_serde::CairoSerde;
 use katana_core::hooker::{HookerAddresses, KatanaHooker};
 use katana_core::sequencer::KatanaSequencer;
+use katana_primitives::contract::ContractAddress;
+use katana_primitives::transaction::{ExecutableTx, ExecutableTxWithHash, L1HandlerTx};
+use katana_primitives::utils::transaction::compute_l1_message_hash;
 use starknet::accounts::Call;
 use starknet::core::types::BroadcastedInvokeTransaction;
 use starknet::core::types::FieldElement;
 use starknet::macros::selector;
 use starknet::providers::Provider;
-use starknet_abigen_parser::CairoType;
 use std::sync::Arc;
-
-use katana_core::backend::storage::transaction::L1HandlerTransaction;
-use katana_core::utils::transaction::compute_l1_handler_transaction_hash_felts;
-use katana_core::utils::transaction::stark_felt_to_field_element_array;
-use starknet_api::core::ContractAddress;
-use starknet_api::core::EntryPointSelector;
-use starknet_api::core::Nonce;
-use starknet_api::hash::StarkFelt;
-use starknet_api::stark_felt;
-use starknet_api::transaction::{
-    Calldata, L1HandlerTransaction as ApiL1HandlerTransaction, TransactionHash, TransactionVersion,
-};
 
 use crate::contracts::orderbook::OrderV1;
 use crate::contracts::starknet_utils::StarknetUtilsReader;
@@ -89,7 +80,7 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
         &self,
         selector: FieldElement,
         payload: &[FieldElement],
-    ) -> L1HandlerTransaction {
+    ) {
         let to_address = self.orderbook_address;
         let from_address = self.sn_executor_address;
         let chain_id = CHAIN_ID_SOLIS;
@@ -100,37 +91,27 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
         let nonce = FieldElement::ZERO;
 
         // The calldata always starts with the from_address.
-        let mut calldata: Vec<StarkFelt> = vec![from_address.into()];
+        let mut calldata: Vec<FieldElement> = vec![from_address];
         for p in payload.into_iter() {
-            calldata.push((*p).into());
+            calldata.push(*p);
         }
 
-        let transaction_hash: FieldElement = compute_l1_handler_transaction_hash_felts(
-            // The version is only ZERO for now.
-            FieldElement::ZERO,
-            to_address,
-            selector,
-            &stark_felt_to_field_element_array(&calldata),
-            chain_id,
-            nonce,
-        );
+        let message_hash = compute_l1_message_hash(from_address, to_address, payload);
 
-        L1HandlerTransaction {
-            inner: ApiL1HandlerTransaction {
-                transaction_hash: TransactionHash(transaction_hash.into()),
-                // Must be 0 for now as it's the only supported version.
-                version: TransactionVersion(stark_felt!(0_u32)),
-                nonce: Nonce(nonce.into()),
-                contract_address: ContractAddress::try_from(
-                    <FieldElement as Into<StarkFelt>>::into(to_address),
-                )
-                .unwrap(),
-                entry_point_selector: EntryPointSelector(selector.into()),
-                calldata: Calldata(calldata.into()),
-            },
-            // This fields has no relevance in the case of Solis. We use the default
-            // value that is normally charged on L1.
-            paid_l1_fee: 30000_u128,
+        let tx = L1HandlerTx {
+            nonce,
+            chain_id,
+            paid_fee_on_l1: 30000_u128,
+            version: FieldElement::ZERO,
+            message_hash,
+            calldata,
+            contract_address: ContractAddress(to_address),
+            entry_point_selector: selector,
+        };
+
+        if let Some(seq) = &self.sequencer {
+            let exe = ExecutableTxWithHash::new_query(ExecutableTx::L1Handler(tx));
+            seq.add_transaction_to_pool(exe);
         }
     }
 }
@@ -193,7 +174,7 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
                 continue;
             }
 
-            let order = match OrderV1::deserialize(&call.calldata, 0) {
+            let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
                 Ok(order) => order,
                 Err(e) => {
                     tracing::error!("Fail deserializing OrderV1: {:?}", e);
