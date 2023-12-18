@@ -16,13 +16,14 @@ import { getSignInfos } from "../../signer";
 import { CancelInfo, FullCancelInfo } from "../../types";
 
 const cancelOrder = async (
-  provider: RpcProvider,
-  account: Account,
+  arkProvider: RpcProvider,
+  starknetAccount: Account,
+  arkAccount: Account,
   cancelInfo: CancelInfo
 ) => {
   const fullCancelInfo: FullCancelInfo = {
     order_hash: cancelInfo.order_hash,
-    canceller: account.address,
+    canceller: starknetAccount.address,
     token_chain_id: shortString.encodeShortString("SN_MAIN"),
     token_address: cancelInfo.token_address,
     token_id: new CairoOption<Uint256>(
@@ -58,7 +59,7 @@ const cancelOrder = async (
     primaryType: "Order"
   };
 
-  const signInfo = await getSignInfos(TypedOrderData, account);
+  const signInfo = await getSignInfos(TypedOrderData, starknetAccount);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
   // Compile calldata for the create_order function
   let create_order_calldata = CallData.compile({
@@ -67,14 +68,14 @@ const cancelOrder = async (
   });
 
   // Execute the transaction
-  const result = await account.execute({
+  const result = await arkAccount.execute({
     contractAddress: ORDER_BOOK_ADDRESS,
     entrypoint: "cancel_order",
     calldata: create_order_calldata
   });
 
   // Wait for the transaction to be processed
-  await provider.waitForTransaction(result.transaction_hash, {
+  await arkProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });
 };

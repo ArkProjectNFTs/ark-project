@@ -12,7 +12,12 @@ import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
 
 // Initialize the RPC provider with the ArkChain node URL
-const provider = new RpcProvider({
+const starknetProvider = new RpcProvider({
+  nodeUrl: "http://0.0.0.0:7777"
+});
+
+// Initialize the RPC provider with the katana node URL for starknet
+const arkProvider = new RpcProvider({
   nodeUrl: "http://0.0.0.0:7777"
 });
 
@@ -21,9 +26,10 @@ const provider = new RpcProvider({
  *
  * @param {RpcProvider} provider - The RPC provider instance.
  */
-(async (provider: RpcProvider) => {
+(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
   // Create a new account using the provider
-  const { account } = await createAccount(provider);
+  const { account: arkAccount } = await createAccount(arkProvider);
+  const { account: starknetAccount } = await createAccount(starknetProvider);
 
   // Define the order details
   let order: ListingV1 = {
@@ -35,7 +41,7 @@ const provider = new RpcProvider({
   };
 
   // Create the listing on the arkchain using the order details
-  await createListing(provider, account, order);
+  await createListing(arkProvider, starknetAccount, arkAccount, order);
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -44,12 +50,12 @@ const provider = new RpcProvider({
   const { orderHash } = await getOrderHash(
     order.tokenId,
     order.tokenAddress,
-    provider
+    arkProvider
   );
 
   let { orderStatus: orderStatusBefore } = await getOrderStatus(
     orderHash,
-    provider
+    arkProvider
   );
   console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
 
@@ -61,13 +67,13 @@ const provider = new RpcProvider({
   };
 
   // Cancel the order
-  cancelOrder(provider, account, cancelInfo);
+  cancelOrder(arkProvider, starknetAccount, arkAccount, cancelInfo);
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   let { orderStatus: orderStatusAfter } = await getOrderStatus(
     orderHash,
-    provider
+    arkProvider
   );
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
-})(provider);
+})(arkProvider, starknetProvider);

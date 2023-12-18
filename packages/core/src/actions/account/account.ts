@@ -1,5 +1,7 @@
 import { Account, CallData, ec, hash, RpcProvider, stark } from "starknet";
 
+import { ACCOUNT_CLASS_HASH } from "../../constants";
+
 import "dotenv/config";
 
 import { ACCOUNT_CLASS_HASH } from "../../constants";

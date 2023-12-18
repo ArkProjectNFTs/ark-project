@@ -17,7 +17,8 @@ import { FulfillInfo } from "../../types";
  */
 const _fulfillOrder = async (
   provider: RpcProvider,
-  account: Account,
+  starknetFulfillerAccount: Account,
+  arkFulfillerAccount: Account,
   fulfillInfo: FulfillInfo
 ) => {
   // Compile the order data
@@ -46,7 +47,7 @@ const _fulfillOrder = async (
     primaryType: "Order"
   };
 
-  const signInfo = await getSignInfos(TypedOrderData, account);
+  const signInfo = await getSignInfos(TypedOrderData, starknetFulfillerAccount);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
   let fulfillInfoCalldata = CallData.compile({
@@ -55,7 +56,7 @@ const _fulfillOrder = async (
   });
 
   // Execute the transaction
-  const result = await account.execute({
+  const result = await arkFulfillerAccount.execute({
     contractAddress: ORDER_BOOK_ADDRESS,
     entrypoint: "fulfill_order",
     calldata: fulfillInfoCalldata

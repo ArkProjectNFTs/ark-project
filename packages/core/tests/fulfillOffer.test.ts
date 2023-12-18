@@ -18,13 +18,18 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     this.timeout(10000); // Extend timeout if necessary
 
     // Initialize the RPC provider with the ArkChain node URL
-    const provider = new RpcProvider({
+    const starknetProvider = new RpcProvider({
+      nodeUrl: "http://0.0.0.0:7777"
+    });
+
+    // Initialize the RPC provider with the katana node URL for starknet
+    const arkProvider = new RpcProvider({
       nodeUrl: "http://0.0.0.0:7777"
     });
 
     // Create a new account for the listing using the provider
-    const { account: listing_account } = await createAccount(provider);
-    expect(listing_account).to.exist;
+    const { account: arkAccount } = await createAccount(arkProvider);
+    const { account: starknetAccount } = await createAccount(starknetProvider);
 
     // Define the order details
     let order: OfferV1 = {
@@ -36,20 +41,27 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     };
 
     // Create the listing on the arkchain using the order details
-    const orderHash = await createListing(provider, listing_account, order);
+    const orderHash = await createListing(
+      arkProvider,
+      starknetAccount,
+      arkAccount,
+      order
+    );
     expect(orderHash).to.exist;
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     let { orderStatus: orderStatusBefore } = await getOrderStatus(
       orderHash,
-      provider
+      arkProvider
     );
     expect(shortString.decodeShortString(orderStatusBefore)).to.equal("OPEN");
 
     // Create a new account for fulfilling the offer
-    const { account: fulfiller_account } = await createAccount(provider);
-    expect(fulfiller_account).to.exist;
+    const { account: starknetFulfillerAccount } =
+      await createAccount(starknetProvider);
+
+    expect(starknetFulfillerAccount).to.exist;
 
     // Define the fulfill details
     const fulfill_info = {
@@ -59,13 +71,18 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     };
 
     // Fulfill the offer
-    await fulfillOffer(provider, fulfiller_account, fulfill_info);
+    await fulfillOffer(
+      arkProvider,
+      starknetFulfillerAccount,
+      arkAccount,
+      fulfill_info
+    );
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     let { orderStatus: orderStatusAfter } = await getOrderStatus(
       orderHash,
-      provider
+      arkProvider
     );
     expect(shortString.decodeShortString(orderStatusAfter)).to.equal(
       "FULFILLED"

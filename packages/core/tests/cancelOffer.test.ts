@@ -21,13 +21,18 @@ chai.use(chaiAsPromised);
 describe("ArkProject cancel offer", () => {
   it("should create an offer and verify its status and type", async function () {
     // Initialize the RPC provider with the ArkChain node URL
-    const provider = new RpcProvider({
+    const starknetProvider = new RpcProvider({
+      nodeUrl: "http://0.0.0.0:7777"
+    });
+
+    // Initialize the RPC provider with the katana node URL for starknet
+    const arkProvider = new RpcProvider({
       nodeUrl: "http://0.0.0.0:7777"
     });
 
     // Create a new account using the provider
-    const { account } = await createAccount(provider);
-    expect(account).to.exist; // Assert that account creation was successful
+    const { account: arkAccount } = await createAccount(arkProvider);
+    const { account: starknetAccount } = await createAccount(starknetProvider);
 
     // Define the order details
     let order: ListingV1 = {
@@ -39,20 +44,25 @@ describe("ArkProject cancel offer", () => {
     };
 
     // Create the listing on the blockchain using the order details
-    let orderHash = await createOffer(provider, account, order);
+    let orderHash = await createOffer(
+      arkProvider,
+      starknetAccount,
+      arkAccount,
+      order
+    );
     // Assert that the listing was created successfully (if possible)
     await sleep(1000); // Wait for the transaction to be processed
 
     // Assert that the order is open
     await expect(
-      getOrderStatus(orderHash, provider).then((res) =>
+      getOrderStatus(orderHash, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
 
     // Assert that the order type is 'OFFER'
     await expect(
-      getOrderType(orderHash, provider).then((res) =>
+      getOrderType(orderHash, arkProvider).then((res) =>
         getTypeFromCairoCustomEnum(res.orderType)
       )
     ).to.eventually.equal("OFFER");
@@ -65,11 +75,11 @@ describe("ArkProject cancel offer", () => {
     };
 
     // Cancel the order
-    await cancelOrder(provider, account, cancelInfo);
+    await cancelOrder(arkProvider, starknetAccount, arkAccount, cancelInfo);
 
     // Assert that the order was cancelled successfully
     await expect(
-      getOrderStatus(orderHash, provider).then((res) =>
+      getOrderStatus(orderHash, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("CANCELLED_USER");

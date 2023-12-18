@@ -13,14 +13,15 @@ import { FulfillInfo, FulfillListingInfo } from "../../types";
 import { _fulfillOrder } from "./_fulfill";
 
 const fulfillListing = async (
-  provider: RpcProvider,
-  account: Account,
+  arkProvider: RpcProvider,
+  starknetFulfillerAccount: Account,
+  arkFulfillerAccount: Account,
   fulfillListingInfo: FulfillListingInfo
 ) => {
   let fulfillInfo: FulfillInfo = {
     order_hash: fulfillListingInfo.order_hash,
     related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),
-    fulfiller: account.address,
+    fulfiller: starknetFulfillerAccount.address,
     token_chain_id: shortString.encodeShortString("SN_MAIN"),
     token_address: fulfillListingInfo.token_address,
     token_id: new CairoOption<Uint256>(
@@ -29,7 +30,12 @@ const fulfillListing = async (
     )
   };
 
-  _fulfillOrder(provider, account, fulfillInfo);
+  _fulfillOrder(
+    arkProvider,
+    starknetFulfillerAccount,
+    arkFulfillerAccount,
+    fulfillInfo
+  );
 };
 
 export { fulfillListing };
