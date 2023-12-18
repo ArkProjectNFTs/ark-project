@@ -5,6 +5,7 @@ import { ArkProvider, Network } from "@ark-project/react";
 import WalletBar from "@/components/WalletBar";
 
 import Account from "./components/Account";
+import CreateListing from "./components/CreateListing";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <ArkProvider network={Network.Testnet}>
         <WalletBar />
         <Account />
+        <CreateListing />
       </ArkProvider>
     </main>
   );
