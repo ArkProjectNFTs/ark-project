@@ -162,7 +162,7 @@ fn setup_offer(
     let order_hash = order_offer.compute_order_hash();
     let token_hash = order_offer.compute_token_hash();
 
-    let signer = sign_mock(order_hash, pk);
+    let signer = sign_mock(order_hash);
 
     (order_offer, signer, order_hash, token_hash)
 }
@@ -289,7 +289,7 @@ fn setup_auction_order(
 
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let signer = sign_mock(order_hash, pk);
+    let signer = sign_mock(order_hash);
 
     (order_listing, signer, order_hash, token_hash)
 }
@@ -326,7 +326,7 @@ fn setup_listing(
 
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let signer = sign_mock(order_hash, Option::None);
+    let signer = sign_mock(order_hash);
     (order_listing, signer, order_hash, token_hash)
 }
 

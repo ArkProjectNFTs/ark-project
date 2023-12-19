@@ -45,7 +45,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -80,7 +80,7 @@ fn test_create_listing_order_and_fulfill() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 
@@ -121,7 +121,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -153,7 +153,7 @@ fn test_fulfill_already_fulfilled_order() {
         token_id: Option::Some(10),
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -187,6 +187,6 @@ fn test_fulfill_expired_order() {
         token_id: Option::Some(10),
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let fulfill_signer = sign_mock(fulfill_info_hash, Option::None);
+    let fulfill_signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, fulfill_signer);
 }

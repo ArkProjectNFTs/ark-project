@@ -4,15 +4,20 @@
  * submitting a listing order and cancelling it.
  */
 
-import { RpcProvider } from "starknet";
+import { RpcProvider, shortString } from "starknet";
 
 import { createAccount } from "../src/actions/account/account";
 import { cancelOrder, createListing } from "../src/actions/order";
-import { getOrderHash } from "../src/actions/read";
+import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
 
 // Initialize the RPC provider with the ArkChain node URL
-const provider = new RpcProvider({
+const starknetProvider = new RpcProvider({
+  nodeUrl: "http://0.0.0.0:5050"
+});
+
+// Initialize the RPC provider with the katana node URL for starknet
+const arkProvider = new RpcProvider({
   nodeUrl: "http://0.0.0.0:7777"
 });
 
@@ -21,21 +26,22 @@ const provider = new RpcProvider({
  *
  * @param {RpcProvider} provider - The RPC provider instance.
  */
-(async (provider: RpcProvider) => {
+(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
   // Create a new account using the provider
-  const { account } = await createAccount(provider);
+  const { account: arkAccount } = await createAccount(arkProvider);
+  const { account: starknetAccount } = await createAccount(starknetProvider);
 
   // Define the order details
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress:
       "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-    tokenId: 6, // The ID of the token
+    tokenId: 63, // The ID of the token
     startAmount: 600000000000000000 // The starting amount for the order
   };
 
   // Create the listing on the arkchain using the order details
-  await createListing(provider, account, order);
+  await createListing(arkProvider, starknetAccount, arkAccount, order);
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -44,8 +50,14 @@ const provider = new RpcProvider({
   const { orderHash } = await getOrderHash(
     order.tokenId,
     order.tokenAddress,
-    provider
+    arkProvider
   );
+
+  let { orderStatus: orderStatusBefore } = await getOrderStatus(
+    orderHash,
+    arkProvider
+  );
+  console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
 
   // Define the cancel details
   const cancelInfo = {
@@ -55,5 +67,13 @@ const provider = new RpcProvider({
   };
 
   // Cancel the order
-  cancelOrder(provider, account, cancelInfo);
-})(provider);
+  cancelOrder(arkProvider, starknetAccount, arkAccount, cancelInfo);
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  let { orderStatus: orderStatusAfter } = await getOrderStatus(
+    orderHash,
+    arkProvider
+  );
+  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+})(arkProvider, starknetProvider);

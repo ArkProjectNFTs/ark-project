@@ -23,7 +23,7 @@ importers:
         version: 3.1.0
       turbo:
         specifier: latest
-        version: 1.11.1
+        version: 1.11.2
 
   packages/core:
     dependencies:
@@ -130,10 +130,10 @@ importers:
         version: 1.0.2(@types/react@18.2.43)(react@18.2.0)
       '@starknet-react/chains':
         specifier: ^0.1.0
-        version: 0.1.3
+        version: 0.1.2
       '@starknet-react/core':
         specifier: ^2.1.0
-        version: 2.1.4(get-starknet-core@3.2.0)(react@18.2.0)(starknet@5.24.5)
+        version: 2.1.3(get-starknet-core@3.2.0)(react@18.2.0)(starknet@5.22.0)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -142,7 +142,7 @@ importers:
         version: 2.0.0
       get-starknet-core:
         specifier: ^3.2.0
-        version: 3.2.0(starknet@5.24.5)
+        version: 3.2.0(starknet@5.22.0)
       next:
         specifier: 14.0.2
         version: 14.0.2(@babel/core@7.23.5)(react-dom@18.2.0)(react@18.2.0)
@@ -154,7 +154,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       starknet:
         specifier: ^5.19.5
-        version: 5.24.5
+        version: 5.22.0
       tailwind-merge:
         specifier: ^2.1.0
         version: 2.1.0
@@ -179,7 +179,7 @@ importers:
         version: 8.54.0
       eslint-config-next:
         specifier: 14.0.2
-        version: 14.0.2(eslint@8.54.0)(typescript@5.3.3)
+        version: 14.0.2(eslint@8.54.0)(typescript@5.2.2)
       postcss:
         specifier: ^8
         version: 8.4.32
@@ -188,7 +188,7 @@ importers:
         version: 3.3.6
       typescript:
         specifier: ^5
-        version: 5.3.3
+        version: 5.2.2
 
   packages/react:
     dependencies:
@@ -1074,24 +1074,24 @@ packages:
       '@noble/hashes': 1.3.2
     dev: false
 
-  /@starknet-react/chains@0.1.3:
-    resolution: {integrity: sha512-dSpLgDS02PmPzFVoW07EBVRbsX+h7MH7DYx2FF7vJv/J6eMGY7KtSupJW9R6ys0iADAxSg0UDcZr7syuy+b/Pg==}
+  /@starknet-react/chains@0.1.2:
+    resolution: {integrity: sha512-23/itO07epsI7Lxw2NB0hk+PzY/7hmTo+/p/MKGT3OeHuf+NjlKw23YdE6wNhG1qTA6d/P2CumQiJadRESAhQA==}
     dev: false
 
-  /@starknet-react/core@2.1.4(get-starknet-core@3.2.0)(react@18.2.0)(starknet@5.24.5):
-    resolution: {integrity: sha512-VPUDxCu/VlbaSjUxvji+JsuGwv3LnulMk36L1fnR0zPVSJkMdXcn5RRjqo0aXS6LsCUYlDI8oQm3K483cTylPA==}
+  /@starknet-react/core@2.1.3(get-starknet-core@3.2.0)(react@18.2.0)(starknet@5.22.0):
+    resolution: {integrity: sha512-kiXowWZKR7fiiox9xmYd4utbZ9qnB8HxJ5NHq6dg+jscRp484Oif980WEuFwVOKK3lB8LS5/artW7xWo3sKYPg==}
     peerDependencies:
       get-starknet-core: ^3.2.0
       react: ^18.0
       starknet: ^5.19.0
     dependencies:
-      '@starknet-react/chains': 0.1.3
+      '@starknet-react/chains': 0.1.2
       '@tanstack/react-query': 5.13.4(react@18.2.0)
       eventemitter3: 5.0.1
-      get-starknet-core: 3.2.0(starknet@5.24.5)
+      get-starknet-core: 3.2.0(starknet@5.22.0)
       immutable: 4.3.4
       react: 18.2.0
-      starknet: 5.24.5
+      starknet: 5.22.0
       zod: 3.22.4
     dev: false
 
@@ -1230,27 +1230,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@typescript-eslint/parser@6.11.0(eslint@8.54.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-+whEdjk+d5do5nxfxx73oanLL9ghKO3EwM9kBCkUtWMRwWuPaFv9ScuqlYfQ6pAD6ZiJhky7TZ2ZYhrMsfMxVQ==}
-    engines: {node: ^16.0.0 || >=18.0.0}
-    peerDependencies:
-      eslint: ^7.0.0 || ^8.0.0
-      typescript: '*'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      '@typescript-eslint/scope-manager': 6.11.0
-      '@typescript-eslint/types': 6.11.0
-      '@typescript-eslint/typescript-estree': 6.11.0(typescript@5.3.3)
-      '@typescript-eslint/visitor-keys': 6.11.0
-      debug: 4.3.4(supports-color@8.1.1)
-      eslint: 8.54.0
-      typescript: 5.3.3
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /@typescript-eslint/scope-manager@5.62.0:
     resolution: {integrity: sha512-VXuvVvZeQCQb5Zgf4HAxc04q5j+WrNAtNh9OwCsCgpKqESMTu3tF/jhZ3xG6T4NZwWl65Bg8KuS2uEvhSfLl0w==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -1334,27 +1313,6 @@ packages:
       typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
-
-  /@typescript-eslint/typescript-estree@6.11.0(typescript@5.3.3):
-    resolution: {integrity: sha512-Aezzv1o2tWJwvZhedzvD5Yv7+Lpu1by/U1LZ5gLc4tCx8jUmuSCMioPFRjliN/6SJIvY6HpTtJIWubKuYYYesQ==}
-    engines: {node: ^16.0.0 || >=18.0.0}
-    peerDependencies:
-      typescript: '*'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      '@typescript-eslint/types': 6.11.0
-      '@typescript-eslint/visitor-keys': 6.11.0
-      debug: 4.3.4(supports-color@8.1.1)
-      globby: 11.1.0
-      is-glob: 4.0.3
-      semver: 7.5.4
-      ts-api-utils: 1.0.3(typescript@5.3.3)
-      typescript: 5.3.3
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /@typescript-eslint/utils@5.62.0(eslint@8.54.0)(typescript@5.2.2):
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
@@ -2222,7 +2180,7 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
-  /eslint-config-next@14.0.2(eslint@8.54.0)(typescript@5.3.3):
+  /eslint-config-next@14.0.2(eslint@8.54.0)(typescript@5.2.2):
     resolution: {integrity: sha512-CasWThlsyIcg/a+clU6KVOMTieuDhTztsrqvniP6AsRki9v7FnojTa7vKQOYM8QSOsQdZ/aElLD1Y2Oc8/PsIg==}
     peerDependencies:
       eslint: ^7.23.0 || ^8.0.0
@@ -2233,7 +2191,7 @@ packages:
     dependencies:
       '@next/eslint-plugin-next': 14.0.2
       '@rushstack/eslint-patch': 1.6.0
-      '@typescript-eslint/parser': 6.11.0(eslint@8.54.0)(typescript@5.3.3)
+      '@typescript-eslint/parser': 6.11.0(eslint@8.54.0)(typescript@5.2.2)
       eslint: 8.54.0
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@6.11.0)(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.0)(eslint@8.54.0)
@@ -2241,7 +2199,7 @@ packages:
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.54.0)
       eslint-plugin-react: 7.33.2(eslint@8.54.0)
       eslint-plugin-react-hooks: 4.6.0(eslint@8.54.0)
-      typescript: 5.3.3
+      typescript: 5.2.2
     transitivePeerDependencies:
       - eslint-import-resolver-webpack
       - supports-color
@@ -2941,12 +2899,12 @@ packages:
       hasown: 2.0.0
     dev: true
 
-  /get-starknet-core@3.2.0(starknet@5.24.5):
+  /get-starknet-core@3.2.0(starknet@5.22.0):
     resolution: {integrity: sha512-SZhxtLlKoPKLZ2H3l9WIU7CiNmkL3qLWGksALmvZdAXa/9PykYfLtvIB5B8A2UZMpf2ojTZlWLfuo1KhgmVobA==}
     peerDependencies:
       starknet: ^5.18.0
     dependencies:
-      starknet: 5.24.5
+      starknet: 5.22.0
     dev: false
 
   /get-stdin@9.0.0:
@@ -4570,20 +4528,6 @@ packages:
       - encoding
     dev: false
 
-  /starknet@5.24.5:
-    resolution: {integrity: sha512-6N9AXNVv33cz0ZJ1YDsnLBdbTnHJ0Eo/wkSWhsUnbBTUK4svy9/8g6fbM/0goAOTCyclf6w1jnrkJ7DECUqZyw==}
-    dependencies:
-      '@noble/curves': 1.2.0
-      '@scure/base': 1.1.3
-      '@scure/starknet': 0.3.0
-      isomorphic-fetch: 3.0.0
-      lossless-json: 2.0.11
-      pako: 2.1.0
-      url-join: 4.0.1
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /streamsearch@1.1.0:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
     engines: {node: '>=10.0.0'}
@@ -4831,15 +4775,6 @@ packages:
     dependencies:
       typescript: 5.2.2
 
-  /ts-api-utils@1.0.3(typescript@5.3.3):
-    resolution: {integrity: sha512-wNMeqtMz5NtwpT/UZGY5alT+VoKdSsOOP/kqHFcUW1P/VRhH2wJ48+DN2WwUliNbQ976ETwDL0Ifd2VVvgonvg==}
-    engines: {node: '>=16.13.0'}
-    peerDependencies:
-      typescript: '>=4.2.0'
-    dependencies:
-      typescript: 5.3.3
-    dev: true
-
   /ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
@@ -4939,64 +4874,64 @@ packages:
       typescript: 5.2.2
     dev: true
 
-  /turbo-darwin-64@1.11.1:
-    resolution: {integrity: sha512-JmwL8kcfxncDf2SZFioSa6dUvpMq/HbMcurh9mGm6BxWLQoB0d3fP/q3HizgCSbOE4ihScXoQ+c/C2xhl6Ngjg==}
+  /turbo-darwin-64@1.11.2:
+    resolution: {integrity: sha512-toFmRG/adriZY3hOps7nYCfqHAS+Ci6xqgX3fbo82kkLpC6OBzcXnleSwuPqjHVAaRNhVoB83L5njcE9Qwi2og==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-darwin-arm64@1.11.1:
-    resolution: {integrity: sha512-lIpT7nPkU0xmpkI8VOGQcgoQKmUATRMpRhTDclz6j/Px7Qtxjc+2PitKHKfR3aCnseoRMGkgMzPEJTPUwCpnlQ==}
+  /turbo-darwin-arm64@1.11.2:
+    resolution: {integrity: sha512-FCsEDZ8BUSFYEOSC3rrARQrj7x2VOrmVcfrMUIhexTxproRh4QyMxLfr6LALk4ymx6jbDCxWa6Szal8ckldFbA==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-linux-64@1.11.1:
-    resolution: {integrity: sha512-mHFSqMkgy3h/M8Ocj2oiOr6CqlCqB6coCPWVIAmraBk+SQywwsszgJ69GWBfm7lwwJvb3B1YN1wkZNe9ZZnBfg==}
+  /turbo-linux-64@1.11.2:
+    resolution: {integrity: sha512-Vzda/o/QyEske5CxLf0wcu7UUS+7zB90GgHZV4tyN+WZtoouTvbwuvZ3V6b5Wgd3OJ/JwWR0CXDK7Sf4VEMr7A==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-linux-arm64@1.11.1:
-    resolution: {integrity: sha512-6ybojTkAkymo1Ig7kU3s2YQUUSRf3l2qatPZgw3v4OmFTSU2feCU1sHjAEqhHwEjV1KciDo1wRl1gjjyby4foQ==}
+  /turbo-linux-arm64@1.11.2:
+    resolution: {integrity: sha512-bRLwovQRz0yxDZrM4tQEAYV0fBHEaTzUF0JZ8RG1UmZt/CqtpnUrJpYb1VK8hj1z46z9YehARpYCwQ2K0qU4yw==}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-windows-64@1.11.1:
-    resolution: {integrity: sha512-ytWy6+yEtBfv6nbgCKW6HsolgUFAC1PZGMPzbqRGnCm2eLVWhDuwO1Yk7uq4cvdrpXcXgOMcPEoJZxUCDbeJaQ==}
+  /turbo-windows-64@1.11.2:
+    resolution: {integrity: sha512-LgTWqkHAKgyVuLYcEPxZVGPInTjjeCnN5KQMdJ4uQZ+xMDROvMFS2rM93iQl4ieDJgidwHCxxCxaU9u8c3d/Kg==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-windows-arm64@1.11.1:
-    resolution: {integrity: sha512-O04DdJoRavOh/v9/MM5wWCEtOekO4aiLljNZc/fOh853sOhid61ZRSEYUmS9ecjmZ/OjKqedIfbkitaQ77c4xA==}
+  /turbo-windows-arm64@1.11.2:
+    resolution: {integrity: sha512-829aVBU7IX0c/B4G7g1VI8KniAGutHhIupkYMgF6xPkYVev2G3MYe6DMS/vsLt9GGM9ulDtdWxWrH5P2ngK8IQ==}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo@1.11.1:
-    resolution: {integrity: sha512-pmIsyTcyBJ5iJIaTjJyCxAq7YquDqyRai6FW2q0mFAkwK3k0p36wJ5yH85U2Ue6esrTKzeSEKskP4/fa7dv4+A==}
+  /turbo@1.11.2:
+    resolution: {integrity: sha512-jPC7LVQJzebs5gWf8FmEvsvXGNyKbN+O9qpvv98xpNaM59aS0/Irhd0H0KbcqnXfsz7ETlzOC3R+xFWthC4Z8A==}
     hasBin: true
     optionalDependencies:
-      turbo-darwin-64: 1.11.1
-      turbo-darwin-arm64: 1.11.1
-      turbo-linux-64: 1.11.1
-      turbo-linux-arm64: 1.11.1
-      turbo-windows-64: 1.11.1
-      turbo-windows-arm64: 1.11.1
+      turbo-darwin-64: 1.11.2
+      turbo-darwin-arm64: 1.11.2
+      turbo-linux-64: 1.11.2
+      turbo-linux-arm64: 1.11.2
+      turbo-windows-64: 1.11.2
+      turbo-windows-arm64: 1.11.2
     dev: true
 
   /type-check@0.4.0:

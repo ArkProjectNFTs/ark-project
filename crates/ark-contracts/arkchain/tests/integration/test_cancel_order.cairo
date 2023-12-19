@@ -42,7 +42,7 @@ fn test_cancel_auction() {
     };
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
+    let canceller_signer = sign_mock(cancel_info_hash);
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
 
@@ -74,7 +74,7 @@ fn test_cancel_non_existing_order() {
     };
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
+    let canceller_signer = sign_mock(cancel_info_hash);
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
@@ -111,7 +111,7 @@ fn test_invalid_cancel_auction_order() {
     let order_hash = auction_listing_order.compute_order_hash();
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
+    let canceller_signer = sign_mock(cancel_info_hash);
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
 
@@ -156,7 +156,7 @@ fn test_cancel_auction_during_the_extended_time() {
     };
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash, Option::None);
+    let canceller_signer = sign_mock(cancel_info_hash);
 
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }

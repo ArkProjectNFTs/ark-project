@@ -14,16 +14,24 @@ import { generateRandomTokenId, sleep } from "./utils"; // Assuming you have a s
 
 chai.use(chaiAsPromised);
 
-describe("ArkProject Order Lifecycle", () => {
+describe("ArkProject Cancel listing", () => {
   it("should create and then cancel a listing", async function () {
     // Initialize the RPC provider with the ArkChain node URL
-    const provider = new RpcProvider({
+    const starknetProvider = new RpcProvider({
+      nodeUrl: "http://0.0.0.0:7777"
+    });
+
+    // Initialize the RPC provider with the katana node URL for starknet
+    const arkProvider = new RpcProvider({
       nodeUrl: "http://0.0.0.0:7777"
     });
 
     // Create a new account using the provider
-    const { account } = await createAccount(provider);
-    expect(account).to.exist; // Assert that account creation was successful
+    const { account: arkAccount } = await createAccount(arkProvider);
+    const { account: starknetAccount } = await createAccount(starknetProvider);
+
+    expect(arkAccount).to.exist;
+    expect(starknetAccount).to.exist;
 
     // Define the order details
     let order: ListingV1 = {
@@ -35,21 +43,21 @@ describe("ArkProject Order Lifecycle", () => {
     };
 
     // Create the listing on the arkchain using the order details
-    await createListing(provider, account, order);
+    await createListing(arkProvider, starknetAccount, arkAccount, order);
     await sleep(1000); // Wait for the transaction to be processed
 
     // Get the order hash
     const { orderHash } = await getOrderHash(
       order.tokenId,
       order.tokenAddress,
-      provider
+      arkProvider
     );
     // Assert that we received an order hash
     expect(orderHash).to.exist;
 
     // Assert that the order is open
     await expect(
-      getOrderStatus(orderHash, provider).then((res) =>
+      getOrderStatus(orderHash, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
@@ -62,11 +70,11 @@ describe("ArkProject Order Lifecycle", () => {
     };
 
     // Cancel the order
-    await cancelOrder(provider, account, cancelInfo);
-
+    cancelOrder(arkProvider, starknetAccount, arkAccount, cancelInfo);
+    await sleep(1000); // Wait for the transaction to be processed
     // Assert that the order was cancelled successfully
     await expect(
-      getOrderStatus(orderHash, provider).then((res) =>
+      getOrderStatus(orderHash, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("CANCELLED_USER");
