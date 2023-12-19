@@ -4,8 +4,6 @@ import { ACCOUNT_CLASS_HASH } from "../../constants";
 
 import "dotenv/config";
 
-import { ACCOUNT_CLASS_HASH } from "../../constants";
-
 /**
  * Creates a new account on the StarkNet testnet.
  * This function generates a private key, derives the corresponding public key,
