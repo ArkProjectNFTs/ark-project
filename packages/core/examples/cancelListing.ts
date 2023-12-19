@@ -13,7 +13,7 @@ import { ListingV1 } from "../src/types";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
-  nodeUrl: "http://0.0.0.0:7777"
+  nodeUrl: "http://0.0.0.0:5050"
 });
 
 // Initialize the RPC provider with the katana node URL for starknet

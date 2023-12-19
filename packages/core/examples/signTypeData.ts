@@ -1,10 +1,4 @@
-import {
-  RpcProvider,
-  selector,
-  shortString,
-  Signature,
-  typedData
-} from "starknet";
+import { RpcProvider, selector, Signature, typedData } from "starknet";
 
 import { createAccount } from "../src/actions/account";
 
@@ -17,7 +11,6 @@ const provider = new RpcProvider({
   console.log(account.address);
   const orderTypeHash = selector.starknetKeccak("Order(hash:felt252)");
   console.log("orderTypeHash: " + orderTypeHash);
-
   const TypedOrderData = {
     message: {
       orderHash: 1
