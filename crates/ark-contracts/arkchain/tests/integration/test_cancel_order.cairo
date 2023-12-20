@@ -42,7 +42,7 @@ fn test_cancel_auction() {
     };
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash);
+    let canceller_signer = sign_mock(cancel_info_hash, auction_listing_order.offerer);
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
 
@@ -51,30 +51,27 @@ fn test_cancel_auction() {
 fn test_cancel_non_existing_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
-
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
     let order_hash = auction_listing_order.compute_order_hash();
-
+    let canceller = 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
+        .try_into()
+        .unwrap();
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
-
     let cancel_info = CancelInfo {
         order_hash: order_hash,
-        canceller: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        canceller: canceller,
         token_chain_id: 0,
         token_address: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
             .try_into()
             .unwrap(),
         token_id: Option::Some(1),
     };
-
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash);
+    let canceller_signer = sign_mock(cancel_info_hash, canceller);
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
@@ -111,7 +108,7 @@ fn test_invalid_cancel_auction_order() {
     let order_hash = auction_listing_order.compute_order_hash();
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash);
+    let canceller_signer = sign_mock(cancel_info_hash, auction_listing_order.offerer);
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }
 
@@ -128,25 +125,19 @@ fn test_cancel_auction_during_the_extended_time() {
     let contract = declare('orderbook');
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
-
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
-
     let order_type = dispatcher.get_order_type(order_hash);
     assert(order_type == OrderType::Auction.into(), 'order is not auction');
-
     start_warp(contract_address, end_date - 1);
     let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_offer(
         end_date - 1, end_date + 1200, Option::None, Option::None
     );
     dispatcher.create_order(order: auction_offer, signer: signer);
     let order_expiration_date = dispatcher.get_auction_expiration(auction_order_hash);
-
     let expected_end_date = end_date + 600;
     assert(order_expiration_date == expected_end_date, 'order end date is not correct');
-
     start_warp(contract_address, end_date + 5);
-
     let cancel_info = CancelInfo {
         order_hash: order_hash,
         canceller: auction_listing_order.offerer,
@@ -156,7 +147,7 @@ fn test_cancel_auction_during_the_extended_time() {
     };
 
     let cancel_info_hash = serialized_hash(cancel_info);
-    let canceller_signer = sign_mock(cancel_info_hash);
+    let canceller_signer = sign_mock(cancel_info_hash, auction_listing_order.offerer);
 
     dispatcher.cancel_order(cancel_info, signer: canceller_signer);
 }

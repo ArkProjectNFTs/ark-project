@@ -348,7 +348,6 @@ mod orderbook {
             let order_hash = order.compute_order_hash();
             let order_sign = OrderSign { hash: order_hash };
             let order_sign_hash = order_sign.compute_hash_from(from: order.offerer);
-
             let user_pubkey = SignerValidator::verify(order_sign_hash, signer);
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
@@ -359,7 +358,6 @@ mod orderbook {
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
             let order_hash = order.compute_order_hash();
-
             match order_type {
                 OrderType::Listing => {
                     assert(
@@ -457,7 +455,7 @@ mod orderbook {
                         .read(fulfill_info.order_hash);
                     let mut origin_signer = signer.clone();
                     origin_signer.set_public_key(original_signer_public_key);
-                    SignerValidator::verify(fulfill_hash, origin_signer);
+                    SignerValidator::verify(fulfill_sign_hash, origin_signer);
                     self._fulfill_auction_order(fulfill_info, order)
                 },
                 OrderType::Offer => { self._fulfill_offer(fulfill_info, order); },
@@ -703,14 +701,22 @@ mod orderbook {
             let token_hash = order.compute_token_hash();
             // revert if order is fulfilled or Open
             let current_order_hash = self.token_listings.read(token_hash);
-            // check expiration if order is expired continue
+            if (current_order_hash.is_non_zero()) {
+                assert(
+                    order_status_read(current_order_hash) != Option::Some(OrderStatus::Fulfilled),
+                    orderbook_errors::ORDER_FULFILLED
+                );
+            }
             let current_order: Option<OrderV1> = order_read(current_order_hash);
             if (current_order.is_some()) {
                 let current_order = current_order.unwrap();
-                assert(
-                    current_order.end_date <= starknet::get_block_timestamp(),
-                    orderbook_errors::ORDER_ALREADY_EXISTS
-                );
+                // check expiration if order is expired continue
+                if (current_order.offerer == order.offerer) {
+                    assert(
+                        current_order.end_date <= starknet::get_block_timestamp(),
+                        orderbook_errors::ORDER_ALREADY_EXISTS
+                    );
+                }
             }
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
             order_write(order_hash, order_type, order);
@@ -734,13 +740,22 @@ mod orderbook {
         ) {
             let token_hash = order.compute_token_hash();
             let current_order_hash = self.token_listings.read(token_hash);
+            if (current_order_hash.is_non_zero()) {
+                assert(
+                    order_status_read(current_order_hash) != Option::Some(OrderStatus::Fulfilled),
+                    orderbook_errors::ORDER_FULFILLED
+                );
+            }
             let current_order: Option<OrderV1> = order_read(current_order_hash);
             if (current_order.is_some()) {
                 let current_order = current_order.unwrap();
-                assert(
-                    current_order.end_date <= starknet::get_block_timestamp(),
-                    orderbook_errors::ORDER_ALREADY_EXISTS
-                );
+                // check expiration if order is expired continue
+                if (current_order.offerer == order.offerer) {
+                    assert(
+                        current_order.end_date <= starknet::get_block_timestamp(),
+                        orderbook_errors::ORDER_ALREADY_EXISTS
+                    );
+                }
             }
             let token_hash = order.compute_token_hash();
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);

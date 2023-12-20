@@ -28,15 +28,15 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
-
+    let fulfiller = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        .try_into()
+        .unwrap();
     let fulfill_info = FulfillInfo {
         order_hash: 0x00E4769a444F7FF9C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
             .try_into()
             .unwrap(),
         related_order_hash: Option::None,
-        fulfiller: 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        fulfiller: fulfiller,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -45,7 +45,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, fulfiller);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -65,13 +65,13 @@ fn test_create_listing_order_and_fulfill() {
 
     dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(order_hash);
-
+    let fulfiller = 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        .try_into()
+        .unwrap();
     let fulfill_info = FulfillInfo {
         order_hash: order_hash,
         related_order_hash: Option::None,
-        fulfiller: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        fulfiller: fulfiller,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -80,7 +80,7 @@ fn test_create_listing_order_and_fulfill() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, fulfiller);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 
@@ -110,9 +110,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
     let fulfill_info = FulfillInfo {
         order_hash: order_hash,
         related_order_hash: Option::None,
-        fulfiller: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        fulfiller: order_listing.offerer,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -121,7 +119,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, order_listing.offerer);
 
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -139,13 +137,13 @@ fn test_fulfill_already_fulfilled_order() {
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: order_listing, signer: signer);
-
+    let fulfiller = 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        .try_into()
+        .unwrap();
     let fulfill_info = FulfillInfo {
         order_hash: order_hash,
         related_order_hash: Option::None,
-        fulfiller: 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        fulfiller: fulfiller,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -153,7 +151,7 @@ fn test_fulfill_already_fulfilled_order() {
         token_id: Option::Some(10),
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash);
+    let signer = sign_mock(fulfill_info_hash, fulfiller);
     dispatcher.fulfill_order(fulfill_info, signer);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
@@ -173,13 +171,13 @@ fn test_fulfill_expired_order() {
     dispatcher.create_order(order: order_listing, signer: signer);
 
     start_warp(contract_address, order_listing.end_date + 10);
-
+    let fulfiller = 0x00E4269a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        .try_into()
+        .unwrap();
     let fulfill_info = FulfillInfo {
         order_hash: order_hash,
         related_order_hash: Option::None,
-        fulfiller: 0x00E4269a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        fulfiller: fulfiller,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -187,6 +185,6 @@ fn test_fulfill_expired_order() {
         token_id: Option::Some(10),
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let fulfill_signer = sign_mock(fulfill_info_hash);
+    let fulfill_signer = sign_mock(fulfill_info_hash, fulfiller);
     dispatcher.fulfill_order(fulfill_info, fulfill_signer);
 }

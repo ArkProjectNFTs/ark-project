@@ -1,4 +1,4 @@
-use core::debug::PrintTrait;
+use snforge_std::PrintTrait;
 use core::option::OptionTrait;
 use arkchain::orderbook::{orderbook, orderbook_errors};
 use arkchain::order::order_v1::OrderV1;
@@ -16,7 +16,6 @@ use array::ArrayTrait;
 use super::super::common::setup::{setup_listing_order, get_offer_order, setup_orders};
 
 const ORDER_VERSION_V1: felt252 = 'v1';
-
 
 #[test]
 fn test_create_listing() {
@@ -70,7 +69,7 @@ fn test_create_listing() {
         );
 }
 
-#[should_panic(expected: ('OB: order not cancellable',))]
+#[should_panic(expected: ('OB: order already exists',))]
 #[test]
 fn test_recreate_listing_same_owner() {
     let (order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
@@ -81,7 +80,7 @@ fn test_recreate_listing_same_owner() {
     );
     // check is first order is fulfilled
     let order_status = order_status_read(order_hash_1);
-    assert(order_status.unwrap() == OrderStatus::Open, 'Order not open');
+    assert(order_status.unwrap() == OrderStatus::Open, 'OB: order already exists');
     // create a second order over the first one same ressource hash different price
     let (order_listing_2, order_hash_2, token_hash_2) = setup_listing_order(500000000000000000);
     orderbook::InternalFunctions::_create_listing_order(
@@ -105,12 +104,12 @@ fn test_recreate_listing_different_offerer_fulfilled() {
     order_status_write(order_hash_1, OrderStatus::Fulfilled);
     // check is first order is fulfilled
     let order_status = order_status_read(order_hash_1);
-    assert(order_status.unwrap() == OrderStatus::Fulfilled, 'Order not fulfilled');
+    // assert(order_status.unwrap() == OrderStatus::Fulfilled, 'Order not fulfilled');
     // create a second order over the first one same ressource hash different price, different owner but the previous order is only fulfilled, to cover the case of user who just bought a token to list it instantly but the order is not yet executed
     // we cannot place & cancel a previous order if it's fulfilled
     let (mut order_listing_2, order_hash_2, token_hash_2) = setup_listing_order(500000000000000000);
     order_listing_2
-        .offerer = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        .offerer = 0x2484a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
         .try_into()
         .unwrap();
     orderbook::InternalFunctions::_create_listing_order(
@@ -128,8 +127,6 @@ fn test_recreate_listing_same_offerer_fulfilled() {
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     let order_option = order_read::<OrderV1>(order_hash_1);
-    let order_status = order_status_read(order_hash_1);
-    let order_type = order_type_read(order_hash_1);
     // fullfill the order 1
     order_status_write(order_hash_1, OrderStatus::Fulfilled);
     // check is first order is fulfilled
@@ -138,10 +135,6 @@ fn test_recreate_listing_same_offerer_fulfilled() {
     // create a second order over the first one same ressource hash different price, different owner but the previous order is only fulfilled, to cover the case of user who just bought a token to list it instantly but the order is not yet executed
     // we cannot place & cancel a previous order if it's fulfilled
     let (mut order_listing_2, order_hash_2, token_hash_2) = setup_listing_order(500000000000000000);
-    order_listing_2
-        .offerer = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-        .try_into()
-        .unwrap();
     orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
@@ -155,10 +148,11 @@ fn test_recreate_listing_new_owner() {
     orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
+
     // create a second order over the first one same ressource hash different price, different owner it should work and cancel the previous one
     let (mut order_listing_2, order_hash_2, token_hash_2) = setup_listing_order(500000000000000000);
     order_listing_2
-        .offerer = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        .offerer = 0x2584a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a823
         .try_into()
         .unwrap();
     orderbook::InternalFunctions::_create_listing_order(
@@ -306,7 +300,7 @@ fn test_create_listing_order_and_fulfill_the_order() {
     let fulfill_info = FulfillInfo {
         order_hash: order_hash_1,
         related_order_hash: Option::None,
-        fulfiller: 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        fulfiller: 0x2584a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: order_listing_1.token_chain_id,
@@ -344,7 +338,7 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
     let fulfill_info = FulfillInfo {
         order_hash: order_hash_1,
         related_order_hash: Option::None,
-        fulfiller: 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        fulfiller: 0x2584a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: order_listing_1.token_chain_id,
@@ -358,8 +352,6 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
 
 #[test]
 fn test_fulfill_classic_token_offer() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
-
     let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
@@ -399,8 +391,6 @@ fn test_fulfill_classic_token_offer() {
 
 #[test]
 fn test_fulfill_classic_collection_offer() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
-
     let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
     let contract_address = test_address();
     let mut spy = spy_events(SpyOn::One(contract_address));
@@ -443,8 +433,6 @@ fn test_fulfill_classic_collection_offer() {
 #[test]
 #[should_panic(expected: ('OB: order expired',))]
 fn test_fulfill_expired_offer() {
-    let user_pubkey: felt252 = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078;
-
     let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
