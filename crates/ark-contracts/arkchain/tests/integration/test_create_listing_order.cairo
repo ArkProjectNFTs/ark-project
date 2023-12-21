@@ -42,13 +42,11 @@ fn test_create_listing_order() {
     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
-
     dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
     let order_type = dispatcher.get_order_type(_order_hash);
     let order_hash = dispatcher.get_order_hash(token_hash);
-
     assert(order.broker_id == 123, 'Broker id is not equal');
     assert(order.token_id.is_some(), 'No Token id');
     assert(order.token_id.unwrap() == 10, 'Token id is not equal');
@@ -73,7 +71,7 @@ fn test_create_listing_order() {
     assert(order.end_date == end_date, 'End date is not equal');
     assert(
         order
-            .offerer == 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+            .offerer == 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         'Offerer is not equal'
@@ -113,4 +111,3 @@ fn test_auction_order_with_extended_time_order() {
     let expected_end_date = end_date + 600;
     assert(order_expiration_date == expected_end_date, 'order end date is not correct');
 }
-
