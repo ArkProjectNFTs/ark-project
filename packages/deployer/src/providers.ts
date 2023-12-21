@@ -1,18 +1,5 @@
 import { RpcProvider } from "starknet";
 
-type Provider = {
-  nodeUrl?: string;
-};
-
-// Initialize the RPC provider with the ArkChain node URL
-export const initProvider = ({ nodeUrl = "http://0.0.0.0:7777" }: Provider) => {
-  const provider = new RpcProvider({
-    nodeUrl: nodeUrl
-  });
-
-  return provider;
-};
-
 export const goerliProvider = new RpcProvider({
   nodeUrl: "https://starknet-testnet.public.blastapi.io"
 });
@@ -40,3 +27,6 @@ export function getProvider(network: string) {
       return goerliProvider;
   }
 }
+
+export const STARKGATE_ADDRESS =
+  "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";

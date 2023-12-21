@@ -4,22 +4,53 @@
  * submitting a listing order and cancelling it.
  */
 
-import { RpcProvider, shortString } from "starknet";
+import {
+  Account,
+  cairo,
+  CallData,
+  RpcProvider,
+  shortString,
+  type BigNumberish
+} from "starknet";
 
-import { createAccount } from "../src/actions/account/account";
+import {
+  createAccount,
+  fetchOrCreateAccount
+} from "../src/actions/account/account";
+import { approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
+import {
+  STARKNET_EXECUTOR_ADDRESS,
+  STARKNET_NFT_ADDRESS
+} from "../src/constants";
 import { ListingV1 } from "../src/types";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
-  nodeUrl: "http://0.0.0.0:5050"
+  nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
 });
 
 // Initialize the RPC provider with the katana node URL for starknet
 const arkProvider = new RpcProvider({
-  nodeUrl: "http://0.0.0.0:7777"
+  nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
 });
+
+async function freeMint(
+  provider: RpcProvider,
+  starknetAccount: Account,
+  tokenId: BigNumberish
+) {
+  const mintResult = await starknetAccount.execute({
+    contractAddress: STARKNET_NFT_ADDRESS,
+    entrypoint: "mint",
+    calldata: CallData.compile({
+      recipient: starknetAccount.address,
+      token_id: cairo.uint256(tokenId)
+    })
+  });
+  await provider.waitForTransaction(mintResult.transaction_hash);
+}
 
 /**
  * Creates a listing on the blockchain using provided order details.
@@ -29,19 +60,38 @@ const arkProvider = new RpcProvider({
 (async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
-  const { account: starknetAccount } = await createAccount(starknetProvider);
 
   // Define the order details
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
-    tokenAddress:
-      "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-    tokenId: 21, // The ID of the token
+    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenId: 411, // The ID of the token
     startAmount: 600000000000000000 // The starting amount for the order
   };
 
+  const starknetAccount1 = await fetchOrCreateAccount(
+    starknetProvider,
+    process.env.ACCOUNT1_ADDRESS,
+    process.env.ACCOUNT1_PRIVATE_KEY
+  );
+
+  console.log("Minting token...");
+  await freeMint(starknetProvider, starknetAccount1, order.tokenId);
+
+  console.log(
+    `Approving token ${order.tokenId} to ${STARKNET_EXECUTOR_ADDRESS}...`
+  );
+  await approveERC721(
+    starknetProvider,
+    starknetAccount1,
+    STARKNET_NFT_ADDRESS,
+    STARKNET_EXECUTOR_ADDRESS,
+    order.tokenId
+  );
+
+  console.log("Creating listing...");
   // Create the listing on the arkchain using the order details
-  await createListing(arkProvider, starknetAccount, arkAccount, order);
+  await createListing(arkProvider, starknetAccount1, arkAccount, order);
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -59,9 +109,11 @@ const arkProvider = new RpcProvider({
   );
   console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
 
-  // Create a new accounts for the fulfill using the provider
-  const { account: starknetFulfillerAccount } =
-    await createAccount(starknetProvider);
+  const starknetFulfillerAccount = await fetchOrCreateAccount(
+    starknetProvider,
+    process.env.ACCOUNT2_ADDRESS,
+    process.env.ACCOUNT2_PRIVATE_KEY
+  );
 
   // Define the cancel details
   const fulfill_info = {

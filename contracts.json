@@ -1,0 +1,7 @@
+{
+  "goerli": {
+    "messaging": "0x61bc68a20626d9b42d1863d977f994c1ddb3f755123c6fe2b9e5376743461f4",
+    "executor": "0x306fc8a9e95bd358015936302b8116396626bc9063862b81ffc8d8c16d9c90b"
+  },
+  "mainnet": {}
+}
