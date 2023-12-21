@@ -13,15 +13,16 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
+import { fetchOrCreateAccount } from "../src/actions/account/account";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
-  nodeUrl: "http://0.0.0.0:5050"
+  nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
 });
 
 // Initialize the RPC provider with the katana node URL for starknet
 const arkProvider = new RpcProvider({
-  nodeUrl: "http://0.0.0.0:7777"
+  nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
 });
 
 /**
@@ -32,7 +33,11 @@ const arkProvider = new RpcProvider({
 (async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
-  const { account: starknetAccount } = await createAccount(starknetProvider);
+  const starknetAccount = await fetchOrCreateAccount(
+    starknetProvider,
+    process.env.ACCOUNT1_ADDRESS,
+    process.env.ACCOUNT1_PRIVATE_KEY
+  );
 
   // Define the order details
   let order: OfferV1 = {
@@ -52,7 +57,7 @@ const arkProvider = new RpcProvider({
   );
 
   // wait 10 seconds for the transaction to be processed
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  await new Promise((resolve) => setTimeout(resolve, 60000));
 
   let { orderStatus: orderStatusBefore } = await getOrderStatus(
     orderHash,
@@ -61,17 +66,21 @@ const arkProvider = new RpcProvider({
   console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
 
   // Create a new account for the listing using the provider
-  const { account: fulfiller_account } = await createAccount(starknetProvider);
+  const fulfillerAccount = await fetchOrCreateAccount(
+    starknetProvider,
+    process.env.ACCOUNT2_ADDRESS,
+    process.env.ACCOUNT2_PRIVATE_KEY
+  );
 
   // Define the cancel details
-  const fulfill_info = {
+  const fulfillInfo = {
     order_hash: orderHash,
     token_address: order.tokenAddress,
     token_id: order.tokenId
   };
 
   // Cancel the order
-  fulfillOffer(arkProvider, fulfiller_account, arkAccount, fulfill_info);
+  fulfillOffer(arkProvider, fulfillerAccount, arkAccount, fulfillInfo);
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 

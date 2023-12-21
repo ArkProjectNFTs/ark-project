@@ -8,7 +8,7 @@ import {
   Uint256
 } from "starknet";
 
-import { ORDER_BOOK_ADDRESS } from "../../constants";
+import { ORDER_BOOK_ADDRESS, STARKNET_ETH_ADDRESS } from "../../constants";
 import { ListingV1, OrderV1, RouteType } from "../../types";
 import { createOrder } from "./_create";
 
@@ -46,11 +46,12 @@ const createListing = async (
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
 
+  console.log("starknetAccount", starknetAccount.address);
+
   // Construct the OrderV1 object from the base order and additional default values
   const order: OrderV1 = {
     route: RouteType.Erc721ToErc20,
-    currencyAddress:
-      "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    currencyAddress: STARKNET_ETH_ADDRESS,
     currencyChainId: shortString.encodeShortString("SN_MAIN"),
     salt: 1,
     offerer: starknetAccount.address,

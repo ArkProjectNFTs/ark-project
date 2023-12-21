@@ -27,7 +27,7 @@ import "dotenv/config";
  *   console.log(account.burner);
  * });
  */
-const createAccount = async (provider: RpcProvider) => {
+export const createAccount = async (provider: RpcProvider) => {
   const accountClassHash = ACCOUNT_CLASS_HASH;
   const privateKey = stark.randomAddress();
   const publicKey = ec.starkCurve.getStarkKey(privateKey);
@@ -59,4 +59,26 @@ const createAccount = async (provider: RpcProvider) => {
   };
 };
 
-export { createAccount };
+/**
+ * Asynchronously fetches an existing account or creates a new one based on the provided parameters.
+ *
+ * @param {RpcProvider} provider - The RPC provider to interact with the blockchain.
+ * @param {string} [accountAddress] - The address of the existing account, if any.
+ * @param {string} [accountPrivateKey] - The private key of the existing account, if any.
+ * @returns {Promise<Account>} - The existing or newly created account.
+ *
+ * This function checks if both account address and private key are provided. If not, it creates a new account using the provided provider.
+ * If both are provided, it initializes and returns an existing account with the given credentials.
+ */
+export async function fetchOrCreateAccount(
+  provider: RpcProvider,
+  accountAddress?: string,
+  accountPrivateKey?: string
+): Promise<Account> {
+  if (!accountAddress || !accountPrivateKey) {
+    const { account } = await createAccount(provider);
+    return account;
+  } else {
+    return new Account(provider, accountAddress, accountPrivateKey);
+  }
+}

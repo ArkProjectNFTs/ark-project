@@ -6,43 +6,6 @@ import {
   type BigNumberish
 } from "starknet";
 
-/**
- * Executes an approval transaction for ERC721 or ERC20 tokens.
- * @param provider - The RpcProvider to use for the transaction.
- * @param account - The account performing the transaction.
- * @param contractAddress - The address of the token contract.
- * @param entrypoint - The contract entrypoint (function) to call.
- * @param parameters - The parameters for the contract call.
- */
-async function executeApproval(
-  provider: RpcProvider,
-  account: Account,
-  contractAddress: string,
-  entrypoint: string,
-  parameters: { [key: string]: BigNumberish }
-) {
-  try {
-    const calldata = CallData.compile(
-      Object.fromEntries(
-        Object.entries(parameters).map(([key, value]) => [
-          key,
-          cairo.uint256(value)
-        ])
-      )
-    );
-
-    const result = await account.execute({
-      contractAddress,
-      entrypoint,
-      calldata
-    });
-
-    await provider.waitForTransaction(result.transaction_hash);
-  } catch (error) {
-    console.error("Approval transaction failed:", error);
-    throw error;
-  }
-}
 
 export const approveERC721 = async (
   provider: RpcProvider,
@@ -51,10 +14,16 @@ export const approveERC721 = async (
   to: BigNumberish,
   tokenId: BigNumberish
 ) => {
-  await executeApproval(provider, account, contractAddress, "approve", {
-    to,
-    tokenId
+  const result = await account.execute({
+    contractAddress,
+    entrypoint: "approve",
+    calldata: CallData.compile({
+      to,
+      token_id: cairo.uint256(tokenId)
+    })
   });
+
+  await provider.waitForTransaction(result.transaction_hash);
 };
 
 export const approveERC20 = async (
@@ -64,8 +33,14 @@ export const approveERC20 = async (
   spender: BigNumberish,
   amount: BigNumberish
 ) => {
-  await executeApproval(provider, account, contractAddress, "approve", {
-    spender,
-    amount
+  const result = await account.execute({
+    contractAddress,
+    entrypoint: "approve",
+    calldata: CallData.compile({
+      spender,
+      amount: cairo.uint256(amount)
+    })
   });
+
+  await provider.waitForTransaction(result.transaction_hash);
 };

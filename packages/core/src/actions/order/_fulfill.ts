@@ -15,7 +15,7 @@ import { FulfillInfo } from "../../types";
  * @returns {Promise<void>} A promise that resolves when the transaction is completed.
  * @throws {Error} Throws an error if the ABI or order type is invalid.
  */
-const _fulfillOrder = async (
+export const _fulfillOrder = async (
   provider: RpcProvider,
   starknetFulfillerAccount: Account,
   arkFulfillerAccount: Account,
@@ -67,5 +67,3 @@ const _fulfillOrder = async (
     retryInterval: 1000
   });
 };
-
-export { _fulfillOrder };
