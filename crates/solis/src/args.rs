@@ -33,9 +33,10 @@ pub struct KatanaArgs {
     )]
     pub messaging: katana_core::service::messaging::MessagingConfig,
 
-    // #[command(flatten)]
-    // #[command(next_help_heading = "Solis options")]
-    // pub solis: crate::solis_args::SolisOptions,
+    #[command(flatten)]
+    #[command(next_help_heading = "Solis options")]
+    pub solis: crate::solis_args::SolisOptions,
+
     #[command(flatten)]
     #[command(next_help_heading = "Server options")]
     pub server: ServerOptions,
