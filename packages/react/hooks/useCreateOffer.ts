@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Account } from "starknet";
+import { Account, AccountInterface } from "starknet";
 
 import { createOffer as createOfferCore, OfferV1 } from "@ark-project/core";
 
@@ -12,7 +12,10 @@ export default function useCreateOffer() {
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>(undefined);
 
-  async function createOffer(offer: OfferV1) {
+  async function createOffer(
+    starknetAccount: AccountInterface,
+    offer: OfferV1
+  ) {
     const burner_address = localStorage.getItem("burner_address");
     const burner_private_key = localStorage.getItem("burner_private_key");
     const burner_public_key = localStorage.getItem("burner_public_key");
@@ -28,6 +31,7 @@ export default function useCreateOffer() {
       setStatus("loading");
       const orderHash = await createOfferCore(
         rpcProvider,
+        starknetAccount,
         new Account(rpcProvider, burner_address, burner_private_key),
         offer
       );

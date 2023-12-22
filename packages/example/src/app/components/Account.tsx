@@ -36,7 +36,7 @@ const Account = () => {
 
   return (
     <div>
-      <Button onClick={signMessage}>Sign Message</Button>
+      {/* <Button onClick={signMessage}>Sign Message</Button> */}
       <p>Account: {address}</p>
     </div>
   );

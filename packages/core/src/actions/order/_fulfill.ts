@@ -1,7 +1,14 @@
-import { Account, CairoCustomEnum, CallData, RpcProvider } from "starknet";
+import * as starknet from "@scure/starknet";
+import {
+  Account,
+  AccountInterface,
+  CairoCustomEnum,
+  CallData,
+  RpcProvider
+} from "starknet";
 
 import { ORDER_BOOK_ADDRESS } from "../../constants";
-import { signMessage } from "../../signer";
+import { getSignInfos } from "../../signer";
 import { FulfillInfo } from "../../types";
 
 /**
@@ -16,7 +23,8 @@ import { FulfillInfo } from "../../types";
  */
 const _fulfillOrder = async (
   provider: RpcProvider,
-  account: Account,
+  starknetFulfillerAccount: AccountInterface,
+  arkFulfillerAccount: Account,
   fulfillInfo: FulfillInfo
 ) => {
   // Compile the order data
@@ -25,18 +33,36 @@ const _fulfillOrder = async (
   });
   let compiletOrderBigInt = compiledOrder.map(BigInt);
 
-  // Sign the compiled order
-  const signInfo = signMessage(compiletOrderBigInt);
+  const TypedOrderData = {
+    message: {
+      hash: starknet.poseidonHashMany(compiletOrderBigInt)
+    },
+    domain: {
+      name: "Ark",
+      chainId: "SN_MAIN",
+      version: "1.1"
+    },
+    types: {
+      StarkNetDomain: [
+        { name: "name", type: "felt252" },
+        { name: "chainId", type: "felt252" },
+        { name: "version", type: "felt252" }
+      ],
+      Order: [{ name: "hash", type: "felt252" }]
+    },
+    primaryType: "Order"
+  };
+
+  const signInfo = await getSignInfos(TypedOrderData, starknetFulfillerAccount);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
-  // Compile calldata for the create_order function
   let fulfillInfoCalldata = CallData.compile({
     fulfill_info: fulfillInfo,
     signer: signer
   });
 
   // Execute the transaction
-  const result = await account.execute({
+  const result = await arkFulfillerAccount.execute({
     contractAddress: ORDER_BOOK_ADDRESS,
     entrypoint: "fulfill_order",
     calldata: fulfillInfoCalldata

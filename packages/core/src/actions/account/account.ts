@@ -1,8 +1,8 @@
 import { Account, CallData, ec, hash, RpcProvider, stark } from "starknet";
 
-import "dotenv/config";
-
 import { ACCOUNT_CLASS_HASH } from "../../constants";
+
+import "dotenv/config";
 
 /**
  * Creates a new account on the StarkNet testnet.

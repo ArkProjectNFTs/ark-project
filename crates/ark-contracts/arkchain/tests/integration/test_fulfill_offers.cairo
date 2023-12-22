@@ -32,7 +32,7 @@ fn test_fulfill_offer_before_the_offer_start() {
     order_offer.end_date = order_listing.start_date + 1000;
 
     let offer_order_hash = order_offer.compute_order_hash();
-    let offer_signer = sign_mock(offer_order_hash, Option::None);
+    let offer_signer = sign_mock(offer_order_hash);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_listing.start_date);
@@ -47,7 +47,7 @@ fn test_fulfill_offer_before_the_offer_start() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
@@ -66,7 +66,7 @@ fn test_fulfill_expired_offer() {
     order_offer.end_date = order_listing.start_date + 1000;
 
     let offer_order_hash = order_offer.compute_order_hash();
-    let offer_signer = sign_mock(offer_order_hash, Option::None);
+    let offer_signer = sign_mock(offer_order_hash);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_listing.start_date + 2000);
@@ -81,7 +81,7 @@ fn test_fulfill_expired_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
@@ -108,7 +108,7 @@ fn test_fulfill_non_existing_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
@@ -123,14 +123,14 @@ fn test_fulfill_classic_offer() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let listing_order_hash = order_listing.compute_order_hash();
-    let signer = sign_mock(listing_order_hash, Option::None);
+    let signer = sign_mock(listing_order_hash);
     dispatcher.create_order(order: order_listing, signer: signer);
 
     order_offer.start_date = order_listing.start_date;
     order_offer.end_date = order_listing.start_date + 1000;
 
     let offer_order_hash = order_offer.compute_order_hash();
-    let offer_signer = sign_mock(offer_order_hash, Option::None);
+    let offer_signer = sign_mock(offer_order_hash);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_offer.start_date);
@@ -145,7 +145,7 @@ fn test_fulfill_classic_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
@@ -184,7 +184,7 @@ fn test_fulfill_collection_offer() {
     };
 
     let offer_order_hash = order_offer.compute_order_hash();
-    let offer_signer = sign_mock(offer_order_hash, Option::None);
+    let offer_signer = sign_mock(offer_order_hash);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_offer.start_date);
@@ -203,7 +203,7 @@ fn test_fulfill_collection_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
@@ -244,7 +244,7 @@ fn test_fulfill_expired_collection_offer() {
     };
 
     let offer_order_hash = order_offer.compute_order_hash();
-    let offer_signer = sign_mock(offer_order_hash, Option::None);
+    let offer_signer = sign_mock(offer_order_hash);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_offer.end_date);
@@ -263,7 +263,7 @@ fn test_fulfill_expired_collection_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
@@ -280,14 +280,14 @@ fn test_double_fulfill_offer() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let listing_order_hash = order_listing.compute_order_hash();
-    let signer = sign_mock(listing_order_hash, Option::None);
+    let signer = sign_mock(listing_order_hash);
     dispatcher.create_order(order: order_listing, signer: signer);
 
     order_offer.start_date = order_listing.start_date;
     order_offer.end_date = order_listing.start_date + 1000;
 
     let offer_order_hash = order_offer.compute_order_hash();
-    let offer_signer = sign_mock(offer_order_hash, Option::None);
+    let offer_signer = sign_mock(offer_order_hash);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_offer.start_date);
@@ -302,7 +302,7 @@ fn test_double_fulfill_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 
     let fulfill_info = FulfillInfo {
@@ -315,6 +315,6 @@ fn test_double_fulfill_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }

@@ -39,6 +39,8 @@ let appmsg_contract = await appmsg.declareDeploy(
   }
 );
 
+console.log("executor (sn)", appmsg_contract.address);
+
 let executor_contract = await executor.declareDeploy(
   sn_artifacts_path,
   katana_account0,

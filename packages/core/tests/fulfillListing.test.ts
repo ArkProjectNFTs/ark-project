@@ -13,11 +13,18 @@ chai.use(chaiAsPromised);
 describe("ArkProject Listing", () => {
   it("should create and fulfill a listing", async () => {
     // Initialize the RPC provider with the ArkChain node URL
-    const provider = new RpcProvider({
+    const starknetProvider = new RpcProvider({
       nodeUrl: "http://0.0.0.0:7777"
     });
 
-    const { account: listing_account } = await createAccount(provider);
+    // Initialize the RPC provider with the katana node URL for starknet
+    const arkProvider = new RpcProvider({
+      nodeUrl: "http://0.0.0.0:7777"
+    });
+
+    // Create a new account using the provider
+    const { account: arkAccount } = await createAccount(arkProvider);
+    const { account: starknetAccount } = await createAccount(starknetProvider);
 
     let order: ListingV1 = {
       brokerId: 123, // The broker ID
@@ -27,20 +34,22 @@ describe("ArkProject Listing", () => {
       startAmount: 600000000000000000 // The starting amount for the order
     };
 
-    await createListing(provider, listing_account, order);
+    await createListing(arkProvider, starknetAccount, arkAccount, order);
     await sleep(2000);
     const { orderHash } = await getOrderHash(
       order.tokenId,
       order.tokenAddress,
-      provider
+      arkProvider
     );
     await expect(
-      getOrderStatus(orderHash, provider).then((res) =>
+      getOrderStatus(orderHash, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
 
-    const { account: fulfiller_account } = await createAccount(provider);
+    // Create a new accounts for the fulfill using the provider
+    const { account: starknetFulfillerAccount } =
+      await createAccount(starknetProvider);
 
     const fulfill_info = {
       order_hash: orderHash,
@@ -48,11 +57,16 @@ describe("ArkProject Listing", () => {
       token_id: order.tokenId
     };
 
-    await fulfillListing(provider, fulfiller_account, fulfill_info);
+    fulfillListing(
+      arkProvider,
+      starknetFulfillerAccount,
+      arkAccount,
+      fulfill_info
+    );
     await sleep(1000);
 
     await expect(
-      getOrderStatus(orderHash, provider).then((res) =>
+      getOrderStatus(orderHash, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("FULFILLED");

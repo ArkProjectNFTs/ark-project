@@ -107,7 +107,7 @@ trait OrderTrait<T, +Serde<T>, +Drop<T>> {
 
 /// Status of an order, that may be defined from
 /// incoming transactions or messages from Starknet.
-#[derive(Serde, Drop, PartialEq)]
+#[derive(Serde, Drop, PartialEq, Debug)]
 enum OrderStatus {
     Open,
     Fulfilled,

@@ -1,5 +1,6 @@
 import {
   Account,
+  AccountInterface,
   cairo,
   CairoOption,
   CairoOptionVariant,
@@ -29,19 +30,24 @@ import { createOrder } from "./_create";
  * @throws {Error} Throws an error if the ABI for the order book contract is not found.
  */
 const createOffer = async (
-  provider: RpcProvider,
-  account: Account,
+  arkProvider: RpcProvider,
+  starknetAccount: AccountInterface,
+  arkAccount: Account,
   baseOrder: OfferV1
 ) => {
   // Retrieve the ABI for the order book contract
-  const { abi: orderbookAbi } = await provider.getClassAt(ORDER_BOOK_ADDRESS);
+  const { abi: orderbookAbi } =
+    await arkProvider.getClassAt(ORDER_BOOK_ADDRESS);
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
   }
 
   let currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
-  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
+  // TODO: this is a hot fix, optional date should be
+  // a cairo option and set at contract level to prevent
+  // date in the past
+  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 5);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
 
   // Construct the OrderV1 object from the base order and additional default values
@@ -51,7 +57,7 @@ const createOffer = async (
       "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
     currencyChainId: shortString.encodeShortString("SN_MAIN"),
     salt: 1,
-    offerer: account.address,
+    offerer: starknetAccount.address,
     tokenChainId: shortString.encodeShortString("SN_MAIN"),
     tokenAddress: baseOrder.tokenAddress,
     tokenId: new CairoOption<Uint256>(
@@ -66,7 +72,12 @@ const createOffer = async (
     brokerId: baseOrder.brokerId,
     additionalData: [45]
   };
-  const orderHash = await createOrder(provider, account, order);
+  const orderHash = await createOrder(
+    arkProvider,
+    starknetAccount,
+    arkAccount,
+    order
+  );
   return orderHash;
 };
 

@@ -4,7 +4,7 @@ use starknet::core::types::FieldElement;
 use starknet::core::utils::parse_cairo_short_string;
 use std::fmt::LowerHex;
 
-use crate::orderbook::{u256, OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced};
+use crate::orderbook::{OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced, U256};
 
 #[derive(Debug, Clone)]
 pub struct PlacedData {
@@ -113,7 +113,7 @@ pub fn to_hex_str_opt<T: LowerHex>(value: &Option<T>) -> Option<String> {
     value.as_ref().map(|v| format!("0x{:064x}", v))
 }
 
-pub fn u256_to_biguint(v: &u256) -> BigUint {
+pub fn u256_to_biguint(v: &U256) -> BigUint {
     let low_bytes = v.low.to_be_bytes();
     let high_bytes = v.high.to_be_bytes();
 
@@ -124,10 +124,10 @@ pub fn u256_to_biguint(v: &u256) -> BigUint {
     BigUint::from_bytes_be(&bytes[..])
 }
 
-pub fn u256_to_hex(value: &u256) -> String {
+pub fn u256_to_hex(value: &U256) -> String {
     to_hex_str(&u256_to_biguint(value))
 }
 
-pub fn u256_to_hex_opt(value: &Option<u256>) -> Option<String> {
+pub fn u256_to_hex_opt(value: &Option<U256>) -> Option<String> {
     value.as_ref().map(|v| to_hex_str(&u256_to_biguint(v)))
 }

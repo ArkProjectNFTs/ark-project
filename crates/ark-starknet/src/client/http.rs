@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use regex::Regex;
 use starknet::{
     core::types::*,
-    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider},
+    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError},
 };
 use std::collections::HashMap;
 use url::Url;
@@ -13,7 +13,8 @@ use super::{StarknetClient, StarknetClientError};
 
 const INPUT_TOO_SHORT: &str = "0x496e70757420746f6f2073686f727420666f7220617267756d656e7473";
 const INPUT_TOO_LONG: &str = "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473";
-const ENTRYPOINT_NOT_FOUND: &str = "EntryPointNotFoundInContract";
+const FAILED_DESERIALIZE: &str = "0x4661696c656420746f20646573657269616c697a6520706172616d202331";
+const ENTRYPOINT_NOT_FOUND: &str = "not found in contract";
 
 #[derive(Debug)]
 pub struct StarknetClientHttp {
@@ -89,7 +90,6 @@ impl StarknetClient for StarknetClientHttp {
                 PendingTransactionReceipt::Invoke(inner) => inner.events,
                 PendingTransactionReceipt::L1Handler(inner) => inner.events,
                 PendingTransactionReceipt::Declare(inner) => inner.events,
-                PendingTransactionReceipt::Deploy(inner) => inner.events,
                 PendingTransactionReceipt::DeployAccount(inner) => inner.events,
             },
         };
@@ -276,15 +276,19 @@ impl StarknetClient for StarknetClientHttp {
         match r {
             Ok(felts) => Ok(felts),
             Err(e) => {
-                let s = e.to_string();
-                if s.contains(ENTRYPOINT_NOT_FOUND) {
-                    Err(StarknetClientError::EntrypointNotFound(s))
-                } else if s.contains(INPUT_TOO_SHORT) {
-                    Err(StarknetClientError::InputTooShort)
-                } else if s.contains(INPUT_TOO_LONG) {
-                    Err(StarknetClientError::InputTooLong)
+                if let ProviderError::StarknetError(StarknetError::ContractError(ref data)) = e {
+                    let s = data.revert_error.clone();
+                    if s.contains(ENTRYPOINT_NOT_FOUND) {
+                        Err(StarknetClientError::EntrypointNotFound(s))
+                    } else if s.contains(INPUT_TOO_SHORT) || s.contains(FAILED_DESERIALIZE) {
+                        Err(StarknetClientError::InputTooShort)
+                    } else if s.contains(INPUT_TOO_LONG) {
+                        Err(StarknetClientError::InputTooLong)
+                    } else {
+                        Err(StarknetClientError::Contract(s))
+                    }
                 } else {
-                    Err(StarknetClientError::Contract(s))
+                    Err(StarknetClientError::Contract(e.to_string()))
                 }
             }
         }
@@ -307,6 +311,7 @@ mod tests {
             .unwrap(),
         );
 
+        // Starkgate.
         let contract_address = FieldElement::from_hex_be(
             "049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         )
@@ -328,10 +333,87 @@ mod tests {
             )
             .await;
 
-        if let Err(StarknetClientError::Contract(e)) = r {
+        if let Err(StarknetClientError::EntrypointNotFound(e)) = r {
             assert!(e.to_string().contains("not found in contract"));
         } else {
             panic!("Expecting EntrypointNotFound error, got {:?}", r);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_contract_error_input_too_short() {
+        let client = Arc::new(
+            StarknetClientHttp::new(
+                "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            )
+            .unwrap(),
+        );
+
+        // Pragma v2.
+        let contract_address = FieldElement::from_hex_be(
+            "0x06df335982dddce41008e4c03f2546fa27276567b5274c7d0c1262f3c2b5d167",
+        )
+        .unwrap();
+
+        let entry_point_selector = get_selector_from_name("get_data_median").unwrap();
+
+        let calldata = vec![];
+
+        let r = client
+            .call_contract(
+                contract_address,
+                entry_point_selector,
+                calldata,
+                BlockId::Tag(BlockTag::Latest),
+            )
+            .await;
+
+        if let Err(StarknetClientError::InputTooShort) = r {
+            ()
+        } else {
+            panic!("Expected StarknetClientError::InputTooShort, got {:?}", r);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_contract_error_input_too_long() {
+        let client = Arc::new(
+            StarknetClientHttp::new(
+                "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            )
+            .unwrap(),
+        );
+
+        // Pragma v2.
+        let contract_address = FieldElement::from_hex_be(
+            "0x06df335982dddce41008e4c03f2546fa27276567b5274c7d0c1262f3c2b5d167",
+        )
+        .unwrap();
+
+        let entry_point_selector = get_selector_from_name("get_decimals").unwrap();
+
+        let calldata = vec![
+            FieldElement::ZERO,
+            FieldElement::ONE,
+            FieldElement::TWO,
+            FieldElement::ONE,
+            FieldElement::ZERO,
+            FieldElement::TWO,
+        ];
+
+        let r = client
+            .call_contract(
+                contract_address,
+                entry_point_selector,
+                calldata,
+                BlockId::Tag(BlockTag::Latest),
+            )
+            .await;
+
+        if let Err(StarknetClientError::InputTooLong) = r {
+            ()
+        } else {
+            panic!("Expected StarknetClientError::InputTooLong, got {:?}", r);
         }
     }
 }

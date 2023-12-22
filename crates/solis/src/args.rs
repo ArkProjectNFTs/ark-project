@@ -4,11 +4,9 @@ use katana_core::backend::config::{Environment, StarknetConfig};
 use katana_core::constants::{
     DEFAULT_GAS_PRICE, DEFAULT_INVOKE_MAX_STEPS, DEFAULT_VALIDATE_MAX_STEPS,
 };
-use katana_core::db::serde::state::SerializableState;
 use katana_core::sequencer::SequencerConfig;
 use katana_rpc::api::ApiKind;
 use katana_rpc::config::ServerConfig;
-use std::path::PathBuf;
 use tracing::Subscriber;
 use tracing_subscriber::{fmt, EnvFilter};
 
@@ -48,21 +46,6 @@ pub struct KatanaArgs {
 
     #[command(subcommand)]
     pub command: Option<Commands>,
-
-    #[arg(long)]
-    #[arg(value_name = "PATH")]
-    #[arg(help = "Dump the state of chain on exit to the given file.")]
-    #[arg(
-        long_help = "Dump the state of chain on exit to the given file. If the value is a \
-                       directory, the state will be written to `<PATH>/state.bin`."
-    )]
-    pub dump_state: Option<PathBuf>,
-
-    #[arg(long)]
-    #[arg(value_name = "PATH")]
-    #[arg(value_parser = SerializableState::parse)]
-    #[arg(help = "Initialize the chain from a previously saved state snapshot.")]
-    pub load_state: Option<SerializableState>,
 }
 
 #[derive(Debug, Subcommand)]
@@ -173,7 +156,6 @@ impl KatanaArgs {
             total_accounts: self.starknet.total_accounts,
             seed: parse_seed(&self.starknet.seed),
             disable_fee: true,
-            init_state: None,
             fork_rpc_url: None,
             fork_block_number: None,
             env: Environment {

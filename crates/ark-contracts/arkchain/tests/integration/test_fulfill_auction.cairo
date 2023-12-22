@@ -56,8 +56,8 @@ fn test_fulfill_auction() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let offer_signer = sign_mock(fulfill_info_hash, Option::None);
-    let mut original_order_hash_signer = sign_mock(order_hash, Option::None);
+    let offer_signer = sign_mock(fulfill_info_hash);
+    let mut original_order_hash_signer = sign_mock(order_hash);
     let public_key = original_order_hash_signer.get_public_key();
     // sign original orderhash 
     // from signer send public key
@@ -103,7 +103,7 @@ fn test_fulfill_auction_with_classic_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
     let auction_status = dispatcher.get_order_status(order_hash);
     let offer_status = dispatcher.get_order_status(offer_order_hash);
@@ -149,7 +149,7 @@ fn test_fulfill_auction_with_future_offer() {
     start_warp(contract_address, start_date + 3600);
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
     let auction_status = dispatcher.get_order_status(order_hash);
     let offer_status = dispatcher.get_order_status(offer_order_hash);
@@ -193,7 +193,7 @@ fn test_fulfill_auction_with_expired_offer() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
     let auction_status = dispatcher.get_order_status(order_hash);
     let offer_status = dispatcher.get_order_status(offer_order_hash);
@@ -237,7 +237,7 @@ fn test_fulfill_expired_auction() {
     };
     start_warp(contract_address, 1700869684);
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
     let auction_status = dispatcher.get_order_status(order_hash);
     let offer_status = dispatcher.get_order_status(offer_order_hash);
@@ -281,7 +281,7 @@ fn test_fulfill_auction_with_offer_for_different_token() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
     let auction_status = dispatcher.get_order_status(order_hash);
     let offer_status = dispatcher.get_order_status(offer_order_hash);
@@ -317,7 +317,7 @@ fn test_fulfill_auction_with_non_existing_related_order_hash() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
@@ -358,7 +358,7 @@ fn test_fulfill_auction_with_listing_order() {
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, Option::None);
+    let signer = sign_mock(fulfill_info_hash);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 // TODO update this test when https://github.com/ArkProjectNFTs/ark-project/pull/188 is merged

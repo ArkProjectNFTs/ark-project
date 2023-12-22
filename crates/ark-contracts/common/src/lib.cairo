@@ -5,4 +5,7 @@ mod protocol {
 mod crypto {
     mod hash;
     mod signer;
+    mod typed_data;
+    mod constants;
+    mod common;
 }

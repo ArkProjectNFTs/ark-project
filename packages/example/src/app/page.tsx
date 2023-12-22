@@ -4,16 +4,14 @@ import { ArkProvider, Network } from "@ark-project/react";
 
 import WalletBar from "@/components/WalletBar";
 
-import Account from "./components/Account";
-import CreateListing from "./components/CreateListing";
+import OrderBookActions from "./components/OrderBookActions";
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen gap-12">
+    <main className="flex flex-col items-center min-h-screen gap-12 max-w-5xl px-2 mx-auto mt-16">
       <ArkProvider network={Network.Testnet}>
         <WalletBar />
-        <Account />
-        <CreateListing />
+        <OrderBookActions />
       </ArkProvider>
     </main>
   );

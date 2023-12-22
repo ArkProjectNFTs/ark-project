@@ -1,5 +1,6 @@
 import {
   Account,
+  AccountInterface,
   BigNumberish,
   cairo,
   CairoOption,
@@ -14,13 +15,14 @@ import { _fulfillOrder } from "./_fulfill";
 
 const fulfillOffer = async (
   provider: RpcProvider,
-  account: Account,
+  starknetFulfillerAccount: AccountInterface,
+  arkFulfillerAccount: Account,
   fulfillOfferInfo: FulfillOfferInfo
 ) => {
   let fulfillInfo: FulfillInfo = {
     order_hash: fulfillOfferInfo.order_hash,
     related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),
-    fulfiller: account.address,
+    fulfiller: starknetFulfillerAccount.address,
     token_chain_id: shortString.encodeShortString("SN_MAIN"),
     token_address: fulfillOfferInfo.token_address,
     token_id: new CairoOption<Uint256>(
@@ -29,7 +31,12 @@ const fulfillOffer = async (
     )
   };
 
-  _fulfillOrder(provider, account, fulfillInfo);
+  _fulfillOrder(
+    provider,
+    starknetFulfillerAccount,
+    arkFulfillerAccount,
+    fulfillInfo
+  );
 };
 
 export { fulfillOffer };
