@@ -1,7 +1,11 @@
 {
   "goerli": {
-    "messaging": "0x61bc68a20626d9b42d1863d977f994c1ddb3f755123c6fe2b9e5376743461f4",
-    "executor": "0x306fc8a9e95bd358015936302b8116396626bc9063862b81ffc8d8c16d9c90b"
+    "messaging": "0x64a04c3ee9e946b536d9f52f0a30d1666085c6fafffbcaea489a5d326b58bd7",
+    "executor": "0xe8fb7177ed7548e7137fee8de03067bf126cc931b9e37dd7b86e3937a8a66f"
   },
-  "mainnet": {}
+  "mainnet": {},
+  "katana": {
+    "messaging": "0x66cb89668c8b742c286b61343763e8d23c5b288e1cf31abd1f0807ca0be3b80",
+    "executor": "0x1584f4b6684072d19f1e02f85724edcc105e8d23af60a72f0223dba13c025c2"
+  }
 }

@@ -4,7 +4,7 @@ import * as sn from "starknet";
 
 import { deployExecutor, upgradeExecutor } from "./contracts/executor";
 import { deployMessaging, upgradeMessaging } from "./contracts/messaging";
-import { getProvider, STARKGATE_ADDRESS } from "./providers";
+import { getFeeAddress, getProvider } from "./providers";
 import {
   getContractsFilePath,
   getExistingAccounts,
@@ -15,9 +15,12 @@ const snArtifactsPath = "../../crates/ark-contracts/starknet/target/dev/";
 
 const loading = require("loading-cli");
 
+const STARKNET_NETWORK = "katana";
+
 async function deployStarknetContracts() {
-  const starknetProvider = getProvider("goerli");
-  const starknetAccounts = await getExistingAccounts("goerli");
+  const starknetProvider = getProvider(STARKNET_NETWORK);
+  const starknetAccounts = await getExistingAccounts(STARKNET_NETWORK);
+
   const [starknetAdminAccount, ...otherUsers] = starknetAccounts;
 
   const existingContracts = await getExistingContracts();
@@ -36,13 +39,13 @@ async function deployStarknetContracts() {
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
 
   let messagingContract: sn.Contract;
-  if (existingContracts.goerli.messaging) {
+  if (existingContracts[STARKNET_NETWORK].messaging) {
     starknetSpinner.text = "Upgrading Messaging Contract...";
     messagingContract = await upgradeMessaging(
       snArtifactsPath,
       starknetAdminAccount,
       starknetProvider,
-      existingContracts.goerli.messaging
+      existingContracts[STARKNET_NETWORK].messaging
     );
   } else {
     starknetSpinner.text = "Deploying Messaging Contract...";
@@ -51,7 +54,7 @@ async function deployStarknetContracts() {
       starknetAdminAccount,
       starknetProvider
     );
-    existingContracts.goerli.messaging = messagingContract.address;
+    existingContracts[STARKNET_NETWORK].messaging = messagingContract.address;
     await fs.writeFile(
       getContractsFilePath(),
       JSON.stringify(existingContracts)
@@ -60,13 +63,13 @@ async function deployStarknetContracts() {
 
   starknetSpinner.text = "⚡ Deploying Executor Contract...";
   let executorContract: sn.Contract;
-  if (existingContracts.goerli.executor) {
+  if (existingContracts[STARKNET_NETWORK].executor) {
     starknetSpinner.text = "⚡ Upgrading Executor Contract...";
     executorContract = await upgradeExecutor(
       snArtifactsPath,
       starknetAdminAccount,
       starknetProvider,
-      existingContracts.goerli.messaging
+      existingContracts[STARKNET_NETWORK].messaging
     );
   } else {
     starknetSpinner.text = "⚡ Deploying Executor Contract...";
@@ -74,10 +77,10 @@ async function deployStarknetContracts() {
       snArtifactsPath,
       starknetAdminAccount,
       starknetProvider,
-      STARKGATE_ADDRESS,
+      getFeeAddress(STARKNET_NETWORK),
       messagingContract.address
     );
-    existingContracts.goerli.executor = executorContract.address;
+    existingContracts[STARKNET_NETWORK].executor = executorContract.address;
     await fs.writeFile(
       getContractsFilePath(),
       JSON.stringify(existingContracts)

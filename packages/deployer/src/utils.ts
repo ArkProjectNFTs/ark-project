@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import { join } from "path";
 
-import { Account } from "starknet";
+import { Account, CairoVersion } from "starknet";
 
 import { getProvider } from "./providers";
 import { ProviderNetwork } from "./types";
@@ -25,8 +25,8 @@ export async function getExistingAccounts(
   }
 
   let accounts: Account[] = [];
-  for (const { address, privateKey } of accountRows) {
-    const account = new Account(provider, address, privateKey);
+  for (const { address, privateKey, cairoVersion } of accountRows) {
+    const account = new Account(provider, address, privateKey, cairoVersion);
     accounts.push(account);
   }
   return accounts;

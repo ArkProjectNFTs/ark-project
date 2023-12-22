@@ -627,10 +627,10 @@ mod orderbook {
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
                     order_hash: order.compute_order_hash(),
+                    nft_address: order.token_address,
                     nft_from: order.offerer,
                     nft_to: fulfill_info.fulfiller,
                     nft_token_id: order.token_id.unwrap(),
-                    nft_address: order.token_address,
                     payment_from: fulfill_info.fulfiller,
                     payment_to: order.offerer,
                     payment_amount: order.start_amount,
@@ -638,7 +638,7 @@ mod orderbook {
                     payment_currency_chain_id: order.currency_chain_id
                 };
                 execute_info.serialize(ref buf);
-                starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap_syscall();
+                starknet::send_message_to_l1_syscall('EXE', buf.span());
             }
         }
 

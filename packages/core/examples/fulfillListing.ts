@@ -17,7 +17,7 @@ import {
   createAccount,
   fetchOrCreateAccount
 } from "../src/actions/account/account";
-import { approveERC721 } from "../src/actions/contract";
+import { approveERC20, approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import {
@@ -29,12 +29,12 @@ import { ListingV1 } from "../src/types";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
-  nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
+  nodeUrl: process.env.STARKNET_RPC_URL || ""
 });
 
 // Initialize the RPC provider with the katana node URL for starknet
 const arkProvider = new RpcProvider({
-  nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
+  nodeUrl: process.env.ARKCHAIN_RPC_URL || ""
 });
 
 async function freeMint(
@@ -62,12 +62,14 @@ async function freeMint(
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
 
+  console.log("STARKNET_NFT_ADDRESS:", STARKNET_NFT_ADDRESS);
+
   // Define the order details
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 411, // The ID of the token
-    startAmount: 600000000000000000 // The starting amount for the order
+    tokenId: 434, // The ID of the token
+    startAmount: 1 // The starting amount for the order
   };
 
   const starknetAccount1 = await fetchOrCreateAccount(
@@ -113,6 +115,14 @@ async function freeMint(
     starknetProvider,
     process.env.ACCOUNT2_ADDRESS,
     process.env.ACCOUNT2_PRIVATE_KEY
+  );
+
+  await approveERC20(
+    starknetProvider,
+    starknetFulfillerAccount,
+    STARKNET_ETH_ADDRESS,
+    STARKNET_EXECUTOR_ADDRESS,
+    BigInt(order.startAmount) + BigInt(1)
   );
 
   // Define the cancel details

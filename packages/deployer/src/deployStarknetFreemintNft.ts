@@ -7,9 +7,11 @@ import { getExistingAccounts, getExistingContracts } from "./utils";
 const loading = require("loading-cli");
 const artifactsPath = "../../crates/ark-contracts/common/target/dev/";
 
+const STARKNET_NETWORK = "katana";
+
 export async function deployStarknetRandomNft() {
-  const starknetProvider = getProvider("goerli");
-  const starknetAccounts = await getExistingAccounts("goerli");
+  const starknetProvider = getProvider(STARKNET_NETWORK);
+  const starknetAccounts = await getExistingAccounts(STARKNET_NETWORK);
 
   const [starknetAdminAccount, ...otherUsers] = starknetAccounts;
   const existingContracts = await getExistingContracts();

@@ -12,6 +12,7 @@ trait IExecutor<T> {
     fn update_messaging_address(ref self: T, msger_address: ContractAddress);
     fn get_messaging_address(ref self: T) -> ContractAddress;
     fn get_orderbook_address(ref self: T) -> ContractAddress;
+    fn update_arkchain_orderbook_address(ref self: T, orderbook_address: ContractAddress);
 }
 
 #[starknet::interface]

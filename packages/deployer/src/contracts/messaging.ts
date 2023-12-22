@@ -13,10 +13,12 @@ export async function upgradeMessaging(
     "ark_starknet_appchain_messaging"
   );
 
-  const { class_hash } = await deployerAccount.declareIfNot({
+  const { class_hash, transaction_hash } = await deployerAccount.declareIfNot({
     contract: artifacts.sierra,
     casm: artifacts.casm
   });
+
+  await provider.waitForTransaction(transaction_hash);
 
   const { abi } = await provider.getClassAt(contractAddress);
   if (abi === undefined) {

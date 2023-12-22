@@ -11,6 +11,11 @@ export async function createNewAccounts(
   network: string
 ) {
   const accountsFilePath = join(__dirname, `../../accounts/${network}.json`);
+  try {
+    await fs.access(join(__dirname, "../../accounts"));
+  } catch (error) {
+    await fs.mkdir(join(__dirname, "../../accounts"));
+  }
 
   console.log(
     `| Account                                                            | Private key                                                       | Public key`
@@ -20,9 +25,7 @@ export async function createNewAccounts(
   try {
     const fileData = await fs.readFile(accountsFilePath, "utf8");
     existingAccounts = JSON.parse(fileData);
-  } catch (error) {
-    console.error(error);
-  }
+  } catch (error) {}
 
   for (let i = 0; i < numberOfAccounts; i++) {
     const privateKey = sn.stark.randomAddress();

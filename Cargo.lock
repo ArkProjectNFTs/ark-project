@@ -669,15 +669,6 @@ dependencies = [
 
 [[package]]
 name = "bincode"
-version = "1.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "bincode"
 version = "2.0.0-rc.3"
 source = "git+https://github.com/bincode-org/bincode.git?tag=v2.0.0-rc.3#aada4bb4cb457677a4b8e47572ae7ca8dd44927c"
 dependencies = [
@@ -1588,7 +1579,7 @@ version = "0.8.2"
 source = "git+https://github.com/dojoengine/cairo-rs.git?rev=262b7eb4b11ab165a2a936a5f914e78aa732d4a2#262b7eb4b11ab165a2a936a5f914e78aa732d4a2"
 dependencies = [
  "anyhow",
- "bincode 2.0.0-rc.3",
+ "bincode",
  "bitvec",
  "cairo-felt",
  "generic-array",
@@ -4921,8 +4912,8 @@ dependencies = [
 
 [[package]]
 name = "katana-core"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4953,11 +4944,10 @@ dependencies = [
 
 [[package]]
 name = "katana-db"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
- "bincode 1.3.3",
  "blockifier",
  "cairo-vm",
  "katana-primitives",
@@ -4974,8 +4964,8 @@ dependencies = [
 
 [[package]]
 name = "katana-executor"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4991,8 +4981,8 @@ dependencies = [
 
 [[package]]
 name = "katana-primitives"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -5010,8 +5000,8 @@ dependencies = [
 
 [[package]]
 name = "katana-provider"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
  "auto_impl",
@@ -5027,8 +5017,8 @@ dependencies = [
 
 [[package]]
 name = "katana-rpc"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
  "cairo-lang-starknet",
@@ -5057,8 +5047,8 @@ dependencies = [
 
 [[package]]
 name = "katana-rpc-types"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
  "derive_more",
@@ -5070,8 +5060,8 @@ dependencies = [
 
 [[package]]
 name = "katana-rpc-types-builder"
-version = "0.4.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.6-solis#4d8c0896670f203952509ff3d326fbb9958b13f4"
+version = "0.4.2"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
 dependencies = [
  "anyhow",
  "katana-executor",

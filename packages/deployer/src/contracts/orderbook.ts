@@ -22,7 +22,8 @@ export async function deployOrderBook(
     {
       contract: artifacts.sierra,
       casm: artifacts.casm,
-      constructorCalldata: contractConstructor
+      constructorCalldata: contractConstructor,
+      salt: "1337"
     },
     {
       maxFee: 0
@@ -38,4 +39,21 @@ export async function deployOrderBook(
     deployR.deploy.contract_address,
     provider
   );
+}
+
+export async function updateExecutorAddress(
+  provider: sn.RpcProvider,
+  deployerAccount: sn.Account,
+  contractAddress: string,
+  executorAddress: string
+) {
+  const { abi } = await provider.getClassAt(contractAddress);
+  if (abi === undefined) {
+    throw new Error("no abi.");
+  }
+  const executorContract = new sn.Contract(abi, contractAddress, provider);
+  executorContract.connect(deployerAccount);
+  const response =
+    await executorContract.update_starknet_executor_address(executorAddress);
+  await provider.waitForTransaction(response.transaction_hash);
 }

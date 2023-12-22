@@ -28,5 +28,11 @@ export function getProvider(network: string) {
   }
 }
 
-export const STARKGATE_ADDRESS =
-  "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+export function getFeeAddress(network: string) {
+  switch (network) {
+    case "katana":
+      return "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+    default:
+      return "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+  }
+}

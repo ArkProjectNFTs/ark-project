@@ -15,9 +15,7 @@ async function deployAccount(network: string) {
   try {
     const fileData = await fs.readFile(accountsFilePath, "utf8");
     accounts = JSON.parse(fileData);
-  } catch (error) {
-    console.error(error);
-  }
+  } catch (error) {}
 
   const noDeployedAccounts = accounts.filter((a) => a.deployed === false);
 

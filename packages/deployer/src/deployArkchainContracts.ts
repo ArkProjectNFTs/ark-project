@@ -3,13 +3,13 @@ import { promises as fs } from "fs";
 import loading from "loading-cli";
 
 import { updateOrderbookAddress } from "./contracts/executor";
-import { deployOrderBook } from "./contracts/orderbook";
+import { deployOrderBook, updateExecutorAddress } from "./contracts/orderbook";
 import { getProvider } from "./providers";
 import { getContractsFilePath, getExistingAccounts } from "./utils";
 
 const arkchainArtifactsPath = "../../crates/ark-contracts/arkchain/target/dev/";
 
-const STARKNET_NETWORK = "goerli";
+const STARKNET_NETWORK = "katana";
 
 async function deployArkchainContracts() {
   const starknetProvider = getProvider(STARKNET_NETWORK);
@@ -40,6 +40,14 @@ async function deployArkchainContracts() {
     const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
     const contracts = JSON.parse(fileContent);
     const { executor: executorAddress } = contracts[STARKNET_NETWORK];
+
+    console.log("Updating executor address...", executorAddress);
+    await updateExecutorAddress(
+      solisProvider,
+      arkchainAdminAccount,
+      orderbookContract.address,
+      executorAddress
+    );
 
     arkchainSpinner.text = "💠 Updating Executor Contract on Starknet...";
 

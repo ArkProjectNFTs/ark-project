@@ -61,6 +61,8 @@ export const _fulfillOrder = async (
   );
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
+  console.log("fulfillInfo", fulfillInfo);
+
   let fulfillInfoCalldata = CallData.compile({
     fulfill_info: fulfillInfo,
     signer: signer
