@@ -6,11 +6,13 @@ import { createOffer as createOfferCore, OfferV1 } from "@ark-project/core";
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types/hooks";
+import { useOwner } from "./useOwner";
 
 export default function useCreateOffer() {
   const { rpcProvider } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>(undefined);
+  const owner = useOwner();
 
   async function createOffer(
     starknetAccount: AccountInterface,
@@ -19,6 +21,7 @@ export default function useCreateOffer() {
     const burner_address = localStorage.getItem("burner_address");
     const burner_private_key = localStorage.getItem("burner_private_key");
     const burner_public_key = localStorage.getItem("burner_public_key");
+
     if (
       burner_address === null ||
       burner_private_key === null ||
@@ -33,7 +36,8 @@ export default function useCreateOffer() {
         rpcProvider,
         starknetAccount,
         new Account(rpcProvider, burner_address, burner_private_key),
-        offer
+        offer,
+        owner
       );
       setStatus("success");
       setResponse(orderHash);

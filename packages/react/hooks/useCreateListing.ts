@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Account, AccountInterface, shortString, TypedData } from "starknet";
+import { Account, AccountInterface } from "starknet";
 
 import {
   createListing as createListingCore,
@@ -9,37 +9,17 @@ import {
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types/hooks";
+import { useOwner } from "./useOwner";
 
 export default function useCreateListing() {
   const { rpcProvider } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>(undefined);
-
+  const owner = useOwner();
   async function createListing(
     starknetAccount: AccountInterface,
     order: ListingV1
   ) {
-    // const typedDataValidate: TypedData = {
-    //   types: {
-    //     StarkNetDomain: [
-    //       { name: "name", type: "string" },
-    //       { name: "version", type: "felt" },
-    //       { name: "chainId", type: "felt" }
-    //     ],
-    //     Validate: [{ name: "orderhash", type: "felt" }]
-    //   },
-    //   primaryType: "Validate",
-    //   domain: {
-    //     name: "ArkProject",
-    //     version: "1",
-    //     chainId: shortString.encodeShortString("SN_MAIN")
-    //   },
-    //   message: {
-    //     orderhash: "0x0000004f000f"
-    //   }
-    // };
-    // starknetAccount.signMessage(typedDataValidate);
-
     const burner_address = localStorage.getItem("burner_address");
     const burner_private_key = localStorage.getItem("burner_private_key");
     const burner_public_key = localStorage.getItem("burner_public_key");
@@ -57,7 +37,8 @@ export default function useCreateListing() {
         rpcProvider,
         starknetAccount,
         new Account(rpcProvider, burner_address, burner_private_key),
-        order
+        order,
+        owner
       );
       setStatus("success");
       setResponse(orderHash);

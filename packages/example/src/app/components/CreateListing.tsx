@@ -1,12 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TabsContent } from "@radix-ui/react-tabs";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { useCreateListing } from "@ark-project/react";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -27,7 +26,9 @@ export default function CreateListing() {
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
       .length(66, { message: "Please enter a valid address" }),
-    tokenId: z.number(),
+    tokenId: z
+      .string()
+      .regex(/^\d+$/, { message: "Token ID must be a number" }),
     startAmount: z.number()
   });
 
@@ -37,7 +38,7 @@ export default function CreateListing() {
       brokerId: 123,
       tokenAddress:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-      tokenId: 12,
+      tokenId: "12",
       startAmount: 600000000000000000
     }
   });
@@ -46,7 +47,11 @@ export default function CreateListing() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (account === undefined) return;
-    createListing(account, values);
+    const processedValues = {
+      ...values,
+      tokenId: parseInt(values.tokenId, 10)
+    };
+    createListing(account, processedValues);
   }
 
   return (
@@ -118,7 +123,7 @@ export default function CreateListing() {
           </Button>
         </form>
       </Form>
-      {response}
+      <div className="mt-4">response: {response?.toString()}</div>
     </>
   );
 }

@@ -33,7 +33,8 @@ const createOffer = async (
   arkProvider: RpcProvider,
   starknetAccount: AccountInterface,
   arkAccount: Account,
-  baseOrder: OfferV1
+  baseOrder: OfferV1,
+  owner?: string
 ) => {
   // Retrieve the ABI for the order book contract
   const { abi: orderbookAbi } =
@@ -76,7 +77,8 @@ const createOffer = async (
     arkProvider,
     starknetAccount,
     arkAccount,
-    order
+    order,
+    owner
   );
   return orderHash;
 };

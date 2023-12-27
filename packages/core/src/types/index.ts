@@ -36,9 +36,9 @@ export enum RouteType {
 }
 
 export type CancelInfo = {
-  order_hash: BigNumberish;
-  token_address: BigNumberish;
-  token_id: BigNumberish;
+  orderHash: BigNumberish;
+  tokenAddress: BigNumberish;
+  tokenId: BigNumberish;
 };
 
 export type FullCancelInfo = {

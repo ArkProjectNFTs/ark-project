@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 
 import { StarknetProvider } from "@/components/starknet-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
 
@@ -24,14 +25,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable
-        )}
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
       >
-        <StarknetProvider>{children}</StarknetProvider>
-      </body>
+        <body
+          className={cn(
+            "min-h-screen bg-background font-sans antialiased",
+            fontSans.variable
+          )}
+        >
+          <StarknetProvider>{children}</StarknetProvider>
+        </body>
+      </ThemeProvider>
     </html>
   );
 }

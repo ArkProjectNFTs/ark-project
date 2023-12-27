@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 
-import { Button } from "./ui/Button";
+import { Button } from "@/components/ui/button";
 
 function WalletConnected() {
   const { address } = useAccount();

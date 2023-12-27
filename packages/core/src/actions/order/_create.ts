@@ -28,7 +28,8 @@ const createOrder = async (
   arkProvider: RpcProvider,
   starknetAccount: AccountInterface,
   arkAccount: Account,
-  order: OrderV1
+  order: OrderV1,
+  owner?: string
 ) => {
   // Compile the order data
   let compiledOrder = CallData.compile({
@@ -37,7 +38,6 @@ const createOrder = async (
   let compiletOrderBigInt = compiledOrder.map(BigInt);
 
   // Sign the compiled order
-  console.log(starknet.poseidonHashMany(compiletOrderBigInt));
   const TypedOrderData = {
     message: {
       hash: starknet.poseidonHashMany(compiletOrderBigInt).toString()
@@ -58,7 +58,7 @@ const createOrder = async (
     primaryType: "Order"
   };
 
-  const signInfo = await getSignInfos(TypedOrderData, starknetAccount);
+  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
   // Compile calldata for the create_order function
   let create_order_calldata = CallData.compile({
@@ -66,7 +66,6 @@ const createOrder = async (
     signer: signer
   });
 
-  console.log(ORDER_BOOK_ADDRESS);
   // Execute the transaction
   const result = await arkAccount.execute({
     contractAddress: ORDER_BOOK_ADDRESS,

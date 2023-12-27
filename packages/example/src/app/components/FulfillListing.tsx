@@ -5,7 +5,7 @@ import * as z from "zod";
 
 import { useFulfillListing } from "@ark-project/react";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -38,8 +38,6 @@ export default function FulfillListing() {
       token_id: 12
     }
   });
-
-  if (account === undefined) return;
 
   if (account === undefined) return;
 

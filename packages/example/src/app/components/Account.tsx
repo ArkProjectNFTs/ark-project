@@ -1,7 +1,7 @@
 import { useAccount } from "@starknet-react/core";
 import { shortString, TypedData } from "starknet";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 const Account = () => {
   const { account, address, status } = useAccount();

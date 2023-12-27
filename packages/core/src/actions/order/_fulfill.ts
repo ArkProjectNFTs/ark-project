@@ -35,7 +35,7 @@ const _fulfillOrder = async (
 
   const TypedOrderData = {
     message: {
-      hash: starknet.poseidonHashMany(compiletOrderBigInt)
+      hash: starknet.poseidonHashMany(compiletOrderBigInt).toString()
     },
     domain: {
       name: "Ark",

@@ -14,13 +14,14 @@ import { createAccount } from "@ark-project/core";
 
 export enum Network {
   Mainnet,
-  Testnet
+  Testnet,
+  Dev
 }
 
 const NETWORK_TO_RPC_NODE_URL: Record<Network, string> = {
-  [Network.Mainnet]: "https://solis.arkproject.dev/",
-  // [Network.Testnet]: "https://staging.solis.arkproject.dev/"
-  [Network.Testnet]: "http://localhost:7777"
+  [Network.Mainnet]: "https://solis.arkproject.dev",
+  [Network.Testnet]: "https://staging.solis.arkproject.dev",
+  [Network.Dev]: "http://localhost:7777"
 };
 
 type RpcContextValue =
@@ -56,8 +57,13 @@ export function RpcProviderProvider(
       !localStorage.getItem("burner_private_key") &&
       !localStorage.getItem("burner_public_key")
     ) {
+      console.log("Creating burner account");
       createAccount(value.rpcProvider).then(
         ({ address, privateKey, publicKey }) => {
+          console.log("Burner account created");
+          console.log("Address: ", address);
+          console.log("Private key: ", privateKey);
+          console.log("Public key: ", publicKey);
           localStorage.setItem("burner_address", address);
           localStorage.setItem("burner_private_key", privateKey);
           localStorage.setItem("burner_public_key", publicKey);

@@ -20,29 +20,32 @@ const cancelOrder = async (
   arkProvider: RpcProvider,
   starknetAccount: AccountInterface,
   arkAccount: Account,
-  cancelInfo: CancelInfo
+  cancelInfo: CancelInfo,
+  owner?: string
 ) => {
+  console.log("cancelInfo" + cancelInfo);
   const fullCancelInfo: FullCancelInfo = {
-    order_hash: cancelInfo.order_hash,
+    order_hash: cancelInfo.orderHash,
     canceller: starknetAccount.address,
     token_chain_id: shortString.encodeShortString("SN_MAIN"),
-    token_address: cancelInfo.token_address,
+    token_address: cancelInfo.tokenAddress,
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(cancelInfo.token_id)
+      cairo.uint256(cancelInfo.tokenId)
     )
   };
-
+  console.log("fullCancelInfo" + fullCancelInfo);
   // Compile the orderhash
   let compiledOrder = CallData.compile({
     fullCancelInfo
   });
+  console.log("compiledOrder" + compiledOrder);
   let compiledCancelInfo = compiledOrder.map(BigInt);
-
+  console.log("compiledCancelInfo" + compiledCancelInfo);
   // Sign the compiled order
   const TypedOrderData = {
     message: {
-      hash: starknet.poseidonHashMany(compiledCancelInfo)
+      hash: starknet.poseidonHashMany(compiledCancelInfo).toString()
     },
     domain: {
       name: "Ark",
@@ -59,20 +62,23 @@ const cancelOrder = async (
     },
     primaryType: "Order"
   };
+  console.log("TypedOrderData" + TypedOrderData);
 
-  const signInfo = await getSignInfos(TypedOrderData, starknetAccount);
+  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
+  console.log("signInfo" + signInfo);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-  // Compile calldata for the create_order function
-  let create_order_calldata = CallData.compile({
+  console.log("signer" + signer);
+  // Compile calldata for the cancel_order function
+  let cancel_order_calldata = CallData.compile({
     order: fullCancelInfo,
     signer: signer
   });
-
+  console.log("cancel_order_calldata" + cancel_order_calldata);
   // Execute the transaction
   const result = await arkAccount.execute({
     contractAddress: ORDER_BOOK_ADDRESS,
     entrypoint: "cancel_order",
-    calldata: create_order_calldata
+    calldata: cancel_order_calldata
   });
 
   // Wait for the transaction to be processed
