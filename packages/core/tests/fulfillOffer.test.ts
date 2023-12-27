@@ -4,7 +4,7 @@ import { RpcProvider, shortString } from "starknet";
 
 import {
   createAccount,
-  createListing,
+  createOffer,
   fulfillOffer,
   getOrderStatus,
   OfferV1
@@ -14,7 +14,7 @@ import { generateRandomTokenId } from "./utils";
 chai.use(chaiAsPromised);
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
-  it("should create a listing and fulfill an offer", async function () {
+  it("should create an offer and fulfill the offer", async function () {
     this.timeout(10000); // Extend timeout if necessary
 
     // Initialize the RPC provider with the ArkChain node URL
@@ -41,7 +41,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     };
 
     // Create the listing on the arkchain using the order details
-    const orderHash = await createListing(
+    const orderHash = await createOffer(
       arkProvider,
       starknetAccount,
       arkAccount,
@@ -78,12 +78,13 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       fulfill_info
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     let { orderStatus: orderStatusAfter } = await getOrderStatus(
       orderHash,
       arkProvider
     );
+
     expect(shortString.decodeShortString(orderStatusAfter)).to.equal(
       "FULFILLED"
     );

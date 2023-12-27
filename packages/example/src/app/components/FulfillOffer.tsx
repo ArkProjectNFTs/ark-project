@@ -26,7 +26,9 @@ export default function FulfillOffer() {
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
       .length(66, { message: "Please enter a valid address" }),
-    token_id: z.number()
+    token_id: z
+      .string()
+      .regex(/^\d+$/, { message: "Token ID must be a number" })
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -35,7 +37,7 @@ export default function FulfillOffer() {
       order_hash: undefined,
       token_address:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-      token_id: 12
+      token_id: "12"
     }
   });
 
@@ -43,7 +45,11 @@ export default function FulfillOffer() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (account === undefined) return;
-    fulfillOffer(account, values);
+    const processedValues = {
+      ...values,
+      token_id: parseInt(values.token_id, 10)
+    };
+    fulfillOffer(account, processedValues);
   }
 
   return (

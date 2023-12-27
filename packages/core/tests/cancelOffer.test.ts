@@ -69,9 +69,9 @@ describe("ArkProject cancel offer", () => {
 
     // Define the cancel details
     const cancelInfo = {
-      order_hash: orderHash,
-      token_address: order.tokenAddress,
-      token_id: order.tokenId
+      orderHash: orderHash,
+      tokenAddress: order.tokenAddress,
+      tokenId: order.tokenId
     };
 
     // Cancel the order

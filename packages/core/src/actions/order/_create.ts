@@ -4,9 +4,7 @@ import {
   AccountInterface,
   CairoCustomEnum,
   CallData,
-  RpcProvider,
-  shortString,
-  TypedData
+  RpcProvider
 } from "starknet";
 
 import { ORDER_BOOK_ADDRESS } from "../../constants";

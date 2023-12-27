@@ -25,7 +25,8 @@ const _fulfillOrder = async (
   provider: RpcProvider,
   starknetFulfillerAccount: AccountInterface,
   arkFulfillerAccount: Account,
-  fulfillInfo: FulfillInfo
+  fulfillInfo: FulfillInfo,
+  owner?: string
 ) => {
   // Compile the order data
   let compiledOrder = CallData.compile({
@@ -53,7 +54,11 @@ const _fulfillOrder = async (
     primaryType: "Order"
   };
 
-  const signInfo = await getSignInfos(TypedOrderData, starknetFulfillerAccount);
+  const signInfo = await getSignInfos(
+    TypedOrderData,
+    starknetFulfillerAccount,
+    owner
+  );
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
   let fulfillInfoCalldata = CallData.compile({

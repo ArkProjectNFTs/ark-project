@@ -23,7 +23,6 @@ const cancelOrder = async (
   cancelInfo: CancelInfo,
   owner?: string
 ) => {
-  console.log("cancelInfo" + cancelInfo);
   const fullCancelInfo: FullCancelInfo = {
     order_hash: cancelInfo.orderHash,
     canceller: starknetAccount.address,
@@ -34,14 +33,13 @@ const cancelOrder = async (
       cairo.uint256(cancelInfo.tokenId)
     )
   };
-  console.log("fullCancelInfo" + fullCancelInfo);
+
   // Compile the orderhash
   let compiledOrder = CallData.compile({
     fullCancelInfo
   });
-  console.log("compiledOrder" + compiledOrder);
   let compiledCancelInfo = compiledOrder.map(BigInt);
-  console.log("compiledCancelInfo" + compiledCancelInfo);
+
   // Sign the compiled order
   const TypedOrderData = {
     message: {
@@ -62,18 +60,16 @@ const cancelOrder = async (
     },
     primaryType: "Order"
   };
-  console.log("TypedOrderData" + TypedOrderData);
 
   const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
-  console.log("signInfo" + signInfo);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-  console.log("signer" + signer);
+
   // Compile calldata for the cancel_order function
   let cancel_order_calldata = CallData.compile({
     order: fullCancelInfo,
     signer: signer
   });
-  console.log("cancel_order_calldata" + cancel_order_calldata);
+
   // Execute the transaction
   const result = await arkAccount.execute({
     contractAddress: ORDER_BOOK_ADDRESS,

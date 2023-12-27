@@ -569,7 +569,7 @@ mod orderbook {
             }
 
             let current_date = starknet::get_block_timestamp();
-            assert(current_date >= order.start_date, orderbook_errors::OFFER_NOT_STARTED);
+            // assert(current_date > order.start_date, orderbook_errors::OFFER_NOT_STARTED);
             assert(order.end_date > current_date, orderbook_errors::ORDER_EXPIRED);
 
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
@@ -592,6 +592,7 @@ mod orderbook {
         fn _fulfill_listing_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
+            // assert(starknet::get_block_timestamp() > order.start_date, orderbook_errors::OFFER_NOT_STARTED);
             assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
             assert(
                 order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED

@@ -5,10 +5,7 @@ const getSignInfos = async (
   account: AccountInterface,
   owner?: string
 ) => {
-  console.log("Owner", owner);
-  console.log(account);
   let signer: Signature = await account.signMessage(TypedOrderData);
-  console.log("Signer", signer);
   let pubKey = owner ? owner : await account.signer.getPubKey();
   if ("r" in signer && "s" in signer) {
     return {

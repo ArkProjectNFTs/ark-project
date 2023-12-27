@@ -17,7 +17,8 @@ const fulfillOffer = async (
   provider: RpcProvider,
   starknetFulfillerAccount: AccountInterface,
   arkFulfillerAccount: Account,
-  fulfillOfferInfo: FulfillOfferInfo
+  fulfillOfferInfo: FulfillOfferInfo,
+  owner?: string
 ) => {
   let fulfillInfo: FulfillInfo = {
     order_hash: fulfillOfferInfo.order_hash,
@@ -35,7 +36,8 @@ const fulfillOffer = async (
     provider,
     starknetFulfillerAccount,
     arkFulfillerAccount,
-    fulfillInfo
+    fulfillInfo,
+    owner
   );
 };
 

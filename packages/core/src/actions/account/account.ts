@@ -51,7 +51,7 @@ const createAccount = async (provider: RpcProvider) => {
   await provider.waitForTransaction(transaction_hash, {
     retryInterval: 100
   });
-  console.log(contract_address, privateKey, publicKey, account);
+
   return {
     address: contract_address,
     privateKey,
