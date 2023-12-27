@@ -1,5 +1,3 @@
-import { useAccount } from "@starknet-react/core";
-
 import Tab from "@/components/ui/tab-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -10,9 +8,6 @@ import FulfillListing from "./FulfillListing";
 import FulfillOffer from "./FulfillOffer";
 
 export default function OrderBookActions() {
-  const { account } = useAccount();
-  if (account === undefined) return;
-
   return (
     <div className="flex w-full space-x-4">
       <Tabs defaultValue="createListing" className="basis-1/2">

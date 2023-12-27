@@ -1,14 +1,18 @@
 "use client";
 
+import { useAccount } from "@starknet-react/core";
+
 import { ArkProvider, Network } from "@ark-project/react";
 
 import { MainNav } from "@/components/main-nav";
-import { Search } from "@/components/search";
 import { UserNav } from "@/components/user-nav";
 
+import Authentification from "./components/Authentification";
 import OrderBookActions from "./components/OrderBookActions";
 
 export default function Home() {
+  const { account } = useAccount();
+  if (account === undefined) return <Authentification />;
   return (
     <>
       <ArkProvider network={Network.Dev}>
@@ -18,7 +22,6 @@ export default function Home() {
               <div className="flex h-16 items-center">
                 <MainNav />
                 <div className="ml-auto flex items-center space-x-4">
-                  <Search />
                   <UserNav />
                 </div>
               </div>
