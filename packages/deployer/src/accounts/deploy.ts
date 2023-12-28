@@ -4,11 +4,14 @@ import { join } from "path";
 import { Command } from "commander";
 import { Account, CallData, RpcProvider } from "starknet";
 
+import "dotenv/config";
+
+import { SOLIS_NETWORK, STARKNET_NETWORK } from "../constants";
 import { getProvider } from "../providers";
 import { OZaccountClassHash } from "./constants";
 
 async function deployAccount(network: string) {
-  const provider = getProvider(network);
+  const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
 
   const accountsFilePath = join(__dirname, `../../accounts/${network}.json`);
   let accounts: any[] = [];
@@ -21,7 +24,7 @@ async function deployAccount(network: string) {
 
   for (const accountToDeploy of noDeployedAccounts) {
     const account = new Account(
-      provider,
+      starknetProvider,
       accountToDeploy.address,
       accountToDeploy.privateKey,
       "1"

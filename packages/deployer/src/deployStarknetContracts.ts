@@ -1,10 +1,13 @@
 import { promises as fs } from "fs";
+import { join } from "path";
 
 import * as sn from "starknet";
 
+import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
 import { deployExecutor, upgradeExecutor } from "./contracts/executor";
 import { deployMessaging, upgradeMessaging } from "./contracts/messaging";
 import { getFeeAddress, getProvider } from "./providers";
+import { ProviderNetwork } from "./types";
 import {
   getContractsFilePath,
   getExistingAccounts,
@@ -15,16 +18,29 @@ const snArtifactsPath = "../../crates/ark-contracts/starknet/target/dev/";
 
 const loading = require("loading-cli");
 
-const STARKNET_NETWORK = "katana";
+function getMessagingFilePath(network: ProviderNetwork): string {
+  switch (network) {
+    case "mainnet":
+      return join(__dirname, "../../../crates/solis/messaging.json");
+    case "testnet":
+      return join(__dirname, "../../../crates/solis/messaging.goerli.json");
+    case "local":
+      return join(__dirname, "../../../crates/solis/messaging.local.json");
+    default:
+      return join(__dirname, "../../../crates/solis/messaging.local.json");
+  }
+}
 
 async function deployStarknetContracts() {
-  const starknetProvider = getProvider(STARKNET_NETWORK);
-  const starknetAccounts = await getExistingAccounts(STARKNET_NETWORK);
+  const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
+  const { starknetAccounts } = getExistingAccounts(
+    STARKNET_NETWORK,
+    SOLIS_NETWORK
+  );
 
   const [starknetAdminAccount, ...otherUsers] = starknetAccounts;
 
   const existingContracts = await getExistingContracts();
-
   console.log("\nSTARKNET ACCOUNTS");
   console.log("=================\n");
   console.log(`| Admin account |  ${starknetAdminAccount.address}`);
@@ -85,6 +101,11 @@ async function deployStarknetContracts() {
       getContractsFilePath(),
       JSON.stringify(existingContracts)
     );
+
+    const messagingFilePath = getMessagingFilePath(STARKNET_NETWORK);
+    const configData = JSON.parse(await fs.readFile(messagingFilePath, "utf8"));
+    configData.contract_address = messagingContract.address;
+    await fs.writeFile(messagingFilePath, JSON.stringify(configData, null, 2));
   }
 
   starknetSpinner.stop();
@@ -93,10 +114,6 @@ async function deployStarknetContracts() {
   console.log("==================\n");
   console.log(`| Messaging contract | ${messagingContract.address}`);
   console.log(`| Executor contract  | ${executorContract.address}`);
-  console.log("");
-  console.log(
-    "<!> Don't forget to update the orderbook contract address to the executor contract."
-  );
 }
 
 deployStarknetContracts();

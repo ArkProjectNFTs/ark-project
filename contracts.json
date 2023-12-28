@@ -1,15 +1,10 @@
 {
-  "goerli": {
-    "messaging": "0x64a04c3ee9e946b536d9f52f0a30d1666085c6fafffbcaea489a5d326b58bd7",
-    "executor": "0xe8fb7177ed7548e7137fee8de03067bf126cc931b9e37dd7b86e3937a8a66f"
-  },
+  "goerli": {},
   "mainnet": {},
-  "katana": {
-    "messaging": "0x40fd928c2dba3e9a754c3337db2d46eade0b1c5adf3735eb09476efd6b5715e",
-    "executor": "0x49b9353e858b766571d70b6b87ca95853a28e3ca8163f6321ee376fe32d51d2"
-  },
-  "arkchain": {
-    "eth": "0x461003257aec8b23c6d338ab1a4a0ea0afb35fae83abd3cd87087b6310644fb",
+  "local": {
+    "messaging": "0x13ac53faba6c4005a3f15a4471bff8570f3781533adc484291188937fbadbb0",
+    "executor": "0x7e1bae92abd58fbb717e109427d1e50cbe5e0fc5e8e94a86c87edecfd5a43c6",
+    "nftContract": "0x4d930e12aa26b7f27f2cd7e44afe56fb1d899484dd3878c5c8a8df00240c2bc",
     "orderbook": "0x4277b065d4e8e013505ce42ced85ef6fd716fc4f9638ddc8dafb452a60c41da"
   }
 }

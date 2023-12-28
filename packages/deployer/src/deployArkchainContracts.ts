@@ -2,7 +2,7 @@ import { promises as fs } from "fs";
 
 import loading from "loading-cli";
 
-import { deployERC20 } from "./contracts/erc20";
+import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
 import { updateOrderbookAddress } from "./contracts/executor";
 import { deployOrderBook, updateExecutorAddress } from "./contracts/orderbook";
 import { getProvider } from "./providers";
@@ -12,17 +12,59 @@ import {
   getExistingContracts
 } from "./utils";
 
+import "dotenv/config";
+
 const arkchainArtifactsPath = "../../crates/ark-contracts/arkchain/target/dev/";
 const commonArtifactsPath = "../../crates/ark-contracts/common/target/dev/";
 
-const STARKNET_NETWORK = "katana";
+async function setSolisAddresses(
+  orderbookAddress: string,
+  executorAddress: string
+) {
+  const url = process.env.ARKCHAIN_RPC_URL || "http://127.0.0.1:7777";
+  const postData = {
+    jsonrpc: "2.0",
+    id: "1",
+    method: "katana_setSolisAddresses",
+    params: {
+      addresses: {
+        orderbook_arkchain: orderbookAddress,
+        executor_starknet: executorAddress
+      }
+    }
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(postData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    await response.json();
+    console.log("Ok");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
 
 async function deployArkchainContracts() {
-  const starknetProvider = getProvider(STARKNET_NETWORK);
-  const starknetAccounts = await getExistingAccounts(STARKNET_NETWORK);
+  const { solisProvider, starknetProvider } = getProvider(
+    STARKNET_NETWORK,
+    SOLIS_NETWORK
+  );
 
-  const solisProvider = getProvider("solis");
-  const arkchainAccounts = await getExistingAccounts("solis");
+  const { starknetAccounts, arkchainAccounts } = getExistingAccounts(
+    STARKNET_NETWORK,
+    SOLIS_NETWORK
+  );
+
   const arkchainAdminAccount = arkchainAccounts[0];
 
   console.log("\nARKCHAIN ACCOUNTS");
@@ -63,18 +105,17 @@ async function deployArkchainContracts() {
       solisProvider,
       arkchainAdminAccount.address
     );
+    const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
+    const contracts = JSON.parse(fileContent);
+    const { executor: executorAddress } = contracts[STARKNET_NETWORK];
 
-    existingContracts.arkchain.orderbook = orderbookContract.address;
+    const existingContracts = await getExistingContracts();
+    existingContracts[SOLIS_NETWORK].orderbook = orderbookContract.address;
     await fs.writeFile(
       getContractsFilePath(),
       JSON.stringify(existingContracts)
     );
 
-    const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
-    const contracts = JSON.parse(fileContent);
-    const { executor: executorAddress } = contracts[STARKNET_NETWORK];
-
-    arkchainSpinner.text = "💠 Updating executor address...";
     await updateExecutorAddress(
       solisProvider,
       arkchainAdminAccount,
@@ -93,6 +134,9 @@ async function deployArkchainContracts() {
         orderbookContract.address
       );
     }
+
+    arkchainSpinner.text = "💠 Updating Contracts on solis rpc...";
+    await setSolisAddresses(orderbookContract.address, executorAddress);
 
     arkchainSpinner.stop();
     console.log("💠 Arkchain Contracts");

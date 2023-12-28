@@ -5,7 +5,10 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "deploy:solis": "turbo run deploy:solis",
+    "deploy:starknet:nft": "turbo run deploy:starknet:nft",
+    "deploy:starknet": "turbo run deploy:starknet"
   },
   "devDependencies": {
     "@ark-project/eslint-config": "workspace:*",

@@ -68,14 +68,14 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 434, // The ID of the token
+    tokenId: 435, // The ID of the token
     startAmount: 1 // The starting amount for the order
   };
 
   const starknetAccount1 = await fetchOrCreateAccount(
     starknetProvider,
-    process.env.ACCOUNT1_ADDRESS,
-    process.env.ACCOUNT1_PRIVATE_KEY
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
   console.log("Minting token...");
@@ -113,8 +113,8 @@ async function freeMint(
 
   const starknetFulfillerAccount = await fetchOrCreateAccount(
     starknetProvider,
-    process.env.ACCOUNT2_ADDRESS,
-    process.env.ACCOUNT2_PRIVATE_KEY
+    process.env.STARKNET_ACCOUNT2_ADDRESS,
+    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
   );
 
   await approveERC20(
