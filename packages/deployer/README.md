@@ -24,9 +24,6 @@ the contract.json file is a reference of the deployed contract and is used to de
   - `pnpm run deploy:starknet`
   - `pnpm run deploy:starknet:nft`
 
-  - TODO in the deploy starknet script:
-    - [] Update messaging.local.json with new addresses
-
 ## Run Solis with Updated Configuration
 
 - Use the following command:
@@ -39,7 +36,7 @@ the contract.json file is a reference of the deployed contract and is used to de
 
 ## Update Core SDK constants
 
-- Modify the addresses in `packages/core/src/constants.ts` as needed.
+- Modify the addresses in `packages/core/src/constants.ts` as needed using the root file contract.json
 
 ## Use the SDK
 
