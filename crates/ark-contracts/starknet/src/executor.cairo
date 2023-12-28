@@ -138,11 +138,11 @@ use core::box::BoxTrait;
             // );
 
             let currency_contract = IERC20Dispatcher {
-                contract_address:  0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.try_into().unwrap() //execution_info.payment_currency_address
+                contract_address:  execution_info.payment_currency_address.try_into().unwrap()
             };
 
             currency_contract
-                .transfer_from(
+                .transferFrom(
                     execution_info.payment_from,
                     execution_info.payment_to,
                     execution_info.payment_amount

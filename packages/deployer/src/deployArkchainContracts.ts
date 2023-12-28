@@ -2,12 +2,18 @@ import { promises as fs } from "fs";
 
 import loading from "loading-cli";
 
+import { deployERC20 } from "./contracts/erc20";
 import { updateOrderbookAddress } from "./contracts/executor";
 import { deployOrderBook, updateExecutorAddress } from "./contracts/orderbook";
 import { getProvider } from "./providers";
-import { getContractsFilePath, getExistingAccounts } from "./utils";
+import {
+  getContractsFilePath,
+  getExistingAccounts,
+  getExistingContracts
+} from "./utils";
 
 const arkchainArtifactsPath = "../../crates/ark-contracts/arkchain/target/dev/";
+const commonArtifactsPath = "../../crates/ark-contracts/common/target/dev/";
 
 const STARKNET_NETWORK = "katana";
 
@@ -27,7 +33,28 @@ async function deployArkchainContracts() {
 
   console.log("\n");
 
-  const arkchainSpinner = loading("💠 Depoying Arkchain Contracts...").start();
+  let existingContracts = await getExistingContracts();
+
+  const arkchainSpinner = loading("💠 Depoying fake eth contract...").start();
+
+  const ethContract = await deployERC20(
+    commonArtifactsPath,
+    arkchainAdminAccount,
+    solisProvider,
+    "ETH",
+    "ETH"
+  );
+
+  existingContracts = {
+    ...existingContracts,
+    arkchain: {
+      ...existingContracts.arkchain,
+      eth: ethContract.address
+    }
+  };
+  await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
+
+  arkchainSpinner.text = "💠 Depoying Arkchain Contracts...";
 
   if (arkchainAdminAccount) {
     const orderbookContract = await deployOrderBook(
@@ -37,11 +64,17 @@ async function deployArkchainContracts() {
       arkchainAdminAccount.address
     );
 
+    existingContracts.arkchain.orderbook = orderbookContract.address;
+    await fs.writeFile(
+      getContractsFilePath(),
+      JSON.stringify(existingContracts)
+    );
+
     const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
     const contracts = JSON.parse(fileContent);
     const { executor: executorAddress } = contracts[STARKNET_NETWORK];
 
-    console.log("Updating executor address...", executorAddress);
+    arkchainSpinner.text = "💠 Updating executor address...";
     await updateExecutorAddress(
       solisProvider,
       arkchainAdminAccount,
@@ -64,6 +97,7 @@ async function deployArkchainContracts() {
     arkchainSpinner.stop();
     console.log("💠 Arkchain Contracts");
     console.log(`- Orderbook contract: ${orderbookContract.address}\n`);
+    console.log(`- ETH contract: ${ethContract.address}\n`);
   }
 }
 

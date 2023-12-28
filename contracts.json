@@ -5,7 +5,11 @@
   },
   "mainnet": {},
   "katana": {
-    "messaging": "0x66cb89668c8b742c286b61343763e8d23c5b288e1cf31abd1f0807ca0be3b80",
-    "executor": "0x1584f4b6684072d19f1e02f85724edcc105e8d23af60a72f0223dba13c025c2"
+    "messaging": "0x40fd928c2dba3e9a754c3337db2d46eade0b1c5adf3735eb09476efd6b5715e",
+    "executor": "0x49b9353e858b766571d70b6b87ca95853a28e3ca8163f6321ee376fe32d51d2"
+  },
+  "arkchain": {
+    "eth": "0x461003257aec8b23c6d338ab1a4a0ea0afb35fae83abd3cd87087b6310644fb",
+    "orderbook": "0x4277b065d4e8e013505ce42ced85ef6fd716fc4f9638ddc8dafb452a60c41da"
   }
 }

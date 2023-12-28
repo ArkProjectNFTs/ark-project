@@ -12,4 +12,5 @@ mod crypto {
 
 mod tokens {
     mod nft;
+    mod erc20;
 }
