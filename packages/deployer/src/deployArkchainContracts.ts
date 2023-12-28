@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import loading from "loading-cli";
 
 import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
+import { deployERC20 } from "./contracts/erc20";
 import { updateOrderbookAddress } from "./contracts/executor";
 import { deployOrderBook, updateExecutorAddress } from "./contracts/orderbook";
 import { getProvider } from "./providers";
@@ -109,6 +110,7 @@ async function deployArkchainContracts() {
     const contracts = JSON.parse(fileContent);
     const { executor: executorAddress } = contracts[STARKNET_NETWORK];
 
+    arkchainSpinner.text = "💠 Updating executor address...";
     const existingContracts = await getExistingContracts();
     existingContracts[SOLIS_NETWORK].orderbook = orderbookContract.address;
     await fs.writeFile(
