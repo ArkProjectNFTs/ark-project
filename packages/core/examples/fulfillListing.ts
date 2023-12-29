@@ -21,6 +21,7 @@ import { approveERC20, approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import {
+  STARKNET_ADMIN_ACCOUNT_ADDRESS,
   STARKNET_ETH_ADDRESS,
   STARKNET_EXECUTOR_ADDRESS,
   STARKNET_NFT_ADDRESS
@@ -68,7 +69,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 2, // The ID of the token
+    tokenId: 3, // The ID of the token
     startAmount: 1 // The starting amount for the order
   };
 
@@ -131,7 +132,7 @@ async function freeMint(
     starknetProvider,
     starknetFulfillerAccount,
     STARKNET_ETH_ADDRESS,
-    STARKNET_EXECUTOR_ADDRESS,
+    STARKNET_ADMIN_ACCOUNT_ADDRESS,
     BigInt(order.startAmount) + BigInt(1)
   );
 
