@@ -76,28 +76,9 @@ async function deployArkchainContracts() {
 
   console.log("\n");
 
-  let existingContracts = await getExistingContracts();
+  const existingContracts = await getExistingContracts();
 
-  const arkchainSpinner = loading("💠 Depoying fake eth contract...").start();
-
-  const ethContract = await deployERC20(
-    commonArtifactsPath,
-    arkchainAdminAccount,
-    solisProvider,
-    "ETH",
-    "ETH"
-  );
-
-  existingContracts = {
-    ...existingContracts,
-    arkchain: {
-      ...existingContracts.arkchain,
-      eth: ethContract.address
-    }
-  };
-  await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
-
-  arkchainSpinner.text = "💠 Depoying Arkchain Contracts...";
+  const arkchainSpinner = loading("💠 Depoying Arkchain Contracts...").start();
 
   if (arkchainAdminAccount) {
     const orderbookContract = await deployOrderBook(
@@ -143,7 +124,6 @@ async function deployArkchainContracts() {
     arkchainSpinner.stop();
     console.log("💠 Arkchain Contracts");
     console.log(`- Orderbook contract: ${orderbookContract.address}\n`);
-    console.log(`- ETH contract: ${ethContract.address}\n`);
   }
 }
 

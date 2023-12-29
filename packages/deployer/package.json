@@ -9,8 +9,9 @@
     "accounts:new": "npm run build && node ./dist/accounts/new.js",
     "accounts:deploy": "npm run build && node ./dist/accounts/deploy.js",
     "deploy:solis": "npm run build && node ./dist/deployArkchainContracts.js",
-    "deploy:starknet:nft": "npm run build && node ./dist/deployStarknetFreemintNft.js",
-    "deploy:starknet": "npm run build && node ./dist/deployStarknetContracts.js"
+    "deploy:starknet:tokens": "npm run build && node ./dist/deployStarknetFreemintNft.js",
+    "deploy:starknet": "npm run build && node ./dist/deployStarknetContracts.js",
+    "deploy:all": "pnpm run deploy:starknet && pnpm run deploy:starknet:tokens"
   },
   "keywords": [],
   "author": "",

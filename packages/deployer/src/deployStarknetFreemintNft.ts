@@ -1,9 +1,10 @@
 import { promises as fs } from "fs";
 
-import { CallData, Contract } from "starknet";
+import { Account, CallData, Contract, RpcProvider } from "starknet";
 
 import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
 import { loadArtifacts } from "./contracts/common";
+import { deployERC20 } from "./contracts/erc20";
 import { getProvider } from "./providers";
 import {
   getContractsFilePath,
@@ -14,16 +15,15 @@ import {
 const loading = require("loading-cli");
 const artifactsPath = "../../crates/ark-contracts/common/target/dev/";
 
-export async function deployStarknetRandomNft() {
+export async function deployStarknetContracts() {
   const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
-
   const { starknetAccounts } = getExistingAccounts(
     STARKNET_NETWORK,
     SOLIS_NETWORK
   );
-
   const [starknetAdminAccount, ...otherUsers] = starknetAccounts;
-  const existingContracts = await getExistingContracts();
+
+  let existingContracts = await getExistingContracts();
 
   console.log("\nSTARKNET ACCOUNTS");
   console.log("=================\n");
@@ -57,11 +57,47 @@ export async function deployStarknetRandomNft() {
     starknetProvider
   );
 
-  existingContracts[STARKNET_NETWORK].nftContract = nftContract.address;
+  existingContracts = {
+    ...existingContracts,
+    [STARKNET_NETWORK]: {
+      ...existingContracts[STARKNET_NETWORK],
+      nftContract: nftContract.address
+    }
+  };
+
   await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
+
+  let ethContract: Contract | undefined;
+  if (STARKNET_NETWORK === "local") {
+    starknetSpinner.text = "Deploying Eth Contract...";
+
+    ethContract = await deployERC20(
+      artifactsPath,
+      starknetAdminAccount,
+      starknetProvider,
+      "ETH",
+      "ETH"
+    );
+
+    existingContracts = {
+      ...existingContracts,
+      [STARKNET_NETWORK]: {
+        ...existingContracts[STARKNET_NETWORK],
+        eth: ethContract.address
+      }
+    };
+
+    await fs.writeFile(
+      getContractsFilePath(),
+      JSON.stringify(existingContracts)
+    );
+  }
 
   starknetSpinner.stop();
   console.log("- Nft contract: ", nftContract.address);
+  if (ethContract) {
+    console.log("- Eth contract: ", ethContract.address);
+  }
 }
 
-deployStarknetRandomNft();
+deployStarknetContracts();

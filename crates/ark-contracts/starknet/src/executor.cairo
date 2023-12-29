@@ -142,7 +142,7 @@ use core::box::BoxTrait;
             };
 
             currency_contract
-                .transferFrom(
+                .transfer_from(
                     execution_info.payment_from,
                     execution_info.payment_to,
                     execution_info.payment_amount

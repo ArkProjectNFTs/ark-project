@@ -7,7 +7,7 @@
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "deploy:solis": "turbo run deploy:solis",
-    "deploy:starknet:nft": "turbo run deploy:starknet:nft",
+    "deploy:starknet:tokens": "turbo run deploy:starknet:tokens",
     "deploy:starknet": "turbo run deploy:starknet"
   },
   "devDependencies": {

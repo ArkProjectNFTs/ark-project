@@ -2,9 +2,11 @@
   "goerli": {},
   "mainnet": {},
   "local": {
-    "messaging": "0x13ac53faba6c4005a3f15a4471bff8570f3781533adc484291188937fbadbb0",
-    "executor": "0x7e1bae92abd58fbb717e109427d1e50cbe5e0fc5e8e94a86c87edecfd5a43c6",
-    "nftContract": "0x4d930e12aa26b7f27f2cd7e44afe56fb1d899484dd3878c5c8a8df00240c2bc",
+    "messaging": "0x1fd48fa434aaa2268e2d532c50e9cb004dc2be6b762403c98305a3eff12ca37",
+    "executor": "0x3841bf5d095fcb74770b4a2e2ca5ead60ebad7224f06730fd49dfa22b8c8c03",
+    "nftContract": "0x7026a16b7863eb1b5818d5f49cbd1237d687642f4b7747cdb526ab144aea960",
+    "eth": "0x461003257aec8b23c6d338ab1a4a0ea0afb35fae83abd3cd87087b6310644fb",
     "orderbook": "0x4277b065d4e8e013505ce42ced85ef6fd716fc4f9638ddc8dafb452a60c41da"
-  }
+  },
+  "arkchain": {}
 }

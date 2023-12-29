@@ -47,8 +47,6 @@ export async function updateExecutorAddress(
   contractAddress: string,
   executorAddress: string
 ) {
-  console.log("executorAddress", executorAddress);
-  console.log("contractAddress", contractAddress);
   const { abi } = await provider.getClassAt(contractAddress);
   if (abi === undefined) {
     throw new Error("no abi.");

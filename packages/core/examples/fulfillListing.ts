@@ -68,7 +68,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 435, // The ID of the token
+    tokenId: 1, // The ID of the token
     startAmount: 1 // The starting amount for the order
   };
 
@@ -78,7 +78,7 @@ async function freeMint(
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
-  console.log("Minting token...");
+  console.log("Minting token...", STARKNET_NFT_ADDRESS);
   await freeMint(starknetProvider, starknetAccount1, order.tokenId);
 
   console.log(
