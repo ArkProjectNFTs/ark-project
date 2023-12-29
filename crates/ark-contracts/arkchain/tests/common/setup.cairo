@@ -1,3 +1,4 @@
+use core::traits::TryInto;
 use core::option::OptionTrait;
 use core::traits::Into;
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
@@ -27,7 +28,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
@@ -50,7 +51,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
@@ -73,7 +74,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 0,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
@@ -97,7 +98,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 0,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
@@ -134,7 +135,9 @@ fn setup_offer(
 
     let data = array![];
     let data_span = data.span();
-
+    let offerer = 0x202344517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
+        .try_into()
+        .unwrap();
     let order_offer = OrderV1 {
         route: RouteType::Erc20ToErc721.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
@@ -142,9 +145,7 @@ fn setup_offer(
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd042
-            .try_into()
-            .unwrap(),
+        offerer: offerer,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -162,7 +163,7 @@ fn setup_offer(
     let order_hash = order_offer.compute_order_hash();
     let token_hash = order_offer.compute_token_hash();
 
-    let signer = sign_mock(order_hash);
+    let signer = sign_mock(order_hash, offerer);
 
     (order_offer, signer, order_hash, token_hash)
 }
@@ -172,7 +173,7 @@ fn setup_offer(
 /// # Arguments
 /// * `price` - The price of the listing
 ///
-/// # Returns a tuple of the different orders
+/// # Returns a tuple of the different orders details
 ///
 fn setup_listing_order(price: felt252) -> (OrderV1, felt252, felt252) {
     let block_timestamp = starknet::get_block_timestamp();
@@ -186,7 +187,7 @@ fn setup_listing_order(price: felt252) -> (OrderV1, felt252, felt252) {
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
@@ -228,7 +229,7 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
@@ -261,6 +262,9 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
 fn setup_auction_order(
     start_date: u64, end_date: u64, start_price: felt252, end_price: felt252, pk: Option<felt252>
 ) -> (OrderV1, Signer, felt252, felt252) {
+    let offerer = 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
+        .try_into()
+        .unwrap();
     let data = array![];
     let data_span = data.span();
     let order_listing = OrderV1 {
@@ -270,9 +274,7 @@ fn setup_auction_order(
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        offerer: offerer,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -289,7 +291,7 @@ fn setup_auction_order(
 
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let signer = sign_mock(order_hash);
+    let signer = sign_mock(order_hash, offerer);
 
     (order_listing, signer, order_hash, token_hash)
 }
@@ -299,7 +301,9 @@ fn setup_listing(
 ) -> (OrderV1, Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
-
+    let offerer = 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
+        .try_into()
+        .unwrap();
     let order_listing = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
@@ -307,9 +311,7 @@ fn setup_listing(
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 1,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
-            .try_into()
-            .unwrap(),
+        offerer: offerer,
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
@@ -323,10 +325,9 @@ fn setup_listing(
         broker_id: 123,
         additional_data: data_span,
     };
-
     let order_hash = order_listing.compute_order_hash();
     let token_hash = order_listing.compute_token_hash();
-    let signer = sign_mock(order_hash);
+    let signer = sign_mock(order_hash, offerer);
     (order_listing, signer, order_hash, token_hash)
 }
 
@@ -340,7 +341,7 @@ fn get_offer_order() -> OrderV1 {
             .unwrap(),
         currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
         salt: 0,
-        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+        offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
         token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
