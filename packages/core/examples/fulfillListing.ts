@@ -68,7 +68,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 1, // The ID of the token
+    tokenId: 2, // The ID of the token
     startAmount: 1 // The starting amount for the order
   };
 
@@ -116,6 +116,16 @@ async function freeMint(
     process.env.STARKNET_ACCOUNT2_ADDRESS,
     process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
   );
+
+  const mintResult = await starknetFulfillerAccount.execute({
+    contractAddress: STARKNET_NFT_ADDRESS,
+    entrypoint: "mint",
+    calldata: CallData.compile({
+      recipient: starknetFulfillerAccount.address,
+      amount: cairo.uint256(100)
+    })
+  });
+  await starknetProvider.waitForTransaction(mintResult.transaction_hash);
 
   await approveERC20(
     starknetProvider,
