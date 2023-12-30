@@ -11,7 +11,7 @@
     "deploy:solis": "npm run build && node ./dist/deployArkchainContracts.js",
     "deploy:starknet:tokens": "npm run build && node ./dist/deployStarknetFreemintNft.js",
     "deploy:starknet": "npm run build && node ./dist/deployStarknetContracts.js",
-    "deploy:all": "pnpm run deploy:starknet && pnpm run deploy:starknet:tokens"
+    "deploy:starknet:all": "pnpm run deploy:starknet && pnpm run deploy:starknet:tokens"
   },
   "keywords": [],
   "author": "",

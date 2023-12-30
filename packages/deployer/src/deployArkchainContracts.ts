@@ -15,8 +15,7 @@ import {
 
 import "dotenv/config";
 
-const arkchainArtifactsPath = "../../crates/ark-contracts/arkchain/target/dev/";
-const commonArtifactsPath = "../../crates/ark-contracts/common/target/dev/";
+const artifactsPath = "../../contracts/target/dev/";
 
 async function setSolisAddresses(
   orderbookAddress: string,
@@ -82,7 +81,7 @@ async function deployArkchainContracts() {
 
   if (arkchainAdminAccount) {
     const orderbookContract = await deployOrderBook(
-      arkchainArtifactsPath,
+      artifactsPath,
       arkchainAdminAccount,
       solisProvider,
       arkchainAdminAccount.address

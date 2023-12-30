@@ -14,7 +14,7 @@ import {
   getExistingContracts
 } from "./utils";
 
-const snArtifactsPath = "../../crates/ark-contracts/starknet/target/dev/";
+const artifactsPath = "../../contracts/target/dev/";
 
 const loading = require("loading-cli");
 
@@ -55,10 +55,13 @@ async function deployStarknetContracts() {
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
 
   let messagingContract: sn.Contract;
-  if (existingContracts[STARKNET_NETWORK].messaging) {
+  if (
+    existingContracts[STARKNET_NETWORK].messaging &&
+    !STARKNET_NETWORK.includes("local")
+  ) {
     starknetSpinner.text = "Upgrading Messaging Contract...";
     messagingContract = await upgradeMessaging(
-      snArtifactsPath,
+      artifactsPath,
       starknetAdminAccount,
       starknetProvider,
       existingContracts[STARKNET_NETWORK].messaging
@@ -66,7 +69,7 @@ async function deployStarknetContracts() {
   } else {
     starknetSpinner.text = "Deploying Messaging Contract...";
     messagingContract = await deployMessaging(
-      snArtifactsPath,
+      artifactsPath,
       starknetAdminAccount,
       starknetProvider
     );
@@ -79,10 +82,13 @@ async function deployStarknetContracts() {
 
   starknetSpinner.text = "⚡ Deploying Executor Contract...";
   let executorContract: sn.Contract;
-  if (existingContracts[STARKNET_NETWORK].executor) {
+  if (
+    existingContracts[STARKNET_NETWORK].executor &&
+    !STARKNET_NETWORK.includes("local")
+  ) {
     starknetSpinner.text = "⚡ Upgrading Executor Contract...";
     executorContract = await upgradeExecutor(
-      snArtifactsPath,
+      artifactsPath,
       starknetAdminAccount,
       starknetProvider,
       existingContracts[STARKNET_NETWORK].messaging
@@ -90,7 +96,7 @@ async function deployStarknetContracts() {
   } else {
     starknetSpinner.text = "⚡ Deploying Executor Contract...";
     executorContract = await deployExecutor(
-      snArtifactsPath,
+      artifactsPath,
       starknetAdminAccount,
       starknetProvider,
       getFeeAddress(STARKNET_NETWORK),

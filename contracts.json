@@ -1,12 +1,1 @@
-{
-  "goerli": {},
-  "mainnet": {},
-  "local": {
-    "messaging": "0x1fd48fa434aaa2268e2d532c50e9cb004dc2be6b762403c98305a3eff12ca37",
-    "executor": "0x3841bf5d095fcb74770b4a2e2ca5ead60ebad7224f06730fd49dfa22b8c8c03",
-    "nftContract": "0x7026a16b7863eb1b5818d5f49cbd1237d687642f4b7747cdb526ab144aea960",
-    "eth": "0x461003257aec8b23c6d338ab1a4a0ea0afb35fae83abd3cd87087b6310644fb",
-    "orderbook": "0x4277b065d4e8e013505ce42ced85ef6fd716fc4f9638ddc8dafb452a60c41da"
-  },
-  "arkchain": {}
-}
+{"goerli":{},"mainnet":{},"local":{"messaging":"0x2552d95fe7840ccc975602254491de1324b4abf6944ac89c51763cede947438","executor":"0x17420d49d49a944eca7c4b8060fed6e2a1b64610a49900ef3dd240643d5c9cb","nftContract":"0x418711b177d48c8f8ada23a755f15556f0df6d2cf6379f93a0e0563d1378d01","eth":"0x172ca09df59789985a1dfb68e0f3f554121eb313c68cf391bd78f9bf69abcf","orderbook":"0x4277b065d4e8e013505ce42ced85ef6fd716fc4f9638ddc8dafb452a60c41da"},"arkchain":{}}

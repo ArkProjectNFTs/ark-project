@@ -2,7 +2,7 @@
   {
     "type": "impl",
     "name": "ImplOrderbook",
-    "interface_name": "arkchain::orderbook::Orderbook"
+    "interface_name": "ark_orderbook:orderbook::Orderbook"
   },
   {
     "type": "enum",
@@ -58,7 +58,7 @@
   },
   {
     "type": "struct",
-    "name": "arkchain::order::order_v1::OrderV1",
+    "name": "ark_orderbook:order::order_v1::OrderV1",
     "members": [
       {
         "name": "route",
@@ -244,7 +244,7 @@
   },
   {
     "type": "interface",
-    "name": "arkchain::orderbook::Orderbook",
+    "name": "ark_orderbook:orderbook::Orderbook",
     "items": [
       {
         "type": "function",
@@ -264,7 +264,7 @@
         "inputs": [
           {
             "name": "order",
-            "type": "arkchain::order::order_v1::OrderV1"
+            "type": "ark_orderbook:order::order_v1::OrderV1"
           },
           {
             "name": "signer",
@@ -365,7 +365,7 @@
         ],
         "outputs": [
           {
-            "type": "arkchain::order::order_v1::OrderV1"
+            "type": "ark_orderbook:order::order_v1::OrderV1"
           }
         ],
         "state_mutability": "view"
@@ -474,7 +474,7 @@
   },
   {
     "type": "event",
-    "name": "arkchain::orderbook::orderbook::OrderPlaced",
+    "name": "ark_orderbook:orderbook::orderbook::OrderPlaced",
     "kind": "struct",
     "members": [
       {
@@ -499,14 +499,14 @@
       },
       {
         "name": "order",
-        "type": "arkchain::order::order_v1::OrderV1",
+        "type": "ark_orderbook:order::order_v1::OrderV1",
         "kind": "data"
       }
     ]
   },
   {
     "type": "event",
-    "name": "arkchain::orderbook::orderbook::OrderExecuted",
+    "name": "ark_orderbook:orderbook::orderbook::OrderExecuted",
     "kind": "struct",
     "members": [
       {
@@ -518,7 +518,7 @@
   },
   {
     "type": "event",
-    "name": "arkchain::orderbook::orderbook::OrderCancelled",
+    "name": "ark_orderbook:orderbook::orderbook::OrderCancelled",
     "kind": "struct",
     "members": [
       {
@@ -535,7 +535,7 @@
   },
   {
     "type": "event",
-    "name": "arkchain::orderbook::orderbook::OrderFulfilled",
+    "name": "ark_orderbook:orderbook::orderbook::OrderFulfilled",
     "kind": "struct",
     "members": [
       {
@@ -557,7 +557,7 @@
   },
   {
     "type": "event",
-    "name": "arkchain::orderbook::orderbook::Upgraded",
+    "name": "ark_orderbook:orderbook::orderbook::Upgraded",
     "kind": "struct",
     "members": [
       {
@@ -569,32 +569,32 @@
   },
   {
     "type": "event",
-    "name": "arkchain::orderbook::orderbook::Event",
+    "name": "ark_orderbook:orderbook::orderbook::Event",
     "kind": "enum",
     "variants": [
       {
         "name": "OrderPlaced",
-        "type": "arkchain::orderbook::orderbook::OrderPlaced",
+        "type": "ark_orderbook:orderbook::orderbook::OrderPlaced",
         "kind": "nested"
       },
       {
         "name": "OrderExecuted",
-        "type": "arkchain::orderbook::orderbook::OrderExecuted",
+        "type": "ark_orderbook:orderbook::orderbook::OrderExecuted",
         "kind": "nested"
       },
       {
         "name": "OrderCancelled",
-        "type": "arkchain::orderbook::orderbook::OrderCancelled",
+        "type": "ark_orderbook:orderbook::orderbook::OrderCancelled",
         "kind": "nested"
       },
       {
         "name": "OrderFulfilled",
-        "type": "arkchain::orderbook::orderbook::OrderFulfilled",
+        "type": "ark_orderbook:orderbook::orderbook::OrderFulfilled",
         "kind": "nested"
       },
       {
         "name": "Upgraded",
-        "type": "arkchain::orderbook::orderbook::Upgraded",
+        "type": "ark_orderbook:orderbook::orderbook::Upgraded",
         "kind": "nested"
       }
     ]

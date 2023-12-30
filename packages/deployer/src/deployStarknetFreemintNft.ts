@@ -13,7 +13,7 @@ import {
 } from "./utils";
 
 const loading = require("loading-cli");
-const artifactsPath = "../../crates/ark-contracts/common/target/dev/";
+const artifactsPath = "../../contracts/target/dev/";
 
 export async function deployStarknetContracts() {
   const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
@@ -37,7 +37,7 @@ export async function deployStarknetContracts() {
   console.log("");
 
   const starknetSpinner = loading("Deploying Nft Contract...").start();
-  const artifacts = loadArtifacts(artifactsPath, "ark_common_FreeMintNFT");
+  const artifacts = loadArtifacts(artifactsPath, "ark_tokens_FreeMintNFT");
 
   const contractCallData = new CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {

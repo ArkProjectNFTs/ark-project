@@ -13,7 +13,7 @@ export async function deployERC20(
   name: string,
   symbol: string
 ): Promise<sn.Contract> {
-  const artifacts = loadArtifacts(artifactsPath, "ark_common_FreeMintERC20");
+  const artifacts = loadArtifacts(artifactsPath, "ark_tokens_FreeMintERC20");
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
     initial_supply: sn.cairo.uint256(0),
