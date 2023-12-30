@@ -39,6 +39,9 @@ importers:
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
+      fs:
+        specifier: 0.0.1-security
+        version: 0.0.1-security
       i:
         specifier: ^0.3.7
         version: 0.3.7
@@ -3554,6 +3557,10 @@ packages:
   /fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
+  /fs@0.0.1-security:
+    resolution: {integrity: sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==}
+    dev: false
+
   /fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -5353,7 +5360,7 @@ packages:
     resolution: {integrity: sha512-v0TuaNc9iNtHdbIRzX372jfQH1vgx2rwBHQDMqK4DqjJbwFEE5dog8Go6rGiZVW750NqRSWrZ7ahqyRNc3bscg==}
     dependencies:
       '@noble/curves': 1.2.0
-      '@scure/base': 1.1.3
+      '@scure/base': 1.1.5
       '@scure/starknet': 0.3.0
       isomorphic-fetch: 3.0.0
       lossless-json: 2.0.11

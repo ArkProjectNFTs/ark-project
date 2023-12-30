@@ -12,7 +12,7 @@ import {
   Uint256
 } from "starknet";
 
-import { ORDER_BOOK_ADDRESS } from "../../constants";
+import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
 import { getSignInfos } from "../../signer";
 import { CancelInfo, FullCancelInfo } from "../../types";
 
@@ -72,7 +72,7 @@ const cancelOrder = async (
 
   // Execute the transaction
   const result = await arkAccount.execute({
-    contractAddress: ORDER_BOOK_ADDRESS,
+    contractAddress: SOLIS_ORDER_BOOK_ADDRESS,
     entrypoint: "cancel_order",
     calldata: cancel_order_calldata
   });

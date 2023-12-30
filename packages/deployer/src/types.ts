@@ -1,1 +1,1 @@
-export type ProviderNetwork = "mainnet" | "testnet" | "local";
+export type ProviderNetwork = "mainnet" | "goerli" | "sepolia" | "local";

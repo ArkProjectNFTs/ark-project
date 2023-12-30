@@ -7,7 +7,7 @@ import {
   RpcProvider
 } from "starknet";
 
-import { ORDER_BOOK_ADDRESS } from "../../constants";
+import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
 import { getSignInfos } from "../../signer";
 import { FulfillInfo } from "../../types";
 
@@ -70,7 +70,7 @@ export const _fulfillOrder = async (
 
   // Execute the transaction
   const result = await arkFulfillerAccount.execute({
-    contractAddress: ORDER_BOOK_ADDRESS,
+    contractAddress: SOLIS_ORDER_BOOK_ADDRESS,
     entrypoint: "fulfill_order",
     calldata: fulfillInfoCalldata
   });

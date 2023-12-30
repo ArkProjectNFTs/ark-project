@@ -7,7 +7,7 @@ import {
   RpcProvider
 } from "starknet";
 
-import { ORDER_BOOK_ADDRESS } from "../../constants";
+import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
 import { getSignInfos } from "../../signer";
 import { OrderV1 } from "../../types";
 import { getOrderHashFromOrderV1 } from "../../utils";
@@ -66,7 +66,7 @@ const createOrder = async (
 
   // Execute the transaction
   const result = await arkAccount.execute({
-    contractAddress: ORDER_BOOK_ADDRESS,
+    contractAddress: SOLIS_ORDER_BOOK_ADDRESS,
     entrypoint: "create_order",
     calldata: create_order_calldata
   });

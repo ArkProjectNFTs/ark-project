@@ -12,7 +12,7 @@ export async function deployOrderBook(
   provider: sn.RpcProvider,
   adminAddress: string
 ): Promise<sn.Contract> {
-  const artifacts = loadArtifacts(artifactsPath, "arkchain_orderbook");
+  const artifacts = loadArtifacts(artifactsPath, "ark_orderbook_orderbook");
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
     admin: adminAddress

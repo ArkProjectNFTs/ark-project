@@ -3,7 +3,6 @@ import { promises as fs } from "fs";
 import loading from "loading-cli";
 
 import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
-import { deployERC20 } from "./contracts/erc20";
 import { updateOrderbookAddress } from "./contracts/executor";
 import { deployOrderBook, updateExecutorAddress } from "./contracts/orderbook";
 import { getProvider } from "./providers";
@@ -77,7 +76,7 @@ async function deployArkchainContracts() {
 
   const existingContracts = await getExistingContracts();
 
-  const arkchainSpinner = loading("💠 Depoying Arkchain Contracts...").start();
+  const arkchainSpinner = loading("💠 Deploying Arkchain Contracts...").start();
 
   if (arkchainAdminAccount) {
     const orderbookContract = await deployOrderBook(

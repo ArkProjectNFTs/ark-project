@@ -1,6 +1,6 @@
 import { Account, CallData, ec, hash, RpcProvider, stark } from "starknet";
 
-import { ACCOUNT_CLASS_HASH } from "../../constants";
+import { SOLIS_ACCOUNT_CLASS_HASH } from "../../constants";
 
 import "dotenv/config";
 
@@ -28,7 +28,7 @@ import "dotenv/config";
  * });
  */
 export const createAccount = async (provider: RpcProvider) => {
-  const accountClassHash = ACCOUNT_CLASS_HASH;
+  const accountClassHash = SOLIS_ACCOUNT_CLASS_HASH;
   const privateKey = stark.randomAddress();
   const publicKey = ec.starkCurve.getStarkKey(privateKey);
   const address = hash.calculateContractAddressFromHash(

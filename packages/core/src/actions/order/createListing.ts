@@ -9,7 +9,10 @@ import {
   Uint256
 } from "starknet";
 
-import { ORDER_BOOK_ADDRESS, STARKNET_ETH_ADDRESS } from "../../constants";
+import {
+  SOLIS_ORDER_BOOK_ADDRESS,
+  STARKNET_ETH_ADDRESS
+} from "../../constants";
 import { ListingV1, OrderV1, RouteType } from "../../types";
 import { createOrder } from "./_create";
 
@@ -37,8 +40,9 @@ const createListing = async (
   owner?: string
 ) => {
   // Retrieve the ABI for the order book contract
-  const { abi: orderbookAbi } =
-    await arkProvider.getClassAt(ORDER_BOOK_ADDRESS);
+  const { abi: orderbookAbi } = await arkProvider.getClassAt(
+    SOLIS_ORDER_BOOK_ADDRESS
+  );
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
   }
