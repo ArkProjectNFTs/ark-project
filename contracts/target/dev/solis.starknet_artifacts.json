@@ -1,1 +1,0 @@
-{"version":1,"contracts":[{"id":"a0s97i7j83ksu","package_name":"solis","contract_name":"starknet_utils","artifacts":{"sierra":"solis_starknet_utils.contract_class.json","casm":"solis_starknet_utils.compiled_contract_class.json"}}]}

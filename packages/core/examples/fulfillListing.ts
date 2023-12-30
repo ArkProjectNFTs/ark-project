@@ -21,7 +21,6 @@ import { approveERC20, approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import {
-  STARKNET_ADMIN_ACCOUNT_ADDRESS,
   STARKNET_ETH_ADDRESS,
   STARKNET_EXECUTOR_ADDRESS,
   STARKNET_NFT_ADDRESS
@@ -69,25 +68,25 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 3, // The ID of the token
-    startAmount: 1 // The starting amount for the order
+    tokenId: 4, // The ID of the token
+    startAmount: 100000000000000000 // The starting amount for the order
   };
 
-  const starknetAccount1 = await fetchOrCreateAccount(
+  const starknetOffererAccount = await fetchOrCreateAccount(
     starknetProvider,
     process.env.STARKNET_ACCOUNT1_ADDRESS,
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
   console.log("Minting token...", STARKNET_NFT_ADDRESS);
-  await freeMint(starknetProvider, starknetAccount1, order.tokenId);
+  await freeMint(starknetProvider, starknetOffererAccount, order.tokenId);
 
   console.log(
     `Approving token ${order.tokenId} to ${STARKNET_EXECUTOR_ADDRESS}...`
   );
   await approveERC721(
     starknetProvider,
-    starknetAccount1,
+    starknetOffererAccount,
     STARKNET_NFT_ADDRESS,
     STARKNET_EXECUTOR_ADDRESS,
     order.tokenId
@@ -95,7 +94,7 @@ async function freeMint(
 
   console.log("Creating listing...");
   // Create the listing on the arkchain using the order details
-  await createListing(arkProvider, starknetAccount1, arkAccount, order);
+  await createListing(arkProvider, starknetOffererAccount, arkAccount, order);
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -107,10 +106,10 @@ async function freeMint(
     arkProvider
   );
 
-  let { orderStatus: orderStatusBefore } = await getOrderStatus(
-    orderHash,
-    arkProvider
-  );
+  // let { orderStatus: orderStatusBefore } = await getOrderStatus(
+  //   orderHash,
+  //   arkProvider
+  // );
 
   const starknetFulfillerAccount = await fetchOrCreateAccount(
     starknetProvider,
@@ -118,21 +117,24 @@ async function freeMint(
     process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
   );
 
-  const mintResult = await starknetFulfillerAccount.execute({
-    contractAddress: STARKNET_NFT_ADDRESS,
+  const mintErc20Result = await starknetFulfillerAccount.execute({
+    contractAddress: STARKNET_ETH_ADDRESS,
     entrypoint: "mint",
     calldata: CallData.compile({
       recipient: starknetFulfillerAccount.address,
-      amount: cairo.uint256(100)
+      amount: cairo.uint256(1000000000000000000)
     })
   });
-  await starknetProvider.waitForTransaction(mintResult.transaction_hash);
+
+  console.log("mintResult", mintErc20Result);
+
+  await starknetProvider.waitForTransaction(mintErc20Result.transaction_hash);
 
   await approveERC20(
     starknetProvider,
     starknetFulfillerAccount,
     STARKNET_ETH_ADDRESS,
-    STARKNET_ADMIN_ACCOUNT_ADDRESS,
+    STARKNET_EXECUTOR_ADDRESS,
     BigInt(order.startAmount) + BigInt(1)
   );
 

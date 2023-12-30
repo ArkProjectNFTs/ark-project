@@ -22,7 +22,9 @@ function getMessagingFilePath(network: ProviderNetwork): string {
   switch (network) {
     case "mainnet":
       return join(__dirname, "../../../crates/solis/messaging.json");
-    case "testnet":
+    case "goerli":
+      return join(__dirname, "../../../crates/solis/messaging.goerli.json");
+    case "sepolia":
       return join(__dirname, "../../../crates/solis/messaging.goerli.json");
     case "local":
       return join(__dirname, "../../../crates/solis/messaging.local.json");

@@ -20,6 +20,10 @@
     "deploy:starknet": {
       "cache": false,
       "persistent": true
+    },
+    "deploy:starknet:all": {
+      "cache": false,
+      "persistent": true
     }
   },
   "globalEnv": [
