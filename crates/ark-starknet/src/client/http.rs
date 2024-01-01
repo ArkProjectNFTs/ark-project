@@ -333,10 +333,20 @@ mod tests {
             )
             .await;
 
-        if let Err(StarknetClientError::EntrypointNotFound(e)) = r {
-            assert!(e.to_string().contains("not found in contract"));
-        } else {
-            panic!("Expecting EntrypointNotFound error, got {:?}", r);
+        match r {
+            Err(StarknetClientError::Contract(error))
+                if error.contains("Invalid message selector") =>
+            {
+                println!("{}", error);
+                assert!(error.contains("Invalid message selector"));
+            }
+            _ => {
+                println!("{:?}", r);
+                panic!(
+                    "Expecting Contract error with Invalid message selector, got {:?}",
+                    r
+                );
+            }
         }
     }
 

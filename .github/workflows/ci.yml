@@ -18,6 +18,14 @@ jobs:
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
   check:
     needs: setup
@@ -46,8 +54,6 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-      - name: Cache cargo dependencies
-        uses: Swatinem/rust-cache@v2
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:

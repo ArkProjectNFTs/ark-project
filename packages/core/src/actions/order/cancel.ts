@@ -1,6 +1,7 @@
 import * as starknet from "@scure/starknet";
 import {
   Account,
+  AccountInterface,
   cairo,
   CairoCustomEnum,
   CairoOption,
@@ -17,18 +18,19 @@ import { CancelInfo, FullCancelInfo } from "../../types";
 
 const cancelOrder = async (
   arkProvider: RpcProvider,
-  starknetAccount: Account,
+  starknetAccount: AccountInterface,
   arkAccount: Account,
-  cancelInfo: CancelInfo
+  cancelInfo: CancelInfo,
+  owner?: string
 ) => {
   const fullCancelInfo: FullCancelInfo = {
-    order_hash: cancelInfo.order_hash,
+    order_hash: cancelInfo.orderHash,
     canceller: starknetAccount.address,
     token_chain_id: shortString.encodeShortString("SN_MAIN"),
-    token_address: cancelInfo.token_address,
+    token_address: cancelInfo.tokenAddress,
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(cancelInfo.token_id)
+      cairo.uint256(cancelInfo.tokenId)
     )
   };
 
@@ -41,7 +43,7 @@ const cancelOrder = async (
   // Sign the compiled order
   const TypedOrderData = {
     message: {
-      hash: starknet.poseidonHashMany(compiledCancelInfo)
+      hash: starknet.poseidonHashMany(compiledCancelInfo).toString()
     },
     domain: {
       name: "Ark",
@@ -59,10 +61,11 @@ const cancelOrder = async (
     primaryType: "Order"
   };
 
-  const signInfo = await getSignInfos(TypedOrderData, starknetAccount);
+  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-  // Compile calldata for the create_order function
-  let create_order_calldata = CallData.compile({
+
+  // Compile calldata for the cancel_order function
+  let cancel_order_calldata = CallData.compile({
     order: fullCancelInfo,
     signer: signer
   });
@@ -71,7 +74,7 @@ const cancelOrder = async (
   const result = await arkAccount.execute({
     contractAddress: ORDER_BOOK_ADDRESS,
     entrypoint: "cancel_order",
-    calldata: create_order_calldata
+    calldata: cancel_order_calldata
   });
 
   // Wait for the transaction to be processed

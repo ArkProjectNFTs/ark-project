@@ -52,7 +52,7 @@ const arkProvider = new RpcProvider({
   );
 
   // wait 10 seconds for the transaction to be processed
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   let { orderStatus: orderStatusBefore } = await getOrderStatus(
     orderHash,

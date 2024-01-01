@@ -1,7 +1,7 @@
 import { useAccount } from "@starknet-react/core";
 import { shortString, TypedData } from "starknet";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 const Account = () => {
   const { account, address, status } = useAccount();
@@ -36,7 +36,7 @@ const Account = () => {
 
   return (
     <div>
-      <Button onClick={signMessage}>Sign Message</Button>
+      {/* <Button onClick={signMessage}>Sign Message</Button> */}
       <p>Account: {address}</p>
     </div>
   );

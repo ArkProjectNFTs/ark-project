@@ -1,14 +1,15 @@
 "use client";
+
 import { ReactNode } from "react";
 
 import { devnet, goerli, mainnet } from "@starknet-react/chains";
 import {
-  StarknetConfig,
   argent,
   braavos,
   publicProvider,
+  StarknetConfig,
   useInjectedConnectors,
-  voyager,
+  voyager
 } from "@starknet-react/core";
 
 export function StarknetProvider({ children }: { children: ReactNode }) {
@@ -18,7 +19,7 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
     // Hide recommended connectors if the user has any connector installed.
     includeRecommended: "onlyIfNoConnectors",
     // Randomize the order of the connectors.
-    order: "random",
+    order: "alphabetical"
   });
 
   return (
@@ -27,6 +28,7 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
       provider={publicProvider()}
       connectors={connectors}
       explorer={voyager}
+      autoConnect
     >
       {children}
     </StarknetConfig>

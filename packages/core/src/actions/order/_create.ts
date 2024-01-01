@@ -1,5 +1,11 @@
 import * as starknet from "@scure/starknet";
-import { Account, CairoCustomEnum, CallData, RpcProvider } from "starknet";
+import {
+  Account,
+  AccountInterface,
+  CairoCustomEnum,
+  CallData,
+  RpcProvider
+} from "starknet";
 
 import { ORDER_BOOK_ADDRESS } from "../../constants";
 import { getSignInfos } from "../../signer";
@@ -18,9 +24,10 @@ import { getOrderHashFromOrderV1 } from "../../utils";
  */
 const createOrder = async (
   arkProvider: RpcProvider,
-  starknetAccount: Account,
+  starknetAccount: AccountInterface,
   arkAccount: Account,
-  order: OrderV1
+  order: OrderV1,
+  owner?: string
 ) => {
   // Compile the order data
   let compiledOrder = CallData.compile({
@@ -31,7 +38,7 @@ const createOrder = async (
   // Sign the compiled order
   const TypedOrderData = {
     message: {
-      hash: starknet.poseidonHashMany(compiletOrderBigInt)
+      hash: starknet.poseidonHashMany(compiletOrderBigInt).toString()
     },
     domain: {
       name: "Ark",
@@ -49,7 +56,7 @@ const createOrder = async (
     primaryType: "Order"
   };
 
-  const signInfo = await getSignInfos(TypedOrderData, starknetAccount);
+  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
   // Compile calldata for the create_order function
   let create_order_calldata = CallData.compile({

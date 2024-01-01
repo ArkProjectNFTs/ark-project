@@ -48,7 +48,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
 
         token.owner = token_owner_raw_result
             .ok()
-            .and_then(|owner| owner.get(0).map(to_hex_str))
+            .and_then(|owner| owner.first().map(to_hex_str))
             .unwrap_or_default();
 
         self.storage.register_token(&token, block_timestamp).await?;
