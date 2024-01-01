@@ -3,10 +3,10 @@ name: ArkChain contract testing
 on:
   push:
     paths:
-      - "crates/ark-contracts/arkchain/**"
+      - "contracts/arkchain/**"
   pull_request:
     paths:
-      - "crates/ark-contracts/arkchain/**"
+      - "contracts/arkchain/**"
 
 jobs:
   check:
@@ -26,7 +26,7 @@ jobs:
           starknet-foundry-version: 0.10.1
 
       - name: Check Scarb Formatting
-        run: cd crates/ark-contracts/arkchain && scarb fmt --check
+        run: cd contracts/arkchain && scarb fmt --check
 
       - name: Run Snforge Tests
-        run: cd crates/ark-contracts/arkchain && snforge test
+        run: cd contracts/arkchain && snforge test
