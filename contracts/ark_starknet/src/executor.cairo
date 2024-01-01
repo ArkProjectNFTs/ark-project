@@ -134,9 +134,9 @@ use core::box::BoxTrait;
 
             // Check if execution_info.currency_contract_address is whitelisted
 
-            // assert(
-            //     execution_info.payment_currency_chain_id == 'SN_MAIN', 'Chain ID is not SN_MAIN'
-            // );
+            assert(
+                execution_info.payment_currency_chain_id == 'SN_MAIN', 'Chain ID is not SN_MAIN'
+            );
 
             let currency_contract = IERC20Dispatcher {
                 contract_address:  execution_info.payment_currency_address.try_into().unwrap()
@@ -152,44 +152,44 @@ use core::box::BoxTrait;
                     execution_info.payment_amount
                 );
 
-            // let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
-            // nft_contract
-            //     .transfer_from(
-            //         execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
-            //     );
+            let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
+            nft_contract
+                .transfer_from(
+                    execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
+                );
 
             // self._transfer_royalties(execution_info, eth_contract);
 
-            // let tx_info = starknet::get_tx_info().unbox();
-            // let transaction_hash = tx_info.transaction_hash;
-            // let block_timestamp = starknet::info::get_block_timestamp();
+            let tx_info = starknet::get_tx_info().unbox();
+            let transaction_hash = tx_info.transaction_hash;
+            let block_timestamp = starknet::info::get_block_timestamp();
 
-            // self
-            //     .emit(
-            //         OrderExecuted {
-            //             order_hash: execution_info.order_hash, transaction_hash, block_timestamp,
-            //         }
-            //     );
+            self
+                .emit(
+                    OrderExecuted {
+                        order_hash: execution_info.order_hash, transaction_hash, block_timestamp,
+                    }
+                );
 
-            // let messaging = IAppchainMessagingDispatcher {
-            //     contract_address: self.messaging_address.read()
-            // };
+            let messaging = IAppchainMessagingDispatcher {
+                contract_address: self.messaging_address.read()
+            };
 
-            // let vinfo = ExecutionValidationInfo {
-            //     order_hash: execution_info.order_hash,
-            //     transaction_hash,
-            //     starknet_block_timestamp: block_timestamp,
-            // };
+            let vinfo = ExecutionValidationInfo {
+                order_hash: execution_info.order_hash,
+                transaction_hash,
+                starknet_block_timestamp: block_timestamp,
+            };
 
-            // let mut vinfo_buf = array![];
-            // Serde::serialize(@vinfo, ref vinfo_buf);
+            let mut vinfo_buf = array![];
+            Serde::serialize(@vinfo, ref vinfo_buf);
 
-            // messaging
-            //     .send_message_to_appchain(
-            //         self.arkchain_orderbook_address.read(),
-            //         selector!("validate_order_execution"),
-            //         vinfo_buf.span(),
-            //     );
+            messaging
+                .send_message_to_appchain(
+                    self.arkchain_orderbook_address.read(),
+                    selector!("validate_order_execution"),
+                    vinfo_buf.span(),
+                );
         }
     }
 
