@@ -12,6 +12,7 @@ homepage = "https://arkproject.dev"
 description = """
 ArkProject libraries written in Rust
 """
+exclude = ["crates/solis"]
 
 [workspace]
 members = [
@@ -21,6 +22,7 @@ members = [
   "crates/solis",
   "crates/diri",
 ]
+
 
 [workspace.dependencies]
 ark-starknet = { path = "./crates/ark-starknet" }
