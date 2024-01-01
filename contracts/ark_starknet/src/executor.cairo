@@ -12,8 +12,8 @@
 #[starknet::contract]
 mod executor {
     use core::debug::PrintTrait;
-use core::traits::TryInto;
-use core::box::BoxTrait;
+    use core::traits::TryInto;
+    use core::box::BoxTrait;
     use starknet::{ContractAddress, ClassHash};
     use ark_common::protocol::order_types::{RouteType, ExecutionInfo, ExecutionValidationInfo};
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
@@ -71,8 +71,10 @@ use core::box::BoxTrait;
         fn get_orderbook_address(ref self: ContractState) -> ContractAddress {
             self.arkchain_orderbook_address.read()
         }
-        
-        fn update_arkchain_orderbook_address(ref self: ContractState, orderbook_address: ContractAddress) {
+
+        fn update_arkchain_orderbook_address(
+            ref self: ContractState, orderbook_address: ContractAddress
+        ) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
@@ -139,7 +141,7 @@ use core::box::BoxTrait;
             );
 
             let currency_contract = IERC20Dispatcher {
-                contract_address:  execution_info.payment_currency_address.try_into().unwrap()
+                contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
             execution_info.payment_from.print();

@@ -181,32 +181,29 @@ struct FulfillInfo {
 #[derive(Drop, Serde, Copy)]
 struct ExecutionInfo {
     order_hash: felt252,
-
     nft_address: ContractAddress,
     nft_from: ContractAddress,
     nft_to: ContractAddress,
     nft_token_id: u256,
-
     payment_from: ContractAddress,
     payment_to: ContractAddress,
     payment_amount: u256,
     payment_currency_address: ContractAddress,
     payment_currency_chain_id: felt252,
-
-    // route: RouteType,
-    // order_hash: felt252,
-    // token_address: ContractAddress,
-    // token_id: u256,
-    // quantity: u256,
-    // offerer_address: ContractAddress,
-    // fulfiller_address: ContractAddress,
-    // price: u256,
-    // creator_address: ContractAddress,
-    // creator_fee: u256,
-    // create_broker_address: ContractAddress,
-    // create_broker_fee: u256,
-    // fulfill_broker_address: ContractAddress,
-    // fulfill_broker_fee: u256
+// route: RouteType,
+// order_hash: felt252,
+// token_address: ContractAddress,
+// token_id: u256,
+// quantity: u256,
+// offerer_address: ContractAddress,
+// fulfiller_address: ContractAddress,
+// price: u256,
+// creator_address: ContractAddress,
+// creator_fee: u256,
+// create_broker_address: ContractAddress,
+// create_broker_fee: u256,
+// fulfill_broker_address: ContractAddress,
+// fulfill_broker_fee: u256
 }
 
 /// The info sent from Starknet to the Arkchain to

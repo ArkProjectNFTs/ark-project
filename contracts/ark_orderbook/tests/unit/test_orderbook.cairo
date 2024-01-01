@@ -6,7 +6,9 @@ use core::traits::Into;
 use core::traits::TryInto;
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use ark_common::protocol::order_types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
-use ark_orderbook::order::database::{order_read, order_status_read, order_status_write, order_type_read};
+use ark_orderbook::order::database::{
+    order_read, order_status_read, order_status_write, order_type_read
+};
 use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
     Event, SpyOn, test_address
