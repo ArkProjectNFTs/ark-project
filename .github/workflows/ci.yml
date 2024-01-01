@@ -34,8 +34,6 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-      - name: Cache cargo dependencies
-        uses: Swatinem/rust-cache@v2
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -54,8 +52,6 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-      - name: Cache cargo dependencies
-        uses: Swatinem/rust-cache@v2
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
@@ -69,8 +65,6 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-      - name: Cache cargo dependencies
-        uses: Swatinem/rust-cache@v2
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
