@@ -1,0 +1,42 @@
+name: Solis Deploy Stack with Custom Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      contractAddress:
+        description: "Contract Address"
+        required: true
+      executorAddress:
+        description: "Executor Address"
+        required: true
+      orderbookAddress:
+        description: "Orderbook Address"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+
+      - name: Change to CDK directory
+        run: cd aws/cdk-solis-ecs
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy CDK Stack
+        env:
+          RPC_URL: ${{ secrets.RPC_URL }}
+          SENDER_ADDRESS: ${{ secrets.SENDER_ADDRESS }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          CONTRACT_ADDRESS: ${{ github.event.inputs.contractAddress }}
+          EXECUTOR_ADDRESS: ${{ github.event.inputs.executorAddress }}
+          ORDERBOOK_ADDRESS: ${{ github.event.inputs.orderbookAddress }}
+        run: npx cdk deploy --all --require-approval never

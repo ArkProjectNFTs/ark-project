@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo" # Rust's package manager
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "npm" # JavaScript package manager
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "docker" # Docker
+    directory: "/" # Location of Dockerfiles
+    schedule:
+      interval: "weekly"

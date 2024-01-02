@@ -1,0 +1,9 @@
+# Ignore all node modules
+node_modules
+
+# Ignore various non-source directories
+packages
+contracts
+aws
+skip_examples
+target
