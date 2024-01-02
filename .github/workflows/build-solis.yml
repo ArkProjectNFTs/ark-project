@@ -1,4 +1,4 @@
-name: Build Solis
+name: Solis Build
 
 on:
   push:
