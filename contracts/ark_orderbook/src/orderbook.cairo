@@ -257,7 +257,7 @@ mod orderbook {
     #[l1_handler]
     fn validate_order_execution(
         ref self: ContractState, _from_address: felt252, info: ExecutionValidationInfo
-    ) { 
+    ) {
         // Solis already checks that ALL the messages are coming from the executor contract.
         // TODO: anyway, it can be useful to have an extra check here.
 
