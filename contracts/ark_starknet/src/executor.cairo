@@ -144,9 +144,6 @@ mod executor {
                 contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
-            execution_info.payment_from.print();
-            execution_info.payment_to.print();
-            execution_info.payment_amount.print();
             currency_contract
                 .transfer_from(
                     execution_info.payment_from,
