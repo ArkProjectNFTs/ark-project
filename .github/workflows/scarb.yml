@@ -31,5 +31,5 @@ jobs:
       - name: Test ark_common contracts
         run: cd contracts/ark_common && snforge test
 
-        - name: Test ark_common contracts
+      - name: Test ark_common contracts
         run: cd contracts/ark_common && snforge test
