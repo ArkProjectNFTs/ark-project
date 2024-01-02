@@ -9,10 +9,33 @@
     "lint": {
       "dependsOn": ["^lint"]
     },
-    "dev": {
+    "deploy:solis": {
+      "cache": false,
+      "persistent": true
+    },
+    "deploy:starknet:nft": {
+      "cache": false,
+      "persistent": true
+    },
+    "deploy:starknet": {
+      "cache": false,
+      "persistent": true
+    },
+    "deploy:starknet:all": {
       "cache": false,
       "persistent": true
     }
   },
-  "globalEnv": ["ACCOUNT_CLASS_HASH", "ORDERBOOK_CONTRACT"]
+  "globalEnv": [
+    "ACCOUNT_CLASS_HASH",
+    "ORDERBOOK_CONTRACT",
+    "STARKNET_RPC_URL",
+    "ARKCHAIN_RPC_URL",
+    "STARKNET_NETWORK_ID",
+    "SOLIS_NETWORK_ID",
+    "STARKNET_ACCOUNT1_ADDRESS",
+    "STARKNET_ACCOUNT1_PRIVATE_KEY",
+    "STARKNET_ACCOUNT2_ADDRESS",
+    "STARKNET_ACCOUNT2_PRIVATE_KEY"
+  ]
 }

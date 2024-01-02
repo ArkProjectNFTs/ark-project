@@ -1,16 +1,33 @@
-name: ArkChain contract testing
+name: ArkProject contracts CI
 
 on:
   push:
+    branches:
+      - main
     paths:
-      - "crates/ark-contracts/arkchain/**"
+      - "contracts/**"
   pull_request:
     paths:
-      - "crates/ark-contracts/arkchain/**"
+      - "contracts/**"
 
 jobs:
-  check:
+  fmt:
     runs-on: ubuntu-latest
+    name: Cairo formatting
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: 2.3.1
+
+      - name: Check Scarb Formatting
+        run: cd contracts && scarb fmt --check
+  test:
+    runs-on: ubuntu-latest
+    name: Cairo starknet foundry tests
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -25,8 +42,14 @@ jobs:
         with:
           starknet-foundry-version: 0.10.1
 
-      - name: Check Scarb Formatting
-        run: cd crates/ark-contracts/arkchain && scarb fmt --check
+      - name: Test ark_common contracts
+        run: cd contracts/ark_common && snforge test
 
-      - name: Run Snforge Tests
-        run: cd crates/ark-contracts/arkchain && snforge test
+      - name: Test ark_orderbook contracts
+        run: cd contracts/ark_orderbook && snforge test
+
+      - name: Test ark_starknet contracts
+        run: cd contracts/ark_starknet && scarb test
+
+      - name: Test ark_tokens contracts
+        run: cd contracts/ark_tokens && scarb test

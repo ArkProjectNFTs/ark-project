@@ -28,7 +28,9 @@ tracing = "0.1"
 num-bigint = "0.4.4"
 num-traits = "0.2.17"
 
-cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.1.5", features = ["abigen-rs"] }
+cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.1.7", features = [
+  "abigen-rs",
+] }
 
 anyhow.workspace = true
 async-trait.workspace = true

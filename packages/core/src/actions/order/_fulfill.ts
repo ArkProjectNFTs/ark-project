@@ -7,7 +7,7 @@ import {
   RpcProvider
 } from "starknet";
 
-import { ORDER_BOOK_ADDRESS } from "../../constants";
+import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
 import { getSignInfos } from "../../signer";
 import { FulfillInfo } from "../../types";
 
@@ -21,7 +21,7 @@ import { FulfillInfo } from "../../types";
  * @returns {Promise<void>} A promise that resolves when the transaction is completed.
  * @throws {Error} Throws an error if the ABI or order type is invalid.
  */
-const _fulfillOrder = async (
+export const _fulfillOrder = async (
   provider: RpcProvider,
   starknetFulfillerAccount: AccountInterface,
   arkFulfillerAccount: Account,
@@ -61,6 +61,8 @@ const _fulfillOrder = async (
   );
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
+  console.log("fulfillInfo", fulfillInfo);
+
   let fulfillInfoCalldata = CallData.compile({
     fulfill_info: fulfillInfo,
     signer: signer
@@ -68,7 +70,7 @@ const _fulfillOrder = async (
 
   // Execute the transaction
   const result = await arkFulfillerAccount.execute({
-    contractAddress: ORDER_BOOK_ADDRESS,
+    contractAddress: SOLIS_ORDER_BOOK_ADDRESS,
     entrypoint: "fulfill_order",
     calldata: fulfillInfoCalldata
   });
@@ -78,5 +80,3 @@ const _fulfillOrder = async (
     retryInterval: 1000
   });
 };
-
-export { _fulfillOrder };
