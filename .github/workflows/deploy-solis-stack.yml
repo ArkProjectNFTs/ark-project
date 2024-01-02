@@ -1,4 +1,4 @@
-name: Deploy Solis Stack with Custom Environment
+name: Solis Deploy Stack with Custom Environment
 
 on:
   workflow_dispatch:

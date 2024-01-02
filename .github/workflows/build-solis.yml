@@ -1,9 +1,10 @@
-name: Solis Build
+name: Solis Build & Push Image to Amazon ECR
 
 on:
   push:
     branches:
       - main
+  # TODO: remove this once merged into main
   pull_request:
     types: [synchronize, opened, reopened]
 
