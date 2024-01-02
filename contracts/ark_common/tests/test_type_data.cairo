@@ -15,9 +15,6 @@ fn sign_mock(message_hash: felt252) -> Signer {
     let private_key: felt252 = 0x1234567890987654321;
     let mut key_pair = StarkCurveKeyPairTrait::from_private_key(private_key);
     let (r, s) = key_pair.sign(message_hash).unwrap();
-    r.print();
-    s.print();
-    key_pair.public_key.print();
     Signer::WEIERSTRESS_STARKNET(
         SignInfo { user_pubkey: key_pair.public_key, user_sig_r: r, user_sig_s: s, }
     )
@@ -32,13 +29,14 @@ fn ORDER() -> OrderSign {
 }
 
 fn ORDER_HASH() -> felt252 {
-    0x32c0fac84cfd23ed5a608215640aea894432b9f57c2f0eeeef8890b69c9857a
+    0x232DD797D0E66C2F6B9AD5427565B23158DE6328C3186B644DDB1767F81D504
 }
 
 #[test]
 fn ark_test_type_data() {
     let order = ORDER();
     let order_hash = order.compute_hash_from(from: SIGNER());
+    order_hash.print();
     let signer = sign_mock(order_hash);
     assert(order_hash == ORDER_HASH(), 'Invalid order hash');
 }
