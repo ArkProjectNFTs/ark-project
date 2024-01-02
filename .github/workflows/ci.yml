@@ -1,16 +1,21 @@
-name: ci
+name: ArkProject crate CI
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "crates/**"
   pull_request:
+    paths:
+      - "crates/**"
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   setup:
+    name: Setup rust ci
     runs-on: ubuntu-latest
     outputs:
       date: ${{ steps.date.outputs.date }}
@@ -29,7 +34,7 @@ jobs:
 
   check:
     needs: setup
-    name: Check
+    name: Check rust crates
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -49,7 +54,7 @@ jobs:
 
   test:
     needs: check
-    name: Test
+    name: Test rust crates
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -62,7 +67,7 @@ jobs:
 
   lints:
     if: github.event_name == 'pull_request'
-    name: Lints
+    name: Lints rust crates
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
