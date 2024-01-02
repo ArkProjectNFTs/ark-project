@@ -2,6 +2,8 @@ name: ArkChain contract testing
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "contracts/**"
   pull_request:
