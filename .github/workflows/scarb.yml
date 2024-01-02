@@ -26,7 +26,7 @@ jobs:
           starknet-foundry-version: 0.10.1
 
       - name: Check Scarb Formatting
-        run: cd contracts/arkchain && scarb fmt --check
+        run: cd contracts && scarb fmt --check
 
       - name: Run Snforge Tests
-        run: cd contracts/arkchain && snforge test
+        run: cd contracts && snforge test
