@@ -2,6 +2,7 @@ import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { RpcProvider, shortString } from "starknet";
 
+import { Network } from "../src";
 import { createAccount } from "../src/actions/account/account";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
@@ -22,6 +23,8 @@ describe("ArkProject Listing", () => {
       nodeUrl: "http://0.0.0.0:7777"
     });
 
+    const network = "dev" as Network;
+
     // Create a new account using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
     const { account: starknetAccount } = await createAccount(starknetProvider);
@@ -34,15 +37,22 @@ describe("ArkProject Listing", () => {
       startAmount: 600000000000000000 // The starting amount for the order
     };
 
-    await createListing(arkProvider, starknetAccount, arkAccount, order);
+    await createListing(
+      network,
+      arkProvider,
+      starknetAccount,
+      arkAccount,
+      order
+    );
     await sleep(2000);
     const { orderHash } = await getOrderHash(
       order.tokenId,
       order.tokenAddress,
+      network,
       arkProvider
     );
     await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
+      getOrderStatus(orderHash, network, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
@@ -51,22 +61,23 @@ describe("ArkProject Listing", () => {
     const { account: starknetFulfillerAccount } =
       await createAccount(starknetProvider);
 
-    const fulfill_info = {
+    const fulfillInfo = {
       order_hash: orderHash,
       token_address: order.tokenAddress,
       token_id: order.tokenId
     };
 
     fulfillListing(
+      network,
       arkProvider,
       starknetFulfillerAccount,
       arkAccount,
-      fulfill_info
+      fulfillInfo
     );
     await sleep(1000);
 
     await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
+      getOrderStatus(orderHash, network, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("FULFILLED");

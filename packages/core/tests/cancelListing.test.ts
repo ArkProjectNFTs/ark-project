@@ -8,7 +8,8 @@ import {
   createListing,
   getOrderHash,
   getOrderStatus,
-  ListingV1
+  ListingV1,
+  Network
 } from "../src";
 import { generateRandomTokenId, sleep } from "./utils"; // Assuming you have a sleep utility function
 
@@ -25,6 +26,8 @@ describe("ArkProject Cancel listing", () => {
     const arkProvider = new RpcProvider({
       nodeUrl: "http://0.0.0.0:7777"
     });
+
+    const network = "dev" as Network;
 
     // Create a new account using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
@@ -43,13 +46,20 @@ describe("ArkProject Cancel listing", () => {
     };
 
     // Create the listing on the arkchain using the order details
-    await createListing(arkProvider, starknetAccount, arkAccount, order);
+    await createListing(
+      network,
+      arkProvider,
+      starknetAccount,
+      arkAccount,
+      order
+    );
     await sleep(1000); // Wait for the transaction to be processed
 
     // Get the order hash
     const { orderHash } = await getOrderHash(
       order.tokenId,
       order.tokenAddress,
+      network,
       arkProvider
     );
     // Assert that we received an order hash
@@ -57,7 +67,7 @@ describe("ArkProject Cancel listing", () => {
 
     // Assert that the order is open
     await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
+      getOrderStatus(orderHash, network, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
@@ -70,11 +80,11 @@ describe("ArkProject Cancel listing", () => {
     };
 
     // Cancel the order
-    cancelOrder(arkProvider, starknetAccount, arkAccount, cancelInfo);
+    cancelOrder(network, arkProvider, starknetAccount, arkAccount, cancelInfo);
     await sleep(1000); // Wait for the transaction to be processed
     // Assert that the order was cancelled successfully
     await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
+      getOrderStatus(orderHash, network, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("CANCELLED_USER");

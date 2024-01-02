@@ -9,8 +9,8 @@ import {
 import { getContractAddresses, Network } from "../../constants";
 
 const getOrderType = async (
-  network: Network,
   orderHash: BigNumberish,
+  network: Network,
   provider: RpcProvider
 ) => {
   const { SOLIS_ORDER_BOOK_ADDRESS } = getContractAddresses(network);

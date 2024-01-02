@@ -79,7 +79,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 5, // The ID of the token
+    tokenId: 16, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
   };
 
@@ -179,8 +179,8 @@ async function freeMint(
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   let { orderStatus: orderStatusAfter } = await getOrderStatus(
-    network,
     orderHash,
+    network,
     arkProvider
   );
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));

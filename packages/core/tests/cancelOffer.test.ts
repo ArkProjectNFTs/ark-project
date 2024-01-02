@@ -8,7 +8,8 @@ import {
   createOffer,
   getOrderStatus,
   getOrderType,
-  ListingV1
+  ListingV1,
+  Network
 } from "../src";
 import {
   generateRandomTokenId,
@@ -30,6 +31,8 @@ describe("ArkProject cancel offer", () => {
       nodeUrl: "http://0.0.0.0:7777"
     });
 
+    const network = "dev" as Network;
+
     // Create a new account using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
     const { account: starknetAccount } = await createAccount(starknetProvider);
@@ -45,6 +48,7 @@ describe("ArkProject cancel offer", () => {
 
     // Create the listing on the blockchain using the order details
     let orderHash = await createOffer(
+      network,
       arkProvider,
       starknetAccount,
       arkAccount,
@@ -55,14 +59,14 @@ describe("ArkProject cancel offer", () => {
 
     // Assert that the order is open
     await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
+      getOrderStatus(orderHash, network, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
 
     // Assert that the order type is 'OFFER'
     await expect(
-      getOrderType(orderHash, arkProvider).then((res) =>
+      getOrderType(orderHash, network, arkProvider).then((res) =>
         getTypeFromCairoCustomEnum(res.orderType)
       )
     ).to.eventually.equal("OFFER");
@@ -75,11 +79,17 @@ describe("ArkProject cancel offer", () => {
     };
 
     // Cancel the order
-    await cancelOrder(arkProvider, starknetAccount, arkAccount, cancelInfo);
+    await cancelOrder(
+      network,
+      arkProvider,
+      starknetAccount,
+      arkAccount,
+      cancelInfo
+    );
 
     // Assert that the order was cancelled successfully
     await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
+      getOrderStatus(orderHash, network, arkProvider).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("CANCELLED_USER");

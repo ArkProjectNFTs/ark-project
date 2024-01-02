@@ -7,6 +7,7 @@ import {
   createOffer,
   fulfillOffer,
   getOrderStatus,
+  Network,
   OfferV1
 } from "../src";
 import { generateRandomTokenId } from "./utils";
@@ -27,6 +28,8 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       nodeUrl: "http://0.0.0.0:7777"
     });
 
+    const network = "dev" as Network;
+
     // Create a new account for the listing using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
     const { account: starknetAccount } = await createAccount(starknetProvider);
@@ -42,6 +45,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     // Create the listing on the arkchain using the order details
     const orderHash = await createOffer(
+      network,
       arkProvider,
       starknetAccount,
       arkAccount,
@@ -53,6 +57,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     let { orderStatus: orderStatusBefore } = await getOrderStatus(
       orderHash,
+      network,
       arkProvider
     );
     expect(shortString.decodeShortString(orderStatusBefore)).to.equal("OPEN");
@@ -72,6 +77,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     // Fulfill the offer
     await fulfillOffer(
+      network,
       arkProvider,
       starknetFulfillerAccount,
       arkAccount,
@@ -82,6 +88,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     let { orderStatus: orderStatusAfter } = await getOrderStatus(
       orderHash,
+      network,
       arkProvider
     );
 
