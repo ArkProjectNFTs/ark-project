@@ -21,8 +21,7 @@ the contract.json file is a reference of the deployed contract and is used to de
 
 - Execute the following commands in the `root` directory:
 
-  - `pnpm run deploy:starknet`
-  - `pnpm run deploy:starknet:tokens`
+  - `pnpm run deploy:starknet:all`
 
 ## Run Solis with Updated Configuration
 

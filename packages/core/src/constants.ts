@@ -1,5 +1,5 @@
-const ORDER_BOOK_ADDRESS =
-  "0x228b5856d5f0e231fe28ed0815ac5a4ae7ab585ef15b20b6d5e48d02c8b41ec";
+import fs from "fs";
+import path from "path";
 
 type ContractConfig = {
   [key: string]: {

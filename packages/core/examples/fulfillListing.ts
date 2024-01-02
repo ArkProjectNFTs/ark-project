@@ -59,6 +59,8 @@ async function freeMint(
  * @param {RpcProvider} provider - The RPC provider instance.
  */
 (async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
+  console.log("=> process.env.ARKCHAIN_RPC_URL", process.env.ARKCHAIN_RPC_URL);
+
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
 
@@ -68,7 +70,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 4, // The ID of the token
+    tokenId: 3, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
   };
 
