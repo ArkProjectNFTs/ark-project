@@ -28,5 +28,8 @@ jobs:
       - name: Check Scarb Formatting
         run: cd contracts && scarb fmt --check
 
-      - name: Run Snforge Tests
-        run: cd contracts && snforge test
+      - name: Test ark_common contracts
+        run: cd contracts/ark_common && snforge test
+
+        - name: Test ark_common contracts
+        run: cd contracts/ark_common && snforge test
