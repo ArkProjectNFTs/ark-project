@@ -22,8 +22,6 @@ const contractsFilePath = path.join(
   "src/constants/contracts.ts"
 );
 
-console.log(contracts);
-
 const testnet = "goerli"; // TODO: change to sepolia
 
 fs.writeFileSync(

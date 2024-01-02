@@ -8,7 +8,8 @@
     "clean": "rm -rf .turbo node_modules",
     "lint": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build:constants": "npx ts-node ./scripts/build.ts",
+    "build": "pnpm run build:constants && tsup src/index.ts --format cjs,esm --dts",
     "test": "mocha --require ts-node/register --timeout 10000 'tests/**/*.ts'"
   },
   "dependencies": {
