@@ -9,10 +9,7 @@ import {
   Uint256
 } from "starknet";
 
-import {
-  SOLIS_ORDER_BOOK_ADDRESS,
-  STARKNET_ETH_ADDRESS
-} from "../../constants";
+import { getContractAddresses, Network } from "../../constants";
 import { ListingV1, OrderV1, RouteType } from "../../types";
 import { createOrder } from "./_create";
 
@@ -33,12 +30,16 @@ import { createOrder } from "./_create";
  * @throws {Error} Throws an error if the ABI for the order book contract is not found.
  */
 const createListing = async (
+  network: Network,
   arkProvider: RpcProvider,
   starknetAccount: AccountInterface,
   arkAccount: Account,
   baseOrder: ListingV1,
   owner?: string
 ) => {
+  const { SOLIS_ORDER_BOOK_ADDRESS, STARKNET_ETH_ADDRESS } =
+    getContractAddresses(network);
+
   // Retrieve the ABI for the order book contract
   const { abi: orderbookAbi } = await arkProvider.getClassAt(
     SOLIS_ORDER_BOOK_ADDRESS
@@ -77,6 +78,7 @@ const createListing = async (
   };
 
   const orderHash = await createOrder(
+    network,
     arkProvider,
     starknetAccount,
     arkAccount,

@@ -8,11 +8,12 @@ import {
   shortString
 } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { getContractAddresses, Network } from "../../constants";
 
 const getOrderHash = async (
   tokenId: BigNumberish,
   tokenAddress: BigNumberish,
+  network: Network,
   provider: RpcProvider
 ) => {
   let tokenHash = {
@@ -29,6 +30,8 @@ const getOrderHash = async (
   let tokenHashBigIntArray = tokenHashCompiled.map(BigInt);
 
   const tokenHashMessage = starknet.poseidonHashMany(tokenHashBigIntArray);
+
+  const { SOLIS_ORDER_BOOK_ADDRESS } = getContractAddresses(network);
 
   const { abi: orderbookAbi } = await provider.getClassAt(
     SOLIS_ORDER_BOOK_ADDRESS

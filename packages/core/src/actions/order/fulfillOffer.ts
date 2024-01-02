@@ -10,10 +10,12 @@ import {
   Uint256
 } from "starknet";
 
+import { Network } from "../../constants";
 import { FulfillInfo, FulfillOfferInfo } from "../../types";
 import { _fulfillOrder } from "./_fulfill";
 
 const fulfillOffer = async (
+  network: Network,
   provider: RpcProvider,
   starknetFulfillerAccount: AccountInterface,
   arkFulfillerAccount: Account,
@@ -33,6 +35,7 @@ const fulfillOffer = async (
   };
 
   _fulfillOrder(
+    network,
     provider,
     starknetFulfillerAccount,
     arkFulfillerAccount,

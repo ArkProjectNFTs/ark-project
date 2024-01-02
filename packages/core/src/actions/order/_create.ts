@@ -7,7 +7,7 @@ import {
   RpcProvider
 } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { getContractAddresses, Network } from "../../constants";
 import { getSignInfos } from "../../signer";
 import { OrderV1 } from "../../types";
 import { getOrderHashFromOrderV1 } from "../../utils";
@@ -23,6 +23,7 @@ import { getOrderHashFromOrderV1 } from "../../utils";
  * @throws {Error} Throws an error if the ABI or order type is invalid.
  */
 const createOrder = async (
+  network: Network,
   arkProvider: RpcProvider,
   starknetAccount: AccountInterface,
   arkAccount: Account,
@@ -63,6 +64,8 @@ const createOrder = async (
     order: order,
     signer: signer
   });
+
+  const { SOLIS_ORDER_BOOK_ADDRESS } = getContractAddresses(network);
 
   // Execute the transaction
   const result = await arkAccount.execute({

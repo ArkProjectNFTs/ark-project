@@ -7,7 +7,7 @@ import {
   RpcProvider
 } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { getContractAddresses, Network } from "../../constants";
 import { getSignInfos } from "../../signer";
 import { FulfillInfo } from "../../types";
 
@@ -22,6 +22,7 @@ import { FulfillInfo } from "../../types";
  * @throws {Error} Throws an error if the ABI or order type is invalid.
  */
 export const _fulfillOrder = async (
+  network: Network,
   provider: RpcProvider,
   starknetFulfillerAccount: AccountInterface,
   arkFulfillerAccount: Account,
@@ -67,6 +68,8 @@ export const _fulfillOrder = async (
     fulfill_info: fulfillInfo,
     signer: signer
   });
+
+  const { SOLIS_ORDER_BOOK_ADDRESS } = getContractAddresses(network);
 
   // Execute the transaction
   const result = await arkFulfillerAccount.execute({

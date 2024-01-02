@@ -15,7 +15,7 @@ export default function Home() {
   if (account === undefined) return <Authentification />;
   return (
     <>
-      <ArkProvider network={Network.Dev}>
+      <ArkProvider network="dev">
         <div className="hidden flex-col md:flex">
           <div className="border-b">
             <div className="container mx-auto">

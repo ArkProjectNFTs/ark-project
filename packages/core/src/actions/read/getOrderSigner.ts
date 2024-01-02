@@ -1,11 +1,14 @@
 import { BigNumberish, CallData, Contract, RpcProvider } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { getContractAddresses, Network } from "../../constants";
 
 const getOrderSigner = async (
+  network: Network,
   orderHash: BigNumberish,
   provider: RpcProvider
 ) => {
+  const { SOLIS_ORDER_BOOK_ADDRESS } = getContractAddresses(network);
+
   const { abi: orderbookAbi } = await provider.getClassAt(
     SOLIS_ORDER_BOOK_ADDRESS
   );

@@ -11,6 +11,7 @@ import {
   createOffer,
   fulfillOffer,
   getOrderStatus,
+  Network,
   OfferV1
 } from "../src";
 import { fetchOrCreateAccount } from "../src/actions/account/account";
@@ -25,12 +26,18 @@ const arkProvider = new RpcProvider({
   nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
 });
 
+const network = (process.env.NETWORK ?? "dev") as Network;
+
 /**
  * Creates a listing on the blockchain using provided order details.
  *
  * @param {RpcProvider} provider - The RPC provider instance.
  */
-(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
+(async (
+  network: Network,
+  arkProvider: RpcProvider,
+  starknetProvider: RpcProvider
+) => {
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
   const starknetAccount = await fetchOrCreateAccount(
@@ -50,6 +57,7 @@ const arkProvider = new RpcProvider({
 
   // Create the listing on the arkchain using the order details
   let orderHash = await createOffer(
+    network,
     arkProvider,
     starknetAccount,
     arkAccount,
@@ -61,6 +69,7 @@ const arkProvider = new RpcProvider({
 
   let { orderStatus: orderStatusBefore } = await getOrderStatus(
     orderHash,
+    network,
     arkProvider
   );
   console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
@@ -80,13 +89,14 @@ const arkProvider = new RpcProvider({
   };
 
   // Cancel the order
-  fulfillOffer(arkProvider, fulfillerAccount, arkAccount, fulfillInfo);
+  fulfillOffer(network, arkProvider, fulfillerAccount, arkAccount, fulfillInfo);
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   let { orderStatus: orderStatusAfter } = await getOrderStatus(
     orderHash,
+    network,
     arkProvider
   );
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
-})(arkProvider, starknetProvider);
+})(network, arkProvider, starknetProvider);

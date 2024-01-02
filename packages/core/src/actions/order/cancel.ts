@@ -12,11 +12,12 @@ import {
   Uint256
 } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { getContractAddresses, Network } from "../../constants";
 import { getSignInfos } from "../../signer";
 import { CancelInfo, FullCancelInfo } from "../../types";
 
 const cancelOrder = async (
+  network: Network,
   arkProvider: RpcProvider,
   starknetAccount: AccountInterface,
   arkAccount: Account,
@@ -69,6 +70,8 @@ const cancelOrder = async (
     order: fullCancelInfo,
     signer: signer
   });
+
+  const { SOLIS_ORDER_BOOK_ADDRESS } = getContractAddresses(network);
 
   // Execute the transaction
   const result = await arkAccount.execute({
