@@ -11,52 +11,58 @@ type ContractConfig = {
   };
 };
 
-// Read contract.json
-const contractJsonPath = path.join(__dirname, "..", "../../contracts.json");
-const contractJson = fs.readFileSync(contractJsonPath, "utf8");
-const contracts: ContractConfig = JSON.parse(contractJson);
+// Function to read and parse JSON from a given path
+const readJson = (filePath: string): ContractConfig => {
+  const rawJson = fs.readFileSync(filePath, "utf8");
+  return JSON.parse(rawJson);
+};
 
+// Function to construct contract address constants
+const constructContractConstants = (
+  contracts: ContractConfig,
+  network: string,
+  networkName: string
+): string => {
+  return `
+export const STARKNET_ETH_ADDRESS_${networkName} = "${
+    contracts[network]?.eth || ""
+  }";
+export const STARKNET_NFT_ADDRESS_${networkName} = "${
+    contracts[network]?.nftContract || ""
+  }";
+export const STARKNET_EXECUTOR_ADDRESS_${networkName} = "${
+    contracts[network]?.executor || ""
+  }";
+export const SOLIS_ORDER_BOOK_ADDRESS_${networkName} = "${
+    contracts[network]?.orderbook || ""
+  }";
+  `.trim();
+};
+
+// Paths
+const contractJsonPath = path.join(__dirname, "..", "../../contracts.json");
 const contractsFilePath = path.join(
   __dirname,
   "..",
   "src/constants/contracts.ts"
 );
 
-const testnet = "goerli"; // TODO: change to sepolia
+// Read contract.json
+const contracts = readJson(contractJsonPath);
 
-fs.writeFileSync(
-  contractsFilePath,
-  `export const STARKNET_ETH_ADDRESS_TESTNET = "${
-    contracts[testnet]?.eth || ""
-  }";
-export const STARKNET_ETH_ADDRESS_MAINNET = "${contracts.mainnet?.eth || ""}";
-export const STARKNET_ETH_ADDRESS_DEV = "${contracts.local?.eth || ""}";
+// Networks
+const networks = {
+  testnet: "goerli", // TODO: change to sepolia
+  mainnet: "mainnet",
+  dev: "local"
+};
 
-export const STARKNET_NFT_ADDRESS_TESTNET = "${
-    contracts[testnet]?.nftContract || ""
-  }";
-export const STARKNET_NFT_ADDRESS_MAINNET = "${
-    contracts.mainnet?.nftContract || ""
-  }";
-export const STARKNET_NFT_ADDRESS_DEV = "${contracts.local?.nftContract || ""}";
+// Construct contract address constants for each network
+const contractConstants = Object.entries(networks)
+  .map(([networkName, network]) =>
+    constructContractConstants(contracts, network, networkName.toUpperCase())
+  )
+  .join("\n\n");
 
-export const STARKNET_EXECUTOR_ADDRESS_TESTNET = "${
-    contracts[testnet]?.executor || ""
-  }";
-export const STARKNET_EXECUTOR_ADDRESS_MAINNET = "${
-    contracts.mainnet?.executor || ""
-  }";
-export const STARKNET_EXECUTOR_ADDRESS_DEV = "${
-    contracts.local?.executor || ""
-  }";
-
-export const SOLIS_ORDER_BOOK_ADDRESS_TESTNET = "${
-    contracts[testnet]?.orderbook || ""
-  }";
-export const SOLIS_ORDER_BOOK_ADDRESS_MAINNET = "${
-    contracts.mainnet?.orderbook || ""
-  }";
-export const SOLIS_ORDER_BOOK_ADDRESS_DEV = "${
-    contracts.local?.orderbook || ""
-  }";`
-);
+// Write to contracts file
+fs.writeFileSync(contractsFilePath, contractConstants);
