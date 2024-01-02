@@ -12,7 +12,7 @@ import { OZaccountClassHash } from "./constants";
 
 async function deployAccount(network: string) {
   const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
-
+  console.log("Using StarkNet provider:", starknetProvider.nodeUrl);
   const accountsFilePath = join(__dirname, `../../accounts/${network}.json`);
   let accounts: any[] = [];
   try {
@@ -29,8 +29,7 @@ async function deployAccount(network: string) {
       accountToDeploy.privateKey,
       "1"
     );
-
-    const { transaction_hash, contract_address } = await account.deployAccount({
+    const { transaction_hash } = await account.deployAccount({
       classHash: OZaccountClassHash,
       constructorCalldata: CallData.compile({
         publicKey: accountToDeploy.publicKey

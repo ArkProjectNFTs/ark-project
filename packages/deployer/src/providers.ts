@@ -1,20 +1,19 @@
 import { RpcProvider } from "starknet";
 
-export function getProvider(solisNetwork: string, starknetNetwork: string) {
+export function getProvider(starknetNetwork: string, solisNetwork: string) {
   let solisNodeUrl: string;
   let starknetNodeUrl: string;
-
+  console.log("solisNetwork", solisNetwork);
+  console.log("starknetNetwork", starknetNetwork);
   switch (solisNetwork) {
     case "local":
       solisNodeUrl = "http://0.0.0.0:7777";
       break;
     case "mainnet":
-      solisNodeUrl =
-        process.env.MAINNET_SOLIS_NODE_URL ?? "default_mainnet_solis_url"; // Replace with default or throw error if not set
+      solisNodeUrl = "solis.arkproject.dev";
       break;
-    case "testnet":
-      solisNodeUrl =
-        process.env.TESTNET_SOLIS_NODE_URL ?? "default_testnet_solis_url"; // Replace with default or throw error if not set
+    case "goerli":
+      solisNodeUrl = "staging.solis.arkproject.dev";
       break;
     default:
       throw new Error(`Unsupported solisNetwork: ${solisNetwork}`);
@@ -25,17 +24,15 @@ export function getProvider(solisNetwork: string, starknetNetwork: string) {
       starknetNodeUrl = "http://0.0.0.0:5050";
       break;
     case "mainnet":
-      starknetNodeUrl =
-        process.env.MAINNET_STARKNET_NODE_URL ?? "default_mainnet_starknet_url"; // Replace with default or throw error if not set
+      starknetNodeUrl = "https://juno.arkproject.dev";
       break;
-    case "testnet":
-      starknetNodeUrl =
-        process.env.TESTNET_STARKNET_NODE_URL ?? "default_testnet_starknet_url"; // Replace with default or throw error if not set
+    case "goerli":
+      starknetNodeUrl = "https://juno.testnet.arkproject.dev";
       break;
     default:
       throw new Error(`Unsupported starknetNetwork: ${starknetNetwork}`);
   }
-
+  console.log(starknetNodeUrl);
   const solisProvider = new RpcProvider({ nodeUrl: solisNodeUrl });
   const starknetProvider = new RpcProvider({ nodeUrl: starknetNodeUrl });
 

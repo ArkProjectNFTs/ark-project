@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
+  "globalDotEnv": [".env"],
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
@@ -22,6 +23,14 @@
       "persistent": true
     },
     "deploy:starknet:all": {
+      "cache": false,
+      "persistent": true
+    },
+    "accounts:new": {
+      "cache": false,
+      "persistent": true
+    },
+    "accounts:deploy": {
       "cache": false,
       "persistent": true
     }

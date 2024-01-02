@@ -1,10 +1,8 @@
 FROM rust:latest
 
 # Set the default values for your environment variables
-ENV EXECUTOR_ADDRESS=""
-ENV ORDERBOOK_ADDRESS=""
-ENV RPC_URL=""
-ENV CONTRACT_ADDRESS=""
+ENV RPC_URL_GOERLI=""
+ENV MESSAGING_ADDRESS_GOERLI=""
 ENV SENDER_ADDRESS=""
 ENV PRIVATE_KEY=""
 

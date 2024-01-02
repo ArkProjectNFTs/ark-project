@@ -6,7 +6,7 @@ cat >crates/solis/messaging.json <<EOF
 {
   "chain": "starknet",
   "rpc_url": "$RPC_URL",
-  "contract_address": "$CONTRACT_ADDRESS",
+  "contract_address": "$MESSAGING_ADDRESS",
   "sender_address": "$SENDER_ADDRESS",
   "private_key": "$PRIVATE_KEY",
   "interval": 2,
