@@ -70,7 +70,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 3, // The ID of the token
+    tokenId: 5, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
   };
 

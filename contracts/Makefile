@@ -9,8 +9,8 @@ generate_artifacts:
 	mkdir -p ../../../artifacts
 	# For now, the json is duplicated to be able to run
 	# cargo build -p diri from here, and from ark-services too.
-	jq .abi ./target/dev/arkchain_orderbook.contract_class.json > ../../../artifacts/orderbook.json
-	jq .abi ./target/dev/arkchain_orderbook.contract_class.json > ../../diri/artifacts/orderbook.json
+	jq .abi ./target/dev/ark_orderbook_orderbook.contract_class.json > ../artifacts/orderbook.json
+	jq .abi ./target/dev/ark_orderbook_orderbook.contract_class.json > ../crates/diri/artifacts/orderbook.json
 
 # Using max-fee 0 avoids starkli to run estimate_fee before actually sending the tx.
 # There are no fees on Solis.
