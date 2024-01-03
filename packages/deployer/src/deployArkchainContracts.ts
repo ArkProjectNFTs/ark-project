@@ -17,8 +17,8 @@ import "dotenv/config";
 
 const artifactsPath = "../../contracts/target/dev/";
 
-program.option("--starknet", "Starknet Network", "dev");
-program.option("--solis", "Solis Network", "dev");
+program.option("-sn, --starknet <type>", "Starknet Network", "dev");
+program.option("-so, --solis <type>", "Solis Network", "dev");
 program.parse();
 
 const options = program.opts();

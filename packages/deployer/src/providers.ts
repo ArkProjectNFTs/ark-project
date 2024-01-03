@@ -12,7 +12,7 @@ export function getStarknetProvider(starknetNetwork: string) {
       break;
     case "testnet":
       starknetNodeUrl =
-        process.env.TESTNET_STARKNET_NODE_URL ?? "default_testnet_starknet_url"; // Replace with default or throw error if not set
+        process.env.TESTNET_STARKNET_NODE_URL ?? "default_testnet_starknet_url";
       break;
     default:
       throw new Error(`Unsupported starknetNetwork: ${starknetNetwork}`);

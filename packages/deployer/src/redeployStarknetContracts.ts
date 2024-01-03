@@ -6,7 +6,7 @@ import {
   deployStarknetContracts
 } from "./utils";
 
-program.option("--network", "Starknet Network", "dev");
+program.option("-n, --network <type>", "Starknet Network", "dev");
 program.parse();
 const options = program.opts();
 const { network } = options;
