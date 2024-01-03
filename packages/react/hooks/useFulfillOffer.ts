@@ -10,9 +10,10 @@ import { Status } from "../types/hooks";
 import { useOwner } from "./useOwner";
 
 export default function useFulfillOffer() {
-  const { rpcProvider } = useRpc();
+  const { rpcProvider, network } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
+
   async function fulfillOffer(
     starknetAccount: AccountInterface,
     fulfillOfferInfo: FulfillOfferInfo
@@ -31,6 +32,7 @@ export default function useFulfillOffer() {
     try {
       setStatus("loading");
       await fulfillOfferCore(
+        network,
         rpcProvider,
         starknetAccount,
         new Account(rpcProvider, burner_address, burner_private_key),

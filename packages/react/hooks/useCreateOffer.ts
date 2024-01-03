@@ -9,7 +9,7 @@ import { Status } from "../types/hooks";
 import { useOwner } from "./useOwner";
 
 export default function useCreateOffer() {
-  const { rpcProvider } = useRpc();
+  const { rpcProvider, network } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>(undefined);
   const owner = useOwner();
@@ -33,6 +33,7 @@ export default function useCreateOffer() {
     try {
       setStatus("loading");
       const orderHash = await createOfferCore(
+        network,
         rpcProvider,
         starknetAccount,
         new Account(rpcProvider, burner_address, burner_private_key),
