@@ -70,7 +70,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 5, // The ID of the token
+    tokenId: 44, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
   };
 
@@ -86,6 +86,7 @@ async function freeMint(
   console.log(
     `Approving token ${order.tokenId} to ${STARKNET_EXECUTOR_ADDRESS}...`
   );
+
   await approveERC721(
     starknetProvider,
     starknetOffererAccount,
@@ -96,22 +97,29 @@ async function freeMint(
 
   console.log("Creating listing...");
   // Create the listing on the arkchain using the order details
-  await createListing(arkProvider, starknetOffererAccount, arkAccount, order);
+  const orderHash = await createListing(
+    arkProvider,
+    starknetOffererAccount,
+    arkAccount,
+    order
+  );
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // Get the order hash
-  const { orderHash } = await getOrderHash(
-    order.tokenId,
-    order.tokenAddress,
-    arkProvider
-  );
-
-  // let { orderStatus: orderStatusBefore } = await getOrderStatus(
-  //   orderHash,
+  // // Get the order hash
+  // const { orderHash } = await getOrderHash(
+  //   order.tokenId,
+  //   order.tokenAddress,
   //   arkProvider
   // );
+
+  console.log("orderHash", orderHash);
+  let { orderStatus: orderStatusBefore } = await getOrderStatus(
+    orderHash,
+    arkProvider
+  );
+  console.log(orderStatusBefore);
 
   const starknetFulfillerAccount = await fetchOrCreateAccount(
     starknetProvider,
@@ -140,25 +148,27 @@ async function freeMint(
     BigInt(order.startAmount) + BigInt(1)
   );
 
-  // Define the cancel details
+  // Define the fulfill details
   const fulfill_info = {
     order_hash: orderHash,
     token_address: order.tokenAddress,
     token_id: order.tokenId
   };
 
-  // Cancel the order
+  // fulfill the order
   fulfillListing(
     arkProvider,
     starknetFulfillerAccount,
     arkAccount,
     fulfill_info
   );
+
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   let { orderStatus: orderStatusAfter } = await getOrderStatus(
     orderHash,
     arkProvider
   );
+
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
 })(arkProvider, starknetProvider);

@@ -9,8 +9,8 @@ cp env.example .env
 ## Choose your networks and change the env accordingly
 
 ```bash
-STARKNET_NETWORK_ID=local
-SOLIS_NETWORK_ID=local
+STARKNET_NETWORK_ID=dev
+SOLIS_NETWORK_ID=dev
 ```
 
 ## Clear contracts.json File if needed

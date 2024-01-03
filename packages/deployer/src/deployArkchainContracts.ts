@@ -59,31 +59,27 @@ async function deployArkchainContracts() {
     SOLIS_NETWORK
   );
 
-  const { starknetAccounts, arkchainAccounts } = getExistingAccounts(
+  const { starknetAdminAccount, arkchainAdminAccount } = getExistingAccounts(
     STARKNET_NETWORK,
     SOLIS_NETWORK
   );
 
-  const arkchainAdminAccount = arkchainAccounts[0];
-
   console.log("\nARKCHAIN ACCOUNTS");
   console.log("=================\n");
   if (arkchainAdminAccount) {
-    console.log(`| Admin account |  ${arkchainAdminAccount.address}`);
+    console.log(`| Admin account |  ${arkchainAdminAccount.account.address}`);
   }
 
   console.log("\n");
-
-  const existingContracts = await getExistingContracts();
 
   const arkchainSpinner = loading("💠 Deploying Arkchain Contracts...").start();
 
   if (arkchainAdminAccount) {
     const orderbookContract = await deployOrderBook(
       artifactsPath,
-      arkchainAdminAccount,
+      arkchainAdminAccount.account,
       solisProvider,
-      arkchainAdminAccount.address
+      arkchainAdminAccount.account.address
     );
     const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
     const contracts = JSON.parse(fileContent);
@@ -99,18 +95,17 @@ async function deployArkchainContracts() {
 
     await updateExecutorAddress(
       solisProvider,
-      arkchainAdminAccount,
+      arkchainAdminAccount.account,
       orderbookContract.address,
       executorAddress
     );
 
     arkchainSpinner.text = "💠 Updating Executor Contract on Starknet...";
 
-    const adminAccount = starknetAccounts[0];
-    if (adminAccount) {
+    if (starknetAdminAccount) {
       await updateOrderbookAddress(
         starknetProvider,
-        adminAccount,
+        starknetAdminAccount.account,
         executorAddress,
         orderbookContract.address
       );

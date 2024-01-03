@@ -25,8 +25,8 @@ function getMessagingFilePath(network: ProviderNetwork): string {
     case "goerli":
       return join(__dirname, "../../../crates/solis/messaging.goerli.json");
     case "sepolia":
-      return join(__dirname, "../../../crates/solis/messaging.goerli.json");
-    case "local":
+      return join(__dirname, "../../../crates/solis/messaging.sepolia.json");
+    case "dev":
       return join(__dirname, "../../../crates/solis/messaging.local.json");
     default:
       return join(__dirname, "../../../crates/solis/messaging.local.json");
@@ -35,36 +35,24 @@ function getMessagingFilePath(network: ProviderNetwork): string {
 
 async function deployStarknetContracts() {
   const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
-  const { starknetAccounts } = getExistingAccounts(
+  const { starknetAdminAccount } = getExistingAccounts(
     STARKNET_NETWORK,
     SOLIS_NETWORK
   );
 
-  const [starknetAdminAccount, ...otherUsers] = starknetAccounts;
-
   const existingContracts = await getExistingContracts();
   console.log("\nSTARKNET ACCOUNTS");
   console.log("=================\n");
-  console.log(`| Admin account |  ${starknetAdminAccount.address}`);
-  if (otherUsers.length > 0) {
-    otherUsers.forEach((user, index) => {
-      console.log(`| User ${index}        | ${user.address}`);
-    });
-  }
-
-  console.log("");
+  console.log(`| Admin account |  ${starknetAdminAccount.account.address}`);
 
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
 
   let messagingContract: sn.Contract;
-  if (
-    existingContracts[STARKNET_NETWORK].messaging &&
-    !STARKNET_NETWORK.includes("local")
-  ) {
+  if (existingContracts[STARKNET_NETWORK].messaging) {
     starknetSpinner.text = "Upgrading Messaging Contract...";
     messagingContract = await upgradeMessaging(
       artifactsPath,
-      starknetAdminAccount,
+      starknetAdminAccount.account,
       starknetProvider,
       existingContracts[STARKNET_NETWORK].messaging
     );
@@ -72,7 +60,7 @@ async function deployStarknetContracts() {
     starknetSpinner.text = "Deploying Messaging Contract...";
     messagingContract = await deployMessaging(
       artifactsPath,
-      starknetAdminAccount,
+      starknetAdminAccount.account,
       starknetProvider
     );
     existingContracts[STARKNET_NETWORK].messaging = messagingContract.address;
@@ -84,14 +72,11 @@ async function deployStarknetContracts() {
 
   starknetSpinner.text = "⚡ Deploying Executor Contract...";
   let executorContract: sn.Contract;
-  if (
-    existingContracts[STARKNET_NETWORK].executor &&
-    !STARKNET_NETWORK.includes("local")
-  ) {
+  if (existingContracts[STARKNET_NETWORK].executor) {
     starknetSpinner.text = "⚡ Upgrading Executor Contract...";
     executorContract = await upgradeExecutor(
       artifactsPath,
-      starknetAdminAccount,
+      starknetAdminAccount.account,
       starknetProvider,
       existingContracts[STARKNET_NETWORK].messaging
     );
@@ -99,11 +84,12 @@ async function deployStarknetContracts() {
     starknetSpinner.text = "⚡ Deploying Executor Contract...";
     executorContract = await deployExecutor(
       artifactsPath,
-      starknetAdminAccount,
+      starknetAdminAccount.account,
       starknetProvider,
       getFeeAddress(STARKNET_NETWORK),
       messagingContract.address
     );
+
     existingContracts[STARKNET_NETWORK].executor = executorContract.address;
     await fs.writeFile(
       getContractsFilePath(),
@@ -113,6 +99,8 @@ async function deployStarknetContracts() {
     const messagingFilePath = getMessagingFilePath(STARKNET_NETWORK);
     const configData = JSON.parse(await fs.readFile(messagingFilePath, "utf8"));
     configData.contract_address = messagingContract.address;
+    configData.sender_address = starknetAdminAccount.executor?.address;
+    configData.private_key = starknetAdminAccount.executor?.privateKey;
     await fs.writeFile(messagingFilePath, JSON.stringify(configData, null, 2));
   }
 

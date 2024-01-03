@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 
-import { Account, CallData, Contract, RpcProvider } from "starknet";
+import { CallData, Contract } from "starknet";
 
 import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
 import { loadArtifacts } from "./contracts/common";
@@ -17,23 +17,16 @@ const artifactsPath = "../../contracts/target/dev/";
 
 export async function deployStarknetContracts() {
   const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
-  const { starknetAccounts } = getExistingAccounts(
+  const { starknetAdminAccount } = getExistingAccounts(
     STARKNET_NETWORK,
     SOLIS_NETWORK
   );
-  const [starknetAdminAccount, ...otherUsers] = starknetAccounts;
 
   let existingContracts = await getExistingContracts();
 
   console.log("\nSTARKNET ACCOUNTS");
   console.log("=================\n");
-  console.log(`| Admin account |  ${starknetAdminAccount.address}`);
-  if (otherUsers.length > 0) {
-    otherUsers.forEach((user, index) => {
-      console.log(`| User ${index}        | ${user.address}`);
-    });
-  }
-
+  console.log(`| Admin account |  ${starknetAdminAccount.account.address}`);
   console.log("");
 
   const starknetSpinner = loading("Deploying Nft Contract...").start();
@@ -45,7 +38,7 @@ export async function deployStarknetContracts() {
     symbol: "ARK"
   });
 
-  const deployR = await starknetAdminAccount.declareAndDeploy({
+  const deployR = await starknetAdminAccount.account.declareAndDeploy({
     contract: artifacts.sierra,
     casm: artifacts.casm,
     constructorCalldata: contractConstructor
@@ -68,12 +61,12 @@ export async function deployStarknetContracts() {
   await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
 
   let ethContract: Contract | undefined;
-  if (STARKNET_NETWORK === "local") {
+  if (STARKNET_NETWORK === "dev") {
     starknetSpinner.text = "Deploying Eth Contract...";
 
     ethContract = await deployERC20(
       artifactsPath,
-      starknetAdminAccount,
+      starknetAdminAccount.account,
       starknetProvider,
       "ETH",
       "ETH"

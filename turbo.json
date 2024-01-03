@@ -14,7 +14,7 @@
       "cache": false,
       "persistent": true
     },
-    "deploy:starknet:nft": {
+    "deploy:starknet:tokens": {
       "cache": false,
       "persistent": true
     },
