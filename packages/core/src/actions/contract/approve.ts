@@ -1,15 +1,15 @@
 import {
   Account,
+  AccountInterface,
   cairo,
   CallData,
   RpcProvider,
   type BigNumberish
 } from "starknet";
 
-
 export const approveERC721 = async (
   provider: RpcProvider,
-  account: Account,
+  account: AccountInterface,
   contractAddress: string,
   to: BigNumberish,
   tokenId: BigNumberish

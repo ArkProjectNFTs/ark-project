@@ -1,16 +1,11 @@
 /* eslint-disable no-unused-vars */
+import { Network } from "../types";
 import * as contracts from "./contracts";
 
 export const SOLIS_ACCOUNT_CLASS_HASH =
   "0x04d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f";
 export const STARKNET_ADMIN_ACCOUNT_ADDRESS =
   "0x765149d6bc63271df7b0316537888b81aa021523f9516a05306f10fd36914da";
-
-export enum Network {
-  Mainnet = "mainnet",
-  Testnet = "testnet",
-  Dev = "dev"
-}
 
 const NETWORK_CONTRACT_ADDRESSES = {
   [Network.Dev]: {
