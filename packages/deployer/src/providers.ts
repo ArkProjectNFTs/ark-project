@@ -1,11 +1,31 @@
 import { RpcProvider } from "starknet";
 
-export function getProvider(solisNetwork: string, starknetNetwork: string) {
-  let solisNodeUrl: string;
+export function getStarknetProvider(starknetNetwork: string) {
   let starknetNodeUrl: string;
+  switch (starknetNetwork) {
+    case "dev":
+      starknetNodeUrl = "http://0.0.0.0:5050";
+      break;
+    case "mainnet":
+      starknetNodeUrl =
+        process.env.MAINNET_STARKNET_NODE_URL ?? "default_mainnet_starknet_url"; // Replace with default or throw error if not set
+      break;
+    case "testnet":
+      starknetNodeUrl =
+        process.env.TESTNET_STARKNET_NODE_URL ?? "default_testnet_starknet_url"; // Replace with default or throw error if not set
+      break;
+    default:
+      throw new Error(`Unsupported starknetNetwork: ${starknetNetwork}`);
+  }
+  const starknetProvider = new RpcProvider({ nodeUrl: starknetNodeUrl });
+  return starknetProvider;
+}
+
+export function getSolisProvider(solisNetwork: string) {
+  let solisNodeUrl: string;
 
   switch (solisNetwork) {
-    case "local":
+    case "dev":
       solisNodeUrl = "http://0.0.0.0:7777";
       break;
     case "mainnet":
@@ -20,26 +40,8 @@ export function getProvider(solisNetwork: string, starknetNetwork: string) {
       throw new Error(`Unsupported solisNetwork: ${solisNetwork}`);
   }
 
-  switch (starknetNetwork) {
-    case "local":
-      starknetNodeUrl = "http://0.0.0.0:5050";
-      break;
-    case "mainnet":
-      starknetNodeUrl =
-        process.env.MAINNET_STARKNET_NODE_URL ?? "default_mainnet_starknet_url"; // Replace with default or throw error if not set
-      break;
-    case "testnet":
-      starknetNodeUrl =
-        process.env.TESTNET_STARKNET_NODE_URL ?? "default_testnet_starknet_url"; // Replace with default or throw error if not set
-      break;
-    default:
-      throw new Error(`Unsupported starknetNetwork: ${starknetNetwork}`);
-  }
-
   const solisProvider = new RpcProvider({ nodeUrl: solisNodeUrl });
-  const starknetProvider = new RpcProvider({ nodeUrl: starknetNodeUrl });
-
-  return { solisProvider, starknetProvider };
+  return solisProvider;
 }
 
 export function getFeeAddress(network: string) {

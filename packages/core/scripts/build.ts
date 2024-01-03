@@ -26,7 +26,7 @@ const EXAMPLES_CONTRACTS_TS_PATH = path.join(
 const NETWORKS = {
   testnet: "goerli", // TODO: change to sepolia
   mainnet: "mainnet",
-  dev: "local"
+  dev: "dev"
 };
 
 const readJson = (filePath: string): ContractConfig => {
@@ -81,7 +81,7 @@ try {
       contracts.goerli?.nftContract || ""
     }";
     export const STARKNET_NFT_ADDRESS_DEV = "${
-      contracts.local?.nftContract || ""
+      contracts.dev?.nftContract || ""
     }";
   `
   );

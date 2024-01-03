@@ -20,8 +20,8 @@ import {
 import { approveERC20, approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
-import { getContractAddresses, Network } from "../src/constants";
-import { ListingV1 } from "../src/types";
+import { getContractAddresses } from "../src/constants";
+import { ListingV1, Network } from "../src/types";
 import { getExampleNFTAddress } from "./constants";
 
 // Initialize the RPC provider with the ArkChain node URL

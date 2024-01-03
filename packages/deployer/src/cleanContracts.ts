@@ -1,15 +1,3 @@
-import { promises as fs } from "fs";
+import { cleanContracts } from "./utils";
 
-import { getContractsFilePath } from "./utils";
-
-(async () => {
-  await fs.writeFile(
-    getContractsFilePath(),
-    JSON.stringify({
-      goerli: {},
-      sepolia: {},
-      mainnet: {},
-      local: {}
-    })
-  );
-})();
+cleanContracts();

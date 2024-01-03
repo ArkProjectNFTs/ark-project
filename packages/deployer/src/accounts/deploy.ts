@@ -2,18 +2,18 @@ import { promises as fs } from "fs";
 import { join } from "path";
 
 import { Command } from "commander";
-import { Account, CallData, RpcProvider } from "starknet";
+import { Account, CallData } from "starknet";
 
-import "dotenv/config";
-
-import { SOLIS_NETWORK, STARKNET_NETWORK } from "../constants";
-import { getProvider } from "../providers";
+import { getStarknetProvider } from "../providers";
 import { OZaccountClassHash } from "./constants";
 
-async function deployAccount(network: string) {
-  const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
+async function deployAccount(starknetNetwork: string) {
+  const starknetProvider = getStarknetProvider(starknetNetwork);
 
-  const accountsFilePath = join(__dirname, `../../accounts/${network}.json`);
+  const accountsFilePath = join(
+    __dirname,
+    `../../accounts/${starknetNetwork}.json`
+  );
   let accounts: any[] = [];
   try {
     const fileData = await fs.readFile(accountsFilePath, "utf8");
@@ -60,11 +60,11 @@ async function deployAccount(network: string) {
 }
 
 const program = new Command();
-program.option("-n, --network <type>", "Network to use", "goerli");
+program.option("-n", "Starknet Network to use", "dev");
 
 program.parse(process.argv);
 
 const options = program.opts();
-const network = options.network;
+const { starknet } = options;
 
-deployAccount(network).catch(console.error);
+deployAccount(starknet).catch(console.error);
