@@ -14,6 +14,7 @@ import { createListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import { getContractAddresses, Network } from "../src/constants";
 import { ListingV1 } from "../src/types";
+import { getExampleNFTAddress } from "./constants";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
@@ -37,7 +38,7 @@ const network = (process.env.NETWORK ?? "dev") as Network;
   arkProvider: RpcProvider,
   starknetProvider: RpcProvider
 ) => {
-  const { STARKNET_NFT_ADDRESS } = getContractAddresses(network);
+  const STARKNET_NFT_ADDRESS = getExampleNFTAddress(network);
 
   // Create a new account using the provider
   const { account: arkAccount } = await createAccount(arkProvider);

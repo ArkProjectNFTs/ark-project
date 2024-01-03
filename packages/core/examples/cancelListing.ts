@@ -12,8 +12,9 @@ import {
 } from "../src/actions/account/account";
 import { cancelOrder, createListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
-import { getContractAddresses, Network } from "../src/constants";
+import { Network } from "../src/constants";
 import { ListingV1 } from "../src/types";
+import { getExampleNFTAddress } from "./constants";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
@@ -45,7 +46,7 @@ const network = (process.env.NETWORK ?? "dev") as Network;
     process.env.ACCOUNT1_PRIVATE_KEY
   );
 
-  const { STARKNET_NFT_ADDRESS } = getContractAddresses(network);
+  const STARKNET_NFT_ADDRESS = getExampleNFTAddress(network);
 
   // Define the order details
   let order: ListingV1 = {

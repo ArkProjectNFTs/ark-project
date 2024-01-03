@@ -22,6 +22,7 @@ import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
 import { getContractAddresses, Network } from "../src/constants";
 import { ListingV1 } from "../src/types";
+import { getExampleNFTAddress } from "./constants";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
@@ -66,14 +67,9 @@ async function freeMint(
 
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
-
-  const {
-    STARKNET_NFT_ADDRESS,
-    STARKNET_EXECUTOR_ADDRESS,
-    STARKNET_ETH_ADDRESS
-  } = getContractAddresses(network);
-
-  console.log("STARKNET_NFT_ADDRESS:", STARKNET_NFT_ADDRESS);
+  const STARKNET_NFT_ADDRESS = getExampleNFTAddress(network);
+  const { STARKNET_EXECUTOR_ADDRESS, STARKNET_ETH_ADDRESS } =
+    getContractAddresses(network);
 
   // Define the order details
   let order: ListingV1 = {

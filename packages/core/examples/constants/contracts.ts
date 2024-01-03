@@ -1,0 +1,5 @@
+
+    export const STARKNET_NFT_ADDRESS_MAINNET = "";
+    export const STARKNET_NFT_ADDRESS_TESTNET = "";
+    export const STARKNET_NFT_ADDRESS_DEV = "0x7a0d668105724f2db5197b353538af0454dd059cd0282444c22978493cf2acb";
+  

@@ -11,19 +11,35 @@ type ContractConfig = {
   };
 };
 
-// Function to read and parse JSON from a given path
+const CONTRACTS_JSON_PATH = path.join(__dirname, "..", "../../contracts.json");
+const CONTRACTS_TS_PATH = path.join(
+  __dirname,
+  "..",
+  "src/constants/contracts.ts"
+);
+const EXAMPLES_CONTRACTS_TS_PATH = path.join(
+  __dirname,
+  "..",
+  "examples/constants/contracts.ts"
+);
+
+const NETWORKS = {
+  testnet: "goerli", // TODO: change to sepolia
+  mainnet: "mainnet",
+  dev: "local"
+};
+
 const readJson = (filePath: string): ContractConfig => {
   const rawJson = fs.readFileSync(filePath, "utf8");
   return JSON.parse(rawJson);
 };
 
-// Function to construct contract address constants
 const constructContractConstants = (
   contracts: ContractConfig,
   network: string,
   networkName: string
-): string => {
-  return `
+): string =>
+  `
 export const STARKNET_ETH_ADDRESS_${networkName} = "${
     contracts[network]?.eth || ""
   }";
@@ -36,33 +52,39 @@ export const STARKNET_EXECUTOR_ADDRESS_${networkName} = "${
 export const SOLIS_ORDER_BOOK_ADDRESS_${networkName} = "${
     contracts[network]?.orderbook || ""
   }";
-  `.trim();
+`.trim();
+
+const constructAllConstants = (contracts: ContractConfig) =>
+  Object.entries(NETWORKS)
+    .map(([networkName, network]) =>
+      constructContractConstants(contracts, network, networkName.toUpperCase())
+    )
+    .join("\n\n");
+
+const writeToFile = (filePath: string, data: string) => {
+  fs.writeFileSync(filePath, data);
 };
 
-// Paths
-const contractJsonPath = path.join(__dirname, "..", "../../contracts.json");
-const contractsFilePath = path.join(
-  __dirname,
-  "..",
-  "src/constants/contracts.ts"
-);
+// Main execution
+try {
+  const contracts = readJson(CONTRACTS_JSON_PATH);
+  const contractConstants = constructAllConstants(contracts);
 
-// Read contract.json
-const contracts = readJson(contractJsonPath);
-
-// Networks
-const networks = {
-  testnet: "goerli", // TODO: change to sepolia
-  mainnet: "mainnet",
-  dev: "local"
-};
-
-// Construct contract address constants for each network
-const contractConstants = Object.entries(networks)
-  .map(([networkName, network]) =>
-    constructContractConstants(contracts, network, networkName.toUpperCase())
-  )
-  .join("\n\n");
-
-// Write to contracts file
-fs.writeFileSync(contractsFilePath, contractConstants);
+  writeToFile(CONTRACTS_TS_PATH, contractConstants);
+  writeToFile(
+    EXAMPLES_CONTRACTS_TS_PATH,
+    `
+    export const STARKNET_NFT_ADDRESS_MAINNET = "${
+      contracts.mainnet?.nftContract || ""
+    }";
+    export const STARKNET_NFT_ADDRESS_TESTNET = "${
+      contracts.goerli?.nftContract || ""
+    }";
+    export const STARKNET_NFT_ADDRESS_DEV = "${
+      contracts.local?.nftContract || ""
+    }";
+  `
+  );
+} catch (error) {
+  console.error("An error occurred:", error);
+}
