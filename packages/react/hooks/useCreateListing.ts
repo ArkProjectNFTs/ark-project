@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { useProvider } from "@starknet-react/core";
 import { Account, AccountInterface } from "starknet";
 
 import {
@@ -19,6 +20,8 @@ export default function useCreateListing() {
   const [response, setResponse] = useState<bigint | undefined>(undefined);
   const owner = useOwner();
   const { STARKNET_EXECUTOR_ADDRESS } = getContractAddresses(network);
+
+  const starknetProvider = useProvider();
 
   async function createListing(
     starknetAccount: AccountInterface,
@@ -40,7 +43,7 @@ export default function useCreateListing() {
       setStatus("loading");
 
       await approveERC721(
-        rpcProvider,
+        starknetProvider.provider,
         starknetAccount,
         order.tokenAddress.toString(),
         STARKNET_EXECUTOR_ADDRESS,
