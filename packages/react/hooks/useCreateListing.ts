@@ -1,18 +1,13 @@
 import { useState } from "react";
 
-import {
-  Account,
-  AccountInterface,
-  BigNumberish,
-  cairo,
-  CallData
-} from "starknet";
+import { Account, AccountInterface } from "starknet";
 
 import {
+  approveERC721,
   createListing as createListingCore,
+  getContractAddresses,
   ListingV1
 } from "@ark-project/core";
-import { getContractAddresses } from "@ark-project/core/src/constants";
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types/hooks";
@@ -24,23 +19,6 @@ export default function useCreateListing() {
   const [response, setResponse] = useState<bigint | undefined>(undefined);
   const owner = useOwner();
   const { STARKNET_EXECUTOR_ADDRESS } = getContractAddresses(network);
-
-  async function authorizeStarknetERC721Transfer(
-    tokenAddress: string,
-    starknetAccount: AccountInterface,
-    tokenId: BigNumberish
-  ) {
-    await starknetAccount.execute([
-      {
-        contractAddress: tokenAddress,
-        entrypoint: "approve",
-        calldata: CallData.compile({
-          to: STARKNET_EXECUTOR_ADDRESS,
-          token_id: cairo.uint256(tokenId)
-        })
-      }
-    ]);
-  }
 
   async function createListing(
     starknetAccount: AccountInterface,
@@ -61,9 +39,11 @@ export default function useCreateListing() {
     try {
       setStatus("loading");
 
-      await authorizeStarknetERC721Transfer(
-        order.tokenAddress.toString(),
+      await approveERC721(
+        rpcProvider,
         starknetAccount,
+        order.tokenAddress.toString(),
+        STARKNET_EXECUTOR_ADDRESS,
         order.tokenId
       );
 
