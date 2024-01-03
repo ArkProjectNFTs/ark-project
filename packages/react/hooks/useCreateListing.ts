@@ -1,9 +1,12 @@
 import { useState } from "react";
 
+import { useProvider } from "@starknet-react/core";
 import { Account, AccountInterface } from "starknet";
 
 import {
+  approveERC721,
   createListing as createListingCore,
+  getContractAddresses,
   ListingV1
 } from "@ark-project/core";
 
@@ -13,10 +16,13 @@ import { useOwner } from "./useOwner";
 
 export default function useCreateListing() {
   const { rpcProvider, network } = useRpc();
-
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>(undefined);
   const owner = useOwner();
+  const { STARKNET_EXECUTOR_ADDRESS } = getContractAddresses(network);
+
+  const starknetProvider = useProvider();
+
   async function createListing(
     starknetAccount: AccountInterface,
     order: ListingV1
@@ -24,6 +30,7 @@ export default function useCreateListing() {
     const burner_address = localStorage.getItem("burner_address");
     const burner_private_key = localStorage.getItem("burner_private_key");
     const burner_public_key = localStorage.getItem("burner_public_key");
+
     if (
       burner_address === null ||
       burner_private_key === null ||
@@ -34,6 +41,15 @@ export default function useCreateListing() {
 
     try {
       setStatus("loading");
+
+      await approveERC721(
+        starknetProvider.provider,
+        starknetAccount,
+        order.tokenAddress.toString(),
+        STARKNET_EXECUTOR_ADDRESS,
+        order.tokenId
+      );
+
       const orderHash = await createListingCore(
         network,
         rpcProvider,
