@@ -9,8 +9,8 @@ import {
   Uint256
 } from "starknet";
 
-import { getContractAddresses, Network } from "../../constants";
-import { OfferV1, OrderV1, RouteType } from "../../types";
+import { getContractAddresses } from "../../constants";
+import { Network, OfferV1, OrderV1, RouteType } from "../../types";
 import { createOrder } from "./_create";
 
 /**

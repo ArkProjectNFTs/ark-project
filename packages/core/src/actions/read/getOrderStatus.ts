@@ -1,6 +1,7 @@
 import { BigNumberish, CallData, Contract, RpcProvider } from "starknet";
 
-import { getContractAddresses, Network } from "../../constants";
+import { getContractAddresses } from "../../constants";
+import { Network } from "../../types";
 
 const getOrderStatus = async (
   orderHash: BigNumberish,

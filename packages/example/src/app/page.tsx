@@ -2,7 +2,7 @@
 
 import { useAccount } from "@starknet-react/core";
 
-import { ArkProvider, Network } from "@ark-project/react";
+import { ArkProvider, type Network } from "@ark-project/react";
 
 import { MainNav } from "@/components/main-nav";
 import { UserNav } from "@/components/user-nav";
@@ -15,7 +15,7 @@ export default function Home() {
   if (account === undefined) return <Authentification />;
   return (
     <>
-      <ArkProvider network="dev">
+      <ArkProvider network={"dev" as Network}>
         <div className="hidden flex-col md:flex">
           <div className="border-b">
             <div className="container mx-auto">

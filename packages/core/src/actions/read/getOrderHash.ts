@@ -8,7 +8,8 @@ import {
   shortString
 } from "starknet";
 
-import { getContractAddresses, Network } from "../../constants";
+import { getContractAddresses } from "../../constants";
+import { Network } from "../../types";
 
 const getOrderHash = async (
   tokenId: BigNumberish,

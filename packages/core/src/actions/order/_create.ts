@@ -7,9 +7,9 @@ import {
   RpcProvider
 } from "starknet";
 
-import { getContractAddresses, Network } from "../../constants";
+import { getContractAddresses } from "../../constants";
 import { getSignInfos } from "../../signer";
-import { OrderV1 } from "../../types";
+import { Network, OrderV1 } from "../../types";
 import { getOrderHashFromOrderV1 } from "../../utils";
 
 /**

@@ -12,9 +12,9 @@ import {
   Uint256
 } from "starknet";
 
-import { getContractAddresses, Network } from "../../constants";
+import { getContractAddresses } from "../../constants";
 import { getSignInfos } from "../../signer";
-import { CancelInfo, FullCancelInfo } from "../../types";
+import { CancelInfo, FullCancelInfo, Network } from "../../types";
 
 const cancelOrder = async (
   network: Network,

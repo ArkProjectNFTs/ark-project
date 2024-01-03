@@ -10,8 +10,7 @@ import {
   Uint256
 } from "starknet";
 
-import { Network } from "../../constants";
-import { FulfillInfo, FulfillOfferInfo } from "../../types";
+import { FulfillInfo, FulfillOfferInfo, Network } from "../../types";
 import { _fulfillOrder } from "./_fulfill";
 
 const fulfillOffer = async (

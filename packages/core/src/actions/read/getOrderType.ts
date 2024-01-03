@@ -6,7 +6,8 @@ import {
   RpcProvider
 } from "starknet";
 
-import { getContractAddresses, Network } from "../../constants";
+import { getContractAddresses } from "../../constants";
+import { Network } from "../../types";
 
 const getOrderType = async (
   orderHash: BigNumberish,

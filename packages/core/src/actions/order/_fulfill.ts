@@ -7,9 +7,9 @@ import {
   RpcProvider
 } from "starknet";
 
-import { getContractAddresses, Network } from "../../constants";
+import { getContractAddresses } from "../../constants";
 import { getSignInfos } from "../../signer";
-import { FulfillInfo } from "../../types";
+import { FulfillInfo, Network } from "../../types";
 
 /**
  * Creates an order on the Arkchain with specific constraints based on order type.
