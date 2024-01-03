@@ -6,8 +6,6 @@ export const SOLIS_ACCOUNT_CLASS_HASH =
 export const STARKNET_ADMIN_ACCOUNT_ADDRESS =
   "0x765149d6bc63271df7b0316537888b81aa021523f9516a05306f10fd36914da";
 
-export type ArkChainContractType = "ORDERBOOK";
-
 export enum Network {
   Mainnet = "mainnet",
   Testnet = "testnet",
