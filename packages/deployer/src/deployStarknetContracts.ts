@@ -63,7 +63,8 @@ async function deployStarknetContracts() {
     messagingContract = await deployMessaging(
       artifactsPath,
       starknetAdminAccount.account,
-      starknetProvider
+      starknetProvider,
+      starknetAdminAccount.appchain_account?.address || ""
     );
     existingContracts[STARKNET_NETWORK].messaging = messagingContract.address;
     await fs.writeFile(

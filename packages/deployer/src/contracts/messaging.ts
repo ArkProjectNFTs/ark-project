@@ -50,7 +50,8 @@ export async function upgradeMessaging(
 export async function deployMessaging(
   artifactsPath: string,
   deployerAccount: sn.Account,
-  provider: sn.RpcProvider
+  provider: sn.RpcProvider,
+  appChainAccountAddress: string
 ) {
   const artifacts = common.loadArtifacts(
     artifactsPath,
@@ -60,7 +61,7 @@ export async function deployMessaging(
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
     owner: deployerAccount.address,
-    appchain_account: deployerAccount.address
+    appchain_account: appChainAccountAddress
   });
 
   const deployR = await deployerAccount.declareAndDeploy({
