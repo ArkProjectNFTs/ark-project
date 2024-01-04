@@ -95,12 +95,12 @@ warp = "0.3"
 # katana-core = { path = "../../../dojo/crates/katana/core", features = ["messaging", "starknet-messaging"] }
 # katana-rpc = { path = "../../../dojo/crates/katana/rpc" }
 
-katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.7-solis", features = [
+katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.8-solis", features = [
     "messaging",
     "starknet-messaging",
 ] }
-katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.7-solis" }
-katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.7-solis" }
+katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.8-solis" }
+katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.8-solis" }
 
 cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.1.5", features = [
     "abigen-rs",

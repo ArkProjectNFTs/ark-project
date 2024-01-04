@@ -156,6 +156,7 @@ impl KatanaArgs {
             total_accounts: self.starknet.total_accounts,
             seed: parse_seed(&self.starknet.seed),
             disable_fee: true,
+            disable_validate: false,
             fork_rpc_url: None,
             fork_block_number: None,
             env: Environment {
