@@ -345,7 +345,16 @@ mod appchain_messaging {
             selector: felt252,
             payload: Span<felt252>,
         ) {
-            self.emit(MessageExecuted { from_address, to_address, selector, payload, });
+            self.emit(MessageExecuted { from_address, to_address, selector, payload, })
+            // assert(
+            //     self.appchain_account.read() == starknet::get_caller_address(),
+            //     'Unauthorized executor',
+            // );
+            // match starknet::call_contract_syscall(to_address, selector, payload) {
+            //     Result::Ok(span) => self
+            //         .emit(MessageExecuted { from_address, to_address, selector, payload, }),
+            //     Result::Err(e) => { panic(e) }
+            // }
         }
     }
 }
