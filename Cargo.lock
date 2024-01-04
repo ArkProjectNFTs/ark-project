@@ -1082,7 +1082,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2850dc1d46d5bfb64c5ed0bc7ccd4821e4d4c36a8f2678a897df7c2bfaefe6fc"
 dependencies = [
  "cairo-lang-utils",
- "indoc 2.0.4",
+ "indoc",
  "num-bigint",
  "num-traits 0.2.17",
  "parity-scale-codec",
@@ -1286,7 +1286,7 @@ dependencies = [
  "cairo-lang-syntax",
  "cairo-lang-utils",
  "indent",
- "indoc 2.0.4",
+ "indoc",
  "itertools 0.11.0",
  "salsa",
  "smol_str",
@@ -1361,7 +1361,7 @@ dependencies = [
  "cairo-lang-test-utils",
  "cairo-lang-utils",
  "id-arena",
- "indoc 2.0.4",
+ "indoc",
  "itertools 0.11.0",
  "num-bigint",
  "num-traits 0.2.17",
@@ -1461,7 +1461,7 @@ dependencies = [
  "cairo-lang-sierra-gas",
  "cairo-lang-sierra-type-size",
  "cairo-lang-utils",
- "indoc 2.0.4",
+ "indoc",
  "itertools 0.11.0",
  "num-bigint",
  "num-traits 0.2.17",
@@ -1501,7 +1501,7 @@ dependencies = [
  "const_format",
  "convert_case 0.6.0",
  "indent",
- "indoc 2.0.4",
+ "indoc",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
@@ -1561,7 +1561,7 @@ dependencies = [
  "cairo-lang-starknet",
  "cairo-lang-syntax",
  "cairo-lang-utils",
- "indoc 2.0.4",
+ "indoc",
  "itertools 0.11.0",
  "num-bigint",
  "num-traits 0.2.17",
@@ -4692,12 +4692,6 @@ dependencies = [
 
 [[package]]
 name = "indoc"
-version = "1.0.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa799dd5ed20a7e349f3b4639aa80d74549c81716d9ec4f994c9b5815598306"
-
-[[package]]
-name = "indoc"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e186cfbae8084e513daff4240b4797e342f988cecda4fb6c939150f96315fd8"
@@ -7140,7 +7134,7 @@ dependencies = [
  "glob",
  "ignore",
  "include_dir",
- "indoc 2.0.4",
+ "indoc",
  "itertools 0.12.0",
  "once_cell",
  "pathdiff",
@@ -7793,7 +7787,7 @@ dependencies = [
  "futures",
  "hex",
  "hyper",
- "indoc 1.0.9",
+ "indoc",
  "itertools 0.10.5",
  "katana-core",
  "katana-primitives",
