@@ -3,6 +3,8 @@ import { join } from "path";
 
 import * as sn from "starknet";
 
+import "dotenv/config";
+
 import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
 import { deployExecutor, upgradeExecutor } from "./contracts/executor";
 import { deployMessaging, upgradeMessaging } from "./contracts/messaging";

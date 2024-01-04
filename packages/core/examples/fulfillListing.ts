@@ -13,13 +13,15 @@ import {
   type BigNumberish
 } from "starknet";
 
+import "dotenv/config";
+
 import {
   createAccount,
   fetchOrCreateAccount
 } from "../src/actions/account/account";
 import { approveERC20, approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
-import { getOrderHash, getOrderStatus } from "../src/actions/read";
+import { getOrderStatus } from "../src/actions/read";
 import {
   STARKNET_ETH_ADDRESS,
   STARKNET_EXECUTOR_ADDRESS,
@@ -70,7 +72,7 @@ async function freeMint(
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 44, // The ID of the token
+    tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
   };
 
@@ -127,18 +129,19 @@ async function freeMint(
     process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
   );
 
-  const mintErc20Result = await starknetFulfillerAccount.execute({
-    contractAddress: STARKNET_ETH_ADDRESS,
-    entrypoint: "mint",
-    calldata: CallData.compile({
-      recipient: starknetFulfillerAccount.address,
-      amount: cairo.uint256(1000000000000000000)
-    })
-  });
+  if (process.env.STARKNET_NETWORK_ID === "dev") {
+    const mintErc20Result = await starknetFulfillerAccount.execute({
+      contractAddress: STARKNET_ETH_ADDRESS,
+      entrypoint: "mint",
+      calldata: CallData.compile({
+        recipient: starknetFulfillerAccount.address,
+        amount: cairo.uint256(1000000000000000000)
+      })
+    });
 
-  console.log("mintResult", mintErc20Result);
-
-  await starknetProvider.waitForTransaction(mintErc20Result.transaction_hash);
+    console.log("mintResult", mintErc20Result);
+    await starknetProvider.waitForTransaction(mintErc20Result.transaction_hash);
+  }
 
   await approveERC20(
     starknetProvider,
@@ -147,6 +150,8 @@ async function freeMint(
     STARKNET_EXECUTOR_ADDRESS,
     BigInt(order.startAmount) + BigInt(1)
   );
+
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 
   // Define the fulfill details
   const fulfill_info = {

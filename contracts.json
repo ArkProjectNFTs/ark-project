@@ -1,11 +1,15 @@
 {
-  "goerli": {},
+  "goerli": {
+    "messaging": "0x3ccb818715de9b564fa0ce629ea9a8201c506bbe04933c739b59370154bbd87",
+    "executor": "0x314b0f11881f7bfa79a327b61ffb35c572b7effe4b79dfad10e2fe3df80e8ef",
+    "nftContract": "0xca07e4115c7d03ff934829fe61039529fc5e6d523248c1f08dc09abd4c5765"
+  },
   "sepolia": {},
   "mainnet": {},
   "dev": {
-    "messaging": "0x4dd6883ede4bf377f053c5ce52dcfcee8536d166074cdae63f208f5964daed",
-    "executor": "0x45cb0c8d06fb10712b80e431ec23199d5cafbd496efbf90c4af5aa86edcc7a7",
-    "nftContract": "0x524a3fe35093aa25f788436d1348e1d9ee8b7daa7b8563a1d8e0848069fe18f",
+    "messaging": "0x4cfcbe51988b1a5b59163de5599ff1c626fbf467a23b6c3d7b271d01a2c7e48",
+    "executor": "0x3f70d9a2b1a78707275b4fc106b5e6283e7b0e8680dfc5f8c6d6538db5c6c00",
+    "nftContract": "0x5cfde45c7818b7c0b027d23e2b756d5f25667d756ad96187c371f3c439cbf2b",
     "eth": "0x172ca09df59789985a1dfb68e0f3f554121eb313c68cf391bd78f9bf69abcf",
     "orderbook": "0x3b08fc57e1fc53c8545fa799c7af60bf18b9f43dce739c24bf95f2f118da97"
   }
