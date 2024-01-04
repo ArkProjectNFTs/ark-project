@@ -349,7 +349,6 @@ mod appchain_messaging {
                 self.appchain_account.read() == starknet::get_caller_address(),
                 'Unauthorized executor',
             );
-
             match starknet::call_contract_syscall(to_address, selector, payload) {
                 Result::Ok(span) => self
                     .emit(MessageExecuted { from_address, to_address, selector, payload, }),
@@ -358,4 +357,3 @@ mod appchain_messaging {
         }
     }
 }
-

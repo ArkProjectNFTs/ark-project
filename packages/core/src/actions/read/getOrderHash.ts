@@ -36,14 +36,13 @@ const getOrderHash = async (
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
   }
-  console.log("--------orderbookAbi", SOLIS_ORDER_BOOK_ADDRESS);
-  console.log("--------orderbookAbi", provider);
+
   const orderbookContract = new Contract(
     orderbookAbi,
     SOLIS_ORDER_BOOK_ADDRESS,
     provider
   );
-  console.log("--------orderbookContract", orderbookContract);
+
   let order_hash_calldata = CallData.compile({
     token_hash: tokenHashMessage
   });

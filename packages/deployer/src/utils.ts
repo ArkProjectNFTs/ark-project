@@ -6,6 +6,8 @@ import { Account, RpcProvider } from "starknet";
 import { getProvider } from "./providers";
 import { ProviderNetwork } from "./types";
 
+import "dotenv/config";
+
 export function getExistingAccounts(
   starknetNetwork: ProviderNetwork,
   solisNetwork: ProviderNetwork
@@ -38,109 +40,55 @@ export function getExistingAccounts(
 
   const starknetAdminAccounts = [
     {
-      address:
-        process.env.STARKNET_ADMIN_ADDRESS_DEV ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.STARKNET_ADMIN_PUBLIC_KEY_DEV ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.STARKNET_ADMIN_ADDRESS_DEV || "",
+      privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV || "",
+      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_DEV || ""
     },
     {
-      address:
-        process.env.STARKNET_ADMIN_ADDRESS_GOERLI ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.STARKNET_ADMIN_PRIVATE_KEY_GOERLI ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.STARKNET_ADMIN_PUBLIC_KEY_GOERLI ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.STARKNET_ADMIN_ADDRESS_GOERLI || "",
+      privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_GOERLI || "",
+      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_GOERLI || ""
     },
     {
-      address:
-        process.env.STARKNET_ADMIN_ADDRESS_MAINNET ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.STARKNET_ADMIN_PRIVATE_KEY_MAINNET ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.STARKNET_ADMIN_PUBLIC_KEY_MAINNET ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.STARKNET_ADMIN_ADDRESS_MAINNET || "",
+      privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_MAINNET || "",
+      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_MAINNET || ""
     }
   ];
 
-  const starknetExecutorAccounts = [
+  const starknetAppchainAccounts = [
     {
-      address:
-        process.env.STARKNET_EXECUTOR_ADDRESS_DEV ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.STARKNET_EXECUTOR_PRIVATE_KEY_DEV ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.STARKNET_EXECUTOR_PUBLIC_KEY_DEV ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS_DEV || "",
+      privateKey: process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_DEV || "",
+      publicKey: process.env.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_DEV || ""
     },
     {
-      address:
-        process.env.STARKNET_EXECUTOR_ADDRESS_GOERLI ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.STARKNET_EXECUTOR_PRIVATE_KEY_GOERLI ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.STARKNET_EXECUTOR_PUBLIC_KEY_GOERLI ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI || "",
+      privateKey: process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI || "",
+      publicKey: process.env.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI || ""
     },
     {
-      address:
-        process.env.STARKNET_EXECUTOR_ADDRESS_MAINNET ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.STARKNET_EXECUTOR_PRIVATE_KEY_MAINNET ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.STARKNET_EXECUTOR_PUBLIC_KEY_MAINNET ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET || "",
+      privateKey: process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET || "",
+      publicKey: process.env.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET || ""
     }
   ];
 
   const solisAdminAccounts = [
     {
-      address:
-        process.env.SOLIS_ADMIN_ADDRESS_DEV ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.SOLIS_ADMIN_PUBLIC_KEY_DEV ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.SOLIS_ADMIN_ADDRESS_DEV || "",
+      privateKey: process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV || "",
+      publicKey: process.env.SOLIS_ADMIN_PUBLIC_KEY_DEV || ""
     },
     {
-      address:
-        process.env.SOLIS_ADMIN_ADDRESS_GOERLI ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.SOLIS_ADMIN_PRIVATE_KEY_GOERLI ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.SOLIS_ADMIN_PUBLIC_KEY_GOERLI ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.SOLIS_ADMIN_ADDRESS_GOERLI || "",
+      privateKey: process.env.SOLIS_ADMIN_PRIVATE_KEY_GOERLI || "",
+      publicKey: process.env.SOLIS_ADMIN_PUBLIC_KEY_GOERLI || ""
     },
     {
-      address:
-        process.env.SOLIS_ADMIN_ADDRESS_MAINNET ||
-        "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
-      privateKey:
-        process.env.SOLIS_ADMIN_PRIVATE_KEY_MAINNET ||
-        "0x1800000000300000180000000000030000000000003006001800006600",
-      publicKey:
-        process.env.SOLIS_ADMIN_PUBLIC_KEY_MAINNET ||
-        "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053"
+      address: process.env.SOLIS_ADMIN_ADDRESS_MAINNET || "",
+      privateKey: process.env.SOLIS_ADMIN_PRIVATE_KEY_MAINNET || "",
+      publicKey: process.env.SOLIS_ADMIN_PUBLIC_KEY_MAINNET || ""
     }
   ];
 
@@ -152,10 +100,10 @@ export function getExistingAccounts(
     "ADMIN"
   );
   const filteredStarknetExecutorAccounts = filterAccounts(
-    starknetExecutorAccounts,
+    starknetAppchainAccounts,
     starknetNetwork,
     "STARKNET",
-    "EXECUTOR"
+    "SOLIS_ACCOUNT"
   );
   const filteredSolisAccounts = filterAccounts(
     solisAdminAccounts,
@@ -166,7 +114,7 @@ export function getExistingAccounts(
 
   return {
     starknetAdminAccount: {
-      executor: filteredStarknetExecutorAccounts,
+      appchain_account: filteredStarknetExecutorAccounts,
       account: buildAccounts(starknetProvider, filteredStarknetAccounts)
     },
     arkchainAdminAccount: {

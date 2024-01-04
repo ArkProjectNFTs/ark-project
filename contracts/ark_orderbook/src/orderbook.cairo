@@ -209,6 +209,8 @@ mod orderbook {
     struct OrderExecuted {
         #[key]
         order_hash: felt252,
+        #[key]
+        order_status: OrderStatus,
     // info: ExecutionInfo,
     }
 
@@ -260,8 +262,10 @@ mod orderbook {
     ) {
         // Solis already checks that ALL the messages are coming from the executor contract.
         // TODO: anyway, it can be useful to have an extra check here.
-
-        order_status_write(info.order_hash, OrderStatus::Fulfilled);
+        'validate_order_execution'.print();
+        order_status_write(info.order_hash, OrderStatus::Executed);
+        let order_status = order_status_read(info.order_hash).unwrap();
+        self.emit(OrderExecuted { order_hash: info.order_hash, order_status: order_status });
     }
 
     // *************************************************************************
