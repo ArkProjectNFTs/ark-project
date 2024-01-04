@@ -8,6 +8,14 @@ export async function upgradeMessaging(
   provider: sn.RpcProvider,
   contractAddress: string
 ) {
+  console.log("Using StarkNet provider:", provider.nodeUrl);
+  console.log(artifactsPath);
+  console.log("-------------------");
+  console.log(deployerAccount);
+  console.log("-------------------");
+  console.log(provider);
+  console.log("-------------------");
+  console.log(provider);
   const artifacts = common.loadArtifacts(
     artifactsPath,
     "ark_starknet_appchain_messaging"
@@ -42,8 +50,7 @@ export async function upgradeMessaging(
 export async function deployMessaging(
   artifactsPath: string,
   deployerAccount: sn.Account,
-  provider: sn.RpcProvider,
-  appChainAccountAddress: string
+  provider: sn.RpcProvider
 ) {
   const artifacts = common.loadArtifacts(
     artifactsPath,
@@ -53,7 +60,7 @@ export async function deployMessaging(
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
     owner: deployerAccount.address,
-    appchain_account: appChainAccountAddress
+    appchain_account: deployerAccount.address
   });
 
   const deployR = await deployerAccount.declareAndDeploy({

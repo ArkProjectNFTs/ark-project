@@ -63,8 +63,7 @@ async function deployStarknetContracts() {
     messagingContract = await deployMessaging(
       artifactsPath,
       starknetAdminAccount.account,
-      starknetProvider,
-      starknetAdminAccount.appchain_account?.address || ""
+      starknetProvider
     );
     existingContracts[STARKNET_NETWORK].messaging = messagingContract.address;
     await fs.writeFile(
@@ -73,46 +72,46 @@ async function deployStarknetContracts() {
     );
   }
 
-  // starknetSpinner.text = "⚡ Deploying Executor Contract...";
-  // let executorContract: sn.Contract;
-  // if (existingContracts[STARKNET_NETWORK].executor) {
-  //   starknetSpinner.text = "⚡ Upgrading Executor Contract...";
-  //   executorContract = await upgradeExecutor(
-  //     artifactsPath,
-  //     starknetAdminAccount.account,
-  //     starknetProvider,
-  //     existingContracts[STARKNET_NETWORK].messaging
-  //   );
-  // } else {
-  //   starknetSpinner.text = "⚡ Deploying Executor Contract...";
-  //   executorContract = await deployExecutor(
-  //     artifactsPath,
-  //     starknetAdminAccount.account,
-  //     starknetProvider,
-  //     getFeeAddress(STARKNET_NETWORK),
-  //     messagingContract.address
-  //   );
+  starknetSpinner.text = "⚡ Deploying Executor Contract...";
+  let executorContract: sn.Contract;
+  if (existingContracts[STARKNET_NETWORK].executor) {
+    starknetSpinner.text = "⚡ Upgrading Executor Contract...";
+    executorContract = await upgradeExecutor(
+      artifactsPath,
+      starknetAdminAccount.account,
+      starknetProvider,
+      existingContracts[STARKNET_NETWORK].messaging
+    );
+  } else {
+    starknetSpinner.text = "⚡ Deploying Executor Contract...";
+    executorContract = await deployExecutor(
+      artifactsPath,
+      starknetAdminAccount.account,
+      starknetProvider,
+      getFeeAddress(STARKNET_NETWORK),
+      messagingContract.address
+    );
 
-  //   existingContracts[STARKNET_NETWORK].executor = executorContract.address;
-  //   await fs.writeFile(
-  //     getContractsFilePath(),
-  //     JSON.stringify(existingContracts)
-  //   );
+    existingContracts[STARKNET_NETWORK].executor = executorContract.address;
+    await fs.writeFile(
+      getContractsFilePath(),
+      JSON.stringify(existingContracts)
+    );
 
-  //   const messagingFilePath = getMessagingFilePath(STARKNET_NETWORK);
-  //   const configData = JSON.parse(await fs.readFile(messagingFilePath, "utf8"));
-  //   configData.contract_address = messagingContract.address;
-  //   configData.sender_address = starknetAdminAccount.appchain_account?.address;
-  //   configData.private_key = starknetAdminAccount.appchain_account?.privateKey;
-  //   await fs.writeFile(messagingFilePath, JSON.stringify(configData, null, 2));
-  // }
+    const messagingFilePath = getMessagingFilePath(STARKNET_NETWORK);
+    const configData = JSON.parse(await fs.readFile(messagingFilePath, "utf8"));
+    configData.contract_address = messagingContract.address;
+    configData.sender_address = starknetAdminAccount.appchain_account?.address;
+    configData.private_key = starknetAdminAccount.appchain_account?.privateKey;
+    await fs.writeFile(messagingFilePath, JSON.stringify(configData, null, 2));
+  }
 
-  // starknetSpinner.stop();
+  starknetSpinner.stop();
 
-  // console.log("STARKNET CONTRACTS");
-  // console.log("==================\n");
-  // console.log(`| Messaging contract | ${messagingContract.address}`);
-  // console.log(`| Executor contract  | ${executorContract.address}`);
+  console.log("STARKNET CONTRACTS");
+  console.log("==================\n");
+  console.log(`| Messaging contract | ${messagingContract.address}`);
+  console.log(`| Executor contract  | ${executorContract.address}`);
 }
 
 deployStarknetContracts();
