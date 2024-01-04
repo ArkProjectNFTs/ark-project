@@ -38,16 +38,11 @@ export const createAccount = async (provider: RpcProvider) => {
     0
   );
   const account = new Account(provider, address, privateKey);
-  const { transaction_hash, contract_address } = await account.deployAccount(
-    {
-      classHash: accountClassHash,
-      constructorCalldata: CallData.compile({ publicKey }),
-      addressSalt: publicKey
-    },
-    {
-      maxFee: "0x0"
-    }
-  );
+  const { transaction_hash, contract_address } = await account.deployAccount({
+    classHash: accountClassHash,
+    constructorCalldata: CallData.compile({ publicKey }),
+    addressSalt: publicKey
+  });
   await provider.waitForTransaction(transaction_hash, {
     retryInterval: 100
   });

@@ -1,6 +1,1 @@
-{
-  "goerli": {},
-  "sepolia": {},
-  "mainnet": {},
-  "dev": {}
-}
+{"goerli":{"nftContract":"0x78e76f951aee17ab6f2075987890e0493cf7a8d14243c278729b1cead193c20","messaging":"0x25eab997d5bf56abdb3ce33d873997525eea99fa9c527f0809df09bbbcc890","executor":"0x68c317e638e8446dee9638089e4de00c1e7750174016796bf12d316c5d4942c"},"sepolia":{},"mainnet":{},"dev":{"orderbook":"0xbe5bf705ebf2b4219b4acd68c65daf3f13d41006de4868f27dbe98ae6206a7"}}
