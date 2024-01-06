@@ -47,21 +47,32 @@ Execute the following commands in the `root` directory:
 - Deploy starknet contracts:
   - appchain_messaging
   - executor
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
 
 **Deploy Starknet tokens contracts, for testing purpose**
 
 `pnpm run deploy:starknet:tokens`
 
 - Deploy starknet contracts:
+
   - nft
   - erc20
+
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
 
 **Deploy ArkProject Solis contracts**
 
 `pnpm run deploy:solis`
 
 - Deploy solis contracts:
+
   - orderbook
+
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
+  - `-so, --solis <network>` - solis network to deploy on (default: "dev")
 
 ## Running & deploying ArkProject locally
 
