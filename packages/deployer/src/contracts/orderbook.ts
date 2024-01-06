@@ -14,15 +14,13 @@ export async function deployOrderBook(
 ): Promise<sn.Contract> {
   const artifacts = loadArtifacts(artifactsPath, "ark_orderbook_orderbook");
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
-  const contractConstructor = contractCallData.compile("constructor", {
-    admin: adminAddress
-  });
 
   const deployR = await account.declareAndDeploy({
     contract: artifacts.sierra,
     casm: artifacts.casm,
-    constructorCalldata: contractConstructor,
-    salt: "1818"
+    constructorCalldata: contractCallData.compile("constructor", {
+      admin: adminAddress
+    } as sn.RawArgs)
   });
 
   if (deployR.declare.transaction_hash) {

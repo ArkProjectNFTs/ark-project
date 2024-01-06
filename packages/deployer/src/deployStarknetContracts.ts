@@ -1,118 +1,100 @@
 import { promises as fs } from "fs";
-import { join } from "path";
 
+import { program } from "commander";
 import * as sn from "starknet";
+
+import { ProviderNetwork } from "./types";
 
 import "dotenv/config";
 
-import { SOLIS_NETWORK, STARKNET_NETWORK } from "./constants";
+import loading from "loading-cli";
+
+import { ARTIFACTS_PATH } from "./constants";
 import { deployExecutor, upgradeExecutor } from "./contracts/executor";
 import { deployMessaging, upgradeMessaging } from "./contracts/messaging";
-import { getFeeAddress, getProvider } from "./providers";
-import { ProviderNetwork } from "./types";
+import { getFeeAddress, getStarknetProvider } from "./providers";
 import {
   getContractsFilePath,
-  getExistingAccounts,
-  getExistingContracts
+  getExistingContracts,
+  getMessagingFilePath,
+  getStarknetAccounts
 } from "./utils";
 
-const artifactsPath = "../../contracts/target/dev/";
-
-const loading = require("loading-cli");
-
-function getMessagingFilePath(network: ProviderNetwork): string {
-  switch (network) {
-    case "mainnet":
-      return join(__dirname, "../../../crates/solis/messaging.json");
-    case "goerli":
-      return join(__dirname, "../../../crates/solis/messaging.goerli.json");
-    case "sepolia":
-      return join(__dirname, "../../../crates/solis/messaging.sepolia.json");
-    case "dev":
-      return join(__dirname, "../../../crates/solis/messaging.local.json");
-    default:
-      return join(__dirname, "../../../crates/solis/messaging.local.json");
-  }
-}
-
-async function deployStarknetContracts() {
-  const { starknetProvider } = getProvider(STARKNET_NETWORK, SOLIS_NETWORK);
-  const { starknetAdminAccount } = getExistingAccounts(
-    STARKNET_NETWORK,
-    SOLIS_NETWORK
-  );
-
+async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
+  const starknetProvider = getStarknetProvider(starknetNetwork);
+  const { starknetAdminAccount, starknetSolisAccount } =
+    getStarknetAccounts(starknetNetwork);
   const existingContracts = await getExistingContracts();
+
   console.log("\nSTARKNET ACCOUNTS");
   console.log("=================\n");
-  console.log(`| Admin account |  ${starknetAdminAccount.account.address}`);
-
+  console.log(`| Admin account |  ${starknetAdminAccount.address}`);
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
-
   let messagingContract: sn.Contract;
-  if (existingContracts[STARKNET_NETWORK].messaging) {
+  if (existingContracts[starknetNetwork].messaging) {
     starknetSpinner.text = "Upgrading Messaging Contract...";
     messagingContract = await upgradeMessaging(
-      artifactsPath,
-      starknetAdminAccount.account,
+      ARTIFACTS_PATH,
+      starknetAdminAccount,
       starknetProvider,
-      existingContracts[STARKNET_NETWORK].messaging
+      existingContracts[starknetNetwork].messaging
     );
   } else {
     starknetSpinner.text = "Deploying Messaging Contract...";
     messagingContract = await deployMessaging(
-      artifactsPath,
-      starknetAdminAccount.account,
+      ARTIFACTS_PATH,
+      starknetAdminAccount,
       starknetProvider,
-      starknetAdminAccount.appchain_account?.address || ""
+      starknetSolisAccount?.address || ""
     );
-    existingContracts[STARKNET_NETWORK].messaging = messagingContract.address;
+    existingContracts[starknetNetwork].messaging = messagingContract.address;
     await fs.writeFile(
       getContractsFilePath(),
       JSON.stringify(existingContracts)
     );
   }
-
   starknetSpinner.text = "⚡ Deploying Executor Contract...";
   let executorContract: sn.Contract;
-  if (existingContracts[STARKNET_NETWORK].executor) {
+  if (existingContracts[starknetNetwork].executor) {
     starknetSpinner.text = "⚡ Upgrading Executor Contract...";
     executorContract = await upgradeExecutor(
-      artifactsPath,
-      starknetAdminAccount.account,
+      ARTIFACTS_PATH,
+      starknetAdminAccount,
       starknetProvider,
-      existingContracts[STARKNET_NETWORK].messaging
+      existingContracts[starknetNetwork].messaging
     );
   } else {
     starknetSpinner.text = "⚡ Deploying Executor Contract...";
     executorContract = await deployExecutor(
-      artifactsPath,
-      starknetAdminAccount.account,
+      ARTIFACTS_PATH,
+      starknetAdminAccount,
       starknetProvider,
-      getFeeAddress(STARKNET_NETWORK),
+      getFeeAddress(starknetNetwork),
       messagingContract.address
     );
-
-    existingContracts[STARKNET_NETWORK].executor = executorContract.address;
+    existingContracts[starknetNetwork].executor = executorContract.address;
     await fs.writeFile(
       getContractsFilePath(),
       JSON.stringify(existingContracts)
     );
-
-    const messagingFilePath = getMessagingFilePath(STARKNET_NETWORK);
+    const messagingFilePath = getMessagingFilePath(starknetNetwork);
     const configData = JSON.parse(await fs.readFile(messagingFilePath, "utf8"));
     configData.contract_address = messagingContract.address;
-    configData.sender_address = starknetAdminAccount.appchain_account?.address;
-    configData.private_key = starknetAdminAccount.appchain_account?.privateKey;
+    configData.sender_address = starknetSolisAccount?.address;
+    configData.private_key = starknetSolisAccount?.privateKey;
     await fs.writeFile(messagingFilePath, JSON.stringify(configData, null, 2));
   }
-
   starknetSpinner.stop();
-
   console.log("STARKNET CONTRACTS");
   console.log("==================\n");
   console.log(`| Messaging contract | ${messagingContract.address}`);
   console.log(`| Executor contract  | ${executorContract.address}`);
 }
 
-deployStarknetContracts();
+program.option("-sn, --starknet <type>", "Starknet Network", "dev");
+program.parse();
+
+const options = program.opts();
+const starknetNetwork = options.starknet;
+
+deployStarknetContracts(starknetNetwork);

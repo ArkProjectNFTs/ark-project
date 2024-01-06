@@ -33,12 +33,12 @@ const createOrder = async (
   let compiledOrder = CallData.compile({
     order
   });
-  let compiletOrderBigInt = compiledOrder.map(BigInt);
 
+  let compiledOrderBigInt = compiledOrder.map(BigInt);
   // Sign the compiled order
   const TypedOrderData = {
     message: {
-      hash: starknet.poseidonHashMany(compiletOrderBigInt).toString()
+      hash: starknet.poseidonHashMany(compiledOrderBigInt).toString()
     },
     domain: {
       name: "Ark",

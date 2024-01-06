@@ -27,7 +27,7 @@ const solisNetwork = (process.env.SOLIS_NETWORK_ID ||
 // Assign constants based on the current networks
 export const STARKNET_ETH_ADDRESS =
   contracts[starknetNetwork]?.eth ||
-  "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+  "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 export const STARKNET_NFT_ADDRESS =
   contracts[starknetNetwork]?.nftContract || "";
 export const STARKNET_EXECUTOR_ADDRESS =

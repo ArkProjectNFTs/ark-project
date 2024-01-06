@@ -21,6 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Deploy or update Starknet contracts
+
       - name: Deploy CDK Stack Goerli
         env:
           RPC_URL: ${{ secrets.RPC_URL_GOERLI }}

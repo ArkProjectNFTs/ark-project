@@ -8,14 +8,6 @@ export async function upgradeMessaging(
   provider: sn.RpcProvider,
   contractAddress: string
 ) {
-  console.log("Using StarkNet provider:", provider.nodeUrl);
-  console.log(artifactsPath);
-  console.log("-------------------");
-  console.log(deployerAccount);
-  console.log("-------------------");
-  console.log(provider);
-  console.log("-------------------");
-  console.log(provider);
   const artifacts = common.loadArtifacts(
     artifactsPath,
     "ark_starknet_appchain_messaging"
