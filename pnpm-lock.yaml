@@ -153,8 +153,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       starknet:
-        specifier: 5.22.0
-        version: 5.22.0
+        specifier: 5.24.3
+        version: 5.24.3
     devDependencies:
       '@types/node':
         specifier: ^20.10.1
@@ -6844,6 +6844,20 @@ packages:
     resolution: {integrity: sha512-tWh1onddmhoiY7mAXad7NcdXl3xFpNdPbqZJNOVbmbwmxtQf12Zinr+h+sUNOAyCzzaB9+kGRaYyefxK/8F5hw==}
     dependencies:
       '@noble/curves': 1.2.0
+      '@scure/starknet': 0.3.0
+      isomorphic-fetch: 3.0.0
+      lossless-json: 2.0.11
+      pako: 2.1.0
+      url-join: 4.0.1
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
+  /starknet@5.24.3:
+    resolution: {integrity: sha512-v0TuaNc9iNtHdbIRzX372jfQH1vgx2rwBHQDMqK4DqjJbwFEE5dog8Go6rGiZVW750NqRSWrZ7ahqyRNc3bscg==}
+    dependencies:
+      '@noble/curves': 1.2.0
+      '@scure/base': 1.1.5
       '@scure/starknet': 0.3.0
       isomorphic-fetch: 3.0.0
       lossless-json: 2.0.11

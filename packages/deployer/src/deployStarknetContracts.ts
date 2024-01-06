@@ -32,7 +32,8 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
   let messagingContract: sn.Contract;
   if (existingContracts[starknetNetwork].messaging) {
-    starknetSpinner.text = "Upgrading Messaging Contract...";
+    console.log("⚡ Upgrading Messaging Contract...");
+    starknetSpinner.text = "⚡ Upgrading Messaging Contract...";
     messagingContract = await upgradeMessaging(
       ARTIFACTS_PATH,
       starknetAdminAccount,
@@ -40,7 +41,8 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
       existingContracts[starknetNetwork].messaging
     );
   } else {
-    starknetSpinner.text = "Deploying Messaging Contract...";
+    console.log("⚡ Deploying Messaging Contract...");
+    starknetSpinner.text = "⚡ Deploying Messaging Contract...";
     messagingContract = await deployMessaging(
       ARTIFACTS_PATH,
       starknetAdminAccount,
@@ -56,14 +58,16 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   starknetSpinner.text = "⚡ Deploying Executor Contract...";
   let executorContract: sn.Contract;
   if (existingContracts[starknetNetwork].executor) {
+    console.log("⚡ Upgrading Executor Contract..");
     starknetSpinner.text = "⚡ Upgrading Executor Contract...";
     executorContract = await upgradeExecutor(
       ARTIFACTS_PATH,
       starknetAdminAccount,
       starknetProvider,
-      existingContracts[starknetNetwork].messaging
+      existingContracts[starknetNetwork].executor
     );
   } else {
+    starknetSpinner.text = "⚡ Deploying Executor Contract...";
     starknetSpinner.text = "⚡ Deploying Executor Contract...";
     executorContract = await deployExecutor(
       ARTIFACTS_PATH,

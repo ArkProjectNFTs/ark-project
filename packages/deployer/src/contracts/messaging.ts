@@ -18,7 +18,9 @@ export async function upgradeMessaging(
     casm: artifacts.casm
   });
 
-  await provider.waitForTransaction(transaction_hash);
+  if (transaction_hash) {
+    await provider.waitForTransaction(transaction_hash);
+  }
 
   const { abi } = await provider.getClassAt(contractAddress);
   if (abi === undefined) {
