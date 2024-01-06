@@ -1,6 +1,7 @@
 # arkproject in 🦀🦀
 
 ## Overview
+
 Rust libraries and binaries related to the ArkProject.
 
 This library aims at providing the building block
@@ -73,14 +74,17 @@ by Diri.
 
 Examples are available in the `example` folder.
 They can be run with the following command:
+
 ```
 RUST_LOG="ark=trace,storage=trace" cargo run --example diri
 ```
 
 To work on a specific package:
+
 ```
 cargo build -p <package>
 ```
 
 ## License
+
 Ark Project is licensed under the [Apache License](./LICENCE).
