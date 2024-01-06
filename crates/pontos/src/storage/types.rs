@@ -211,4 +211,6 @@ impl FromStr for ContractType {
 pub struct ContractInfo {
     pub contract_address: String,
     pub contract_type: String,
+    pub name: Option<String>,
+    pub symbol: Option<String>,
 }

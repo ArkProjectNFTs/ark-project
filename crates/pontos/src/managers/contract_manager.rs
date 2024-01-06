@@ -72,6 +72,8 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                 let info = ContractInfo {
                     contract_address: to_hex_str(&address),
                     contract_type: contract_type.to_string(),
+                    name: None,
+                    symbol: None,
                 };
 
                 self.storage
