@@ -1,4 +1,4 @@
-name: Solis Deploy Stack with Custom Environment
+name: Solis Deploy CDK Stack
 
 on:
   workflow_dispatch:

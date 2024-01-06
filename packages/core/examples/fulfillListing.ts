@@ -21,7 +21,7 @@ import {
 } from "../src/actions/account/account";
 import { approveERC20, approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
-import { getOrderHash, getOrderStatus } from "../src/actions/read";
+import { getOrderStatus } from "../src/actions/read";
 import {
   STARKNET_ETH_ADDRESS,
   STARKNET_EXECUTOR_ADDRESS,

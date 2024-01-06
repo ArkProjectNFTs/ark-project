@@ -31,28 +31,3 @@ jobs:
           docker buildx create --use --name ecr-deploy-builder-solis
           docker buildx build --tag ${{ secrets.ECR_URL }}:solis-latest --file ./Dockerfile .
           docker push ${{ secrets.ECR_URL }}:solis-latest
-
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "14"
-
-      - name: Change to CDK directory
-        run: cd aws/cdk-solis-ecs
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Deploy CDK Stack Goerli
-        env:
-          RPC_URL: ${{ secrets.RPC_URL_GOERLI }}
-          MESSAGING_ADDRESS: ${{ secrets.MESSAGING_ADDRESS_GOERLI }}
-          SENDER_ADDRESS: ${{ secrets.SENDER_ADDRESS_GOERLI }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_GOERLI }}
-        run: npx cdk deploy --all --require-approval never
