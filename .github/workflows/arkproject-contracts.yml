@@ -1,4 +1,4 @@
-name: ArkProject contracts CI
+name: ArkProject contracts ci
 
 on:
   push:

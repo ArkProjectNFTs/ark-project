@@ -1,4 +1,4 @@
-name: Bump version
+name: ArkProject github release
 on:
   push:
     branches:

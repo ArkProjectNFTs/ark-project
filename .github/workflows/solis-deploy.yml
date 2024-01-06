@@ -1,0 +1,65 @@
+name: Solis Deploy CDK Stack
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Buils contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: 2.3.1
+      - name: Build contracts
+        run: cd contracts && scarb build -w
+  deploy:
+    name: Deploy Solis orderbook contract on goerli
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: pnpm install
+      - name: Deploy Solis orderbook contract
+        env:
+          STARKNET_NODE_URL_GOERLI: ${{ secrets.STARKNET_NODE_URL_GOERLI }}
+          SOLIS_NODE_URL_GOERLI: ${{ secrets.SOLIS_NODE_URL_GOERLI }}
+          STARKNET_ADMIN_ADDRESS_GOERLI: ${{ secrets.STARKNET_ADMIN_ADDRESS_GOERLI }}
+          STARKNET_ADMIN_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_GOERLI }}
+          STARKNET_ADMIN_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI }}
+          SOLIS_ADMIN_ADDRESS_DEV: ${{ secrets.SOLIS_ADMIN_ADDRESS_DEV }}
+          SOLIS_ADMIN_PRIVATE_KEY_DEV: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_DEV }}
+          SOLIS_ADMIN_PUBLIC_KEY_DEV: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_DEV }}
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
+
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version: "14"
+
+  #     - name: Change to CDK directory
+  #       run: cd aws/cdk-solis-ecs
+
+  #     - name: Install dependencies
+  #       run: npm install
+
+  #     - name: Deploy or update Starknet contracts
+
+  #     - name: Deploy CDK Stack Goerli
+  #       env:
+  #         RPC_URL: ${{ secrets.RPC_URL_GOERLI }}
+  #         MESSAGING_ADDRESS: ${{ secrets.MESSAGING_ADDRESS_GOERLI }}
+  #         SENDER_ADDRESS: ${{ secrets.SENDER_ADDRESS_GOERLI }}
+  #         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_GOERLI }}
+  #       run: npx cdk deploy --all --require-approval never
