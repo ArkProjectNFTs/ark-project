@@ -29,5 +29,5 @@ jobs:
       - name: Build Solis, tag, and push image to Amazon ECR
         run: |
           docker buildx create --use --name ecr-deploy-builder-solis
-          docker buildx build --tag ${{ secrets.ECR_URL }}:solis-latest --file ./Dockerfile .
+          docker buildx build --tag ${{ secrets.ECR_URL }}:solis-latest --file ./Dockerfile . --load
           docker push ${{ secrets.ECR_URL }}:solis-latest
