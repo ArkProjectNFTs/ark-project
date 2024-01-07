@@ -12,18 +12,18 @@ on:
 # 5. Deploy Orderbook contract on Solis goerli
 
 jobs:
-  # build:
-  #   name: Buils contracts
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
-  #     - name: Setup Scarb
-  #       uses: software-mansion/setup-scarb@v1
-  #       with:
-  #         scarb-version: 2.3.1
-  #     - name: Build contracts
-  #       run: cd contracts && scarb build -w
+  build:
+    name: Buils contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: 2.3.1
+      - name: Build contracts
+        run: cd contracts && scarb build -w
   deploy:
     runs-on: ubuntu-latest
     steps:

@@ -5,8 +5,8 @@ on:
     branches:
       - main
   # TODO: remove this once merged into main
-  pull_request:
-    types: [synchronize, opened, reopened]
+  # pull_request:
+  #   types: [synchronize, opened, reopened]
 
 jobs:
   build-and-push-solis-image:
