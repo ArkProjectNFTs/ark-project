@@ -45,18 +45,18 @@ jobs:
           npm install -g aws-cdk
           pnpm install
 
-      - name: Change to CDK directory
-
-        run: cd aws/cdk-solis-ecs
-      - name: Install dependencies
-        run: pnpm install
-
       - name: Read environment variables from file
         id: vars
         run: |
           content=`cat <your-json-file-path>`
           STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI=$(echo $content | jq -r '.goerli.messaging')
           echo "STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI=$STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI" >> $GITHUB_ENV
+
+      - name: Change to CDK directory
+        run: cd aws/cdk-solis-ecs
+
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Deploy CDK Stack Goerli
         env:
