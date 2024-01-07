@@ -34,7 +34,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-     - name: Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: "18"
@@ -46,7 +46,7 @@ jobs:
           pnpm install
 
       - name: Change to CDK directory
-        
+
         run: cd aws/cdk-solis-ecs
       - name: Install dependencies
         run: pnpm install
