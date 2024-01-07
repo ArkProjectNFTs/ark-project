@@ -1,9 +1,11 @@
 name: Solis Deploy CDK Stack
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     types: [synchronize, opened, reopened]
-
 # TODO: build order to deploy the arkproject on goerli
 # 1. Build contracts
 # 2. Deploy starknet contracts on goerli
