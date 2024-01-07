@@ -52,11 +52,10 @@ jobs:
           STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI=$(echo $content | jq -r '.goerli.messaging')
           echo "STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI=$STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI" >> $GITHUB_ENV
 
-      - name: Change to CDK directory
-        run: cd aws/cdk-solis-ecs
-
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          cd aws/cdk-solis-ecs
+          pnpm install
 
       - name: Deploy CDK Stack Goerli
         env:
@@ -64,7 +63,9 @@ jobs:
           STARKNET_APPCHAIN_MESSAGING_ADDRESS: ${{ env.STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI }}
           STARKNET_SOLIS_ACCOUNT_ADDRESS: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI }}
           STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI }}
-        run: pnpm cdk deploy --all --require-approval never
+        run: |
+          cd aws/cdk-solis-ecs
+          pnpm cdk deploy --all --require-approval never
 
   # deploy:
   #   name: Deploy Solis orderbook contract on goerli
