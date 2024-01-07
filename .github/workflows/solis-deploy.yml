@@ -39,6 +39,17 @@ jobs:
         with:
           node-version: "18"
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
       - name: Install pnpm
         run: |
           npm install -g pnpm
@@ -59,10 +70,6 @@ jobs:
 
       - name: Deploy CDK Stack Goerli
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
           STARKNET_NODE_URL: ${{ secrets.STARKNET_NODE_URL_GOERLI }}
           STARKNET_APPCHAIN_MESSAGING_ADDRESS: ${{ env.STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI }}
           STARKNET_SOLIS_ACCOUNT_ADDRESS: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI }}
