@@ -40,7 +40,7 @@ jobs:
         run: cd aws/cdk-solis-ecs
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Read environment variables from file
         id: vars
