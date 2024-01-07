@@ -27,7 +27,7 @@ jobs:
       - name: Build contracts
         run: cd contracts && scarb build -w
 
-  deploy:
+  deploy-solis:
     name: Deploy Solis latest
     runs-on: ubuntu-latest
     steps:
