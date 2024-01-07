@@ -14,7 +14,7 @@ export class CdkSolisStack extends cdk.Stack {
 
     // VPC Lookup
     const vpc = ec2.Vpc.fromLookup(this, "ArkVPC", {
-      vpcId: "vpc-050257a2b877850af"
+      vpcId: "vpc-0d11f7ec183208e08"
     });
 
     // ECS Cluster

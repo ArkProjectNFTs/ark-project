@@ -58,5 +58,49 @@
   "hosted-zone:account=223605539824:domainName=arkproject.dev:region=us-east-1": {
     "Id": "/hostedzone/Z057403917YO7G55AYYF9",
     "Name": "arkproject.dev."
+  },
+  "vpc-provider:account=223605539824:filter.vpc-id=vpc-0d11f7ec183208e08:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0d11f7ec183208e08",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "223605539824",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-043e080e03b9f4ba1",
+            "cidr": "10.0.0.0/18",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0ccb49d56b88eb6dd"
+          },
+          {
+            "subnetId": "subnet-01fb3b6077af7c052",
+            "cidr": "10.0.64.0/18",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-09b85c6c9ff862e54"
+          }
+        ]
+      },
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-044b09768846a6c22",
+            "cidr": "10.0.128.0/18",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-040106c3b806f9c8c"
+          },
+          {
+            "subnetId": "subnet-0dcdfd6d4b554f5b6",
+            "cidr": "10.0.192.0/18",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-01d1f5cc64632ab78"
+          }
+        ]
+      }
+    ]
   }
 }
