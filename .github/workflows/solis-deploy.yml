@@ -25,7 +25,9 @@ jobs:
         with:
           scarb-version: 2.3.1
       - name: Build contracts
-        run: cd contracts && scarb build -w
+        run: |
+          cd contracts
+          scarb build -workspace
 
   deploy-solis:
     name: Deploy Solis latest
