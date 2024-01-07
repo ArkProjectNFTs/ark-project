@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: Buils contracts
+    name: Build contracts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -26,7 +26,9 @@ jobs:
           scarb-version: 2.3.1
       - name: Build contracts
         run: cd contracts && scarb build -w
+
   deploy:
+    name: Deploy Solis latest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
