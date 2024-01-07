@@ -39,6 +39,11 @@ jobs:
       - name: Change to CDK directory
         run: cd aws/cdk-solis-ecs
 
+      - name: Install pnpm
+        run: |
+          npm install -g pnpm
+          npm install -g aws-cdk
+
       - name: Install dependencies
         run: pnpm install
 
@@ -55,7 +60,7 @@ jobs:
           STARKNET_APPCHAIN_MESSAGING_ADDRESS: ${{ env.STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI }}
           STARKNET_SOLIS_ACCOUNT_ADDRESS: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI }}
           STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI }}
-        run: npx cdk deploy --all --require-approval never
+        run: pnpm cdk deploy --all --require-approval never
 
   # deploy:
   #   name: Deploy Solis orderbook contract on goerli
