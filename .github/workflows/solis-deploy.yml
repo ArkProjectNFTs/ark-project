@@ -50,7 +50,7 @@ jobs:
       - name: Build contracts
         run: |
           cd contracts
-          scarb build -workspace
+          scarb build --workspace
 
   deploy-solis:
     needs: build-and-push-solis-image
