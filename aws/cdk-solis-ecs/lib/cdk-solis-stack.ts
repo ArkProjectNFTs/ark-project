@@ -53,14 +53,14 @@ export class CdkSolisStack extends cdk.Stack {
         "solis-latest"
       ),
       environment: {
-        RPC_URL: process.env.STARKNET_NODE_URL || "default_rpc_url", // Fallback to a default if not set
-        CONTRACT_ADDRESS:
+        STARKNET_NODE_URL: process.env.STARKNET_NODE_URL || "default_rpc_url", // Fallback to a default if not set
+        STARKNET_APPCHAIN_MESSAGING_ADDRESS:
           process.env.STARKNET_APPCHAIN_MESSAGING_ADDRESS ||
           "default_contract_address",
-        SENDER_ADDRESS:
+        STARKNET_SOLIS_ACCOUNT_ADDRESS:
           process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS ||
           "default_sender_address",
-        PRIVATE_KEY:
+        STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY:
           process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY ||
           "default_private_key"
       },
