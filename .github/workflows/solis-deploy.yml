@@ -48,7 +48,7 @@ jobs:
       - name: Read environment variables from file
         id: vars
         run: |
-          content=`cat <your-json-file-path>`
+          content=`cat contracts.json`
           STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI=$(echo $content | jq -r '.goerli.messaging')
           echo "STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI=$STARKNET_APPCHAIN_MESSAGING_ADDRESS_GOERLI" >> $GITHUB_ENV
 
