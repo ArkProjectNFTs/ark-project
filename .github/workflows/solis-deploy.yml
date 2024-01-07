@@ -36,14 +36,15 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Change to CDK directory
-        run: cd aws/cdk-solis-ecs
-
       - name: Install pnpm
         run: |
           npm install -g pnpm
           npm install -g aws-cdk
+          pnpm install
 
+      - name: Change to CDK directory
+        
+        run: cd aws/cdk-solis-ecs
       - name: Install dependencies
         run: pnpm install
 
