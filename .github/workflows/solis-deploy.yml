@@ -38,6 +38,7 @@ jobs:
           docker push ${{ secrets.ECR_URL }}:solis-latest
 
   build:
+    depends-on: build-and-push-solis-image
     name: Build contracts
     runs-on: ubuntu-latest
     steps:
@@ -53,6 +54,7 @@ jobs:
           scarb build -workspace
 
   deploy-solis:
+    depends-on: build-and-push-solis-image
     name: Deploy Solis latest
     runs-on: ubuntu-latest
     steps:
