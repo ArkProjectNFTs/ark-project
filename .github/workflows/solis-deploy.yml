@@ -109,6 +109,22 @@ jobs:
           cd aws/cdk-solis-ecs
           pnpm cdk deploy --all --require-approval never
 
+      - name: Deploy orderbook contracts
+        env:
+          STARKNET_NODE_URL_GOERLI: ${{ secrets.STARKNET_NODE_URL_GOERLI }}
+          SOLIS_NODE_URL_GOERLI: ${{ secrets.SOLIS_NODE_URL_GOERLI }}
+          STARKNET_ADMIN_ADDRESS_GOERLI: ${{ secrets.STARKNET_ADMIN_ADDRESS_GOERLI }}
+          STARKNET_ADMIN_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_GOERLI }}
+          STARKNET_ADMIN_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI }}
+          SOLIS_ADMIN_ADDRESS_GOERLI: ${{ secrests.SOLIS_ADMIN_ADDRESS_GOERLI }}
+          SOLIS_ADMIN_PRIVATE_KEY_GOERLI: ${{ secrests.SOLIS_ADMIN_PRIVATE_KEY_GOERLI }}
+          SOLIS_ADMIN_PUBLIC_KEY_GOERLI: ${{ secrests.SOLIS_ADMIN_PUBLIC_KEY_GOERLI }}
+        run: |
+          pnpm run deploy:solis -- --solis goerli --starknet goerli
+
   # deploy:
   #   name: Deploy Solis orderbook contract on goerli
   #   runs-on: ubuntu-latest

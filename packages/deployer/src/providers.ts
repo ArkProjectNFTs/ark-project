@@ -26,10 +26,10 @@ export function getSolisProvider(solisNetwork?: string) {
       solisNodeUrl = process.env.SOLIS_NODE_URL_DEV || "";
       break;
     case "mainnet":
-      solisNodeUrl = process.env.SOLIS_NODE_URL_GOERLI || "";
+      solisNodeUrl = process.env.SOLIS_NODE_URL_MAINNET || "";
       break;
     case "goerli":
-      solisNodeUrl = process.env.SOLIS_NODE_URL_MAINNET || "";
+      solisNodeUrl = process.env.SOLIS_NODE_URL_GOERLI || "";
       break;
     default:
       throw new Error(`Unsupported solisNetwork: ${solisNetwork}`);
