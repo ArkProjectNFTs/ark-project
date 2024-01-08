@@ -1,7 +1,5 @@
 # Using the Deployer
 
-First use case local starknet with local solis
-
 ### Environment Settings
 
 Navigate to the `root` directory and copy the .env.example for your needs,
@@ -76,9 +74,13 @@ Execute the following commands in the `root` directory:
 
 ## Running & deploying ArkProject locally
 
+**Install the dependencies:**
+Follow the dojo installation guide:
+https://book.dojoengine.org/getting-started/quick-start.html
+
 **Use the following command:**
 
-Start a katana for starknet
+Start a katana for starknet with the previously installed dojo katana
 
 `katana`
 
