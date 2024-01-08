@@ -103,7 +103,8 @@ and
 
 at the root of the repository execute:
 
-`cargo run -p solis -- --messaging ./messaging.local.json --dev`
+`cargo run -p solis -- --messaging crates/solis/messaging.local.json --dev`
+
 (the messaging.local.json file should be relative to your network, in our case local)
 
 **6. Deploy Solis contracts using:**
