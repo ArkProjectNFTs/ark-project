@@ -14,47 +14,32 @@ on:
 # 5. Deploy Orderbook contract on Solis goerli
 
 jobs:
-  build-and-push-solis-image:
-    name: Build and push Solis image to Amazon ECR
-    runs-on: ubuntu-latest # This specifies the runner environment
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v2
+  # build-and-push-solis-image:
+  #   name: Build and push Solis image to Amazon ECR
+  #   runs-on: ubuntu-latest # This specifies the runner environment
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v2
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          mask-password: true
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+  #     - name: Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v1
+  #       with:
+  #         mask-password: true
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  #         AWS_REGION: ${{ secrets.AWS_REGION }}
 
-      - name: Build Solis, tag, and push image to Amazon ECR
-        run: |
-          docker buildx create --use --name ecr-deploy-builder-solis
-          docker buildx build --tag ${{ secrets.ECR_URL }}:solis-latest --file ./Dockerfile . --load
-          docker push ${{ secrets.ECR_URL }}:solis-latest
-
-  build:
-    name: Build ArkProject contracts
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Setup Scarb
-        uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: 2.3.1
-      - name: Build contracts
-        run: |
-          cd contracts
-          scarb build --workspace
+  #     - name: Build Solis, tag, and push image to Amazon ECR
+  #       run: |
+  #         docker buildx create --use --name ecr-deploy-builder-solis
+  #         docker buildx build --tag ${{ secrets.ECR_URL }}:solis-latest --file ./Dockerfile . --load
+  #         docker push ${{ secrets.ECR_URL }}:solis-latest
 
   deploy-solis:
-    needs: build-and-push-solis-image
+    # needs: build-and-push-solis-image
     name: Deploy Solis latest image to Amazon ECS
     runs-on: ubuntu-latest
     steps:
@@ -109,6 +94,32 @@ jobs:
           cd aws/cdk-solis-ecs
           pnpm cdk deploy --all --require-approval never
 
+  deploy-orderbook:
+    needs: deploy-solis
+    runs-on: ubuntu-latest
+    name: Build & Deploy orderbook contract
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: 2.3.1
+
+      - name: Build contracts
+        run: |
+          cd contracts
+          scarb build --workspace
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Deploy orderbook contracts
         env:
           STARKNET_NODE_URL_GOERLI: ${{ secrets.STARKNET_NODE_URL_GOERLI }}
@@ -124,25 +135,3 @@ jobs:
           SOLIS_ADMIN_PUBLIC_KEY_GOERLI: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_GOERLI }}
         run: |
           pnpm run deploy:solis -- --solis goerli --starknet goerli
-
-  # deploy:
-  #   name: Deploy Solis orderbook contract on goerli
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
-  #     - name: Install dependencies
-  #       run: pnpm install
-  #     - name: Deploy Solis orderbook contract
-  #       env:
-  #         STARKNET_NODE_URL_GOERLI: ${{ secrets.STARKNET_NODE_URL_GOERLI }}
-  #         SOLIS_NODE_URL_GOERLI: ${{ secrets.SOLIS_NODE_URL_GOERLI }}
-  #         STARKNET_ADMIN_ADDRESS_GOERLI: ${{ secrets.STARKNET_ADMIN_ADDRESS_GOERLI }}
-  #         STARKNET_ADMIN_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_GOERLI }}
-  #         STARKNET_ADMIN_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_GOERLI }}
-  #         STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI }}
-  #         STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI }}
-  #         STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI }}
-  #         SOLIS_ADMIN_ADDRESS_DEV: ${{ secrets.SOLIS_ADMIN_ADDRESS_DEV }}
-  #         SOLIS_ADMIN_PRIVATE_KEY_DEV: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_DEV }}
-  #         SOLIS_ADMIN_PUBLIC_KEY_DEV: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_DEV }}
