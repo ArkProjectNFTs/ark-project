@@ -6,12 +6,6 @@ on:
       - main
   pull_request:
     types: [synchronize, opened, reopened]
-# TODO: build order to deploy the arkproject on goerli
-# 1. Build contracts
-# 2. Deploy starknet contracts on goerli
-# 3. Save starknet contract addresses in github secrets
-# 4. Deploy CDK stack
-# 5. Deploy Orderbook contract on Solis goerli
 
 jobs:
   # build-and-push-solis-image:
@@ -37,6 +31,47 @@ jobs:
   #         docker buildx create --use --name ecr-deploy-builder-solis
   #         docker buildx build --tag ${{ secrets.ECR_URL }}:solis-latest --file ./Dockerfile . --load
   #         docker push ${{ secrets.ECR_URL }}:solis-latest
+
+  deploy-starknet:
+    runs-on: ubuntu-latest
+    name: Build & Deploy starknet contracts
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: 2.3.1
+
+      - name: Build contracts
+        run: |
+          cd contracts
+          scarb build --workspace
+
+      - name: Install pnpm & dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install
+
+      - name: Deploy orderbook contracts
+        env:
+          STARKNET_NODE_URL_GOERLI: ${{ secrets.STARKNET_NODE_URL_GOERLI }}
+          SOLIS_NODE_URL_GOERLI: ${{ secrets.SOLIS_NODE_URL_GOERLI }}
+          STARKNET_ADMIN_ADDRESS_GOERLI: ${{ secrets.STARKNET_ADMIN_ADDRESS_GOERLI }}
+          STARKNET_ADMIN_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_GOERLI }}
+          STARKNET_ADMIN_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI }}
+          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI }}
+        run: |
+          pnpm run deploy:starknet -- --starknet goerli
+          pnpm run deploy:starknet:tokens -- --starknet goerli
 
   deploy-solis:
     # needs: build-and-push-solis-image
