@@ -9,7 +9,7 @@ import { getContractsFilePath } from "./utils";
       goerli: {},
       sepolia: {},
       mainnet: {},
-      local: {}
+      dev: {}
     })
   );
 })();

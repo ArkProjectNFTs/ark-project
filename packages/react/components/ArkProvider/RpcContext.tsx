@@ -57,7 +57,6 @@ export function RpcProviderProvider(
       !localStorage.getItem("burner_private_key") &&
       !localStorage.getItem("burner_public_key")
     ) {
-      console.log("Creating burner account");
       createAccount(value.rpcProvider).then(
         ({ address, privateKey, publicKey }) => {
           console.log("Burner account created");

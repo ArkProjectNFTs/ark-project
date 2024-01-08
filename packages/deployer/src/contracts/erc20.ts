@@ -21,17 +21,12 @@ export async function deployERC20(
     symbol
   });
 
-  const deployR = await account.declareAndDeploy(
-    {
-      contract: artifacts.sierra,
-      casm: artifacts.casm,
-      constructorCalldata: contractConstructor,
-      salt: "1337"
-    },
-    {
-      maxFee: 0
-    }
-  );
+  const deployR = await account.declareAndDeploy({
+    contract: artifacts.sierra,
+    casm: artifacts.casm,
+    constructorCalldata: contractConstructor,
+    salt: "1337"
+  });
 
   if (deployR.declare.transaction_hash) {
     await provider.waitForTransaction(deployR.declare.transaction_hash);

@@ -14,10 +14,14 @@ export async function upgradeExecutor(
 ) {
   const artifacts = getArtifacts(artifactsPath);
 
-  const { class_hash } = await deployerAccount.declareIfNot({
+  const { class_hash, transaction_hash } = await deployerAccount.declareIfNot({
     contract: artifacts.sierra,
     casm: artifacts.casm
   });
+
+  if (transaction_hash) {
+    await provider.waitForTransaction(transaction_hash);
+  }
 
   const { abi } = await provider.getClassAt(contractAddress);
   if (abi === undefined) {

@@ -7,7 +7,7 @@ const Account = () => {
   const { account, address, status } = useAccount();
 
   if (status === "disconnected") return <p>Disconnected</p>;
-  console.log(account);
+
   const signMessage = async () => {
     if (!account) return;
     const typedDataValidate: TypedData = {
@@ -30,8 +30,6 @@ const Account = () => {
       }
     };
     const signature = await account.signMessage(typedDataValidate);
-    console.log(signature);
-    console.log(account);
   };
 
   return (

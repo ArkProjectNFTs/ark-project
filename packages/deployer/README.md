@@ -1,46 +1,97 @@
-## Update Katana Accounts in Environment Settings
+# Using the Deployer
 
-Navigate to the `root` directory and copy the .env.example for your needs
+First use case local starknet with local solis
 
-```bash
-cp env.example .env
-```
+### Environment Settings
 
-## Choose your networks and change the env accordingly
+Navigate to the `root` directory and copy the .env.example for your needs,
 
-```bash
-STARKNET_NETWORK_ID=local
-SOLIS_NETWORK_ID=local
-```
+**Warning** env.example use the default katana accounts, if they change you need to update your .env file
 
-## Clear contracts.json File if needed
+### Contracts.json file
 
-the contract.json file is a reference of the deployed contract and is used to deploy contracts if empty or upgrade them is it has values
+the contract.json file is a reference of the deployed contracts, when working locally you may need to clear it to redeploy the contracts
 
-## Deploy starknet contracts
+## Contracts
 
-- Execute the following commands in the `root` directory:
+### Starknet
 
-  - `pnpm run deploy:starknet:all`
+- appchain_messaging - appchain messaging contract to receive & send messages from starknet
+- executor - executor contract to execute the messages from the appchain (swap assets)
+- nft - nft contract to mint & transfer nft from starknet used as a test contract
+- erc20 - erc20 contract to mint & transfer erc20 from starknet used as a test contract only on katana becase base one doesn't support erc20
 
-## Run Solis with Updated Configuration
+### Solis
 
-- Use the following command:
+- orderbook - orderbook contract to store the orders
 
-  - `RUST_LOG=trace cargo run -p solis -- --messaging ./messaging.local.json --dev`
+## Deployer cmd list
 
-- Deploy Solis using:
+Execute the following commands in the `root` directory:
 
-  - `(core/deployer) pnpm run deploy:solis`
+**Deploy all Starknet contracts**
 
-## Update Core SDK constants
+`pnpm run deploy:starknet:all`
 
-- Modify the addresses in `packages/core/src/constants.ts` as needed using the root file contract.json
+- Using this cmd will clean the contracts.json file
+- Deploy all starknet contract:
+  - appchain_messaging
+  - executor
+  - nft
+  - erc20
 
-## Use the SDK
+**Deploy ArkProject Starknet contracts**
 
--In the (core) directory, run:
+`pnpm run deploy:starknet`
 
-```bash
-npx ts-node ./examples/fulfillListing.ts
-```
+- Deploy starknet contracts:
+  - appchain_messaging
+  - executor
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
+
+**Deploy Starknet tokens contracts, for testing purpose**
+
+`pnpm run deploy:starknet:tokens`
+
+- Deploy starknet contracts:
+
+  - nft
+  - erc20
+
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
+
+**Deploy ArkProject Solis contracts**
+
+`pnpm run deploy:solis`
+
+- Deploy solis contracts:
+
+  - orderbook
+
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
+  - `-so, --solis <network>` - solis network to deploy on (default: "dev")
+
+## Running & deploying ArkProject locally
+
+**Use the following command:**
+
+Start a katana for starknet
+
+`katana`
+
+Deploy all Starknet contracts on katana
+
+`pnpm run deploy:starknet:all`
+
+Start Solis
+
+`RUST_LOG=trace cargo run -p solis -- --messaging ./messaging.local.json --dev`
+
+**Deploy Solis contracts using:**
+
+`pnpm run deploy:solis`
+
+You can now use the SDK locally

@@ -8,8 +8,6 @@
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use ark_orderbook::order::order_v1::OrderV1;
-use debug::PrintTrait;
-
 
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
@@ -209,6 +207,8 @@ mod orderbook {
     struct OrderExecuted {
         #[key]
         order_hash: felt252,
+        #[key]
+        order_status: OrderStatus,
     // info: ExecutionInfo,
     }
 
@@ -260,8 +260,9 @@ mod orderbook {
     ) {
         // Solis already checks that ALL the messages are coming from the executor contract.
         // TODO: anyway, it can be useful to have an extra check here.
-
-        order_status_write(info.order_hash, OrderStatus::Fulfilled);
+        order_status_write(info.order_hash, OrderStatus::Executed);
+        let order_status = order_status_read(info.order_hash).unwrap();
+        self.emit(OrderExecuted { order_hash: info.order_hash, order_status: order_status });
     }
 
     // *************************************************************************

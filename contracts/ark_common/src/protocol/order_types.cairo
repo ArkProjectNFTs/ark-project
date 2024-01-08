@@ -134,7 +134,7 @@ impl Felt252TryIntoOrderStatus of TryInto<felt252, OrderStatus> {
     fn try_into(self: felt252) -> Option<OrderStatus> {
         if self == 'OPEN' {
             Option::Some(OrderStatus::Open)
-        } else if self == 'EXECUTING' {
+        } else if self == 'EXECUTED' {
             Option::Some(OrderStatus::Executed)
         } else if self == 'FULFILLED' {
             Option::Some(OrderStatus::Fulfilled)

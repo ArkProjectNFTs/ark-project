@@ -6,10 +6,12 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "deploy:solis": "turbo run deploy:solis",
-    "deploy:starknet:tokens": "turbo run deploy:starknet:tokens",
-    "deploy:starknet": "turbo run deploy:starknet",
-    "deploy:starknet:all": "turbo run deploy:starknet:all"
+    "accounts:new": "dotenv -- turbo run accounts:new",
+    "accounts:deploy": "dotenv -- turbo run accounts:deploy",
+    "deploy:solis": "dotenv -- turbo run deploy:solis",
+    "deploy:starknet:tokens": "dotenv -- turbo run deploy:starknet:tokens",
+    "deploy:starknet": "dotenv -- turbo run deploy:starknet",
+    "deploy:starknet:all": "dotenv -- turbo run deploy:starknet:all"
   },
   "devDependencies": {
     "@ark-project/eslint-config": "workspace:*",
@@ -22,6 +24,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "^4.1.1"
+    "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
+    "dotenv-cli": "^7.3.0"
   }
 }
