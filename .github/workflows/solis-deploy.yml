@@ -117,8 +117,10 @@ jobs:
           cd contracts
           scarb build --workspace
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Install pnpm & dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install
 
       - name: Deploy orderbook contracts
         env:
