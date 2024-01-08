@@ -14,7 +14,7 @@ async-trait = "0.1.68"
 base64 = "0.21.2"
 blockifier = { git = "https://github.com/starkware-libs/blockifier", tag = "v0.4.0-rc9.2" }
 cairo-lang-casm = "2.4.0"
-cairo-lang-compiler = "2.4.0"
+cairo-lang-compiler = "2.4.3"
 cairo-lang-debug = "2.4.0"
 cairo-lang-defs = "2.4.0"
 cairo-lang-diagnostics = "2.4.0"
