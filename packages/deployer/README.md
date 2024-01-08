@@ -93,10 +93,6 @@ With the previously installed dojo, start katana using the following command:
 
 at the root of the repository execute:
 
-`pnpm run deploy:starknet:all`
-
-or
-
 `pnpm run deploy:starknet`
 
 and
