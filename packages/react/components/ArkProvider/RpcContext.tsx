@@ -10,23 +10,18 @@ import React, {
 
 import { RpcProvider } from "starknet";
 
-import { createAccount } from "@ark-project/core";
-
-export enum Network {
-  Mainnet,
-  Testnet,
-  Dev
-}
+import { createAccount, Network } from "@ark-project/core";
 
 const NETWORK_TO_RPC_NODE_URL: Record<Network, string> = {
-  [Network.Mainnet]: "https://solis.arkproject.dev",
-  [Network.Testnet]: "https://staging.solis.arkproject.dev",
-  [Network.Dev]: "http://localhost:7777"
+  mainnet: "https://solis.arkproject.dev",
+  testnet: "https://staging.solis.arkproject.dev",
+  dev: "http://localhost:7777"
 };
 
 type RpcContextValue =
   | {
       rpcProvider: RpcProvider;
+      network: Network;
     }
   | undefined;
 
@@ -45,7 +40,8 @@ export function RpcProviderProvider(
     () => ({
       rpcProvider: new RpcProvider({
         nodeUrl: NETWORK_TO_RPC_NODE_URL[network]
-      })
+      }),
+      network
     }),
     [network]
   );
@@ -82,7 +78,7 @@ export function useRpc() {
     throw new Error("useRpc must be used within an ArkProvider");
   }
 
-  const { rpcProvider } = rpcContext;
+  const { rpcProvider, network } = rpcContext;
 
-  return { rpcProvider };
+  return { rpcProvider, network };
 }

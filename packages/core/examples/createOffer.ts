@@ -6,6 +6,7 @@
 
 import { RpcProvider } from "starknet";
 
+import { Network } from "../src";
 import {
   createAccount,
   fetchOrCreateAccount
@@ -23,12 +24,18 @@ const arkProvider = new RpcProvider({
   nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
 });
 
+const network = (process.env.NETWORK ?? "dev") as Network;
+
 /**
  * Creates a listing on the blockchain using provided order details.
  *
  * @param {RpcProvider} provider - The RPC provider instance.
  */
-(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
+(async (
+  network: Network,
+  arkProvider: RpcProvider,
+  starknetProvider: RpcProvider
+) => {
   // Create a new account using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
   const starknetAccount = await fetchOrCreateAccount(
@@ -48,5 +55,5 @@ const arkProvider = new RpcProvider({
 
   // Create the listing on the blockchain using the order details
   console.log("Creating listing order...");
-  await createOffer(arkProvider, starknetAccount, arkAccount, order);
-})(arkProvider, starknetProvider);
+  await createOffer(network, arkProvider, starknetAccount, arkAccount, order);
+})(network, arkProvider, starknetProvider);

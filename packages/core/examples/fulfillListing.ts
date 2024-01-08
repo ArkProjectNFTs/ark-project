@@ -20,12 +20,9 @@ import {
 import { approveERC20, approveERC721 } from "../src/actions/contract";
 import { createListing, fulfillListing } from "../src/actions/order";
 import { getOrderHash, getOrderStatus } from "../src/actions/read";
-import {
-  STARKNET_ETH_ADDRESS,
-  STARKNET_EXECUTOR_ADDRESS,
-  STARKNET_NFT_ADDRESS
-} from "../src/constants";
-import { ListingV1 } from "../src/types";
+import { getContractAddresses } from "../src/constants";
+import { ListingV1, Network } from "../src/types";
+import { getExampleNFTAddress } from "./constants";
 
 // Initialize the RPC provider with the ArkChain node URL
 const starknetProvider = new RpcProvider({
@@ -37,13 +34,16 @@ const arkProvider = new RpcProvider({
   nodeUrl: process.env.ARKCHAIN_RPC_URL || ""
 });
 
+const network = (process.env.NETWORK ?? "dev") as Network;
+
 async function freeMint(
+  contractAddress: string,
   provider: RpcProvider,
   starknetAccount: Account,
   tokenId: BigNumberish
 ) {
   const mintResult = await starknetAccount.execute({
-    contractAddress: STARKNET_NFT_ADDRESS,
+    contractAddress,
     entrypoint: "mint",
     calldata: CallData.compile({
       recipient: starknetAccount.address,
@@ -58,19 +58,24 @@ async function freeMint(
  *
  * @param {RpcProvider} provider - The RPC provider instance.
  */
-(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
+(async (
+  network: Network,
+  arkProvider: RpcProvider,
+  starknetProvider: RpcProvider
+) => {
   console.log("=> process.env.ARKCHAIN_RPC_URL", process.env.ARKCHAIN_RPC_URL);
 
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
-
-  console.log("STARKNET_NFT_ADDRESS:", STARKNET_NFT_ADDRESS);
+  const STARKNET_NFT_ADDRESS = getExampleNFTAddress(network);
+  const { STARKNET_EXECUTOR_ADDRESS, STARKNET_ETH_ADDRESS } =
+    getContractAddresses(network);
 
   // Define the order details
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 5, // The ID of the token
+    tokenId: 16, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
   };
 
@@ -81,7 +86,12 @@ async function freeMint(
   );
 
   console.log("Minting token...", STARKNET_NFT_ADDRESS);
-  await freeMint(starknetProvider, starknetOffererAccount, order.tokenId);
+  await freeMint(
+    STARKNET_NFT_ADDRESS,
+    starknetProvider,
+    starknetOffererAccount,
+    order.tokenId
+  );
 
   console.log(
     `Approving token ${order.tokenId} to ${STARKNET_EXECUTOR_ADDRESS}...`
@@ -96,7 +106,13 @@ async function freeMint(
 
   console.log("Creating listing...");
   // Create the listing on the arkchain using the order details
-  await createListing(arkProvider, starknetOffererAccount, arkAccount, order);
+  await createListing(
+    network,
+    arkProvider,
+    starknetOffererAccount,
+    arkAccount,
+    order
+  );
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -105,6 +121,7 @@ async function freeMint(
   const { orderHash } = await getOrderHash(
     order.tokenId,
     order.tokenAddress,
+    network,
     arkProvider
   );
 
@@ -149,6 +166,7 @@ async function freeMint(
 
   // Cancel the order
   fulfillListing(
+    network,
     arkProvider,
     starknetFulfillerAccount,
     arkAccount,
@@ -158,7 +176,8 @@ async function freeMint(
 
   let { orderStatus: orderStatusAfter } = await getOrderStatus(
     orderHash,
+    network,
     arkProvider
   );
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
-})(arkProvider, starknetProvider);
+})(network, arkProvider, starknetProvider);

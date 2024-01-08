@@ -10,7 +10,7 @@ import { Status } from "../types/hooks";
 import { useOwner } from "./useOwner";
 
 export default function useFulfillListing() {
-  const { rpcProvider } = useRpc();
+  const { rpcProvider, network } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
   async function fulfillListing(
@@ -31,6 +31,7 @@ export default function useFulfillListing() {
     try {
       setStatus("loading");
       await fulfillListingCore(
+        network,
         rpcProvider,
         starknetAccount,
         new Account(rpcProvider, burner_address, burner_private_key),

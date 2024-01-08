@@ -66,3 +66,9 @@ export type BaseFulfillInfo = {
 
 export type FulfillListingInfo = BaseFulfillInfo;
 export type FulfillOfferInfo = BaseFulfillInfo;
+
+export enum Network {
+  Mainnet = "mainnet",
+  Testnet = "testnet",
+  Dev = "dev"
+}
