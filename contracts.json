@@ -1,12 +1,11 @@
 {
-  "goerli": {},
+  "goerli": {
+    "messaging": "0x6b10be5294e691612d2037f652b43d6d754a710c0545ca1d98e7e7dfa71347e",
+    "executor": "0x51bc267473e65bbbb39ace9460ca344adbeca027a713daef006d7fc7ee20c20",
+    "orderbook": "0x614b74e442f67f4778dc66a97444b81e3aeffc637be19a6c8530a3af6919d43",
+    "nftContract": "0x385796f9fb9ef68cd1d2829013ea582ae36f664a3fc36661a412cbd04bdccbd"
+  },
   "sepolia": {},
   "mainnet": {},
-  "local": {
-    "messaging": "0x385ac975687520f0b47f16aa619efb454d16c02388fd01b2fc36c7cb9235dc0",
-    "executor": "0x72edc1c4893cf4288b1f424b677e7f7c791def1c9826b615864821951875186",
-    "nftContract": "0x7a0d668105724f2db5197b353538af0454dd059cd0282444c22978493cf2acb",
-    "eth": "0x172ca09df59789985a1dfb68e0f3f554121eb313c68cf391bd78f9bf69abcf",
-    "orderbook": "0x3b08fc57e1fc53c8545fa799c7af60bf18b9f43dce739c24bf95f2f118da97"
-  }
+  "dev": {}
 }

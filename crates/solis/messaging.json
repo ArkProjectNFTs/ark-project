@@ -1,9 +1,0 @@
-{
-  "chain": "starknet",
-  "rpc_url": "",
-  "contract_address": "",
-  "sender_address": "",
-  "private_key": "",
-  "interval": 2,
-  "from_block": 0
-}

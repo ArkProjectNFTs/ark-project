@@ -1,4 +1,4 @@
-name: ArkProject crate CI
+name: ArkProject rs CI
 
 on:
   push:
