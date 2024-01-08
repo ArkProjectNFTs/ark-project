@@ -77,6 +77,7 @@ Execute the following commands in the `root` directory:
 **1. Build the Starknet contracts:**
 
 `cd contracts`
+
 `scarb build --workspace`
 
 **2. Install the dojo dependencies:**
@@ -90,6 +91,8 @@ With the previously installed dojo, start katana using the following command:
 
 **4. Deploy all Starknet contracts on katana**
 
+at the root of the repository execute:
+
 `pnpm run deploy:starknet:all`
 
 or
@@ -102,10 +105,14 @@ and
 
 **5. Start the Solis L3 sequencer:**
 
+at the root of the repository execute:
+
 `cargo run -p solis -- --messaging ./messaging.local.json --dev`
 (the messaging.local.json file should be relative to your network, in our case local)
 
-**Deploy Solis contracts using:**
+**6. Deploy Solis contracts using:**
+
+at the root of the repository execute:
 
 `pnpm run deploy:solis`
 
