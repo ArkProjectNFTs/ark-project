@@ -74,26 +74,41 @@ Execute the following commands in the `root` directory:
 
 ## Running & deploying ArkProject locally
 
-**Install the dependencies:**
+**1. Build the Starknet contracts:**
+
+`cd contracts`
+`scarb build --workspace`
+
+**2. Install the dojo dependencies:**
 Follow the dojo installation guide:
 https://book.dojoengine.org/getting-started/quick-start.html
 
-**Use the following command:**
-
-Start a katana for starknet with the previously installed dojo katana
+**3. Start a katana for starknet**
+With the previously installed dojo, start katana using the following command:
 
 `katana`
 
-Deploy all Starknet contracts on katana
+**4. Deploy all Starknet contracts on katana**
 
 `pnpm run deploy:starknet:all`
 
-Start Solis
+or
 
-`RUST_LOG=trace cargo run -p solis -- --messaging ./messaging.local.json --dev`
+`pnpm run deploy:starknet`
+
+and
+
+`pnpm run deploy:starknet:tokens`
+
+**5. Start the Solis L3 sequencer:**
+
+`cargo run -p solis -- --messaging ./messaging.local.json --dev`
+(the messaging.local.json file should be relative to your network, in our case local)
 
 **Deploy Solis contracts using:**
 
 `pnpm run deploy:solis`
 
 You can now use the SDK locally
+
+check the examples in the `packages/core` folder
