@@ -18,7 +18,9 @@ export async function upgradeMessaging(
     casm: artifacts.casm
   });
 
-  await provider.waitForTransaction(transaction_hash);
+  if (transaction_hash) {
+    await provider.waitForTransaction(transaction_hash);
+  }
 
   const { abi } = await provider.getClassAt(contractAddress);
   if (abi === undefined) {
@@ -42,7 +44,8 @@ export async function upgradeMessaging(
 export async function deployMessaging(
   artifactsPath: string,
   deployerAccount: sn.Account,
-  provider: sn.RpcProvider
+  provider: sn.RpcProvider,
+  appChainAccountAddress: string
 ) {
   const artifacts = common.loadArtifacts(
     artifactsPath,
@@ -52,7 +55,7 @@ export async function deployMessaging(
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
     owner: deployerAccount.address,
-    appchain_account: deployerAccount.address
+    appchain_account: appChainAccountAddress
   });
 
   const deployR = await deployerAccount.declareAndDeploy({

@@ -11,7 +11,7 @@
     "deploy:solis": "npm run build && node ./dist/deployArkchainContracts.js",
     "deploy:starknet:tokens": "npm run build && node ./dist/deployStarknetFreemintNft.js",
     "deploy:starknet": "npm run build && node ./dist/deployStarknetContracts.js",
-    "deploy:starknet:all": "npm run build && node ./dist/redeployStarknetContracts.js",
+    "deploy:starknet:all": "pnpm run deploy:clean && pnpm run deploy:starknet && pnpm run deploy:starknet:tokens",
     "deploy:clean": "npm run build && node ./dist/cleanContracts.js"
   },
   "keywords": [],
@@ -25,7 +25,7 @@
     "starknet": "5.24.3"
   },
   "devDependencies": {
-    "@types/node": "^20.10.1",
+    "@types/node": "^20.10.7",
     "typescript": "^5.3.3"
   }
 }

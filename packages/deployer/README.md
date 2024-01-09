@@ -1,46 +1,118 @@
-## Update Katana Accounts in Environment Settings
+# Using the Deployer
 
-Navigate to the `root` directory and copy the .env.example for your needs
+### Environment Settings
 
-```bash
-cp env.example .env
-```
+Navigate to the `root` directory and copy the .env.example for your needs,
 
-## Choose your networks and change the env accordingly
+**Warning** env.example use the default katana accounts, if they change you need to update your .env file
 
-```bash
-STARKNET_NETWORK_ID=local
-SOLIS_NETWORK_ID=local
-```
+### Contracts.json file
 
-## Clear contracts.json File if needed
+the contract.json file is a reference of the deployed contracts, when working locally you may need to clear it to redeploy the contracts
 
-the contract.json file is a reference of the deployed contract and is used to deploy contracts if empty or upgrade them is it has values
+## Contracts
 
-## Deploy starknet contracts
+### Starknet
 
-- Execute the following commands in the `root` directory:
+- appchain_messaging - appchain messaging contract to receive & send messages from starknet
+- executor - executor contract to execute the messages from the appchain (swap assets)
+- nft - nft contract to mint & transfer nft from starknet used as a test contract
+- erc20 - erc20 contract to mint & transfer erc20 from starknet used as a test contract only on katana becase base one doesn't support erc20
 
-  - `pnpm run deploy:starknet:all`
+### Solis
 
-## Run Solis with Updated Configuration
+- orderbook - orderbook contract to store the orders
 
-- Use the following command:
+## Deployer cmd list
 
-  - `RUST_LOG=trace cargo run -p solis -- --messaging ./messaging.local.json --dev`
+Execute the following commands in the `root` directory:
 
-- Deploy Solis using:
+**Deploy all Starknet contracts**
 
-  - `(core/deployer) pnpm run deploy:solis`
+`pnpm run deploy:starknet:all`
 
-## Update Core SDK constants
+- Using this cmd will clean the contracts.json file
+- Deploy all starknet contract:
+  - appchain_messaging
+  - executor
+  - nft
+  - erc20
 
-- Modify the addresses in `packages/core/src/constants.ts` as needed using the root file contract.json
+**Deploy ArkProject Starknet contracts**
 
-## Use the SDK
+`pnpm run deploy:starknet`
 
--In the (core) directory, run:
+- Deploy starknet contracts:
+  - appchain_messaging
+  - executor
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
 
-```bash
-npx ts-node ./examples/fulfillListing.ts
-```
+**Deploy Starknet tokens contracts, for testing purpose**
+
+`pnpm run deploy:starknet:tokens`
+
+- Deploy starknet contracts:
+
+  - nft
+  - erc20
+
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
+
+**Deploy ArkProject Solis contracts**
+
+`pnpm run deploy:solis`
+
+- Deploy solis contracts:
+
+  - orderbook
+
+- additional args:
+  - `-sn, --starknet <network>` - starknet network to deploy on (default: "dev")
+  - `-so, --solis <network>` - solis network to deploy on (default: "dev")
+
+## Running & deploying ArkProject locally
+
+**1. Build the Starknet contracts:**
+
+`cd contracts`
+
+`scarb build --workspace`
+
+**2. Install the dojo dependencies:**
+Follow the dojo installation guide:
+https://book.dojoengine.org/getting-started/quick-start.html
+
+**3. Start a katana for starknet**
+With the previously installed dojo, start katana using the following command:
+
+`katana`
+
+**4. Deploy all Starknet contracts on katana**
+
+at the root of the repository execute:
+
+`pnpm run deploy:starknet`
+
+and
+
+`pnpm run deploy:starknet:tokens`
+
+**5. Start the Solis L3 sequencer:**
+
+at the root of the repository execute:
+
+`cargo run -p solis -- --messaging crates/solis/messaging.local.json --dev`
+
+(the messaging.local.json file should be relative to your network, in our case local)
+
+**6. Deploy Solis contracts using:**
+
+at the root of the repository execute:
+
+`pnpm run deploy:solis`
+
+You can now use the SDK locally
+
+check the examples in the `packages/core` folder

@@ -3,73 +3,29 @@ import { promises as fs } from "fs";
 import { program } from "commander";
 import loading from "loading-cli";
 
+import { ARTIFACTS_PATH } from "./constants";
 import { updateOrderbookAddress } from "./contracts/executor";
 import { deployOrderBook, updateExecutorAddress } from "./contracts/orderbook";
 import { getSolisProvider, getStarknetProvider } from "./providers";
+import { setSolisAddresses } from "./solis";
+import { ProviderNetwork } from "./types";
 import {
   getContractsFilePath,
   getExistingContracts,
-  getExistingSolisAccounts,
-  getExistingStarknetAccounts
+  getSolisAccounts,
+  getStarknetAccounts
 } from "./utils";
 
 import "dotenv/config";
 
-const artifactsPath = "../../contracts/target/dev/";
-
-program.option("-sn, --starknet <type>", "Starknet Network", "dev");
-program.option("-so, --solis <type>", "Solis Network", "dev");
-program.parse();
-
-const options = program.opts();
-const starknetNetwork = options.starknet;
-const solisNetwork = options.solis;
-
-async function setSolisAddresses(
-  orderbookAddress: string,
-  executorAddress: string
-) {
-  const url = process.env.ARKCHAIN_RPC_URL || "http://127.0.0.1:7777";
-  const postData = {
-    jsonrpc: "2.0",
-    id: "1",
-    method: "katana_setSolisAddresses",
-    params: {
-      addresses: {
-        orderbook_arkchain: orderbookAddress,
-        executor_starknet: executorAddress
-      }
-    }
-  };
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(postData)
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    await response.json();
-    console.log("Ok");
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-
 async function deployArkchainContracts(
-  solisNetwork: string,
-  starknetNetwork: string
+  starknetNetwork: ProviderNetwork,
+  solisNetwork: ProviderNetwork
 ) {
+  const starknetProvider = getStarknetProvider(starknetNetwork);
   const solisProvider = getSolisProvider(solisNetwork);
-  const arkchainAccounts = getExistingSolisAccounts(solisNetwork);
-
-  const arkchainAdminAccount = arkchainAccounts[0];
+  const { starknetAdminAccount } = getStarknetAccounts(starknetNetwork);
+  const { arkchainAdminAccount } = getSolisAccounts(solisNetwork);
 
   console.log("\nARKCHAIN ACCOUNTS");
   console.log("=================\n");
@@ -83,7 +39,7 @@ async function deployArkchainContracts(
 
   if (arkchainAdminAccount) {
     const orderbookContract = await deployOrderBook(
-      artifactsPath,
+      ARTIFACTS_PATH,
       arkchainAdminAccount,
       solisProvider,
       arkchainAdminAccount.address
@@ -109,21 +65,21 @@ async function deployArkchainContracts(
 
     arkchainSpinner.text = "💠 Updating Executor Contract on Starknet...";
 
-    const starknetProvider = getStarknetProvider(starknetNetwork);
-    const starknetAccounts = getExistingStarknetAccounts(starknetNetwork);
-    const adminAccount = starknetAccounts[0];
-
-    if (adminAccount) {
+    if (starknetAdminAccount) {
       await updateOrderbookAddress(
         starknetProvider,
-        adminAccount,
+        starknetAdminAccount,
         executorAddress,
         orderbookContract.address
       );
     }
 
     arkchainSpinner.text = "💠 Updating Contracts on solis rpc...";
-    await setSolisAddresses(orderbookContract.address, executorAddress);
+    await setSolisAddresses(
+      orderbookContract.address,
+      executorAddress,
+      solisProvider.nodeUrl
+    );
 
     arkchainSpinner.stop();
     console.log("💠 Arkchain Contracts");
@@ -131,4 +87,12 @@ async function deployArkchainContracts(
   }
 }
 
-deployArkchainContracts(solisNetwork, starknetNetwork);
+program.option("-sn, --starknet <type>", "Starknet Network", "dev");
+program.option("-so, --solis <type>", "Solis Network", "dev");
+program.parse();
+
+const options = program.opts();
+const starknetNetwork = options.starknet;
+const solisNetwork = options.solis;
+
+deployArkchainContracts(starknetNetwork, solisNetwork);

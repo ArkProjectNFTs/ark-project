@@ -1,15 +1,17 @@
 import { promises as fs } from "fs";
 import { join } from "path";
 
-import { Command } from "commander";
+import { program } from "commander";
 import { Account, CallData } from "starknet";
+
+import "dotenv/config";
 
 import { getStarknetProvider } from "../providers";
 import { OZaccountClassHash } from "./constants";
 
 async function deployAccount(starknetNetwork: string) {
   const starknetProvider = getStarknetProvider(starknetNetwork);
-
+  console.log("Using StarkNet provider:", starknetProvider.nodeUrl);
   const accountsFilePath = join(
     __dirname,
     `../../accounts/${starknetNetwork}.json`
@@ -29,8 +31,7 @@ async function deployAccount(starknetNetwork: string) {
       accountToDeploy.privateKey,
       "1"
     );
-
-    const { transaction_hash, contract_address } = await account.deployAccount({
+    const { transaction_hash } = await account.deployAccount({
       classHash: OZaccountClassHash,
       constructorCalldata: CallData.compile({
         publicKey: accountToDeploy.publicKey
@@ -59,12 +60,10 @@ async function deployAccount(starknetNetwork: string) {
   }
 }
 
-const program = new Command();
-program.option("-n", "Starknet Network to use", "dev");
-
-program.parse(process.argv);
+program.option("-sn, --starknet <type>", "Starknet Network", "dev");
+program.parse();
 
 const options = program.opts();
-const { starknet } = options;
+const starknetNetwork = options.starknet;
 
-deployAccount(starknet).catch(console.error);
+deployAccount(starknetNetwork);
