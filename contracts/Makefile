@@ -2,7 +2,7 @@ config := --account katana-0 \
 	  --rpc http://0.0.0.0:7777
 
 ob_cl = $(shell starkli class-hash target/dev/ark_orderbook_orderbook_event_mock.contract_class.json)
-ob_addr = 0x045dd7f47f2621491763ebf2095de7b4535487e3ffacde139a832c547c994a2f
+ob_addr = 0x05038d0f1471b8a50903539888b0f51891b377416feaacfc7f037405f7cd7658
 
 generate_artifacts:
 	scarb build --workspace
@@ -17,6 +17,7 @@ generate_artifacts:
 setup_orderbook_events:
 	scarb build
 	starkli declare target/dev/ark_orderbook_orderbook_event_mock.contract_class.json ${config}
+	sleep 2
 	starkli deploy ${ob_cl} ${config} --max-fee 0 --salt 0x1234
 
 	starkli invoke ${ob_addr} emit_order_placed ${config}
