@@ -1,20 +1,21 @@
 import * as starknet from "@scure/starknet";
-import {
-  Account,
-  AccountInterface,
-  CairoCustomEnum,
-  CallData,
-  RpcProvider
-} from "starknet";
+import { Account, AccountInterface, CairoCustomEnum, CallData } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { Config } from "../../createConfig";
 import { getSignInfos } from "../../signer";
 import { FulfillInfo } from "../../types";
+
+interface fulfillOrderParameters {
+  starknetAccount: AccountInterface;
+  arkAccount: Account;
+  fulfillInfo: FulfillInfo;
+  owner?: string;
+}
 
 /**
  * Creates an order on the Arkchain with specific constraints based on order type.
  *
- * @param {RpcProvider} provider - The RPC provider instance.
+ * @param {Config} config - The core SDK config.
  * @param {Account} account - The account used to sign and send the transaction.
  * @param {FulfillInfo} fulfillInfo - The order object with essential details.
  *
@@ -22,12 +23,10 @@ import { FulfillInfo } from "../../types";
  * @throws {Error} Throws an error if the ABI or order type is invalid.
  */
 export const _fulfillOrder = async (
-  provider: RpcProvider,
-  starknetFulfillerAccount: AccountInterface,
-  arkFulfillerAccount: Account,
-  fulfillInfo: FulfillInfo,
-  owner?: string
+  config: Config,
+  parameters: fulfillOrderParameters
 ) => {
+  const { starknetAccount, arkAccount, fulfillInfo, owner } = parameters;
   // Compile the order data
   let compiledOrder = CallData.compile({
     fulfillInfo
@@ -54,11 +53,7 @@ export const _fulfillOrder = async (
     primaryType: "Order"
   };
 
-  const signInfo = await getSignInfos(
-    TypedOrderData,
-    starknetFulfillerAccount,
-    owner
-  );
+  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
   let fulfillInfoCalldata = CallData.compile({
@@ -67,14 +62,14 @@ export const _fulfillOrder = async (
   });
 
   // Execute the transaction
-  const result = await arkFulfillerAccount.execute({
-    contractAddress: SOLIS_ORDER_BOOK_ADDRESS,
+  const result = await arkAccount.execute({
+    contractAddress: config.arkchainContracts.orderbook,
     entrypoint: "fulfill_order",
     calldata: fulfillInfoCalldata
   });
 
   // Wait for the transaction to be processed
-  await provider.waitForTransaction(result.transaction_hash, {
+  await config.arkProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });
 };

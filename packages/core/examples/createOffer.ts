@@ -1,52 +1,81 @@
 /**
- * Demonstrates how to use the Starknet SDK for creating a listing on the arkchain.
+ * Demonstrates how to use the Starknet SDK for creating a offer on the arkchain.
  * This example shows the process of initializing a provider, creating an account,
- * and submitting a listing order.
+ * submitting a offer order
+ * checking the order status
  */
 
-import { RpcProvider } from "starknet";
+import { shortString } from "starknet";
+
+import "dotenv/config";
 
 import {
+  approveERC20,
   createAccount,
-  fetchOrCreateAccount
-} from "../src/actions/account/account";
-import { createOffer } from "../src/actions/order";
-import { OfferV1 } from "../src/types";
-
-// Initialize the RPC provider with the ArkChain node URL
-const starknetProvider = new RpcProvider({
-  nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
-});
-
-// Initialize the RPC provider with the katana node URL for starknet
-const arkProvider = new RpcProvider({
-  nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
-});
+  createOffer,
+  fetchOrCreateAccount,
+  getOrderStatus,
+  ListingV1
+} from "../src";
+import { config } from "./config";
+import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
+import { mintERC20 } from "./utils/mintERC20";
 
 /**
- * Creates a listing on the blockchain using provided order details.
- *
- * @param {RpcProvider} provider - The RPC provider instance.
+ * Creates a offer on the blockchain using provided order details.
  */
-(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
-  // Create a new account using the provider
-  const { account: arkAccount } = await createAccount(arkProvider);
-  const starknetAccount = await fetchOrCreateAccount(
-    starknetProvider,
-    process.env.ACCOUNT1_ADDRESS,
-    process.env.ACCOUNT1_PRIVATE_KEY
-  );
+(async () => {
+  console.log(`=> Getting config...`);
+  const { arkProvider, starknetProvider } = config;
 
+  console.log(`=> Creating account`);
+  // Create a new account for the offer using the provider
+  const { account: arkAccount } = await createAccount(arkProvider);
+
+  console.log(`=> Creating order`);
   // Define the order details
-  let order: OfferV1 = {
+  let order: ListingV1 = {
     brokerId: 123, // The broker ID
-    tokenAddress:
-      "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-    tokenId: 40, // The ID of the token
-    startAmount: 600000000000000000 // The starting amount for the order
+    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
+    startAmount: 100000000000000000 // The starting amount for the order
   };
 
-  // Create the listing on the blockchain using the order details
-  console.log("Creating listing order...");
-  await createOffer(arkProvider, starknetAccount, arkAccount, order);
-})(arkProvider, starknetProvider);
+  console.log(
+    `=> Fetching or creating offerer starknet account, for test purpose only`
+  );
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  );
+
+  if (process.env.STARKNET_NETWORK_ID === "dev") {
+    console.log("=> Minting ERC20...");
+    await mintERC20(starknetProvider, starknetOffererAccount);
+  }
+
+  console.log(
+    `=> Approuving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetOffererAccount.address} to ArkProject executor`
+  );
+  await approveERC20(config, {
+    starknetAccount: starknetOffererAccount,
+    contractAddress: STARKNET_ETH_ADDRESS,
+    amount: order.startAmount
+  });
+
+  console.log("=> Creating Offer...");
+  // Create the offer on the arkchain using the order details
+  const orderHash = await createOffer(config, {
+    starknetAccount: starknetOffererAccount,
+    arkAccount,
+    order
+  });
+
+  console.log("=> Fetching order status...");
+  let { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+    orderHash
+  });
+
+  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+})();

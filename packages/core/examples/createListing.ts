@@ -1,81 +1,77 @@
 /**
  * Demonstrates how to use the Starknet SDK for creating a listing on the arkchain.
  * This example shows the process of initializing a provider, creating an account,
- * and submitting a listing order.
+ * submitting a listing order.
+ * checking the order status
  */
 
-import { RpcProvider, shortString } from "starknet";
+import { shortString } from "starknet";
+
+import "dotenv/config";
 
 import {
+  approveERC721,
   createAccount,
-  fetchOrCreateAccount
-} from "../src/actions/account/account";
-import { createListing } from "../src/actions/order";
-import { getOrderHash, getOrderStatus } from "../src/actions/read";
-import { STARKNET_NFT_ADDRESS } from "../src/constants";
-import { ListingV1 } from "../src/types";
-
-// Initialize the RPC provider with the ArkChain node URL
-const starknetProvider = new RpcProvider({
-  nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
-});
-
-// Initialize the RPC provider with the katana node URL for starknet
-const arkProvider = new RpcProvider({
-  nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
-});
-
-const katana0 = {
-  privateKey: "0x1800000000300000180000000000030000000000003006001800006600",
-  publicKey:
-    "0x2b191c2f3ecf685a91af7cf72a43e7b90e2e41220175de5c4f7498981b10053",
-  accountAddress:
-    "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973"
-};
-
-const katana1 = {
-  privateKey:
-    "0x33003003001800009900180300d206308b0070db00121318d17b5e6262150b",
-  publicKey:
-    "0x4c0f884b8e5b4f00d97a3aad26b2e5de0c0c76a555060c837da2e287403c01d",
-  accountAddress:
-    "0x5686a647a9cdd63ade617e0baf3b364856b813b508f03903eb58a7e622d5855"
-};
+  createListing,
+  fetchOrCreateAccount,
+  getOrderStatus,
+  ListingV1
+} from "../src";
+import { config } from "./config";
+import { STARKNET_NFT_ADDRESS } from "./constants";
+import { mintERC721 } from "./utils/mintERC721";
 
 /**
  * Creates a listing on the blockchain using provided order details.
- *
- * @param {RpcProvider} provider - The RPC provider instance.
  */
-(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
-  // Create a new account using the provider
+(async () => {
+  console.log(`=> Getting config...`);
+  const { arkProvider, starknetProvider } = config;
+
+  console.log(`=> Creating account`);
+  // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
-  const starknetAccount = await fetchOrCreateAccount(
-    starknetProvider,
-    process.env.ACCOUNT1_ADDRESS,
-    process.env.ACCOUNT1_PRIVATE_KEY
-  );
+
+  console.log(`=> Creating order`);
   // Define the order details
   let order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 909, // The ID of the token
-    startAmount: 600000000000000000 // The starting amount for the order
+    tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
+    startAmount: 100000000000000000 // The starting amount for the order
   };
 
-  // Create the listing on the blockchain using the order details
-  await createListing(arkProvider, starknetAccount, arkAccount, order);
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  // Get the order hash
-  const { orderHash } = await getOrderHash(
-    order.tokenId,
-    order.tokenAddress,
-    arkProvider
+  console.log(
+    `=> Fetching or creating offerer starknet account, for test purpose only`
+  );
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
-  let { orderStatus: orderStatusAfter } = await getOrderStatus(
-    orderHash,
-    arkProvider
-  );
+  console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
+  await mintERC721(starknetProvider, starknetOffererAccount, order.tokenId);
+
+  console.log(`=> Approving token ${order.tokenId}`);
+  await approveERC721(config, {
+    contractAddress: STARKNET_NFT_ADDRESS,
+    tokenId: order.tokenId,
+    starknetAccount: starknetOffererAccount
+  });
+
+  console.log("=> Creating listing...");
+  // Create the listing on the arkchain using the order details
+  const orderHash = await createListing(config, {
+    starknetAccount: starknetOffererAccount,
+    arkAccount,
+    order
+  });
+
+  console.log("=> Fetching order status...");
+  let { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+    orderHash
+  });
+
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
-})(arkProvider, starknetProvider);
+})();

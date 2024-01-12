@@ -1,10 +1,15 @@
-import { BigNumberish, CallData, Contract, RpcProvider } from "starknet";
+import { BigNumberish, CallData, Contract } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { Config } from "../../createConfig";
 
-const getOrder = async (orderHash: BigNumberish, provider: RpcProvider) => {
-  const { abi: orderbookAbi } = await provider.getClassAt(
-    SOLIS_ORDER_BOOK_ADDRESS
+interface GetOrderParameters {
+  orderHash: BigNumberish;
+}
+
+const getOrder = async (config: Config, parameters: GetOrderParameters) => {
+  const { orderHash } = parameters;
+  const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
+    config.arkchainContracts.orderbook
   );
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
@@ -12,8 +17,8 @@ const getOrder = async (orderHash: BigNumberish, provider: RpcProvider) => {
 
   const orderbookContract = new Contract(
     orderbookAbi,
-    SOLIS_ORDER_BOOK_ADDRESS,
-    provider
+    config.arkchainContracts.orderbook,
+    config.arkProvider
   );
 
   let order_hash_calldata = CallData.compile({

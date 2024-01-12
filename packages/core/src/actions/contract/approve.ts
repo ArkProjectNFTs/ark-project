@@ -1,46 +1,50 @@
-import {
-  Account,
-  cairo,
-  CallData,
-  RpcProvider,
-  type BigNumberish
-} from "starknet";
+import { Account, cairo, CallData, type BigNumberish } from "starknet";
 
+import { Config } from "../../createConfig";
+
+interface ApproveERC721Parameters {
+  starknetAccount: Account;
+  tokenId: BigNumberish;
+  contractAddress: string;
+}
 
 export const approveERC721 = async (
-  provider: RpcProvider,
-  account: Account,
-  contractAddress: string,
-  to: BigNumberish,
-  tokenId: BigNumberish
+  config: Config,
+  parameters: ApproveERC721Parameters
 ) => {
-  const result = await account.execute({
+  console.log(config.starknetContracts.executor);
+  const { contractAddress, tokenId, starknetAccount } = parameters;
+  const result = await starknetAccount.execute({
     contractAddress,
     entrypoint: "approve",
     calldata: CallData.compile({
-      to,
+      to: config.starknetContracts.executor,
       token_id: cairo.uint256(tokenId)
     })
   });
 
-  await provider.waitForTransaction(result.transaction_hash);
+  await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };
 
+interface ApproveERC20Parameters {
+  starknetAccount: Account;
+  contractAddress: string;
+  amount: BigNumberish;
+}
+
 export const approveERC20 = async (
-  provider: RpcProvider,
-  account: Account,
-  contractAddress: string,
-  spender: BigNumberish,
-  amount: BigNumberish
+  config: Config,
+  parameters: ApproveERC20Parameters
 ) => {
-  const result = await account.execute({
+  const { contractAddress, amount, starknetAccount } = parameters;
+  const result = await starknetAccount.execute({
     contractAddress,
     entrypoint: "approve",
     calldata: CallData.compile({
-      spender,
+      spender: config.starknetContracts.executor,
       amount: cairo.uint256(amount)
     })
   });
 
-  await provider.waitForTransaction(result.transaction_hash);
+  await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };

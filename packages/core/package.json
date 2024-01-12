@@ -8,7 +8,9 @@
     "clean": "rm -rf .turbo node_modules",
     "lint": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "generate-contracts": "ts-node src/generateContracts.ts",
+    "build": "npm run generate-contracts && tsup src/index.ts --format cjs,esm --dts",
+    "dev": "nodemon --watch ../../contracts.json --exec 'npm run generate-contracts' & tsup src/index.ts --format cjs,esm --dts --watch",
     "test": "mocha --require ts-node/register --timeout 10000 'tests/**/*.ts'"
   },
   "dependencies": {
@@ -16,9 +18,7 @@
     "@types/chai-as-promised": "^7.1.8",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",
-    "fs": "0.0.1-security",
-    "i": "^0.3.7",
-    "npm": "^10.2.4",
+    "nodemon": "^3.0.2",
     "path": "^0.12.7",
     "starknet": "5.22.0"
   },

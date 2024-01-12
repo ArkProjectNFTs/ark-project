@@ -7,6 +7,10 @@
       "dependsOn": ["^build"],
       "outputs": [".dist/**"]
     },
+    "dev": {
+      "dependsOn": ["^dev"],
+      "outputs": [".dist/**"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
@@ -45,6 +49,10 @@
     "STARKNET_ACCOUNT1_ADDRESS",
     "STARKNET_ACCOUNT1_PRIVATE_KEY",
     "STARKNET_ACCOUNT2_ADDRESS",
-    "STARKNET_ACCOUNT2_PRIVATE_KEY"
+    "STARKNET_ACCOUNT2_PRIVATE_KEY",
+    "STARKNET_NETWORK",
+    "SOLIS_NODE_URL",
+    "STARKNET_CURRENCY_ADDRESS",
+    "SOLIS_ACCOUNT_CLASS_HASH"
   ]
 }

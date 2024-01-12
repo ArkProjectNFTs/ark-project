@@ -7,22 +7,45 @@ import {
   CairoOption,
   CairoOptionVariant,
   CallData,
-  RpcProvider,
   shortString,
   Uint256
 } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { Config } from "../../createConfig";
 import { getSignInfos } from "../../signer";
 import { CancelInfo, FullCancelInfo } from "../../types";
 
+/**
+ * Executes a transaction to cancel an order on the Arkchain.
+ *
+ * This function manages the cancellation of an order by compiling the cancellation details,
+ * signing the data using the Starknet account, and executing the transaction through the
+ * Arkchain account. It handles the complexities involved in the cancellation process,
+ * including data compilation, signing, and transaction execution.
+ *
+ * @param {Config} config - The core SDK configuration, including network and contract details.
+ * @param {cancelOrderParameters} parameters - The parameters required to cancel an order, including:
+ *   - starknetAccount: The Starknet account used for signing the transaction.
+ *   - arkAccount: The Arkchain account used to execute the cancellation transaction.
+ *   - cancelInfo: Information about the order to be cancelled, including the order hash and token details.
+ *   - owner: (Optional) The owner address for signing purposes.
+ *
+ * @returns {Promise<void>} A promise that resolves when the cancellation transaction is successfully processed.
+ *
+ * @throws {Error} Throws an error if the contract ABI is not found or if the transaction fails.
+ */
+interface cancelOrderParameters {
+  starknetAccount: AccountInterface;
+  arkAccount: Account;
+  cancelInfo: CancelInfo;
+  owner?: string;
+}
+
 const cancelOrder = async (
-  arkProvider: RpcProvider,
-  starknetAccount: AccountInterface,
-  arkAccount: Account,
-  cancelInfo: CancelInfo,
-  owner?: string
+  config: Config,
+  parameters: cancelOrderParameters
 ) => {
+  const { starknetAccount, arkAccount, cancelInfo, owner } = parameters;
   const fullCancelInfo: FullCancelInfo = {
     order_hash: cancelInfo.orderHash,
     canceller: starknetAccount.address,
@@ -33,14 +56,10 @@ const cancelOrder = async (
       cairo.uint256(cancelInfo.tokenId)
     )
   };
-
-  // Compile the orderhash
   let compiledOrder = CallData.compile({
     fullCancelInfo
   });
   let compiledCancelInfo = compiledOrder.map(BigInt);
-
-  // Sign the compiled order
   const TypedOrderData = {
     message: {
       hash: starknet.poseidonHashMany(compiledCancelInfo).toString()
@@ -72,13 +91,13 @@ const cancelOrder = async (
 
   // Execute the transaction
   const result = await arkAccount.execute({
-    contractAddress: SOLIS_ORDER_BOOK_ADDRESS,
+    contractAddress: config.arkchainContracts.orderbook,
     entrypoint: "cancel_order",
     calldata: cancel_order_calldata
   });
 
   // Wait for the transaction to be processed
-  await arkProvider.waitForTransaction(result.transaction_hash, {
+  await config.arkProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });
 };

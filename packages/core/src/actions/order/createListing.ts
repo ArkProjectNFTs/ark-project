@@ -4,58 +4,51 @@ import {
   cairo,
   CairoOption,
   CairoOptionVariant,
-  RpcProvider,
   shortString,
   Uint256
 } from "starknet";
 
-import {
-  SOLIS_ORDER_BOOK_ADDRESS,
-  STARKNET_ETH_ADDRESS
-} from "../../constants";
+import { Config } from "../../createConfig";
 import { ListingV1, OrderV1, RouteType } from "../../types";
 import { createOrder } from "./_create";
+
+interface CreateListingParameters {
+  starknetAccount: AccountInterface;
+  arkAccount: Account;
+  order: ListingV1;
+  owner?: string;
+}
 
 /**
  * Creates a listing on the Arkchain.
  *
- * This function takes a base order object, builds a complete OrderV1 object
- * with default values for unspecified fields, compiles the order data, signs it,
- * and then executes the transaction to create a listing on the arkchain
- * using the specified account and vider.
+ * This function takes a configuration object and listing parameters, builds a complete OrderV1 object
+ * with default values for unspecified fields, compiles the order data, signs it, and then executes
+ * the transaction to create a listing on the Arkchain using the specified Starknet and Arkchain accounts.
  *
- * @param {RpcProvider} provider - The RPC provider instance to interact with the blockchain.
- * @param {Account} account - The burner account used to sign and send the transaction.
- * @param {BaseOrderV1} baseOrder - The base order object containing essential order details.
+ * @param {Config} config - The core SDK config, including network and contract information.
+ * @param {CreateListingParameters} parameters - The parameters for the listing, including Starknet account,
+ * Arkchain account, base order details, and an optional owner address.
  *
- * @returns {Promise<void>} A promise that resolves when the transaction is completed.
+ * @returns {Promise<string>} A promise that resolves with the hash of the created order.
  *
- * @throws {Error} Throws an error if the ABI for the order book contract is not found.
  */
 const createListing = async (
-  arkProvider: RpcProvider,
-  starknetAccount: AccountInterface,
-  arkAccount: Account,
-  baseOrder: ListingV1,
-  owner?: string
+  config: Config,
+  parameters: CreateListingParameters
 ) => {
-  // Retrieve the ABI for the order book contract
-  const { abi: orderbookAbi } = await arkProvider.getClassAt(
-    SOLIS_ORDER_BOOK_ADDRESS
-  );
-  if (orderbookAbi === undefined) {
-    throw new Error("no abi.");
-  }
+  const { starknetAccount, arkAccount, order: baseOrder, owner } = parameters;
 
   let currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
 
-  // Construct the OrderV1 object from the base order and additional default values
+  // TODO: Change the network id based on the network config
+  // instead of using the hardcoded value
   const order: OrderV1 = {
     route: RouteType.Erc721ToErc20,
-    currencyAddress: STARKNET_ETH_ADDRESS,
+    currencyAddress: config.starknetContracts.eth,
     currencyChainId: shortString.encodeShortString("SN_MAIN"),
     salt: 1,
     offerer: starknetAccount.address,
@@ -74,13 +67,13 @@ const createListing = async (
     additionalData: []
   };
 
-  const orderHash = await createOrder(
-    arkProvider,
+  const orderHash = await createOrder(config, {
     starknetAccount,
     arkAccount,
     order,
     owner
-  );
+  });
+
   return orderHash;
 };
 

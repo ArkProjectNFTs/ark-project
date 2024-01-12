@@ -1,16 +1,22 @@
-import { cairo, CallData, Contract, RpcProvider } from "starknet";
+import { cairo, CallData, Contract } from "starknet";
+
+import { Config } from "../../createConfig";
 
 export const getNftOwner = async (
-  provider: RpcProvider,
+  config: Config,
   nftContractAddress: string,
   tokenId: bigint
 ) => {
-  const { abi } = await provider.getClassAt(nftContractAddress);
+  const { abi } = await config.starknetProvider.getClassAt(nftContractAddress);
   if (abi === undefined) {
     throw new Error("no abi.");
   }
 
-  const nftContract = new Contract(abi, nftContractAddress, provider);
+  const nftContract = new Contract(
+    abi,
+    nftContractAddress,
+    config.starknetProvider
+  );
 
   const ownerAddress: bigint = await nftContract.owner_of(
     CallData.compile({
