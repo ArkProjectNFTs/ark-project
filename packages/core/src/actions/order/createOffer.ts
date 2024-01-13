@@ -49,8 +49,7 @@ const createOffer = async (
   // Construct the OrderV1 object from the base order and additional default values
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
-    currencyAddress:
-      "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    currencyAddress: config.starknetContracts.eth,
     currencyChainId: shortString.encodeShortString("SN_MAIN"),
     salt: 1,
     offerer: starknetAccount.address,
@@ -68,6 +67,7 @@ const createOffer = async (
     brokerId: baseOrder.brokerId,
     additionalData: [45]
   };
+
   const orderHash = await createOrder(config, {
     starknetAccount,
     arkAccount,
