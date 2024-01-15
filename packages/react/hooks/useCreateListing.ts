@@ -21,7 +21,7 @@ export default function useCreateListing() {
   const [response, setResponse] = useState<bigint | undefined>(undefined);
   const owner = useOwner();
   const config = useConfig();
-  console.log(config);
+
   async function createListing(
     starknetAccount: AccountInterface,
     order: ListingV1

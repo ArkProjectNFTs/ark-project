@@ -15,7 +15,7 @@ import { createOrder } from "./_create";
 interface CreateOfferParameters {
   starknetAccount: AccountInterface;
   arkAccount: Account;
-  order: OfferV1;
+  offer: OfferV1;
   owner?: string;
 }
 
@@ -36,7 +36,7 @@ const createOffer = async (
   config: Config,
   parameters: CreateOfferParameters
 ) => {
-  const { starknetAccount, arkAccount, order: baseOrder, owner } = parameters;
+  const { starknetAccount, arkAccount, offer: baseOrder, owner } = parameters;
 
   let currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);

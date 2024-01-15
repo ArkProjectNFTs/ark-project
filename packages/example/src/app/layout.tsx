@@ -30,24 +30,26 @@ export default function RootLayout({
     arkchainNetwork: "dev" as Network
   };
   return (
-    <html lang="en">
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}
       >
-        <body
-          className={cn(
-            "min-h-screen bg-background font-sans antialiased",
-            fontSans.variable
-          )}
-        >
-          <StarknetProvider>
-            <ArkProvider config={config}>{children}</ArkProvider>
-          </StarknetProvider>
-        </body>
-      </ThemeProvider>
+        <StarknetProvider>
+          <ArkProvider config={config}>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </ArkProvider>
+        </StarknetProvider>
+      </body>
     </html>
   );
 }

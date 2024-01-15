@@ -1,5 +1,11 @@
 import * as starknet from "@scure/starknet";
-import { Account, AccountInterface, CairoCustomEnum, CallData } from "starknet";
+import {
+  Account,
+  AccountInterface,
+  CairoCustomEnum,
+  CallData,
+  shortString
+} from "starknet";
 
 import { Config } from "../../createConfig";
 import { getSignInfos } from "../../signer";
@@ -39,7 +45,9 @@ export const _fulfillOrder = async (
     },
     domain: {
       name: "Ark",
-      chainId: "SN_MAIN",
+      chainId: shortString.decodeShortString(
+        fulfillInfo.token_chain_id.toString()
+      ),
       version: "1.1"
     },
     types: {

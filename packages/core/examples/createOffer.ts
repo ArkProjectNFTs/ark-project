@@ -15,7 +15,7 @@ import {
   createOffer,
   fetchOrCreateAccount,
   getOrderStatus,
-  ListingV1
+  OfferV1
 } from "../src";
 import { config } from "./config";
 import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
@@ -33,8 +33,8 @@ import { mintERC20 } from "./utils/mintERC20";
   const { account: arkAccount } = await createAccount(arkProvider);
 
   console.log(`=> Creating order`);
-  // Define the order details
-  let order: ListingV1 = {
+  // Define the offer details
+  let offer: OfferV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
@@ -61,7 +61,7 @@ import { mintERC20 } from "./utils/mintERC20";
   await approveERC20(config, {
     starknetAccount: starknetOffererAccount,
     contractAddress: STARKNET_ETH_ADDRESS,
-    amount: order.startAmount
+    amount: offer.startAmount
   });
 
   console.log("=> Creating Offer...");
@@ -69,7 +69,7 @@ import { mintERC20 } from "./utils/mintERC20";
   const orderHash = await createOffer(config, {
     starknetAccount: starknetOffererAccount,
     arkAccount,
-    order
+    offer
   });
 
   console.log("=> Fetching order status...");

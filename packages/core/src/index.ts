@@ -20,5 +20,5 @@ export {
 
 export { createConfig } from "./createConfig";
 
-export type { ListingV1, OfferV1, RouteType } from "./types";
+export type { ListingV1, OfferV1, CancelInfo, RouteType } from "./types";
 export type { Config, Network } from "./createConfig";
