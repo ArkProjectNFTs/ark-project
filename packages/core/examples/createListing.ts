@@ -25,12 +25,9 @@ import { mintERC721 } from "./utils/mintERC721";
  * Creates a listing on the blockchain using provided order details.
  */
 (async () => {
-  console.log(`=> Getting config...`);
-  const { arkProvider, starknetProvider } = config;
-
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
-  const { account: arkAccount } = await createAccount(arkProvider);
+  const { account: arkAccount } = await createAccount(config.arkProvider);
 
   console.log(`=> Creating order`);
   // Define the order details
@@ -51,7 +48,11 @@ import { mintERC721 } from "./utils/mintERC721";
   );
 
   console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
-  await mintERC721(starknetProvider, starknetOffererAccount, order.tokenId);
+  await mintERC721(
+    config.starknetProvider,
+    starknetOffererAccount,
+    order.tokenId
+  );
 
   console.log(`=> Approving token ${order.tokenId}`);
   await approveERC721(config, {
@@ -69,9 +70,9 @@ import { mintERC721 } from "./utils/mintERC721";
   });
 
   console.log("=> Fetching order status...");
-  let { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+  let { orderStatus } = await getOrderStatus(config, {
     orderHash
   });
 
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+  console.log("orderStatus", shortString.decodeShortString(orderStatus));
 })();
