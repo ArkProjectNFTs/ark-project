@@ -4,7 +4,7 @@ import { ProviderNetwork } from "../types";
 
 export const getNetworkVarName = (
   network: ProviderNetwork,
-  type: String,
+  type: string,
   accountType: string
 ): string => `${type}_${accountType}_ADDRESS_${network.toUpperCase()}`;
 

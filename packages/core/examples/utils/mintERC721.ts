@@ -2,7 +2,7 @@ import {
   Account,
   cairo,
   CallData,
-  RpcProvider,
+  ProviderInterface,
   type BigNumberish
 } from "starknet";
 
@@ -11,7 +11,7 @@ import "dotenv/config";
 import { STARKNET_NFT_ADDRESS } from "../constants";
 
 export async function mintERC721(
-  provider: RpcProvider,
+  provider: ProviderInterface,
   starknetAccount: Account,
   tokenId: BigNumberish
 ) {

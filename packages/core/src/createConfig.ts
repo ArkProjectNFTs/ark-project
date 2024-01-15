@@ -1,4 +1,4 @@
-import { RpcProvider } from "starknet";
+import { ProviderInterface, RpcProvider } from "starknet";
 
 import {
   DEV_CONTRACTS,
@@ -14,17 +14,14 @@ const defaultCurrencyAddress =
 const defaultAccountClassHash =
   "0x04d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f";
 
-const defaultExecutorAddress = "";
-
 export interface Config {
   starknetNetwork?: Network;
-  arkchainNetwork?: Network;
+  arkchainNetwork: Network;
   arkchainRpcUrl?: string;
   starknetCurrencyAddress?: string;
   arkchainAccountClassHash?: string;
-  arkProvider: RpcProvider;
-  starknetProvider: RpcProvider;
-  arkExecutorAddress?: string;
+  arkProvider: ProviderInterface;
+  starknetProvider: ProviderInterface;
   starknetContracts: StarknetContract;
   arkchainContracts: ArkchainContract;
 }
@@ -51,7 +48,7 @@ const getArkchainRpcUrl = (network: Network): string => {
     case "mainnet":
       return "https://solis.arkproject.dev";
     default:
-      return "http://default-arkchain-rpc-url.com";
+      return "http://0.0.0.0:7777";
   }
 };
 
@@ -74,6 +71,13 @@ export const createConfig = (userConfig: Partial<Config>): Config => {
     userConfig.arkchainNetwork || "dev"
   ] as ArkchainContract;
 
+  const starknetContracts: StarknetContract = {
+    eth: selectedStarknetContracts.eth || defaultCurrencyAddress,
+    messaging: selectedStarknetContracts.messaging,
+    executor: selectedStarknetContracts.executor,
+    nftContract: selectedStarknetContracts.nftContract
+  };
+
   const arkchainContracts: ArkchainContract = {
     orderbook: selectedArkchainContracts.orderbook
   };
@@ -90,13 +94,12 @@ export const createConfig = (userConfig: Partial<Config>): Config => {
       userConfig.starknetCurrencyAddress || defaultCurrencyAddress,
     arkchainAccountClassHash:
       userConfig.arkchainAccountClassHash || defaultAccountClassHash,
-    arkExecutorAddress: userConfig.arkExecutorAddress || defaultExecutorAddress,
     arkProvider:
       userConfig.arkProvider ||
       new RpcProvider({
         nodeUrl: arkchainRpcUrl
       }),
-    starknetContracts: selectedStarknetContracts,
+    starknetContracts: starknetContracts,
     arkchainContracts: arkchainContracts
   };
 

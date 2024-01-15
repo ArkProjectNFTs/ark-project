@@ -1,9 +1,9 @@
-import { Account, cairo, CallData, RpcProvider } from "starknet";
+import { Account, cairo, CallData, ProviderInterface } from "starknet";
 
 import { STARKNET_ETH_ADDRESS } from "../constants";
 
 export const mintERC20 = async (
-  starknetProvider: RpcProvider,
+  starknetProvider: ProviderInterface,
   starknetFulfillerAccount: Account
 ) => {
   console.log("STARKNET_ETH_ADDRESS" + STARKNET_ETH_ADDRESS);

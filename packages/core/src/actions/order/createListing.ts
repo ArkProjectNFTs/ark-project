@@ -43,16 +43,17 @@ const createListing = async (
   currentDate.setDate(currentDate.getDate() + 30);
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
-
+  const chainId = await config.starknetProvider.getChainId();
+  console.log("chainId", shortString.decodeShortString(chainId));
   // TODO: Change the network id based on the network config
   // instead of using the hardcoded value
   const order: OrderV1 = {
     route: RouteType.Erc721ToErc20,
     currencyAddress: config.starknetContracts.eth,
-    currencyChainId: shortString.encodeShortString("SN_MAIN"),
+    currencyChainId: chainId,
     salt: 1,
     offerer: starknetAccount.address,
-    tokenChainId: shortString.encodeShortString("SN_MAIN"),
+    tokenChainId: chainId,
     tokenAddress: baseOrder.tokenAddress,
     tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,

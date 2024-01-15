@@ -1,11 +1,11 @@
-import { RpcProvider } from "starknet";
+import { ProviderInterface, RpcProvider } from "starknet";
 
 import { createConfig, Network } from "../../src";
 
 // Initialize the RPC provider with your StarkNet node URL
 const starknetProvider = new RpcProvider({
   nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
-});
+}) as ProviderInterface;
 
 // Create the Ark SDK configuration
 export const config = createConfig({

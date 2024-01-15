@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   createContext,
   PropsWithChildren,
@@ -5,23 +7,52 @@ import React, {
   useState
 } from "react";
 
-import { useAccount, useProvider } from "@starknet-react/core";
+import { useAccount, useNetwork, useProvider } from "@starknet-react/core";
+
+import { Config, createConfig, Network } from "@ark-project/core";
 
 import { getOwner } from "../../lib/getOwner";
 import { RpcProviderProvider, RpcProviderProviderProps } from "./RpcContext";
 
 const OwnerDataContext = createContext<string | undefined>(undefined);
+const ConfigDataContext = createContext<Config | undefined>(undefined);
 
-function ArkProvider(props: PropsWithChildren<RpcProviderProviderProps>) {
-  const { children, network } = props;
+export type ArkProviderProviderProps = {
+  config: Partial<Config>;
+};
+
+function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
+  const { children, config: baseConfig } = props;
   const [owner, setOwner] = useState<string | undefined>(undefined);
+  const { provider: starknetProvider } = useProvider();
+  const { chain: starknetChain } = useNetwork();
+  const [config, setConfig] = useState<Config>(
+    createConfig({
+      starknetProvider: starknetProvider,
+      starknetNetwork: starknetChain.network as Network,
+      arkchainNetwork: baseConfig.arkchainNetwork
+    })
+  );
+
+  useEffect(() => {
+    const newConfig = createConfig({
+      starknetProvider: starknetProvider,
+      starknetNetwork: starknetChain.network as Network,
+      arkchainNetwork: baseConfig.arkchainNetwork
+    });
+    setConfig(newConfig);
+  }, [starknetProvider, starknetChain, baseConfig]);
 
   const { address, connector } = useAccount();
-  const { provider } = useProvider();
+
   useEffect(() => {
     const fetchOwner = async () => {
       if (address) {
-        const owner = await getOwner(address, provider, connector?.id);
+        const owner = await getOwner(
+          address,
+          config.starknetProvider,
+          connector?.id
+        );
         if (Array.isArray(owner) && owner[0]) {
           setOwner(owner[0]);
         }
@@ -29,17 +60,16 @@ function ArkProvider(props: PropsWithChildren<RpcProviderProviderProps>) {
         setOwner(undefined);
       }
     };
-
     fetchOwner();
-  }, [address, provider]);
+  }, [address, config.starknetProvider]);
 
   return (
-    <RpcProviderProvider network={network}>
+    <ConfigDataContext.Provider value={config}>
       <OwnerDataContext.Provider value={owner}>
-        {children}
+        <RpcProviderProvider config={config}>{children}</RpcProviderProvider>
       </OwnerDataContext.Provider>
-    </RpcProviderProvider>
+    </ConfigDataContext.Provider>
   );
 }
 
-export { ArkProvider, OwnerDataContext };
+export { ArkProvider, OwnerDataContext, ConfigDataContext };
