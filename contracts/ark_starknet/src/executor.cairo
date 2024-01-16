@@ -140,7 +140,8 @@ mod executor {
             // Check if execution_info.currency_contract_address is whitelisted
 
             assert(
-                execution_info.payment_currency_chain_id == self.chain_id.read(), 'Chain ID is not SN_MAIN'
+                execution_info.payment_currency_chain_id == self.chain_id.read(),
+                'Chain ID is not SN_MAIN'
             );
 
             let currency_contract = IERC20Dispatcher {
