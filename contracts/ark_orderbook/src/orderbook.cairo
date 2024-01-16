@@ -154,7 +154,7 @@ mod orderbook {
         /// Mapping of token hashes to order data.
         /// Order database [token_hash, order_data]
         /// see ark_orderbook:order::database for more details.
-
+        chain_id: felt252,
         /// Administrator address of the order book.
         admin: ContractAddress,
         /// Mapping of broker addresses to their whitelisted status.
@@ -241,8 +241,9 @@ mod orderbook {
     // CONSTRUCTOR
     // *************************************************************************
     #[constructor]
-    fn constructor(ref self: ContractState, admin: ContractAddress) {
+    fn constructor(ref self: ContractState, admin: ContractAddress, chain_id: felt252) {
         self.admin.write(admin);
+        self.chain_id.write(chain_id);
     }
 
     // *************************************************************************
@@ -363,7 +364,8 @@ mod orderbook {
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
             let order_hash = order.compute_order_hash();
             let order_sign = OrderSign { hash: order_hash };
-            let order_sign_hash = order_sign.compute_hash_from(from: order.offerer);
+            let order_sign_hash = order_sign
+                .compute_hash_from(from: order.offerer, chain_id: self.chain_id.read());
             let user_pubkey = SignerValidator::verify(order_sign_hash, signer);
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
@@ -404,7 +406,8 @@ mod orderbook {
             canceller_signer.set_public_key(original_signer_public_key);
             let cancel_info_hash = serialized_hash(cancel_info);
             let order_sign = OrderSign { hash: cancel_info_hash };
-            let order_sign_hash = order_sign.compute_hash_from(from: cancel_info.canceller);
+            let order_sign_hash = order_sign
+                .compute_hash_from(from: cancel_info.canceller, chain_id: self.chain_id.read());
 
             SignerValidator::verify(order_sign_hash, canceller_signer);
             let order_option = order_read::<OrderV1>(order_hash);
@@ -445,7 +448,8 @@ mod orderbook {
         fn fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo, signer: Signer) {
             let fulfill_hash = serialized_hash(fulfill_info);
             let fulfill_sign = OrderSign { hash: fulfill_hash };
-            let fulfill_sign_hash = fulfill_sign.compute_hash_from(from: fulfill_info.fulfiller);
+            let fulfill_sign_hash = fulfill_sign
+                .compute_hash_from(from: fulfill_info.fulfiller, chain_id: self.chain_id.read());
 
             SignerValidator::verify(fulfill_sign_hash, signer);
 

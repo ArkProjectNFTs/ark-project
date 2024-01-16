@@ -13,10 +13,11 @@ const getOrderHash = async (
   parameters: GetOrderHashParameters
 ) => {
   const { tokenId, tokenAddress } = parameters;
+  const chainId = await config.starknetProvider.getChainId();
   let tokenHash = {
     tokenId: cairo.uint256(tokenId),
     tokenAddress: tokenAddress,
-    tokenChainId: shortString.encodeShortString("SN_MAIN")
+    tokenChainId: shortString.decodeShortString(chainId.toString())
   };
 
   // Compile the order data

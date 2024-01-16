@@ -46,10 +46,11 @@ const cancelOrder = async (
   parameters: cancelOrderParameters
 ) => {
   const { starknetAccount, arkAccount, cancelInfo, owner } = parameters;
+  const chainId = await config.starknetProvider.getChainId();
   const fullCancelInfo: FullCancelInfo = {
     order_hash: cancelInfo.orderHash,
     canceller: starknetAccount.address,
-    token_chain_id: shortString.encodeShortString("SN_MAIN"),
+    token_chain_id: chainId,
     token_address: cancelInfo.tokenAddress,
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
@@ -66,7 +67,9 @@ const cancelOrder = async (
     },
     domain: {
       name: "Ark",
-      chainId: "SN_MAIN",
+      chainId: shortString.decodeShortString(
+        fullCancelInfo.token_chain_id.toString()
+      ),
       version: "1.1"
     },
     types: {

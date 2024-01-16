@@ -35,7 +35,7 @@ fn ORDER_HASH() -> felt252 {
 #[test]
 fn ark_test_type_data() {
     let order = ORDER();
-    let order_hash = order.compute_hash_from(from: SIGNER());
+    let order_hash = order.compute_hash_from(from: SIGNER(), chain_id: 0x534e5f4d41494e);
     order_hash.print();
     let signer = sign_mock(order_hash);
     assert(order_hash == ORDER_HASH(), 'Invalid order hash');

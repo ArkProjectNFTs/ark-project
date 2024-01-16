@@ -45,15 +45,15 @@ const createOffer = async (
   // date in the past
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 5);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
-
+  const chainId = await config.starknetProvider.getChainId();
   // Construct the OrderV1 object from the base order and additional default values
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
     currencyAddress: config.starknetContracts.eth,
-    currencyChainId: shortString.encodeShortString("SN_MAIN"),
+    currencyChainId: chainId,
     salt: 1,
     offerer: starknetAccount.address,
-    tokenChainId: shortString.encodeShortString("SN_MAIN"),
+    tokenChainId: chainId,
     tokenAddress: baseOrder.tokenAddress,
     tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,

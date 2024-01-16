@@ -36,7 +36,7 @@ import { mintERC721 } from "./utils/mintERC721";
 
   console.log(`=> Creating order`);
   // Define the order details
-  let order: OfferV1 = {
+  let offer: OfferV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
@@ -63,7 +63,7 @@ import { mintERC721 } from "./utils/mintERC721";
   await approveERC20(config, {
     starknetAccount: starknetOffererAccount,
     contractAddress: STARKNET_ETH_ADDRESS,
-    amount: order.startAmount
+    amount: offer.startAmount
   });
 
   console.log("=> Creating offer...");
@@ -71,7 +71,7 @@ import { mintERC721 } from "./utils/mintERC721";
   const orderHash = await createOffer(config, {
     starknetAccount: starknetOffererAccount,
     arkAccount,
-    order
+    offer
   });
 
   // wait 5 seconds for the transaction to be processed
@@ -87,12 +87,12 @@ import { mintERC721 } from "./utils/mintERC721";
   );
 
   console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
-  await mintERC721(starknetProvider, starknetFulfillerAccount, order.tokenId);
+  await mintERC721(starknetProvider, starknetFulfillerAccount, offer.tokenId);
 
-  console.log(`=> Approving token ${order.tokenId}`);
+  console.log(`=> Approving token ${offer.tokenId}`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
-    tokenId: order.tokenId,
+    tokenId: offer.tokenId,
     starknetAccount: starknetFulfillerAccount
   });
 
@@ -101,8 +101,8 @@ import { mintERC721 } from "./utils/mintERC721";
   // Define the fulfill details
   const fulfillOfferInfo = {
     order_hash: orderHash,
-    token_address: order.tokenAddress,
-    token_id: order.tokenId
+    token_address: offer.tokenAddress,
+    token_id: offer.tokenId
   };
 
   console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);

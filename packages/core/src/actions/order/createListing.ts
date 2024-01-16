@@ -4,7 +4,6 @@ import {
   cairo,
   CairoOption,
   CairoOptionVariant,
-  shortString,
   Uint256
 } from "starknet";
 
@@ -44,7 +43,7 @@ const createListing = async (
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
   const chainId = await config.starknetProvider.getChainId();
-  console.log("chainId", shortString.decodeShortString(chainId));
+  console.log("chainId", chainId);
   // TODO: Change the network id based on the network config
   // instead of using the hardcoded value
   const order: OrderV1 = {

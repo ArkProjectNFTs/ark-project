@@ -12,7 +12,7 @@ import { useAccount, useNetwork, useProvider } from "@starknet-react/core";
 import { Config, createConfig, Network } from "@ark-project/core";
 
 import { getOwner } from "../../lib/getOwner";
-import { RpcProviderProvider, RpcProviderProviderProps } from "./RpcContext";
+import { RpcProviderProvider } from "./RpcContext";
 
 const OwnerDataContext = createContext<string | undefined>(undefined);
 const ConfigDataContext = createContext<Config | undefined>(undefined);

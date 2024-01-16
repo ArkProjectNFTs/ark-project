@@ -8,9 +8,9 @@ import React, {
   type PropsWithChildren
 } from "react";
 
-import { ProviderInterface, RpcProvider } from "starknet";
+import { RpcProvider } from "starknet";
 
-import { Config, createAccount, Network } from "@ark-project/core";
+import { Config, createAccount } from "@ark-project/core";
 
 type RpcContextValue =
   | {
@@ -45,6 +45,7 @@ export function RpcProviderProvider(
       !localStorage.getItem("burner_private_key") &&
       !localStorage.getItem("burner_public_key")
     ) {
+      console.log("Creating burner account");
       createAccount(arkChain.rpcProvider).then(
         ({ address, privateKey, publicKey }) => {
           console.log("Burner account created");

@@ -5,7 +5,6 @@ import {
   cairo,
   CairoOption,
   CairoOptionVariant,
-  shortString,
   Uint256
 } from "starknet";
 
@@ -33,12 +32,13 @@ const fulfillListing = async (
   parameters: FulfillListingParameters
 ) => {
   const { starknetAccount, arkAccount, fulfillListingInfo, owner } = parameters;
+  const chainId = await config.starknetProvider.getChainId();
 
   let fulfillInfo: FulfillInfo = {
     order_hash: fulfillListingInfo.order_hash,
     related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),
     fulfiller: starknetAccount.address,
-    token_chain_id: shortString.encodeShortString("SN_MAIN"),
+    token_chain_id: chainId,
     token_address: fulfillListingInfo.token_address,
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
