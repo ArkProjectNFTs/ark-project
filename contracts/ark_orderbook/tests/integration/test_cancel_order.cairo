@@ -27,7 +27,10 @@ fn test_cancel_auction() {
     );
 
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
@@ -59,7 +62,10 @@ fn test_cancel_non_existing_order() {
         .try_into()
         .unwrap();
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let cancel_info = CancelInfo {
         order_hash: order_hash,
@@ -87,7 +93,10 @@ fn test_invalid_cancel_auction_order() {
     );
 
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
@@ -123,7 +132,10 @@ fn test_cancel_auction_during_the_extended_time() {
     );
 
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);

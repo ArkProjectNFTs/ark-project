@@ -24,7 +24,10 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
         start_date, end_date, Option::Some(123)
     );
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
@@ -37,7 +40,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
             .unwrap(),
         related_order_hash: Option::None,
         fulfiller: fulfiller,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -59,7 +62,10 @@ fn test_create_listing_order_and_fulfill() {
         start_date, end_date, Option::Some(123)
     );
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -72,7 +78,7 @@ fn test_create_listing_order_and_fulfill() {
         order_hash: order_hash,
         related_order_hash: Option::None,
         fulfiller: fulfiller,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -100,7 +106,10 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
         start_date, end_date, Option::Some(123)
     );
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -111,7 +120,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
         order_hash: order_hash,
         related_order_hash: Option::None,
         fulfiller: order_listing.offerer,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -133,7 +142,10 @@ fn test_fulfill_already_fulfilled_order() {
         start_date, end_date, Option::Some(123)
     );
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: order_listing, signer: signer);
@@ -144,7 +156,7 @@ fn test_fulfill_already_fulfilled_order() {
         order_hash: order_hash,
         related_order_hash: Option::None,
         fulfiller: fulfiller,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -165,7 +177,10 @@ fn test_fulfill_expired_order() {
         start_date, end_date, Option::Some(123)
     );
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: order_listing, signer: signer);
@@ -178,7 +193,7 @@ fn test_fulfill_expired_order() {
         order_hash: order_hash,
         related_order_hash: Option::None,
         fulfiller: fulfiller,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),

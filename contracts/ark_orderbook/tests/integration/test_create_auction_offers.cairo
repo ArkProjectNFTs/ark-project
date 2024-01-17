@@ -21,9 +21,11 @@ fn test_create_valid_auction_offer() {
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
-
+    let chain_id = 0x534e5f4d41494e;
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
@@ -43,9 +45,11 @@ fn test_accept_auction_after_expiration() {
     let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
-
+    let chain_id = 0x534e5f4d41494e;
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };

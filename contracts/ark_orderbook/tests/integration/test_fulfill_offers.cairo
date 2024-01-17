@@ -57,9 +57,9 @@ use super::super::common::setup::{setup_orders, setup_listing_order_with_sign};
 fn test_fulfill_expired_offer() {
     let block_timestamp = 1699556828;
     let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
-
+    let chain_id = 0x534e5f4d41494e;
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -90,7 +90,10 @@ fn test_fulfill_expired_offer() {
 #[should_panic(expected: ('OB: order not found',))]
 fn test_fulfill_non_existing_offer() {
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -101,7 +104,7 @@ fn test_fulfill_non_existing_offer() {
         fulfiller: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -119,7 +122,10 @@ fn test_fulfill_classic_offer() {
     let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
 
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -153,10 +159,12 @@ fn test_fulfill_classic_offer() {
 #[test]
 fn test_fulfill_collection_offer() {
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
-
     let data = array![];
     let data_span = data.span();
 
@@ -165,12 +173,12 @@ fn test_fulfill_collection_offer() {
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -208,12 +216,12 @@ fn test_fulfill_collection_offer() {
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
-
 #[test]
 #[should_panic(expected: ('OB: order expired',))]
 fn test_fulfill_expired_collection_offer() {
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -225,12 +233,12 @@ fn test_fulfill_expired_collection_offer() {
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -256,7 +264,7 @@ fn test_fulfill_expired_collection_offer() {
         fulfiller: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc8
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -268,15 +276,14 @@ fn test_fulfill_expired_collection_offer() {
     dispatcher.fulfill_order(fulfill_info, signer);
 }
 
-
 #[test]
 #[should_panic(expected: ('OB: order not fulfillable',))]
 fn test_double_fulfill_offer() {
     let block_timestamp = 1699556828;
     let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
-
+    let chain_id = 0x534e5f4d41494e;
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
+    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
