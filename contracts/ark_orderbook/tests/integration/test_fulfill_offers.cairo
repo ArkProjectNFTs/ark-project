@@ -59,7 +59,9 @@ fn test_fulfill_expired_offer() {
     let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
     let chain_id = 0x534e5f4d41494e;
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id];
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -221,7 +223,9 @@ fn test_fulfill_collection_offer() {
 fn test_fulfill_expired_collection_offer() {
     let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id];
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
@@ -283,7 +287,9 @@ fn test_double_fulfill_offer() {
     let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
     let chain_id = 0x534e5f4d41494e;
     let contract = declare('orderbook');
-    let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id];
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
