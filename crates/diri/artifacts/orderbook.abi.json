@@ -505,6 +505,36 @@
     ]
   },
   {
+    "type": "enum",
+    "name": "ark_common::protocol::order_types::OrderStatus",
+    "variants": [
+      {
+        "name": "Open",
+        "type": "()"
+      },
+      {
+        "name": "Fulfilled",
+        "type": "()"
+      },
+      {
+        "name": "Executed",
+        "type": "()"
+      },
+      {
+        "name": "CancelledUser",
+        "type": "()"
+      },
+      {
+        "name": "CancelledByNewOrder",
+        "type": "()"
+      },
+      {
+        "name": "CancelledAssetFault",
+        "type": "()"
+      }
+    ]
+  },
+  {
     "type": "event",
     "name": "ark_orderbook::orderbook::orderbook::OrderExecuted",
     "kind": "struct",
@@ -512,6 +542,11 @@
       {
         "name": "order_hash",
         "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "order_status",
+        "type": "ark_common::protocol::order_types::OrderStatus",
         "kind": "key"
       }
     ]
