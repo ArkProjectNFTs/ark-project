@@ -14,18 +14,18 @@ const getOrderHash = async (
 ) => {
   const { tokenId, tokenAddress } = parameters;
   const chainId = await config.starknetProvider.getChainId();
-  let tokenHash = {
+  const tokenHash = {
     tokenId: cairo.uint256(tokenId),
     tokenAddress: tokenAddress,
     tokenChainId: shortString.decodeShortString(chainId.toString())
   };
 
   // Compile the order data
-  let tokenHashCompiled = CallData.compile({
+  const tokenHashCompiled = CallData.compile({
     tokenHash
   });
 
-  let tokenHashBigIntArray = tokenHashCompiled.map(BigInt);
+  const tokenHashBigIntArray = tokenHashCompiled.map(BigInt);
 
   const tokenHashMessage = starknet.poseidonHashMany(tokenHashBigIntArray);
 
@@ -42,7 +42,7 @@ const getOrderHash = async (
     config.arkProvider
   );
 
-  let order_hash_calldata = CallData.compile({
+  const order_hash_calldata = CallData.compile({
     token_hash: tokenHashMessage
   });
 

@@ -8,7 +8,7 @@ import { Config, fulfillOffer as fulfillOfferCore } from "@ark-project/core";
 import { FulfillOfferInfo } from "@ark-project/core/src/types";
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
-import { Status } from "../types/hooks";
+import { Status } from "../types";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 

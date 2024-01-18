@@ -57,10 +57,10 @@ const cancelOrder = async (
       cairo.uint256(cancelInfo.tokenId)
     )
   };
-  let compiledOrder = CallData.compile({
+  const compiledOrder = CallData.compile({
     fullCancelInfo
   });
-  let compiledCancelInfo = compiledOrder.map(BigInt);
+  const compiledCancelInfo = compiledOrder.map(BigInt);
   const TypedOrderData = {
     message: {
       hash: starknet.poseidonHashMany(compiledCancelInfo).toString()
@@ -87,7 +87,7 @@ const cancelOrder = async (
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
   // Compile calldata for the cancel_order function
-  let cancel_order_calldata = CallData.compile({
+  const cancel_order_calldata = CallData.compile({
     order: fullCancelInfo,
     signer: signer
   });

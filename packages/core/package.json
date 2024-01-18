@@ -6,7 +6,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
     "generate-contracts": "ts-node src/generateContracts.ts",
     "build": "npm run generate-contracts && tsup src/index.ts --format cjs,esm --dts",

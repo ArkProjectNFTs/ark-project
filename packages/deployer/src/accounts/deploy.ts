@@ -9,6 +9,13 @@ import "dotenv/config";
 import { getStarknetProvider } from "../providers";
 import { OZaccountClassHash } from "./constants";
 
+interface Iaccount {
+  address: string;
+  privateKey: string;
+  publicKey: string;
+  deployed: boolean;
+}
+
 async function deployAccount(starknetNetwork: string) {
   const starknetProvider = getStarknetProvider(starknetNetwork);
   console.log("Using StarkNet provider:", starknetProvider.nodeUrl);
@@ -16,11 +23,14 @@ async function deployAccount(starknetNetwork: string) {
     __dirname,
     `../../accounts/${starknetNetwork}.json`
   );
-  let accounts: any[] = [];
+  let accounts: Iaccount[] = [];
   try {
     const fileData = await fs.readFile(accountsFilePath, "utf8");
     accounts = JSON.parse(fileData);
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error reading JSON file:", error);
+    return;
+  }
 
   const noDeployedAccounts = accounts.filter((a) => a.deployed === false);
 
@@ -48,7 +58,10 @@ async function deployAccount(starknetNetwork: string) {
       (a) => a.address === accountToDeploy.address
     );
     if (accountIndex !== -1) {
-      accounts[accountIndex].deployed = true;
+      const accountToUpdate = accounts[accountIndex];
+      if (accountToUpdate) {
+        accountToUpdate.deployed = true;
+      }
     }
   }
 

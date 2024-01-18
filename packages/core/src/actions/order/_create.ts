@@ -38,10 +38,10 @@ const createOrder = async (
   parameters: CreateOrderParameters
 ) => {
   const { starknetAccount, arkAccount, order, owner } = parameters;
-  let compiledOrder = CallData.compile({
+  const compiledOrder = CallData.compile({
     order
   });
-  let compiledOrderBigInt = compiledOrder.map(BigInt);
+  const compiledOrderBigInt = compiledOrder.map(BigInt);
   const TypedOrderData = {
     message: {
       hash: starknet.poseidonHashMany(compiledOrderBigInt).toString()
@@ -63,7 +63,7 @@ const createOrder = async (
   };
   const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-  let create_order_calldata = CallData.compile({
+  const create_order_calldata = CallData.compile({
     order: order,
     signer: signer
   });
@@ -77,7 +77,7 @@ const createOrder = async (
     retryInterval: 200
   });
 
-  let orderHash = getOrderHashFromOrderV1(order);
+  const orderHash = getOrderHashFromOrderV1(order);
 
   return orderHash;
 };

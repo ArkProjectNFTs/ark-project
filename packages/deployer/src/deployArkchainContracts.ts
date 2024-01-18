@@ -38,7 +38,7 @@ async function deployArkchainContracts(
   const arkchainSpinner = loading("💠 Deploying Arkchain Contracts...").start();
 
   if (arkchainAdminAccount) {
-    let chain_id = await starknetProvider.getChainId();
+    const chain_id = await starknetProvider.getChainId();
     const orderbookContract = await deployOrderBook(
       ARTIFACTS_PATH,
       arkchainAdminAccount,

@@ -11,7 +11,7 @@ import {
 } from "@ark-project/core";
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
-import { Status } from "../types/hooks";
+import { Status } from "../types";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 

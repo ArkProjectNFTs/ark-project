@@ -12,8 +12,8 @@ when an order is placed, with the event `OrderPlaced`. The order can then
 be stored and mapped to a specific block from which is was created.
 
 Once stored, the order, identified by it's `order_hash`, has it's lifecycle
-which is the one state among the following:
-0. The order is created and open (`OrderPlaced`).
+which is the one state among the following: 0. The order is created and open (`OrderPlaced`).
+
 1. The order is cancelled (`OrderCancelled`).
 2. The order is fulfilled (`OrderFulfilled`).
 3. The order is executed (`OrderExecuted`).

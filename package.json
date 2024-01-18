@@ -2,9 +2,10 @@
   "name": "turbo",
   "private": true,
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
+    "build": "dotenv -- turbo build",
+    "dev": "dotenv -- turbo run dev --parallel",
+    "lint": "dotenv -- turbo run lint",
+    "lint:fix": "dotenv -- turbo run lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "accounts:new": "dotenv -- turbo run accounts:new",
     "accounts:deploy": "dotenv -- turbo run accounts:deploy",
@@ -25,6 +26,7 @@
   },
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
-    "dotenv-cli": "^7.3.0"
+    "dotenv-cli": "^7.3.0",
+    "prettier-plugin-sort-imports": "^1.8.1"
   }
 }

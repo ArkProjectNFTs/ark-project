@@ -1,1 +1,1 @@
-export { Network } from "./network";
+export type Status = "success" | "idle" | "error" | "loading";

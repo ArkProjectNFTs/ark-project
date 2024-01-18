@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix"
   },
   "dependencies": {
     "@ark-project/react": "workspace:*",

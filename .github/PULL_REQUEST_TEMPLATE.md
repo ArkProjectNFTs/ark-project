@@ -1,8 +1,8 @@
 ## Description
 
-<!-- 
+<!--
 Please do not leave this blank.
-Describe the changes in this PR. What does it [add/remove/fix/replace]? 
+Describe the changes in this PR. What does it [add/remove/fix/replace]?
 
 For crafting a good description, consider using ChatGPT to help articulate your changes.
 -->
@@ -24,9 +24,9 @@ For crafting a good description, consider using ChatGPT to help articulate your 
 
 ## Related Tickets & Documents
 
-<!-- 
+<!--
 Please use this format to link related issues: Fixes #<issue_number>
-More info: https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword 
+More info: https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword
 -->
 
 ## Added tests?
@@ -57,7 +57,7 @@ More info: https://docs.github.com/en/free-pro-team@latest/github/managing-your-
 
 ## Closing Issues
 
-<!-- 
+<!--
 Use keywords to close related issues. This ensures that the associated issues will automatically close when the PR is merged.
 
 - `Fixes #123` will close issue 123 when the PR is merged.

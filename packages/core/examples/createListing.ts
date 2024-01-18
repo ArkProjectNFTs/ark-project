@@ -31,7 +31,7 @@ import { mintERC721 } from "./utils/mintERC721";
 
   console.log(`=> Creating order`);
   // Define the order details
-  let order: ListingV1 = {
+  const order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
@@ -70,7 +70,7 @@ import { mintERC721 } from "./utils/mintERC721";
   });
 
   console.log("=> Fetching order status...");
-  let { orderStatus } = await getOrderStatus(config, {
+  const { orderStatus } = await getOrderStatus(config, {
     orderHash
   });
 
