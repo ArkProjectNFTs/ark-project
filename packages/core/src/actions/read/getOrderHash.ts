@@ -1,24 +1,23 @@
 import * as starknet from "@scure/starknet";
-import {
-  BigNumberish,
-  cairo,
-  CallData,
-  Contract,
-  RpcProvider,
-  shortString
-} from "starknet";
+import { BigNumberish, cairo, CallData, Contract, shortString } from "starknet";
 
-import { SOLIS_ORDER_BOOK_ADDRESS } from "../../constants";
+import { Config } from "../../createConfig";
+
+interface GetOrderHashParameters {
+  tokenId: BigNumberish;
+  tokenAddress: string;
+}
 
 const getOrderHash = async (
-  tokenId: BigNumberish,
-  tokenAddress: BigNumberish,
-  provider: RpcProvider
+  config: Config,
+  parameters: GetOrderHashParameters
 ) => {
+  const { tokenId, tokenAddress } = parameters;
+  const chainId = await config.starknetProvider.getChainId();
   let tokenHash = {
     tokenId: cairo.uint256(tokenId),
     tokenAddress: tokenAddress,
-    tokenChainId: shortString.encodeShortString("SN_MAIN")
+    tokenChainId: shortString.decodeShortString(chainId.toString())
   };
 
   // Compile the order data
@@ -30,8 +29,8 @@ const getOrderHash = async (
 
   const tokenHashMessage = starknet.poseidonHashMany(tokenHashBigIntArray);
 
-  const { abi: orderbookAbi } = await provider.getClassAt(
-    SOLIS_ORDER_BOOK_ADDRESS
+  const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
+    config.arkchainContracts.orderbook
   );
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
@@ -39,8 +38,8 @@ const getOrderHash = async (
 
   const orderbookContract = new Contract(
     orderbookAbi,
-    SOLIS_ORDER_BOOK_ADDRESS,
-    provider
+    config.arkchainContracts.orderbook,
+    config.arkProvider
   );
 
   let order_hash_calldata = CallData.compile({

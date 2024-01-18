@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext } from "react";
 
 import { OwnerDataContext } from "../components/ArkProvider/ArkProvider";

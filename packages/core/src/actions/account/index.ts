@@ -1,1 +1,1 @@
-export { createAccount } from "./account";
+export { fetchOrCreateAccount, createAccount } from "./account";

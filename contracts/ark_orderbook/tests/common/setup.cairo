@@ -17,21 +17,23 @@ use super::super::common::signer::sign_mock;
 /// * order_auction - An auction order of type OrderV1
 /// * order_collection_offer - An offer order of type OrderV1 for a collection
 ///
+
 fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
     let data = array![];
     let data_span = data.span();
+    let chain_id = 0x534e5f4d41494e;
 
     let order_listing = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -49,12 +51,12 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -72,12 +74,12 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 0,
         offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -96,12 +98,12 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 0,
         offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -129,6 +131,7 @@ fn setup_offer(
     start_date: u64, end_date: u64, pk: Option<felt252>, token_id: Option<u256>
 ) -> (OrderV1, Signer, felt252, felt252) {
     let mut _token_id = 10;
+    let chain_id = 0x534e5f4d41494e;
     if token_id.is_some() {
         _token_id = token_id.unwrap();
     }
@@ -143,10 +146,10 @@ fn setup_offer(
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: offerer,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -180,17 +183,18 @@ fn setup_listing_order(price: felt252) -> (OrderV1, felt252, felt252) {
     let end_date = block_timestamp + (30 * 24 * 60 * 60);
     let data = array![];
     let data_span = data.span();
+    let chain_id = 0x534e5f4d41494e;
     let order_listing = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -221,18 +225,19 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
     let block_timestamp = starknet::get_block_timestamp();
     let end_date = block_timestamp + (30 * 24 * 60 * 60);
     let data = array![];
+    let chain_id = 0x534e5f4d41494e;
     let data_span = data.span();
     let order_listing = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -266,16 +271,17 @@ fn setup_auction_order(
         .try_into()
         .unwrap();
     let data = array![];
+    let chain_id = 0x534e5f4d41494e;
     let data_span = data.span();
     let order_listing = OrderV1 {
         route: RouteType::Erc721ToErc20.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: offerer,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -301,6 +307,7 @@ fn setup_listing(
 ) -> (OrderV1, Signer, felt252, felt252) {
     let data = array![];
     let data_span = data.span();
+    let chain_id = 0x534e5f4d41494e;
     let offerer = 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
         .try_into()
         .unwrap();
@@ -309,10 +316,10 @@ fn setup_listing(
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 1,
         offerer: offerer,
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
@@ -334,17 +341,18 @@ fn setup_listing(
 fn get_offer_order() -> OrderV1 {
     let data = array![];
     let data_span = data.span();
+    let chain_id = 0x534e5f4d41494e;
     OrderV1 {
         route: RouteType::Erc20ToErc721.into(),
         currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
             .try_into()
             .unwrap(),
-        currency_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        currency_chain_id: chain_id,
         salt: 0,
         offerer: 0x2284a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
             .try_into()
             .unwrap(),
-        token_chain_id: 0x534e5f4d41494e.try_into().unwrap(),
+        token_chain_id: chain_id,
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),

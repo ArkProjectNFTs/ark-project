@@ -38,11 +38,13 @@ async function deployArkchainContracts(
   const arkchainSpinner = loading("💠 Deploying Arkchain Contracts...").start();
 
   if (arkchainAdminAccount) {
+    let chain_id = await starknetProvider.getChainId();
     const orderbookContract = await deployOrderBook(
       ARTIFACTS_PATH,
       arkchainAdminAccount,
       solisProvider,
-      arkchainAdminAccount.address
+      arkchainAdminAccount.address,
+      chain_id
     );
     const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
     const contracts = JSON.parse(fileContent);

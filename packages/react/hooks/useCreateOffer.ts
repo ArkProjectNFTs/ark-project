@@ -1,11 +1,18 @@
+"use client";
+
 import { useState } from "react";
 
 import { Account, AccountInterface } from "starknet";
 
-import { createOffer as createOfferCore, OfferV1 } from "@ark-project/core";
+import {
+  Config,
+  createOffer as createOfferCore,
+  OfferV1
+} from "@ark-project/core";
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types/hooks";
+import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
 export default function useCreateOffer() {
@@ -13,6 +20,7 @@ export default function useCreateOffer() {
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>(undefined);
   const owner = useOwner();
+  const config = useConfig();
 
   async function createOffer(
     starknetAccount: AccountInterface,
@@ -32,13 +40,16 @@ export default function useCreateOffer() {
 
     try {
       setStatus("loading");
-      const orderHash = await createOfferCore(
-        rpcProvider,
+      const orderHash = await createOfferCore(config as Config, {
         starknetAccount,
-        new Account(rpcProvider, burner_address, burner_private_key),
+        arkAccount: new Account(
+          rpcProvider,
+          burner_address,
+          burner_private_key
+        ),
         offer,
         owner
-      );
+      });
       setStatus("success");
       setResponse(orderHash);
     } catch (error) {

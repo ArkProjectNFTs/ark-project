@@ -1,4 +1,6 @@
-export { createAccount } from "./actions/account";
+export { fetchOrCreateAccount, createAccount } from "./actions/account";
+
+export { approveERC20, approveERC721 } from "./actions/contract";
 
 export {
   createListing,
@@ -16,6 +18,7 @@ export {
   getOrderType
 } from "./actions/read";
 
-export { initProvider } from "./provider/rpc";
+export { createConfig } from "./createConfig";
 
-export type { ListingV1, OfferV1, RouteType } from "./types";
+export type { ListingV1, OfferV1, CancelInfo, RouteType } from "./types";
+export type { Config, Network } from "./createConfig";

@@ -1,18 +1,25 @@
+"use client";
+
 import { useState } from "react";
 
 import { Account, AccountInterface } from "starknet";
 
-import { cancelOrder as cancelOrderCore } from "@ark-project/core";
-import { CancelInfo } from "@ark-project/core/src/types";
+import {
+  CancelInfo,
+  cancelOrder as cancelOrderCore,
+  Config
+} from "@ark-project/core";
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types/hooks";
+import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
 export default function useCancel() {
   const { rpcProvider } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
+  const config = useConfig();
 
   async function cancel(
     starknetAccount: AccountInterface,
@@ -30,15 +37,20 @@ export default function useCancel() {
       throw new Error("No burner wallet in local storage");
     }
 
+    const arkAccount = new Account(
+      rpcProvider,
+      burner_address,
+      burner_private_key
+    );
+
     try {
       setStatus("loading");
-      await cancelOrderCore(
-        rpcProvider,
+      await cancelOrderCore(config as Config, {
         starknetAccount,
-        new Account(rpcProvider, burner_address, burner_private_key),
+        arkAccount: arkAccount,
         cancelInfo,
         owner
-      );
+      });
       setStatus("success");
     } catch (error) {
       setStatus("error");

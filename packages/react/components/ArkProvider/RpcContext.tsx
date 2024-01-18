@@ -10,19 +10,7 @@ import React, {
 
 import { RpcProvider } from "starknet";
 
-import { createAccount } from "@ark-project/core";
-
-export enum Network {
-  Mainnet,
-  Testnet,
-  Dev
-}
-
-const NETWORK_TO_RPC_NODE_URL: Record<Network, string> = {
-  [Network.Mainnet]: "https://solis.arkproject.dev",
-  [Network.Testnet]: "https://staging.solis.arkproject.dev",
-  [Network.Dev]: "http://localhost:7777"
-};
+import { Config, createAccount } from "@ark-project/core";
 
 type RpcContextValue =
   | {
@@ -31,7 +19,7 @@ type RpcContextValue =
   | undefined;
 
 export type RpcProviderProviderProps = {
-  network: Network;
+  config: Config;
 };
 
 const RpcContext = createContext<RpcContextValue>(undefined);
@@ -39,15 +27,15 @@ const RpcContext = createContext<RpcContextValue>(undefined);
 export function RpcProviderProvider(
   props: PropsWithChildren<RpcProviderProviderProps>
 ) {
-  const { children, network } = props;
+  const { children, config } = props;
 
-  const value = useMemo(
+  const arkChain = useMemo(
     () => ({
       rpcProvider: new RpcProvider({
-        nodeUrl: NETWORK_TO_RPC_NODE_URL[network]
+        nodeUrl: config.arkchainRpcUrl
       })
     }),
-    [network]
+    [config.arkchainRpcUrl]
   );
 
   useEffect(() => {
@@ -57,7 +45,8 @@ export function RpcProviderProvider(
       !localStorage.getItem("burner_private_key") &&
       !localStorage.getItem("burner_public_key")
     ) {
-      createAccount(value.rpcProvider).then(
+      console.log("Creating burner account");
+      createAccount(arkChain.rpcProvider).then(
         ({ address, privateKey, publicKey }) => {
           console.log("Burner account created");
           console.log("Address: ", address);
@@ -69,9 +58,9 @@ export function RpcProviderProvider(
         }
       );
     }
-  }, [value]);
+  }, [arkChain]);
 
-  return <RpcContext.Provider value={value}>{children}</RpcContext.Provider>;
+  return <RpcContext.Provider value={arkChain}>{children}</RpcContext.Provider>;
 }
 
 export function useRpc() {

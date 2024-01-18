@@ -11,7 +11,7 @@ fn ORDER(order_hash: felt252) -> OrderSign {
 
 fn sign_mock(message_hash: felt252, signer: starknet::ContractAddress) -> Signer {
     let order = ORDER(message_hash);
-    let order_hash = order.compute_hash_from(signer);
+    let order_hash = order.compute_hash_from(signer, 0x534e5f4d41494e);
     let private_key: felt252 = 0x1234567890987654321;
     let mut key_pair = StarkCurveKeyPairTrait::from_private_key(private_key);
     let (r, s) = key_pair.sign(order_hash).unwrap();

@@ -1,4 +1,11 @@
-import { Account, CallData, ec, hash, RpcProvider, stark } from "starknet";
+import {
+  Account,
+  CallData,
+  ec,
+  hash,
+  ProviderInterface,
+  stark
+} from "starknet";
 
 import { SOLIS_ACCOUNT_CLASS_HASH } from "../../constants";
 
@@ -27,7 +34,7 @@ import "dotenv/config";
  *   console.log(account.burner);
  * });
  */
-export const createAccount = async (provider: RpcProvider) => {
+export const createAccount = async (provider: ProviderInterface) => {
   const accountClassHash = SOLIS_ACCOUNT_CLASS_HASH;
   const privateKey = stark.randomAddress();
   const publicKey = ec.starkCurve.getStarkKey(privateKey);
@@ -58,7 +65,7 @@ export const createAccount = async (provider: RpcProvider) => {
 /**
  * Asynchronously fetches an existing account or creates a new one based on the provided parameters.
  *
- * @param {RpcProvider} provider - The RPC provider to interact with the blockchain.
+ * @param {ProviderInterface} provider - The RPC provider to interact with the blockchain.
  * @param {string} [accountAddress] - The address of the existing account, if any.
  * @param {string} [accountPrivateKey] - The private key of the existing account, if any.
  * @returns {Promise<Account>} - The existing or newly created account.
@@ -67,7 +74,7 @@ export const createAccount = async (provider: RpcProvider) => {
  * If both are provided, it initializes and returns an existing account with the given credentials.
  */
 export async function fetchOrCreateAccount(
-  provider: RpcProvider,
+  provider: ProviderInterface,
   accountAddress?: string,
   accountPrivateKey?: string
 ): Promise<Account> {

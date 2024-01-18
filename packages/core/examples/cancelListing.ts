@@ -4,39 +4,31 @@
  * submitting a listing order and cancelling it.
  */
 
-import { RpcProvider, shortString } from "starknet";
+import { shortString } from "starknet";
 
 import {
   createAccount,
   fetchOrCreateAccount
 } from "../src/actions/account/account";
 import { cancelOrder, createListing } from "../src/actions/order";
-import { getOrderHash, getOrderStatus } from "../src/actions/read";
-import { STARKNET_NFT_ADDRESS } from "../src/constants";
+import { getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
-
-// Initialize the RPC provider with the ArkChain node URL
-const starknetProvider = new RpcProvider({
-  nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
-});
-
-// Initialize the RPC provider with the katana node URL for starknet
-const arkProvider = new RpcProvider({
-  nodeUrl: process.env.ARKCHAIN_RPC_URL ?? "http://0.0.0.0:7777"
-});
+import { config } from "./config";
+import { STARKNET_NFT_ADDRESS } from "./constants";
 
 /**
  * Creates a listing on the blockchain using provided order details.
  *
  * @param {RpcProvider} provider - The RPC provider instance.
  */
-(async (arkProvider: RpcProvider, starknetProvider: RpcProvider) => {
+(async () => {
   // Create a new account using the provider
-  const { account: arkAccount } = await createAccount(arkProvider);
-  const starknetAccount = await fetchOrCreateAccount(
-    starknetProvider,
-    process.env.ACCOUNT1_ADDRESS,
-    process.env.ACCOUNT1_PRIVATE_KEY
+  const { account: arkAccount } = await createAccount(config.arkProvider);
+
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
   // Define the order details
@@ -49,22 +41,20 @@ const arkProvider = new RpcProvider({
 
   console.log("Creating listing order...");
   // Create the listing on the arkchain using the order details
-  await createListing(arkProvider, starknetAccount, arkAccount, order);
+  const orderHash = await createListing(config, {
+    starknetAccount: starknetOffererAccount,
+    arkAccount,
+    order
+  });
 
   // wait 5 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  // Get the order hash
-  const { orderHash } = await getOrderHash(
-    order.tokenId,
-    order.tokenAddress,
-    arkProvider
-  );
+  console.log("=> Fetching order status...");
+  let { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
+    orderHash
+  });
 
-  let { orderStatus: orderStatusBefore } = await getOrderStatus(
-    orderHash,
-    arkProvider
-  );
   console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
 
   // Define the cancel details
@@ -74,14 +64,20 @@ const arkProvider = new RpcProvider({
     tokenId: order.tokenId
   };
 
+  console.log("Cancelling listing order...");
   // Cancel the order
-  cancelOrder(arkProvider, starknetAccount, arkAccount, cancelInfo);
+  cancelOrder(config, {
+    starknetAccount: starknetOffererAccount,
+    arkAccount,
+    cancelInfo
+  });
 
+  // wait 2 seconds for the transaction to be processed
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  let { orderStatus: orderStatusAfter } = await getOrderStatus(
-    orderHash,
-    arkProvider
-  );
+  console.log("=> Fetching order status...");
+  let { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+    orderHash
+  });
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
-})(arkProvider, starknetProvider);
+})();

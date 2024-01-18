@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 
-import { devnet, goerli, mainnet } from "@starknet-react/chains";
+import { goerli, mainnet, sepolia } from "@starknet-react/chains";
 import {
   argent,
   braavos,
@@ -24,7 +24,7 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
 
   return (
     <StarknetConfig
-      chains={[mainnet]}
+      chains={[goerli, mainnet, sepolia]}
       provider={publicProvider()}
       connectors={connectors}
       explorer={voyager}

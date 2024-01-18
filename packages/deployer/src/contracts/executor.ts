@@ -67,12 +67,14 @@ export async function deployExecutor(
   messagingAddress: string
 ) {
   const artifacts = getArtifacts(artifactsPath);
+  let chain_id = await provider.getChainId();
 
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
     admin_address: account.address,
     eth_contract_address: ethContractAddress,
-    messaging_address: messagingAddress
+    messaging_address: messagingAddress,
+    chain_id: chain_id
   });
 
   const deployR = await account.declareAndDeploy({

@@ -1,18 +1,26 @@
+"use client";
+
 import { useState } from "react";
 
 import { Account, AccountInterface } from "starknet";
 
-import { fulfillListing as fulfillListingCore } from "@ark-project/core";
+import {
+  Config,
+  fulfillListing as fulfillListingCore
+} from "@ark-project/core";
 import { FulfillListingInfo } from "@ark-project/core/src/types";
 
 import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types/hooks";
+import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
 export default function useFulfillListing() {
   const { rpcProvider } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
+  const config = useConfig();
+
   async function fulfillListing(
     starknetAccount: AccountInterface,
     fulfillListingInfo: FulfillListingInfo
@@ -30,13 +38,16 @@ export default function useFulfillListing() {
 
     try {
       setStatus("loading");
-      await fulfillListingCore(
-        rpcProvider,
+      await fulfillListingCore(config as Config, {
         starknetAccount,
-        new Account(rpcProvider, burner_address, burner_private_key),
+        arkAccount: new Account(
+          rpcProvider,
+          burner_address,
+          burner_private_key
+        ),
         fulfillListingInfo,
         owner
-      );
+      });
       setStatus("success");
     } catch (error) {
       setStatus("error");
