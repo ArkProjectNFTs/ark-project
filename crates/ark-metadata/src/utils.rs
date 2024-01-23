@@ -99,7 +99,7 @@ async fn fetch_metadata(
                     raw: raw_metadata,
                     normalized: metadata,
                     metadata_updated_at: Some(now.timestamp()),
-                    awaiting_metadata_update: Some(true)
+                    awaiting_metadata_update: Some(true),
                 })
             } else {
                 error!("Request Failed. URI: {}", uri);
@@ -152,7 +152,7 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
                 raw: decoded.to_string(),
                 normalized: metadata,
                 metadata_updated_at: Some(now.timestamp()),
-                awaiting_metadata_update: Some(true)
+                awaiting_metadata_update: Some(true),
             })
         }
         Some(("data:application/json", uri)) => {
@@ -161,7 +161,7 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
                 raw: uri.to_string(),
                 normalized: metadata,
                 metadata_updated_at: Some(now.timestamp()),
-                awaiting_metadata_update: Some(true)
+                awaiting_metadata_update: Some(true),
             })
         }
         _ => match serde_json::from_str(uri) {
