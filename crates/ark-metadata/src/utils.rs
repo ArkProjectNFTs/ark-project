@@ -40,7 +40,7 @@ pub async fn get_token_metadata(
         }
         MetadataType::OnChain(uri) => {
             trace!("Fetching on-chain metadata: {}", uri);
-            get_onchain_metadata(&uri)?
+            fetch_onchain_metadata(&uri)?
         }
     };
     Ok(metadata)
@@ -99,6 +99,7 @@ async fn fetch_metadata(
                     raw: raw_metadata,
                     normalized: metadata,
                     metadata_updated_at: Some(now.timestamp()),
+                    awaiting_metadata_update: Some(true),
                 })
             } else {
                 error!("Request Failed. URI: {}", uri);
@@ -131,7 +132,7 @@ pub fn file_extension_from_mime_type(mime_type: &str) -> &str {
     }
 }
 
-fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
+fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
     // Try to split from the comma as it is the standard with on chain metadata
     let url_encoded = urlencoding::decode(uri).map(|s| String::from(s.as_ref()));
     let uri_string = match url_encoded {
@@ -139,6 +140,7 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
         Err(_) => String::from(uri),
     };
 
+    let now = Utc::now();
     match uri_string.split_once(',') {
         Some(("data:application/json;base64", uri)) => {
             // If it is base64 encoded, decode it, parse and return
@@ -149,7 +151,8 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             Ok(TokenMetadata {
                 raw: decoded.to_string(),
                 normalized: metadata,
-                metadata_updated_at: None,
+                metadata_updated_at: Some(now.timestamp()),
+                awaiting_metadata_update: Some(true),
             })
         }
         Some(("data:application/json", uri)) => {
@@ -157,7 +160,8 @@ fn get_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             Ok(TokenMetadata {
                 raw: uri.to_string(),
                 normalized: metadata,
-                metadata_updated_at: None,
+                metadata_updated_at: Some(now.timestamp()),
+                awaiting_metadata_update: Some(true),
             })
         }
         _ => match serde_json::from_str(uri) {
