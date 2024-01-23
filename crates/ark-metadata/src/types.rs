@@ -68,7 +68,6 @@ pub struct TokenMetadata {
     pub normalized: NormalizedMetadata,
     pub raw: String,
     pub metadata_updated_at: Option<i64>,
-    pub awaiting_metadata_update: Option<bool>,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
