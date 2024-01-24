@@ -1,18 +1,11 @@
+"use client";
+
 import { useMemo } from "react";
 
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
+import Image from "next/image";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/Button";
 
 function ConnectWallet() {
   const { connectors, connect } = useConnect();
@@ -43,30 +36,26 @@ export function UserNav() {
   }, [address]);
 
   return address ? (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/avatars/01.png" alt={shortenedAddress} />
-            <AvatarFallback>{shortenedAddress}</AvatarFallback>
-          </Avatar>
+    <div>
+      <div className="flex items-center space-x-4">
+        <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full">
+          <Image
+            className="aspect-square h-full w-full"
+            src="/01.png"
+            width={36}
+            height={36}
+            alt="avatar"
+          />
+        </span>
+        <div>
+          <p className="text-sm font-medium leading-none">Sofia Davis</p>
+          <p className="text-sm text-muted-foreground">{shortenedAddress}</p>
+        </div>
+        <Button onClick={() => disconnect()} className="gap-x-2 mr-2">
+          Logout
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-xs leading-none text-muted-foreground">
-              {shortenedAddress}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => disconnect()}>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </div>
+    </div>
   ) : (
     <ConnectWallet />
   );

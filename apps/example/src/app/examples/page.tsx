@@ -12,20 +12,23 @@ import {
 } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/Button";
 
+import SdkExamples from "./components/SdkExamples";
+
 export default function Home() {
   return (
     <div className="container relative">
       <PageHeader>
         <Announcement />
         <PageHeaderHeading className="hidden md:block">
-          Ark Project: React SDK Demo
+          Ark Project: SDK hooks Examples
         </PageHeaderHeading>
         <PageHeaderHeading className="md:hidden">Examples</PageHeaderHeading>
         <PageHeaderDescription>
-          Explore key features of the Ark Project with our React SDK demo.
-          Create, manage, and fulfill orders, mint testnet NFTs, and delve into
-          various transactions. Experience our SDK and API in a user-friendly
-          environment.
+          Here, you'll find comprehensive examples for creating listing and
+          offer orders, canceling orders, and fulfilling transactions. These
+          forms are designed to demonstrate both mandatory and optional data
+          required to effectively utilize our React SDK hooks for all these
+          actions.
         </PageHeaderDescription>
         <PageActions>
           <Link
@@ -46,6 +49,7 @@ export default function Home() {
           </Link>
         </PageActions>
       </PageHeader>
+      <SdkExamples />
     </div>
   );
 }

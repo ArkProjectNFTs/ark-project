@@ -2,7 +2,6 @@
 
 import React, {
   createContext,
-  useContext,
   useEffect,
   useMemo,
   type PropsWithChildren
@@ -22,7 +21,7 @@ export type RpcProviderProviderProps = {
   config: Config;
 };
 
-const RpcContext = createContext<RpcContextValue>(undefined);
+export const RpcContext = createContext<RpcContextValue>(undefined);
 
 export function RpcProviderProvider(
   props: PropsWithChildren<RpcProviderProviderProps>
@@ -61,16 +60,4 @@ export function RpcProviderProvider(
   }, [arkChain]);
 
   return <RpcContext.Provider value={arkChain}>{children}</RpcContext.Provider>;
-}
-
-export function useRpc() {
-  const rpcContext = useContext(RpcContext);
-
-  if (rpcContext === undefined) {
-    throw new Error("useRpc must be used within an ArkProvider");
-  }
-
-  const { rpcProvider } = rpcContext;
-
-  return { rpcProvider };
 }

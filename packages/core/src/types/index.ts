@@ -18,17 +18,27 @@ export type OrderV1 = {
   additionalData: BigNumberish[];
 };
 
-export type BaseOrderV1 = {
+export type ListingV1 = {
   brokerId: BigNumberish;
   tokenAddress: BigNumberish;
   tokenId: BigNumberish;
+  currencyAddress?: BigNumberish;
+  currencyChainId?: BigNumberish;
   startAmount: BigNumberish;
   startDate?: number;
   endDate?: number;
 };
 
-export type ListingV1 = BaseOrderV1;
-export type OfferV1 = BaseOrderV1;
+export type OfferV1 = {
+  brokerId: BigNumberish;
+  tokenAddress: BigNumberish;
+  tokenId: BigNumberish;
+  currencyAddress?: BigNumberish;
+  currencyChainId?: BigNumberish;
+  startAmount: BigNumberish;
+  startDate?: number;
+  endDate?: number;
+};
 
 export enum RouteType {
   Erc20ToErc721 = 0,

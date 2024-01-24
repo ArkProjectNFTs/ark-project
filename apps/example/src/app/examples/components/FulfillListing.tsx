@@ -3,9 +3,9 @@ import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { useCreateOffer } from "@ark-project/react";
+import { useFulfillListing } from "@ark-project/react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Form,
   FormControl,
@@ -16,30 +16,28 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-export default function CreateOffer() {
+export default function FulfillListing() {
   const { account } = useAccount();
-  const { response, createOffer, status } = useCreateOffer();
+  const { fulfillListing, status } = useFulfillListing();
 
   const formSchema = z.object({
-    brokerId: z.number(),
-    tokenAddress: z
+    order_hash: z.string(),
+    token_address: z
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
       .length(66, { message: "Please enter a valid address" }),
-    tokenId: z
+    token_id: z
       .string()
-      .regex(/^\d+$/, { message: "Token ID must be a number" }),
-    startAmount: z.number()
+      .regex(/^\d+$/, { message: "Token ID must be a number" })
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      brokerId: 123,
-      tokenAddress:
+      order_hash: undefined,
+      token_address:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-      tokenId: "12",
-      startAmount: 600000000000000000
+      token_id: "12"
     }
   });
 
@@ -49,9 +47,9 @@ export default function CreateOffer() {
     if (account === undefined) return;
     const processedValues = {
       ...values,
-      tokenId: parseInt(values.tokenId, 10)
+      token_id: parseInt(values.token_id, 10)
     };
-    createOffer(account, processedValues);
+    fulfillListing(account, processedValues);
   }
 
   return (
@@ -60,12 +58,12 @@ export default function CreateOffer() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="brokerId"
+            name="order_hash"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Broker Id</FormLabel>
+                <FormLabel>Order Hash</FormLabel>
                 <FormControl>
-                  <Input placeholder="Broker Id" {...field} />
+                  <Input placeholder="Order Hash" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -73,7 +71,7 @@ export default function CreateOffer() {
           />
           <FormField
             control={form.control}
-            name="tokenAddress"
+            name="token_address"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Address</FormLabel>
@@ -86,25 +84,12 @@ export default function CreateOffer() {
           />
           <FormField
             control={form.control}
-            name="tokenId"
+            name="token_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Id</FormLabel>
                 <FormControl>
                   <Input placeholder="Token Id" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="startAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Amount</FormLabel>
-                <FormControl>
-                  <Input placeholder="Broker Id" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -118,12 +103,11 @@ export default function CreateOffer() {
                   ? "Error"
                   : status === "success"
                     ? "Success"
-                    : "Create Offer"
+                    : "Fulfill Listing"
               : "Connect your wallet"}
           </Button>
         </form>
       </Form>
-      <div className="mt-4">response: {response?.toString()}</div>
     </>
   );
 }

@@ -12,20 +12,22 @@ import {
 } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/Button";
 
+import PortFolio from "./components/Portfolio";
+
 export default function Home() {
   return (
     <div className="container relative">
       <PageHeader>
         <Announcement />
         <PageHeaderHeading className="hidden md:block">
-          Ark Project: React SDK Demo
+          Portfolio examples
         </PageHeaderHeading>
         <PageHeaderHeading className="md:hidden">Examples</PageHeaderHeading>
         <PageHeaderDescription>
-          Explore key features of the Ark Project with our React SDK demo.
-          Create, manage, and fulfill orders, mint testnet NFTs, and delve into
-          various transactions. Experience our SDK and API in a user-friendly
-          environment.
+          An interactive portfolio demo of our SDK's. Here, you can effortlessly
+          list your NFTs for sale, cancel listing or accept offers directly.
+          This example highlights how seamlessly our SDK integrates into
+          managing and transacting with your users digital assets.
         </PageHeaderDescription>
         <PageActions>
           <Link
@@ -46,6 +48,7 @@ export default function Home() {
           </Link>
         </PageActions>
       </PageHeader>
+      <PortFolio />
     </div>
   );
 }

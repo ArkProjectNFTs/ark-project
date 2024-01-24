@@ -10,13 +10,13 @@ import {
   Config
 } from "@ark-project/core";
 
-import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types";
+import useArkRpc from "./useArkRpc";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
 export default function useCancel() {
-  const { rpcProvider } = useRpc();
+  const { rpcProvider } = useArkRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
   const config = useConfig();

@@ -5,7 +5,7 @@ import * as z from "zod";
 
 import { useCancel } from "@ark-project/react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Form,
   FormControl,

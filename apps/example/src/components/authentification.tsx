@@ -3,7 +3,7 @@ import React from "react";
 import { useConnect } from "@starknet-react/core";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 function ConnectWallet() {
   const { connectors, connect } = useConnect();

@@ -6,6 +6,7 @@ import { Inter as FontSans } from "next/font/google";
 import { Network } from "@ark-project/core";
 import { ArkProvider } from "@ark-project/react";
 
+import AuthSwitcher from "@/components/authSwitcher";
 import { StarknetProvider } from "@/components/starknet-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -47,7 +48,7 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              {children}
+              <AuthSwitcher>{children}</AuthSwitcher>
             </ThemeProvider>
           </ArkProvider>
         </StarknetProvider>

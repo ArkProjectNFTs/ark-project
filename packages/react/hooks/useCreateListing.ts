@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Account, AccountInterface } from "starknet";
+import { AccountInterface } from "starknet";
 
 import {
   Config,
@@ -10,53 +10,40 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { useRpc } from "../components/ArkProvider/RpcContext";
 import { Status } from "../types";
+import useApproveERC721 from "./useApproveERC721";
+import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
 export default function useCreateListing() {
-  const { rpcProvider } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
-  const [response, setResponse] = useState<bigint | undefined>(undefined);
-  const owner = useOwner();
+  const [response, setResponse] = useState<bigint | undefined>();
+  const { approveERC721 } = useApproveERC721();
   const config = useConfig();
+  const owner = useOwner();
+  const arkAccount = useBurnerWallet();
 
   async function createListing(
     starknetAccount: AccountInterface,
     order: ListingV1
   ) {
-    const burner_address = localStorage.getItem("burner_address");
-    const burner_private_key = localStorage.getItem("burner_private_key");
-    const burner_public_key = localStorage.getItem("burner_public_key");
-
-    if (
-      burner_address === null ||
-      burner_private_key === null ||
-      burner_public_key === null
-    ) {
-      throw new Error("No burner wallet in local storage");
-    }
-
-    const arkAccount = new Account(
-      rpcProvider,
-      burner_address,
-      burner_private_key
-    );
+    if (!arkAccount) throw new Error("No burner wallet.");
 
     try {
       setStatus("loading");
       const orderHash = await createListingCore(config as Config, {
         starknetAccount,
-        arkAccount: arkAccount,
+        arkAccount,
         order,
         owner
       });
-      setStatus("success");
       setResponse(orderHash);
+      setStatus("success");
+      await approveERC721(starknetAccount, order.tokenId, order.tokenAddress);
     } catch (error) {
-      setStatus("error");
       console.error(error);
+      setStatus("error");
     }
   }
 

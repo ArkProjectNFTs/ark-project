@@ -1,11 +1,16 @@
+"use client";
+
+import React, { useEffect } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
+import { Web3 } from "web3";
 import * as z from "zod";
 
-import { useFulfillListing } from "@ark-project/react";
+import { useCreateListing } from "@ark-project/react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Form,
   FormControl,
@@ -16,30 +21,50 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-export default function FulfillListing() {
+interface Token {
+  token_id?: string;
+  contract_address?: string;
+}
+
+interface OrderBookActionsProps {
+  currentToken?: Token;
+}
+
+const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
   const { account } = useAccount();
-  const { fulfillListing, status } = useFulfillListing();
+  const { response, createListing, status } = useCreateListing();
 
   const formSchema = z.object({
-    order_hash: z.string(),
-    token_address: z
+    brokerId: z.number(),
+    tokenAddress: z
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
       .length(66, { message: "Please enter a valid address" }),
-    token_id: z
+    tokenId: z
       .string()
-      .regex(/^\d+$/, { message: "Token ID must be a number" })
+      .regex(/^\d+$/, { message: "Token ID must be a number" }),
+    startAmount: z.string()
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      order_hash: undefined,
-      token_address:
-        "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-      token_id: "12"
+      brokerId: 123,
+      tokenAddress: currentToken?.contract_address,
+      tokenId: currentToken?.token_id,
+      startAmount: Web3.utils.fromWei(42000000000000000, "ether")
     }
   });
+
+  useEffect(() => {
+    if (currentToken) {
+      form.reset({
+        ...form.getValues(),
+        tokenAddress: currentToken.contract_address,
+        tokenId: currentToken.token_id
+      });
+    }
+  }, [currentToken, form]);
 
   if (account === undefined) return;
 
@@ -47,9 +72,10 @@ export default function FulfillListing() {
     if (account === undefined) return;
     const processedValues = {
       ...values,
-      token_id: parseInt(values.token_id, 10)
+      tokenId: parseInt(values.tokenId, 10),
+      startAmount: Web3.utils.toWei(values.startAmount, "ether")
     };
-    fulfillListing(account, processedValues);
+    createListing(account, processedValues);
   }
 
   return (
@@ -58,12 +84,12 @@ export default function FulfillListing() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="order_hash"
+            name="brokerId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Order Hash</FormLabel>
+                <FormLabel>Broker Id</FormLabel>
                 <FormControl>
-                  <Input placeholder="Order Hash" {...field} />
+                  <Input placeholder="Broker Id" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -71,7 +97,7 @@ export default function FulfillListing() {
           />
           <FormField
             control={form.control}
-            name="token_address"
+            name="tokenAddress"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Address</FormLabel>
@@ -84,12 +110,25 @@ export default function FulfillListing() {
           />
           <FormField
             control={form.control}
-            name="token_id"
+            name="tokenId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Id</FormLabel>
                 <FormControl>
                   <Input placeholder="Token Id" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="startAmount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Start Amount</FormLabel>
+                <FormControl>
+                  <Input placeholder="Start Amount in ETH" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -103,11 +142,14 @@ export default function FulfillListing() {
                   ? "Error"
                   : status === "success"
                     ? "Success"
-                    : "Fulfill Listing"
+                    : "Create Listing"
               : "Connect your wallet"}
           </Button>
         </form>
       </Form>
+      <div className="mt-4">response: {response?.toString()}</div>
     </>
   );
-}
+};
+
+export default CreateListing;

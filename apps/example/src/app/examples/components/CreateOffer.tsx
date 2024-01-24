@@ -1,14 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
+import { Web3 } from "web3";
 import * as z from "zod";
 
-import { useCreateListing } from "@ark-project/react";
+import { useCreateOffer } from "@ark-project/react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -16,12 +18,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-export default function CreateListing() {
+export default function CreateOffer() {
   const { account } = useAccount();
-  const { response, createListing, status } = useCreateListing();
+  const { response, createOffer, status } = useCreateOffer();
 
   const formSchema = z.object({
     brokerId: z.number(),
+    currencyAddress: z.string(),
     tokenAddress: z
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
@@ -29,7 +32,7 @@ export default function CreateListing() {
     tokenId: z
       .string()
       .regex(/^\d+$/, { message: "Token ID must be a number" }),
-    startAmount: z.number()
+    startAmount: z.string()
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -39,7 +42,7 @@ export default function CreateListing() {
       tokenAddress:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
       tokenId: "12",
-      startAmount: 600000000000000000
+      startAmount: Web3.utils.fromWei(42000000000000000, "ether")
     }
   });
 
@@ -49,9 +52,10 @@ export default function CreateListing() {
     if (account === undefined) return;
     const processedValues = {
       ...values,
-      tokenId: parseInt(values.tokenId, 10)
+      tokenId: parseInt(values.tokenId, 10),
+      startAmount: Web3.utils.toWei(values.startAmount, "ether")
     };
-    createListing(account, processedValues);
+    createOffer(account, processedValues);
   }
 
   return (
@@ -67,6 +71,10 @@ export default function CreateListing() {
                 <FormControl>
                   <Input placeholder="Broker Id" {...field} />
                 </FormControl>
+                <FormDescription>
+                  A referral ID to collect fees from trades initiated through
+                  this referral.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -80,6 +88,9 @@ export default function CreateListing() {
                 <FormControl>
                   <Input placeholder="Token Address" {...field} />
                 </FormControl>
+                <FormDescription>
+                  Token Address of the token user want to buy
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -93,6 +104,9 @@ export default function CreateListing() {
                 <FormControl>
                   <Input placeholder="Token Id" {...field} />
                 </FormControl>
+                <FormDescription>
+                  token id of the token user want to buy
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -106,6 +120,26 @@ export default function CreateListing() {
                 <FormControl>
                   <Input placeholder="Broker Id" {...field} />
                 </FormControl>
+                <FormDescription>
+                  value send to the function should be in wei
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="currencyAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Currency address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Currency address" {...field} />
+                </FormControl>
+                <FormDescription>
+                  default:
+                  0x04d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -118,7 +152,7 @@ export default function CreateListing() {
                   ? "Error"
                   : status === "success"
                     ? "Success"
-                    : "Create Listing"
+                    : "Create Offer"
               : "Connect your wallet"}
           </Button>
         </form>
