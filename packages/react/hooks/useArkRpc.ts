@@ -6,7 +6,7 @@ export default function useArkRpc() {
   const rpcContext = useContext(RpcContext);
 
   if (rpcContext === undefined) {
-    throw new Error("useRpc must be used within an ArkProvider");
+    throw new Error("useArkRpc must be used within an ArkProvider");
   }
 
   const { rpcProvider } = rpcContext;
