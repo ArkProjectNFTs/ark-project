@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use cainome::cairo_serde::CairoSerde;
 use katana_core::hooker::{HookerAddresses, KatanaHooker};
 use katana_core::sequencer::KatanaSequencer;
+use katana_primitives::chain::ChainId;
 use katana_primitives::contract::ContractAddress;
 use katana_primitives::transaction::{ExecutableTx, ExecutableTxWithHash, L1HandlerTx};
 use katana_primitives::utils::transaction::compute_l1_message_hash;
@@ -83,7 +84,7 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
     ) {
         let to_address = self.orderbook_address;
         let from_address = self.sn_executor_address;
-        let chain_id = CHAIN_ID_SOLIS;
+        let chain_id = ChainId::Id(CHAIN_ID_SOLIS);
 
         // The nonce is normally used by the messaging contract on Starknet. But in the
         // case of those transaction, as they are only sent by Solis itself, we use 0.
