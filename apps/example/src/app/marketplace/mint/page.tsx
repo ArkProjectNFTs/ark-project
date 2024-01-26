@@ -11,20 +11,17 @@ import {
 } from "@starknet-react/core";
 import { BigNumberish, toNumber } from "ethers";
 import Image from "next/image";
-import Link from "next/link";
 
 import { useConfig } from "@ark-project/react";
 
-import { cn } from "@/lib/utils";
-import { Announcement } from "@/components/announcement";
+import { Button } from "@/components/ui/Button";
 import {
-  PageActions,
-  PageHeader,
-  PageHeaderDescription,
-  PageHeaderHeading
-} from "@/components/page-header";
-import { Button, buttonVariants } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 
 import { ABI } from "./abi";
 
@@ -124,19 +121,18 @@ export default function Home() {
   }, [isError, isLoading, error, data]);
 
   return (
-    <div className="container relative">
-      <PageHeader>
-        <Announcement />
-        <PageHeaderHeading className="hidden md:block">
-          Mint a testnet Everai NFT.
-        </PageHeaderHeading>
-        <PageHeaderHeading className="md:hidden">Examples</PageHeaderHeading>
-        <PageHeaderDescription>
-          Mint your testnet Everai token and track it in your portfolio using
-          our API. Create listings with your token and experiment with
-          transactions using a different account.
-        </PageHeaderDescription>
-        <PageActions>
+    <div className="hidden flex-col md:flex items-center">
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Next Everai</CardTitle>
+        </CardHeader>
+        {tokenMetadata && (
+          <CardContent className="grid gap-4">
+            {renderMedia(tokenMetadata.image)}
+            Current token ID: {tokenId}
+          </CardContent>
+        )}
+        <CardFooter>
           {transactionIsLoading ? (
             <div>Transaction in progress</div>
           ) : (
@@ -144,28 +140,8 @@ export default function Home() {
               {isPending ? "Minting..." : "Mint"}
             </Button>
           )}
-          <Link
-            target="_blank"
-            href="https://docs.arkproject.dev"
-            className={cn(buttonVariants(), "rounded-[6px]")}
-          >
-            Portfolio
-          </Link>
-        </PageActions>
-      </PageHeader>
-      <div className="hidden flex-col md:flex items-center">
-        <Card className="w-[350px]">
-          <CardHeader>
-            <CardTitle>Next Everai</CardTitle>
-          </CardHeader>
-          {tokenMetadata && (
-            <CardContent className="grid gap-4">
-              {renderMedia(tokenMetadata.image)}
-              Current token ID: {tokenId}
-            </CardContent>
-          )}
-        </Card>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

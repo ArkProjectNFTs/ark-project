@@ -102,14 +102,7 @@ export default async function Token({
             </div>
           </div>
         </div>
-        <div className="row-span-3 col-span-2 ...">
-          <CreateListing
-            currentToken={{
-              token_id: token.token_id,
-              contract_address: token.contract_address
-            }}
-          />
-        </div>
+        <div className="row-span-3 col-span-2 ...">buy / sell</div>
       </div>
     </div>
   );

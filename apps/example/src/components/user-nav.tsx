@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/Button";
 
 function ConnectWallet() {
   const { connectors, connect } = useConnect();
-
   return (
     <div className="inline-flex flex-row gap-2">
       {connectors.map((connector) => {

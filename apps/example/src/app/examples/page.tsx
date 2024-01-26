@@ -16,7 +16,7 @@ import SdkExamples from "./components/SdkExamples";
 
 export default function Home() {
   return (
-    <div className="container relative">
+    <>
       <PageHeader>
         <Announcement />
         <PageHeaderHeading className="hidden md:block">
@@ -50,6 +50,6 @@ export default function Home() {
         </PageActions>
       </PageHeader>
       <SdkExamples />
-    </div>
+    </>
   );
 }

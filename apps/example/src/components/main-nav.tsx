@@ -37,6 +37,12 @@ export function MainNav({
         Examples
       </Link>
       <Link
+        href="/marketplace"
+        className="text-sm font-medium transition-colors hover:text-primary"
+      >
+        Demo
+      </Link>
+      {/* <Link
         href="/mint"
         className="text-sm font-medium transition-colors hover:text-primary"
       >
@@ -53,7 +59,7 @@ export function MainNav({
         className="text-sm font-medium transition-colors hover:text-primary"
       >
         Portfolio
-      </Link>
+      </Link> */}
       <Link
         target="_blank"
         href="https://docs.arkproject.dev"

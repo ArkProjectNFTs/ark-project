@@ -6,9 +6,11 @@ import { Inter as FontSans } from "next/font/google";
 import { Network } from "@ark-project/core";
 import { ArkProvider } from "@ark-project/react";
 
-import AuthSwitcher from "@/components/authSwitcher";
+import { MainNav } from "@/components/main-nav";
+import { ModeToggle } from "@/components/mode-toggle";
 import { StarknetProvider } from "@/components/starknet-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { UserNav } from "@/components/user-nav";
 
 import "./globals.css";
 
@@ -48,7 +50,22 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <AuthSwitcher>{children}</AuthSwitcher>
+              <div className="hidden flex-col md:flex">
+                <div className="border-b top-0 absolute w-full z-20">
+                  <div className="container mx-auto">
+                    <div className="flex h-16 items-center">
+                      <MainNav />
+                      <div className="ml-auto flex items-center space-x-4">
+                        <ModeToggle />
+                        <UserNav />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="container mx-auto flex-1 space-y-4 p-8 pt-6">
+                  {children}
+                </div>
+              </div>
             </ThemeProvider>
           </ArkProvider>
         </StarknetProvider>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -14,8 +15,8 @@ import { buttonVariants } from "@/components/ui/Button";
 
 export default function Home() {
   return (
-    <div className="container relative">
-      <PageHeader>
+    <>
+      <PageHeader className="md:pb-0 lg:pb-0">
         <Announcement />
         <PageHeaderHeading className="hidden md:block">
           Ark Project: React SDK Demo
@@ -46,6 +47,13 @@ export default function Home() {
           </Link>
         </PageActions>
       </PageHeader>
-    </div>
+      <Image
+        src="/login.png"
+        alt="illustration"
+        width="1758"
+        height="595"
+        className="w-full"
+      />
+    </>
   );
 }
