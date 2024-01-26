@@ -19,7 +19,7 @@ regex = "1.9.1"
 env_logger = "0.10.0"
 log = "0.4.17"
 dotenv = "0.15.0"
-thiserror = "1.0.32"
+thiserror = "1.0.55"
 # For now, Diri can't use the ark-starknet due to the dependency
 # on ArkProjectNFTs for of starknet-rs.
 starknet = "0.8.0"
