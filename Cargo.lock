@@ -4856,8 +4856,8 @@ dependencies = [
 
 [[package]]
 name = "katana-core"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4869,6 +4869,7 @@ dependencies = [
  "ethers",
  "flate2",
  "futures",
+ "katana-db",
  "katana-executor",
  "katana-primitives",
  "katana-provider",
@@ -4888,8 +4889,8 @@ dependencies = [
 
 [[package]]
 name = "katana-db"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4908,8 +4909,8 @@ dependencies = [
 
 [[package]]
 name = "katana-executor"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4925,8 +4926,8 @@ dependencies = [
 
 [[package]]
 name = "katana-primitives"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4937,15 +4938,18 @@ dependencies = [
  "flate2",
  "serde",
  "serde_json",
+ "serde_with",
  "starknet 0.8.0",
  "starknet_api",
+ "strum 0.25.0",
+ "strum_macros 0.25.3",
  "thiserror",
 ]
 
 [[package]]
 name = "katana-provider"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
  "anyhow",
  "auto_impl",
@@ -4961,8 +4965,8 @@ dependencies = [
 
 [[package]]
 name = "katana-rpc"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
  "anyhow",
  "cairo-lang-starknet",
@@ -4975,8 +4979,10 @@ dependencies = [
  "katana-executor",
  "katana-primitives",
  "katana-provider",
+ "katana-rpc-api",
  "katana-rpc-types",
  "katana-rpc-types-builder",
+ "katana-tasks",
  "serde",
  "serde_json",
  "serde_with",
@@ -4990,22 +4996,38 @@ dependencies = [
 ]
 
 [[package]]
-name = "katana-rpc-types"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+name = "katana-rpc-api"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
- "anyhow",
- "derive_more",
+ "jsonrpsee",
+ "katana-core",
  "katana-primitives",
- "serde",
- "serde_with",
+ "katana-rpc-types",
  "starknet 0.8.0",
 ]
 
 [[package]]
+name = "katana-rpc-types"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
+dependencies = [
+ "anyhow",
+ "derive_more",
+ "jsonrpsee",
+ "katana-core",
+ "katana-primitives",
+ "katana-provider",
+ "serde",
+ "serde_with",
+ "starknet 0.8.0",
+ "thiserror",
+]
+
+[[package]]
 name = "katana-rpc-types-builder"
-version = "0.4.2"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.7-solis#a62754e441e88b609f7554fd0e881ce1ef909838"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
 dependencies = [
  "anyhow",
  "katana-executor",
@@ -5013,6 +5035,17 @@ dependencies = [
  "katana-provider",
  "katana-rpc-types",
  "starknet 0.8.0",
+]
+
+[[package]]
+name = "katana-tasks"
+version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.1.9-solis#0f81cb5f7216bdbed16b433b28a1c3a83eea3751"
+dependencies = [
+ "futures",
+ "rayon",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -7528,6 +7561,7 @@ dependencies = [
  "katana-core",
  "katana-primitives",
  "katana-rpc",
+ "katana-rpc-api",
  "lazy_static",
  "metrics-process",
  "num-bigint",

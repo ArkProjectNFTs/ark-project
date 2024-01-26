@@ -1,3 +1,16 @@
+//! Katana binary executable.
+//!
+//! ## Feature Flags
+//!
+//! - `jemalloc`: Uses [jemallocator](https://github.com/tikv/jemallocator) as the global allocator.
+//!   This is **not recommended on Windows**. See [here](https://rust-lang.github.io/rfcs/1974-global-allocators.html#jemalloc)
+//!   for more info.
+//! - `jemalloc-prof`: Enables [jemallocator's](https://github.com/tikv/jemallocator) heap profiling
+//!   and leak detection functionality. See [jemalloc's opt.prof](https://jemalloc.net/jemalloc.3.html#opt.prof)
+//!   documentation for usage details. This is **not recommended on Windows**. See [here](https://rust-lang.github.io/rfcs/1974-global-allocators.html#jemalloc)
+//!   for more info.
+use std::path::PathBuf;
+
 use clap::{Args, Parser, Subcommand};
 use clap_complete::Shell;
 use katana_core::backend::config::{Environment, StarknetConfig};
@@ -5,22 +18,60 @@ use katana_core::constants::{
     DEFAULT_GAS_PRICE, DEFAULT_INVOKE_MAX_STEPS, DEFAULT_VALIDATE_MAX_STEPS,
 };
 use katana_core::sequencer::SequencerConfig;
-use katana_rpc::api::ApiKind;
+use katana_primitives::chain::ChainId;
 use katana_rpc::config::ServerConfig;
+use katana_rpc_api::ApiKind;
 use tracing::Subscriber;
 use tracing_subscriber::{fmt, EnvFilter};
+use url::Url;
+
+use crate::CHAIN_ID_SOLIS;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct KatanaArgs {
+    #[arg(long)]
+    #[arg(help = "Don't print anything on startup.")]
+    pub silent: bool,
+
+    #[arg(long)]
+    #[arg(conflicts_with = "block_time")]
+    #[arg(help = "Disable auto and interval mining, and mine on demand instead via an endpoint.")]
+    pub no_mining: bool,
+
     #[arg(short, long)]
     #[arg(value_name = "MILLISECONDS")]
     #[arg(help = "Block time in milliseconds for interval mining.")]
     pub block_time: Option<u64>,
 
     #[arg(long)]
+    #[arg(value_name = "PATH")]
+    #[arg(help = "Directory path of the database to initialize from.")]
+    #[arg(
+        long_help = "Directory path of the database to initialize from. The path must either \
+                       be an empty directory or a directory which already contains a previously \
+                       initialized Katana database."
+    )]
+    pub db_dir: Option<PathBuf>,
+
+    #[arg(long)]
+    #[arg(value_name = "URL")]
+    #[arg(help = "The Starknet RPC provider to fork the network from.")]
+    pub rpc_url: Option<Url>,
+
+    #[arg(long)]
     pub dev: bool,
+
+    #[arg(long)]
+    #[arg(help = "Output logs in JSON format.")]
+    pub json_log: bool,
+
+    #[arg(long)]
+    #[arg(requires = "rpc_url")]
+    #[arg(value_name = "BLOCK_NUMBER")]
+    #[arg(help = "Fork the network at a specific block.")]
+    pub fork_block_number: Option<u64>,
 
     #[arg(long)]
     #[arg(value_name = "PATH")]
@@ -29,13 +80,10 @@ pub struct KatanaArgs {
     #[arg(
         long_help = "Configure the messaging to allow Katana listening/sending messages on a \
                        settlement chain that can be Ethereum or an other Starknet sequencer. \
-                       The configuration file details and examples can be found here: TODO."
+                       The configuration file details and examples can be found here: https://book.dojoengine.org/toolchain/katana/reference.html#messaging"
     )]
     pub messaging: katana_core::service::messaging::MessagingConfig,
 
-    // #[command(flatten)]
-    // #[command(next_help_heading = "Solis options")]
-    // pub solis: crate::solis_args::SolisOptions,
     #[command(flatten)]
     #[command(next_help_heading = "Server options")]
     pub server: ServerOptions,
@@ -80,14 +128,14 @@ pub struct StarknetOptions {
 
     #[arg(long = "accounts")]
     #[arg(value_name = "NUM")]
-    #[arg(default_value = "2")]
+    #[arg(default_value = "10")]
     #[arg(help = "Number of pre-funded accounts to generate.")]
     pub total_accounts: u8,
 
-    // Fees are disabled for now on Solis.
-    // #[arg(long)]
-    // #[arg(help = "Disable charging fee for transactions.")]
-    // pub disable_fee: bool,
+    #[arg(long)]
+    #[arg(help = "Disable validation when executing transactions.")]
+    pub disable_validate: bool,
+
     #[command(flatten)]
     #[command(next_help_heading = "Environment options")]
     pub environment: EnvironmentOptions,
@@ -96,13 +144,8 @@ pub struct StarknetOptions {
 #[derive(Debug, Args, Clone)]
 pub struct EnvironmentOptions {
     #[arg(long)]
-    #[arg(help = "The chain ID.")]
-    #[arg(default_value = "SOLIS")]
-    pub chain_id: String,
-
-    #[arg(long)]
     #[arg(help = "The gas price.")]
-    pub gas_price: Option<u128>,
+    pub gas_price: Option<u64>,
 
     #[arg(long)]
     #[arg(help = "The maximum number of steps available for the account validation logic.")]
@@ -115,15 +158,19 @@ pub struct EnvironmentOptions {
 
 impl KatanaArgs {
     pub fn init_logging(&self) -> Result<(), Box<dyn std::error::Error>> {
-        const DEFAULT_LOG_FILTER: &str = "info,executor=trace,server=debug,katana_core=trace,\
-                                          blockifier=off,jsonrpsee_server=off,hyper=off,\
-                                          messaging=debug";
+        const DEFAULT_LOG_FILTER: &str = "info,executor=trace,forked_backend=trace,server=debug,\
+                                          katana_core=trace,blockifier=off,jsonrpsee_server=off,\
+                                          hyper=off,messaging=debug";
 
         let builder = fmt::Subscriber::builder().with_env_filter(
             EnvFilter::try_from_default_env().or(EnvFilter::try_new(DEFAULT_LOG_FILTER))?,
         );
 
-        let subscriber: Box<dyn Subscriber + Send + Sync> = Box::new(builder.finish());
+        let subscriber: Box<dyn Subscriber + Send + Sync> = if self.json_log {
+            Box::new(builder.json().finish())
+        } else {
+            Box::new(builder.finish())
+        };
 
         Ok(tracing::subscriber::set_global_default(subscriber)?)
     }
@@ -131,7 +178,7 @@ impl KatanaArgs {
     pub fn sequencer_config(&self) -> SequencerConfig {
         SequencerConfig {
             block_time: self.block_time,
-            no_mining: false,
+            no_mining: self.no_mining,
             messaging: Some(self.messaging.clone()),
         }
     }
@@ -156,10 +203,11 @@ impl KatanaArgs {
             total_accounts: self.starknet.total_accounts,
             seed: parse_seed(&self.starknet.seed),
             disable_fee: true,
+            disable_validate: self.starknet.disable_validate,
             fork_rpc_url: None,
             fork_block_number: None,
             env: Environment {
-                chain_id: self.starknet.environment.chain_id.clone(),
+                chain_id: ChainId::Id(CHAIN_ID_SOLIS),
                 gas_price: self
                     .starknet
                     .environment
@@ -176,6 +224,7 @@ impl KatanaArgs {
                     .validate_max_steps
                     .unwrap_or(DEFAULT_VALIDATE_MAX_STEPS),
             },
+            db_dir: self.db_dir.clone(),
         }
     }
 }
