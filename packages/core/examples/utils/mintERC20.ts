@@ -10,12 +10,11 @@ import {
 import { STARKNET_ETH_ADDRESS } from "../constants";
 
 export const mintERC20 = async (
-  starknetProvider: ProviderInterface,
+  provider: ProviderInterface,
   starknetAccount: Account,
   amount: BigNumberish
 ) => {
-  const { abi: erc20abi } =
-    await starknetProvider.getClassAt(STARKNET_ETH_ADDRESS);
+  const { abi: erc20abi } = await provider.getClassAt(STARKNET_ETH_ADDRESS);
   if (erc20abi === undefined) {
     throw new Error("no abi.");
   }
@@ -26,7 +25,8 @@ export const mintERC20 = async (
     calldata: CallData.compile([starknetAccount.address, cairo.uint256(amount)])
   };
 
-  await starknetAccount.execute(mintERC20Call, [erc20abi], {
+  const result = await starknetAccount.execute(mintERC20Call, [erc20abi], {
     maxFee: 0
   });
+  await provider.waitForTransaction(result.transaction_hash);
 };

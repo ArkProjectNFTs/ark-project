@@ -33,9 +33,10 @@ export const approveERC721 = async (
     calldata: CallData.compile([config.starknetContracts.executor, true])
   };
 
-  await starknetAccount.execute(approveCall, [erc721abi], {
+  const result = await starknetAccount.execute(approveCall, [erc721abi], {
     maxFee: 0
   });
+  await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };
 
 interface ApproveERC20Parameters {
@@ -49,7 +50,6 @@ export const approveERC20 = async (
   parameters: ApproveERC20Parameters
 ) => {
   const { contractAddress, amount, starknetAccount } = parameters;
-
   const { abi: erc20abi } =
     await config.starknetProvider.getClassAt(contractAddress);
 
@@ -66,7 +66,9 @@ export const approveERC20 = async (
     ])
   };
 
-  await starknetAccount.execute(approuveERC20Call, [erc20abi], {
+  const result = await starknetAccount.execute(approuveERC20Call, [erc20abi], {
     maxFee: 0
   });
+
+  await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };
