@@ -1,6 +1,6 @@
 export { fetchOrCreateAccount, createAccount } from "./actions/account";
 
-export { approveERC20, approveERC721 } from "./actions/contract";
+export { approveERC20, approveERC721, increaseERC20 } from "./actions/contract";
 
 export {
   createListing,

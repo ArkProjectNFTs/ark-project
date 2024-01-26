@@ -12,6 +12,7 @@ import {
   createAccount,
   createListing,
   fetchOrCreateAccount,
+  increaseERC20,
   ListingV1
 } from "../src";
 import { config } from "./config";
@@ -92,6 +93,12 @@ import { mintERC721 } from "./utils/mintERC721";
   );
 
   await approveERC20(config, {
+    starknetAccount: starknetFulfillerAccount,
+    contractAddress: STARKNET_ETH_ADDRESS,
+    amount: order.startAmount
+  });
+
+  await increaseERC20(config, {
     starknetAccount: starknetFulfillerAccount,
     contractAddress: STARKNET_ETH_ADDRESS,
     amount: order.startAmount

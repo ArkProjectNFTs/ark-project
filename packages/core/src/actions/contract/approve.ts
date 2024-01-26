@@ -59,7 +59,7 @@ export const approveERC20 = async (
 
   const approuveERC20Call: Call = {
     contractAddress,
-    entrypoint: "increase_allowance",
+    entrypoint: "approve",
     calldata: CallData.compile([
       config.starknetContracts.executor,
       cairo.uint256(amount)
@@ -67,6 +67,34 @@ export const approveERC20 = async (
   };
 
   const result = await starknetAccount.execute(approuveERC20Call, [erc20abi], {
+    maxFee: 0
+  });
+
+  await config.starknetProvider.waitForTransaction(result.transaction_hash);
+};
+
+export const increaseERC20 = async (
+  config: Config,
+  parameters: ApproveERC20Parameters
+) => {
+  const { contractAddress, amount, starknetAccount } = parameters;
+  const { abi: erc20abi } =
+    await config.starknetProvider.getClassAt(contractAddress);
+
+  if (erc20abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const increaseERC20Call: Call = {
+    contractAddress,
+    entrypoint: "increase_allowance",
+    calldata: CallData.compile([
+      config.starknetContracts.executor,
+      cairo.uint256(amount)
+    ])
+  };
+
+  const result = await starknetAccount.execute(increaseERC20Call, [erc20abi], {
     maxFee: 0
   });
 
