@@ -1,6 +1,7 @@
 import {
   Account,
-  Contract,
+  Call,
+  CallData,
   ProviderInterface,
   type BigNumberish
 } from "starknet";
@@ -19,18 +20,15 @@ export async function mintERC721(
     throw new Error("no abi.");
   }
 
-  const erc721Contract = new Contract(
-    erc721abi,
-    STARKNET_NFT_ADDRESS,
-    provider
-  );
+  const mintCall: Call = {
+    contractAddress: STARKNET_NFT_ADDRESS,
+    entrypoint: "mint",
+    calldata: CallData.compile([starknetAccount.address, tokenId])
+  };
 
-  erc721Contract.connect(starknetAccount);
-  const mintCall = erc721Contract.populate("mint", [
-    starknetAccount.address,
-    1
-  ]);
+  const result = await starknetAccount.execute(mintCall, [erc721abi], {
+    maxFee: 0
+  });
 
-  const res = await erc721Contract.mint(mintCall.calldata);
-  await provider.waitForTransaction(res.transaction_hash);
+  await provider.waitForTransaction(result.transaction_hash);
 }

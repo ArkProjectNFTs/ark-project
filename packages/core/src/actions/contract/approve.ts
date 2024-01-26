@@ -1,4 +1,10 @@
-import { AccountInterface, cairo, CallData, type BigNumberish } from "starknet";
+import {
+  AccountInterface,
+  cairo,
+  Call,
+  CallData,
+  type BigNumberish
+} from "starknet";
 
 import { Config } from "../../createConfig";
 
@@ -13,16 +19,23 @@ export const approveERC721 = async (
   parameters: ApproveERC721Parameters
 ) => {
   const { contractAddress, starknetAccount } = parameters;
-  const result = await starknetAccount.execute({
-    contractAddress,
-    entrypoint: "set_approval_for_all",
-    calldata: CallData.compile({
-      operator: config.starknetContracts.executor,
-      approved: true
-    })
-  });
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash);
+  const { abi: erc721abi } =
+    await config.starknetProvider.getClassAt(contractAddress);
+
+  if (erc721abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const approveCall: Call = {
+    contractAddress: contractAddress,
+    entrypoint: "set_approval_for_all",
+    calldata: CallData.compile([config.starknetContracts.executor, true])
+  };
+
+  await starknetAccount.execute(approveCall, [erc721abi], {
+    maxFee: 0
+  });
 };
 
 interface ApproveERC20Parameters {
@@ -36,14 +49,24 @@ export const approveERC20 = async (
   parameters: ApproveERC20Parameters
 ) => {
   const { contractAddress, amount, starknetAccount } = parameters;
-  const result = await starknetAccount.execute({
+
+  const { abi: erc20abi } =
+    await config.starknetProvider.getClassAt(contractAddress);
+
+  if (erc20abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const approuveERC20Call: Call = {
     contractAddress,
     entrypoint: "increase_allowance",
-    calldata: CallData.compile({
-      spender: config.starknetContracts.executor,
-      addedValue: cairo.uint256(amount)
-    })
-  });
+    calldata: CallData.compile([
+      config.starknetContracts.executor,
+      cairo.uint256(amount)
+    ])
+  };
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash);
+  await starknetAccount.execute(approuveERC20Call, [erc20abi], {
+    maxFee: 0
+  });
 };

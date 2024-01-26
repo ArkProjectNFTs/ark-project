@@ -4,8 +4,6 @@
  * submitting a listing order and cancelling it.
  */
 
-import { shortString } from "starknet";
-
 import "dotenv/config";
 
 import {
@@ -14,8 +12,6 @@ import {
   createAccount,
   createListing,
   fetchOrCreateAccount,
-  fulfillListing,
-  getOrderStatus,
   ListingV1
 } from "../src";
 import { config } from "./config";
@@ -84,42 +80,47 @@ import { mintERC721 } from "./utils/mintERC721";
 
   if (process.env.STARKNET_NETWORK_ID === "dev") {
     console.log("=> Minting ERC20...");
-    await mintERC20(starknetProvider, starknetFulfillerAccount);
+    await mintERC20(
+      starknetProvider,
+      starknetFulfillerAccount,
+      order.startAmount
+    );
   }
 
   console.log(
     `=> Approuving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
   );
+
   await approveERC20(config, {
     starknetAccount: starknetFulfillerAccount,
     contractAddress: STARKNET_ETH_ADDRESS,
     amount: order.startAmount
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // Define the fulfill details
-  const fulfillListingInfo = {
-    order_hash: orderHash,
-    token_address: order.tokenAddress,
-    token_id: order.tokenId
-  };
+  // // Define the fulfill details
+  // const fulfillListingInfo = {
+  //   order_hash: orderHash,
+  //   token_address: order.tokenAddress,
+  //   token_id: order.tokenId
+  // };
 
-  console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
-  // fulfill the order
-  await fulfillListing(config, {
-    starknetAccount: starknetFulfillerAccount,
-    arkAccount,
-    fulfillListingInfo
-  });
+  // console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
+  // // fulfill the order
+  // await fulfillListing(config, {
+  //   starknetAccount: starknetFulfillerAccount,
+  //   arkAccount,
+  //   fulfillListingInfo
+  // });
 
-  console.log("=> Waiting for 10 seconds from transaction complete...");
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  // console.log("=> Waiting for 10 seconds from transaction complete...");
+  // await new Promise((resolve) => setTimeout(resolve, 10000));
 
-  console.log("=> Fetching order status...");
-  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
-    orderHash
-  });
+  // console.log("=> Fetching order status...");
+  // const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+  //   orderHash
+  // });
 
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+  // console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
 })();
