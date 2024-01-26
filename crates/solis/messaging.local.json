@@ -1,7 +1,7 @@
 {
   "chain": "starknet",
   "rpc_url": "http://127.0.0.1:5050",
-  "contract_address": "0x6ac6c5b703e79d7464824782acd09d941add2f5808b20630dded1acad959c9c",
+  "contract_address": "0x12a270f28b74f6575713b289e44e789093f46083de2a8407029c40916685cf0",
   "sender_address": "0x5686a647a9cdd63ade617e0baf3b364856b813b508f03903eb58a7e622d5855",
   "private_key": "0x33003003001800009900180300d206308b0070db00121318d17b5e6262150b",
   "interval": 2,

@@ -1,7 +1,6 @@
 import {
   Account,
-  cairo,
-  CallData,
+  Contract,
   ProviderInterface,
   type BigNumberish
 } from "starknet";
@@ -15,13 +14,23 @@ export async function mintERC721(
   starknetAccount: Account,
   tokenId: BigNumberish
 ) {
-  const mintResult = await starknetAccount.execute({
-    contractAddress: STARKNET_NFT_ADDRESS,
-    entrypoint: "mint",
-    calldata: CallData.compile({
-      recipient: starknetAccount.address,
-      token_id: cairo.uint256(tokenId)
-    })
-  });
-  await provider.waitForTransaction(mintResult.transaction_hash);
+  const { abi: erc721abi } = await provider.getClassAt(STARKNET_NFT_ADDRESS);
+  if (erc721abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const erc721Contract = new Contract(
+    erc721abi,
+    STARKNET_NFT_ADDRESS,
+    provider
+  );
+
+  erc721Contract.connect(starknetAccount);
+  const mintCall = erc721Contract.populate("mint", [
+    starknetAccount.address,
+    1
+  ]);
+
+  const res = await erc721Contract.mint(mintCall.calldata);
+  await provider.waitForTransaction(res.transaction_hash);
 }

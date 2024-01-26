@@ -44,7 +44,7 @@ export const createAccount = async (provider: ProviderInterface) => {
     CallData.compile({ publicKey }),
     0
   );
-  const account = new Account(provider, address, privateKey);
+  const account = new Account(provider, address, privateKey, "1");
   const { transaction_hash, contract_address } = await account.deployAccount({
     classHash: accountClassHash,
     constructorCalldata: CallData.compile({ publicKey }),
@@ -82,6 +82,6 @@ export async function fetchOrCreateAccount(
     const { account } = await createAccount(provider);
     return account;
   } else {
-    return new Account(provider, accountAddress, accountPrivateKey);
+    return new Account(provider, accountAddress, accountPrivateKey, "1");
   }
 }

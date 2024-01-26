@@ -5004,8 +5004,6 @@ dependencies = [
  "katana-core",
  "katana-primitives",
  "katana-rpc-types",
- "serde",
- "serde_with",
  "starknet 0.8.0",
 ]
 

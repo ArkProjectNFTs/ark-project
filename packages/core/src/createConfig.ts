@@ -12,7 +12,7 @@ export type Network = "mainnet" | "goerli" | "sepolia" | "dev";
 const defaultCurrencyAddress =
   "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 const defaultAccountClassHash =
-  "0x04d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f";
+  "0x05400e90f7e0ae78bd02c77cd75527280470e2fe19c54970dd79dc37a9d3645c";
 
 export interface Config {
   starknetNetwork?: Network;

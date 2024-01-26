@@ -155,40 +155,40 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
     ) -> bool {
         tracing::trace!("verify invoke tx before pool: {:?}", transaction);
 
-        let calls = match calls_from_tx(&transaction.calldata) {
-            Ok(calls) => calls,
-            Err(e) => {
-                tracing::error!("Fail getting calls from tx: {:?}", e);
-                return false;
-            }
-        };
+        // let calls = match calls_from_tx(&transaction.calldata) {
+        //     Ok(calls) => calls,
+        //     Err(e) => {
+        //         tracing::error!("Fail getting calls from tx: {:?}", e);
+        //         return false;
+        //     }
+        // };
 
-        tracing::trace!("Calls: {:?}", calls);
+        // tracing::trace!("Calls: {:?}", calls);
 
-        for call in calls {
-            tracing::trace!("\nCall: {:?}", call);
-            if call.to != self.orderbook_address {
-                continue;
-            }
+        // for call in calls {
+        //     tracing::trace!("\nCall: {:?}", call);
+        //     if call.to != self.orderbook_address {
+        //         continue;
+        //     }
 
-            if call.selector != selector!("create_order") {
-                continue;
-            }
+        //     if call.selector != selector!("create_order") {
+        //         continue;
+        //     }
 
-            let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
-                Ok(order) => order,
-                Err(e) => {
-                    tracing::error!("Fail deserializing OrderV1: {:?}", e);
-                    return false;
-                }
-            };
+        //     let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
+        //         Ok(order) => order,
+        //         Err(e) => {
+        //             tracing::error!("Fail deserializing OrderV1: {:?}", e);
+        //             return false;
+        //         }
+        //     };
 
-            tracing::trace!("Order to verify: {:?}", order);
+        //     tracing::trace!("Order to verify: {:?}", order);
 
-            // TODO: check assets on starknet.
-            // TODO: if not valid, in some cases we want to send L1HandlerTransaction
-            // to change the status of the order. (entrypoint to be written).
-        }
+        //     // TODO: check assets on starknet.
+        //     // TODO: if not valid, in some cases we want to send L1HandlerTransaction
+        //     // to change the status of the order. (entrypoint to be written).
+        // }
 
         true
     }
