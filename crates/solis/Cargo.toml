@@ -92,18 +92,21 @@ url = "2.4.0"
 hyper = "0.14.27"
 warp = "0.3"
 
-# katana-core = { path = "../../../dojo/crates/katana/core", features = ["messaging", "starknet-messaging"] }
-# katana-rpc = { path = "../../../dojo/crates/katana/rpc/rpc" }
-# katana-rpc-api = { path = "../../../dojo/crates/katana/rpc/rpc-api" }
-# katana-primitives = { path = "../../../dojo/crates/katana/primitives" }
-
-katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis", features = [
+katana-core = { path = "../../../dojo/crates/katana/core", features = [
     "messaging",
     "starknet-messaging",
 ] }
-katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
-katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
-katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
+katana-rpc = { path = "../../../dojo/crates/katana/rpc/rpc" }
+katana-rpc-api = { path = "../../../dojo/crates/katana/rpc/rpc-api" }
+katana-primitives = { path = "../../../dojo/crates/katana/primitives" }
+
+# katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis", features = [
+#     "messaging",
+#     "starknet-messaging",
+# ] }
+# katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
+# katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
+# katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
 
 cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.1.5", features = [
     "abigen-rs",

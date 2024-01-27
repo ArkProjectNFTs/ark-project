@@ -29,11 +29,8 @@ export const approveERC721 = async (
 
   const approveCall: Call = {
     contractAddress: contractAddress,
-    entrypoint: "approve",
-    calldata: CallData.compile([
-      config.starknetContracts.executor,
-      cairo.uint256(tokenId)
-    ])
+    entrypoint: "set_approval_for_all",
+    calldata: CallData.compile([config.starknetContracts.executor, true])
   };
 
   const result = await starknetAccount.execute(approveCall, [erc721abi]);

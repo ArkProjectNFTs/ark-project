@@ -45,7 +45,15 @@ import { mintERC721 } from "./utils/mintERC721";
   );
 
   console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
-  await mintERC721(starknetProvider, starknetOffererAccount);
+  const transaction_hash = await mintERC721(
+    starknetProvider,
+    starknetOffererAccount
+  );
+
+  console.log(transaction_hash);
+
+  // Wait 4 minutes for the transaction to be processed
+  await new Promise((resolve) => setTimeout(resolve, 4 * 60 * 1000));
 
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   console.log("=> Token minted with tokenId: ", tokenId);
@@ -112,12 +120,12 @@ import { mintERC721 } from "./utils/mintERC721";
   // });
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
-
+  console.log("tokenId", tokenId);
   // Define the fulfill details
   const fulfillListingInfo = {
     order_hash: orderHash,
     token_address: order.tokenAddress,
-    token_id: order.tokenId
+    token_id: tokenId
   };
 
   console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
@@ -128,8 +136,8 @@ import { mintERC721 } from "./utils/mintERC721";
     fulfillListingInfo
   });
 
-  console.log("=> Waiting for 10 seconds from transaction complete...");
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  console.log("=> Waiting for 4 minutes for transaction complete...");
+  await new Promise((resolve) => setTimeout(resolve, 4 * 60 * 1000));
 
   console.log("=> Fetching order status...");
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
