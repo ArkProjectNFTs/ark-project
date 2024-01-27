@@ -6,17 +6,21 @@
 
 import "dotenv/config";
 
+import { shortString } from "starknet";
+
 import {
   approveERC20,
   approveERC721,
   createAccount,
   createListing,
   fetchOrCreateAccount,
-  increaseERC20,
+  fulfillListing,
+  getOrderStatus,
   ListingV1
 } from "../src";
 import { config } from "./config";
 import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
+import { getCurrentTokenId } from "./utils/getCurrentTokenId";
 import { mintERC20 } from "./utils/mintERC20";
 import { mintERC721 } from "./utils/mintERC721";
 
@@ -27,18 +31,9 @@ import { mintERC721 } from "./utils/mintERC721";
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
 
-  console.log(`=> Creating account`);
+  console.log(`=> Creating ark account`);
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
-
-  console.log(`=> Creating order`);
-  // Define the order details
-  const order: ListingV1 = {
-    brokerId: 123, // The broker ID
-    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
-    startAmount: 100000000000000000 // The starting amount for the order
-  };
 
   console.log(
     `=> Fetching or creating offerer starknet account, for test purpose only`
@@ -50,14 +45,26 @@ import { mintERC721 } from "./utils/mintERC721";
   );
 
   console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
-  await mintERC721(starknetProvider, starknetOffererAccount, order.tokenId);
+  await mintERC721(starknetProvider, starknetOffererAccount);
 
-  console.log(`=> Approving token ${order.tokenId}`);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+  console.log("=> Token minted with tokenId: ", tokenId);
+
+  console.log(`=> Approving token ${tokenId}`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
-    tokenId: order.tokenId,
+    tokenId: tokenId,
     starknetAccount: starknetOffererAccount
   });
+
+  console.log(`=> Creating order`);
+  // Define the order details
+  const order: ListingV1 = {
+    brokerId: 123, // The broker ID
+    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenId: tokenId, // The ID of the token
+    startAmount: 100000000000000000 // The starting amount for the order
+  };
 
   console.log("=> Creating listing...");
   // Create the listing on the arkchain using the order details
@@ -98,36 +105,36 @@ import { mintERC721 } from "./utils/mintERC721";
     amount: order.startAmount
   });
 
-  await increaseERC20(config, {
+  // await increaseERC20(config, {
+  //   starknetAccount: starknetFulfillerAccount,
+  //   contractAddress: STARKNET_ETH_ADDRESS,
+  //   amount: order.startAmount
+  // });
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  // Define the fulfill details
+  const fulfillListingInfo = {
+    order_hash: orderHash,
+    token_address: order.tokenAddress,
+    token_id: order.tokenId
+  };
+
+  console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
+  // fulfill the order
+  await fulfillListing(config, {
     starknetAccount: starknetFulfillerAccount,
-    contractAddress: STARKNET_ETH_ADDRESS,
-    amount: order.startAmount
+    arkAccount,
+    fulfillListingInfo
   });
 
-  // await new Promise((resolve) => setTimeout(resolve, 2000));
+  console.log("=> Waiting for 10 seconds from transaction complete...");
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 
-  // // Define the fulfill details
-  // const fulfillListingInfo = {
-  //   order_hash: orderHash,
-  //   token_address: order.tokenAddress,
-  //   token_id: order.tokenId
-  // };
+  console.log("=> Fetching order status...");
+  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+    orderHash
+  });
 
-  // console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
-  // // fulfill the order
-  // await fulfillListing(config, {
-  //   starknetAccount: starknetFulfillerAccount,
-  //   arkAccount,
-  //   fulfillListingInfo
-  // });
-
-  // console.log("=> Waiting for 10 seconds from transaction complete...");
-  // await new Promise((resolve) => setTimeout(resolve, 10000));
-
-  // console.log("=> Fetching order status...");
-  // const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
-  //   orderHash
-  // });
-
-  // console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
 })();

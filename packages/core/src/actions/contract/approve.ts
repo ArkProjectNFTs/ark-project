@@ -18,7 +18,7 @@ export const approveERC721 = async (
   config: Config,
   parameters: ApproveERC721Parameters
 ) => {
-  const { contractAddress, starknetAccount } = parameters;
+  const { contractAddress, starknetAccount, tokenId } = parameters;
 
   const { abi: erc721abi } =
     await config.starknetProvider.getClassAt(contractAddress);
@@ -29,13 +29,14 @@ export const approveERC721 = async (
 
   const approveCall: Call = {
     contractAddress: contractAddress,
-    entrypoint: "set_approval_for_all",
-    calldata: CallData.compile([config.starknetContracts.executor, true])
+    entrypoint: "approve",
+    calldata: CallData.compile([
+      config.starknetContracts.executor,
+      cairo.uint256(tokenId)
+    ])
   };
 
-  const result = await starknetAccount.execute(approveCall, [erc721abi], {
-    maxFee: 0
-  });
+  const result = await starknetAccount.execute(approveCall, [erc721abi]);
   await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };
 
@@ -66,9 +67,7 @@ export const approveERC20 = async (
     ])
   };
 
-  const result = await starknetAccount.execute(approuveERC20Call, [erc20abi], {
-    maxFee: 0
-  });
+  const result = await starknetAccount.execute(approuveERC20Call, [erc20abi]);
 
   await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };
@@ -94,9 +93,7 @@ export const increaseERC20 = async (
     ])
   };
 
-  const result = await starknetAccount.execute(increaseERC20Call, [erc20abi], {
-    maxFee: 0
-  });
+  const result = await starknetAccount.execute(increaseERC20Call, [erc20abi]);
 
   await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };

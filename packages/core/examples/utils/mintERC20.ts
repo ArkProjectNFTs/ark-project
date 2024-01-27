@@ -25,8 +25,6 @@ export const mintERC20 = async (
     calldata: CallData.compile([starknetAccount.address, cairo.uint256(amount)])
   };
 
-  const result = await starknetAccount.execute(mintERC20Call, [erc20abi], {
-    maxFee: 0
-  });
+  const result = await starknetAccount.execute(mintERC20Call, [erc20abi]);
   await provider.waitForTransaction(result.transaction_hash);
 };
