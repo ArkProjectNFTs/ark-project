@@ -16,6 +16,7 @@ import {
   fetchOrCreateAccount,
   fulfillListing,
   getOrderStatus,
+  increaseERC20,
   ListingV1
 } from "../src";
 import { config } from "./config";
@@ -53,7 +54,7 @@ import { mintERC721 } from "./utils/mintERC721";
   console.log(transaction_hash);
 
   // Wait 4 minutes for the transaction to be processed
-  await new Promise((resolve) => setTimeout(resolve, 4 * 60 * 1000));
+  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
 
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   console.log("=> Token minted with tokenId: ", tokenId);
@@ -113,11 +114,15 @@ import { mintERC721 } from "./utils/mintERC721";
     amount: order.startAmount
   });
 
-  // await increaseERC20(config, {
-  //   starknetAccount: starknetFulfillerAccount,
-  //   contractAddress: STARKNET_ETH_ADDRESS,
-  //   amount: order.startAmount
-  // });
+  console.log(
+    `=> increase ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
+  );
+
+  await increaseERC20(config, {
+    starknetAccount: starknetFulfillerAccount,
+    contractAddress: STARKNET_ETH_ADDRESS,
+    amount: order.startAmount
+  });
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
   console.log("tokenId", tokenId);
@@ -137,7 +142,7 @@ import { mintERC721 } from "./utils/mintERC721";
   });
 
   console.log("=> Waiting for 4 minutes for transaction complete...");
-  await new Promise((resolve) => setTimeout(resolve, 4 * 60 * 1000));
+  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
 
   console.log("=> Fetching order status...");
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
