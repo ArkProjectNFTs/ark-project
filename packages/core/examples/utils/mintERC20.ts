@@ -1,20 +1,30 @@
-import { Account, cairo, CallData, ProviderInterface } from "starknet";
+import {
+  Account,
+  BigNumberish,
+  cairo,
+  Call,
+  CallData,
+  ProviderInterface
+} from "starknet";
 
 import { STARKNET_ETH_ADDRESS } from "../constants";
 
 export const mintERC20 = async (
-  starknetProvider: ProviderInterface,
-  starknetFulfillerAccount: Account
+  provider: ProviderInterface,
+  starknetAccount: Account,
+  amount: BigNumberish
 ) => {
-  console.log("STARKNET_ETH_ADDRESS" + STARKNET_ETH_ADDRESS);
-  const mintErc20Result = await starknetFulfillerAccount.execute({
+  const { abi: erc20abi } = await provider.getClassAt(STARKNET_ETH_ADDRESS);
+  if (erc20abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const mintERC20Call: Call = {
     contractAddress: STARKNET_ETH_ADDRESS,
     entrypoint: "mint",
-    calldata: CallData.compile({
-      recipient: starknetFulfillerAccount.address,
-      amount: cairo.uint256(1000000000000000000)
-    })
-  });
+    calldata: CallData.compile([starknetAccount.address, cairo.uint256(amount)])
+  };
 
-  await starknetProvider.waitForTransaction(mintErc20Result.transaction_hash);
+  const result = await starknetAccount.execute(mintERC20Call, [erc20abi]);
+  await provider.waitForTransaction(result.transaction_hash);
 };

@@ -38,7 +38,7 @@ const createListing = async (
 ) => {
   const { starknetAccount, arkAccount, order: baseOrder, owner } = parameters;
 
-  let currentDate = new Date();
+  const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);

@@ -32,7 +32,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     const { account: starknetAccount } = await createAccount(starknetProvider);
 
     // Define the order details
-    let order: OfferV1 = {
+    const order: OfferV1 = {
       brokerId: 123, // The broker ID
       tokenAddress:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
@@ -51,7 +51,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    let { orderStatus: orderStatusBefore } = await getOrderStatus(
+    const { orderStatus: orderStatusBefore } = await getOrderStatus(
       orderHash,
       arkProvider
     );
@@ -80,7 +80,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    let { orderStatus: orderStatusAfter } = await getOrderStatus(
+    const { orderStatus: orderStatusAfter } = await getOrderStatus(
       orderHash,
       arkProvider
     );

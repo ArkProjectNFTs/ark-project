@@ -24,7 +24,7 @@ const getOrderType = async (
     config.arkProvider
   );
 
-  let order_hash_calldata = CallData.compile({
+  const order_hash_calldata = CallData.compile({
     order_hash: orderHash
   });
 

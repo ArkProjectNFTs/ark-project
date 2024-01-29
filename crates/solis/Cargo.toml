@@ -3,7 +3,6 @@
 name = "solis"
 version = "0.1.0"
 edition = "2021"
-license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -92,18 +91,21 @@ url = "2.4.0"
 hyper = "0.14.27"
 warp = "0.3"
 
-# katana-core = { path = "../../../dojo/crates/katana/core", features = ["messaging", "starknet-messaging"] }
+# katana-core = { path = "../../../dojo/crates/katana/core", features = [
+#     "messaging",
+#     "starknet-messaging",
+# ] }
 # katana-rpc = { path = "../../../dojo/crates/katana/rpc/rpc" }
 # katana-rpc-api = { path = "../../../dojo/crates/katana/rpc/rpc-api" }
 # katana-primitives = { path = "../../../dojo/crates/katana/primitives" }
 
-katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis", features = [
+katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.0-solis", features = [
     "messaging",
     "starknet-messaging",
 ] }
-katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
-katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
-katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.1.9-solis" }
+katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.0-solis" }
+katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.0-solis" }
+katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.0-solis" }
 
 cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.1.5", features = [
     "abigen-rs",

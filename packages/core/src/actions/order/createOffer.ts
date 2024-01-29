@@ -4,7 +4,6 @@ import {
   cairo,
   CairoOption,
   CairoOptionVariant,
-  shortString,
   Uint256
 } from "starknet";
 
@@ -38,7 +37,7 @@ const createOffer = async (
 ) => {
   const { starknetAccount, arkAccount, offer: baseOrder, owner } = parameters;
 
-  let currentDate = new Date();
+  const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
   // TODO: this is a hot fix, optional date should be
   // a cairo option and set at contract level to prevent

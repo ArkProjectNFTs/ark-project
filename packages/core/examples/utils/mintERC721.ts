@@ -1,10 +1,4 @@
-import {
-  Account,
-  cairo,
-  CallData,
-  ProviderInterface,
-  type BigNumberish
-} from "starknet";
+import { Account, Call, CallData, ProviderInterface } from "starknet";
 
 import "dotenv/config";
 
@@ -12,16 +6,24 @@ import { STARKNET_NFT_ADDRESS } from "../constants";
 
 export async function mintERC721(
   provider: ProviderInterface,
-  starknetAccount: Account,
-  tokenId: BigNumberish
+  starknetAccount: Account
 ) {
-  const mintResult = await starknetAccount.execute({
+  const { abi: erc721abi } = await provider.getClassAt(STARKNET_NFT_ADDRESS);
+  if (erc721abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const mintCall: Call = {
     contractAddress: STARKNET_NFT_ADDRESS,
     entrypoint: "mint",
     calldata: CallData.compile({
       recipient: starknetAccount.address,
-      token_id: cairo.uint256(tokenId)
+      token_uri: `https://api.everai.xyz/m/1`
     })
-  });
-  await provider.waitForTransaction(mintResult.transaction_hash);
+  };
+
+  const result = await starknetAccount.execute(mintCall, [erc721abi]);
+
+  await provider.waitForTransaction(result.transaction_hash);
+  return result.transaction_hash;
 }

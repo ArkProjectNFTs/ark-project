@@ -32,15 +32,6 @@ import { mintERC20 } from "./utils/mintERC20";
   // Create a new account for the offer using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
 
-  console.log(`=> Creating order`);
-  // Define the offer details
-  let offer: OfferV1 = {
-    brokerId: 123, // The broker ID
-    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
-    startAmount: 100000000000000000 // The starting amount for the order
-  };
-
   console.log(
     `=> Fetching or creating offerer starknet account, for test purpose only`
   );
@@ -50,9 +41,22 @@ import { mintERC20 } from "./utils/mintERC20";
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
+  console.log(`=> Creating order`);
+  // Define the offer details
+  const offer: OfferV1 = {
+    brokerId: 123, // The broker ID
+    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenId: 20, // The ID of the token
+    startAmount: 100000000000000000 // The starting amount for the order
+  };
+
   if (process.env.STARKNET_NETWORK_ID === "dev") {
     console.log("=> Minting ERC20...");
-    await mintERC20(starknetProvider, starknetOffererAccount);
+    await mintERC20(
+      starknetProvider,
+      starknetOffererAccount,
+      offer.startAmount
+    );
   }
 
   console.log(
@@ -73,7 +77,7 @@ import { mintERC20 } from "./utils/mintERC20";
   });
 
   console.log("=> Fetching order status...");
-  let { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash
   });
 

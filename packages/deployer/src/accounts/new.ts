@@ -25,7 +25,10 @@ export async function createNewAccounts(
   try {
     const fileData = await fs.readFile(accountsFilePath, "utf8");
     existingAccounts = JSON.parse(fileData);
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error reading JSON file:", error);
+    return;
+  }
 
   for (let i = 0; i < numberOfAccounts; i++) {
     const privateKey = sn.stark.randomAddress();

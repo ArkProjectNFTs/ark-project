@@ -32,7 +32,7 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
   );
 
   // Define the order details
-  let order: ListingV1 = {
+  const order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: 6, // The ID of the token
@@ -51,7 +51,7 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
   console.log("=> Fetching order status...");
-  let { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
+  const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
     orderHash
   });
 
@@ -76,7 +76,7 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   console.log("=> Fetching order status...");
-  let { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash
   });
   console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));

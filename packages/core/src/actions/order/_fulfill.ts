@@ -34,10 +34,10 @@ export const _fulfillOrder = async (
 ) => {
   const { starknetAccount, arkAccount, fulfillInfo, owner } = parameters;
   // Compile the order data
-  let compiledOrder = CallData.compile({
+  const compiledOrder = CallData.compile({
     fulfillInfo
   });
-  let compiletOrderBigInt = compiledOrder.map(BigInt);
+  const compiletOrderBigInt = compiledOrder.map(BigInt);
 
   const TypedOrderData = {
     message: {
@@ -64,7 +64,7 @@ export const _fulfillOrder = async (
   const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
 
-  let fulfillInfoCalldata = CallData.compile({
+  const fulfillInfoCalldata = CallData.compile({
     fulfill_info: fulfillInfo,
     signer: signer
   });

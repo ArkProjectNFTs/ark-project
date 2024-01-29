@@ -26,7 +26,7 @@ describe("ArkProject Listing", () => {
     const { account: arkAccount } = await createAccount(arkProvider);
     const { account: starknetAccount } = await createAccount(starknetProvider);
 
-    let order: ListingV1 = {
+    const order: ListingV1 = {
       brokerId: 123, // The broker ID
       tokenAddress:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address

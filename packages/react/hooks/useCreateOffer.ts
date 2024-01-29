@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Account, AccountInterface } from "starknet";
+import { AccountInterface } from "starknet";
 
 import {
   Config,
@@ -10,48 +10,46 @@ import {
   OfferV1
 } from "@ark-project/core";
 
-import { useRpc } from "../components/ArkProvider/RpcContext";
-import { Status } from "../types/hooks";
+import { Status } from "../types";
+import useApproveERC20 from "./useApproveERC20";
+import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
 export default function useCreateOffer() {
-  const { rpcProvider } = useRpc();
   const [status, setStatus] = useState<Status>("idle");
-  const [response, setResponse] = useState<bigint | undefined>(undefined);
+  const { approveERC20 } = useApproveERC20();
+  const [response, setResponse] = useState<bigint | undefined>();
   const owner = useOwner();
   const config = useConfig();
+  const arkAccount = useBurnerWallet();
 
   async function createOffer(
     starknetAccount: AccountInterface,
     offer: OfferV1
   ) {
-    const burner_address = localStorage.getItem("burner_address");
-    const burner_private_key = localStorage.getItem("burner_private_key");
-    const burner_public_key = localStorage.getItem("burner_public_key");
-
-    if (
-      burner_address === null ||
-      burner_private_key === null ||
-      burner_public_key === null
-    ) {
-      throw new Error("No burner wallet in local storage");
+    if (!arkAccount) {
+      throw new Error("No burner wallet.");
     }
-
+    offer.currencyAddress =
+      offer.currencyAddress || config?.starknetContracts.eth;
+    offer.currencyChainId =
+      offer.currencyChainId || (await config?.starknetProvider.getChainId());
     try {
       setStatus("loading");
       const orderHash = await createOfferCore(config as Config, {
         starknetAccount,
-        arkAccount: new Account(
-          rpcProvider,
-          burner_address,
-          burner_private_key
-        ),
+        arkAccount,
         offer,
         owner
       });
-      setStatus("success");
       setResponse(orderHash);
+      setStatus("success");
+      await approveERC20(
+        starknetAccount,
+        offer.startAmount,
+        offer.currencyAddress
+      );
     } catch (error) {
       setStatus("error");
       console.error(error);
