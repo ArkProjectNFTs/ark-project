@@ -1,4 +1,4 @@
-name: Solis Deploy
+name: ArkProject Deploy Contracts
 
 on: workflow_dispatch
 
