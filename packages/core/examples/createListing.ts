@@ -48,11 +48,7 @@ import { mintERC721 } from "./utils/mintERC721";
   );
 
   console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
-  await mintERC721(
-    config.starknetProvider,
-    starknetOffererAccount,
-    order.tokenId
-  );
+  await mintERC721(config.starknetProvider, starknetOffererAccount);
 
   console.log(`=> Approving token ${order.tokenId}`);
   await approveERC721(config, {

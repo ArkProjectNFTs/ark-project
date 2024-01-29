@@ -53,7 +53,7 @@ import { mintERC721 } from "./utils/mintERC721";
 
   console.log(transaction_hash);
 
-  // Wait 4 minutes for the transaction to be processed
+  console.log("=> Waiting for 5 minutes for transaction complete on goerli...");
   await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
 
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
@@ -141,7 +141,7 @@ import { mintERC721 } from "./utils/mintERC721";
     fulfillListingInfo
   });
 
-  console.log("=> Waiting for 4 minutes for transaction complete...");
+  console.log("=> Waiting for 5 minutes for transaction complete on goerli...");
   await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
 
   console.log("=> Fetching order status...");

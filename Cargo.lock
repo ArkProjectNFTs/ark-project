@@ -4857,6 +4857,7 @@ dependencies = [
 [[package]]
 name = "katana-core"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4889,6 +4890,7 @@ dependencies = [
 [[package]]
 name = "katana-db"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4908,6 +4910,7 @@ dependencies = [
 [[package]]
 name = "katana-executor"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4924,6 +4927,7 @@ dependencies = [
 [[package]]
 name = "katana-primitives"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4945,6 +4949,7 @@ dependencies = [
 [[package]]
 name = "katana-provider"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "auto_impl",
@@ -4961,6 +4966,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "cairo-lang-starknet",
@@ -4992,6 +4998,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-api"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "jsonrpsee",
  "katana-core",
@@ -5003,6 +5010,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-types"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "derive_more",
@@ -5019,6 +5027,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-types-builder"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "anyhow",
  "katana-executor",
@@ -5031,6 +5040,7 @@ dependencies = [
 [[package]]
 name = "katana-tasks"
 version = "0.5.1-alpha.0"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.2.0-solis#3ac67751a61361480500584743cfa37d985b0b95"
 dependencies = [
  "futures",
  "rayon",
