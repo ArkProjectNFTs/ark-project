@@ -34,5 +34,10 @@ export const buildAccounts = (
   if (!accountData) {
     throw new Error("No account found");
   }
-  return new Account(provider, accountData.address, accountData.privateKey);
+  return new Account(
+    provider,
+    accountData.address,
+    accountData.privateKey,
+    "1"
+  );
 };
