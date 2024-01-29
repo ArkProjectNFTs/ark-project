@@ -44,7 +44,6 @@ jobs:
           pnpm run deploy:starknet -- --starknet goerli
           pnpm run deploy:starknet:tokens -- --starknet goerli
   deploy-orderbook:
-    needs: deploy-solis
     runs-on: ubuntu-latest
     name: Build & Deploy orderbook contract
     steps:
