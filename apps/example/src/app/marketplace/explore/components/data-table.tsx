@@ -16,6 +16,7 @@ import {
   useReactTable,
   VisibilityState
 } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
 
 import {
   Table,
@@ -28,6 +29,7 @@ import {
 
 import { DataTablePagination } from "../components/data-table-pagination";
 import { DataTableToolbar } from "../components/data-table-toolbar";
+import { Token } from "../data/schema";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -45,6 +47,7 @@ export function DataTable<TData, TValue>({
     []
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const router = useRouter();
 
   const table = useReactTable({
     data,
@@ -93,21 +96,29 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const token = row.original as Token;
+                return (
+                  <TableRow
+                    onClick={() =>
+                      router.push(
+                        `/marketplace/assets/${token?.contract_address}/${token?.token_id}`
+                      )
+                    }
+                    key={row.id}
+                    className="cursor-pointer hover:slate-50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell

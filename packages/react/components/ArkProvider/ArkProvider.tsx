@@ -47,7 +47,7 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
 
   useEffect(() => {
     const fetchOwner = async () => {
-      if (address) {
+      if (address && config.starknetProvider && connector?.id) {
         const owner = await getOwner(
           address,
           config.starknetProvider,
@@ -61,7 +61,7 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
       }
     };
     fetchOwner();
-  }, [address, config.starknetProvider]);
+  }, [address, config.starknetProvider, connector]);
 
   return (
     <ConfigDataContext.Provider value={config}>

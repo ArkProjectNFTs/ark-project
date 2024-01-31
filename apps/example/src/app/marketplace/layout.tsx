@@ -1,8 +1,10 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { Announcement } from "@/components/announcement";
+import AuthSwitcher from "@/components/authSwitcher";
 import {
   PageActions,
   PageHeader,
@@ -11,9 +13,12 @@ import {
 } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/Button";
 
+import { MainNav } from "./components/main-nav";
+import { UserNav } from "./components/user-nav";
+
 export const metadata: Metadata = {
-  title: "Examples",
-  description: "Check out some examples app built using the components."
+  title: "Marketplace",
+  description: "Check out some examples app built using the Ark SDK hooks."
 };
 
 interface ExamplesLayoutProps {
@@ -27,12 +32,11 @@ export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
         <PageHeader>
           <Announcement />
           <PageHeaderHeading className="hidden md:block">
-            Mini marketplace examples
+            Mini marketplace example
           </PageHeaderHeading>
           <PageHeaderHeading className="md:hidden">Examples</PageHeaderHeading>
           <PageHeaderDescription>
-            Dashboard, cards, authentication. Some examples built using the
-            components. Use this as a guide to build your own.
+            Mint, Explore, check your portfolio, list, buys, bid and sell NFTs.
           </PageHeaderDescription>
           <PageActions>
             <Link
@@ -54,7 +58,35 @@ export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
         </PageHeader>
         <section>
           <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
-            {children}
+            <AuthSwitcher>
+              <div className="md:hidden">
+                <Image
+                  src="/examples/tasks-light.png"
+                  width={1280}
+                  height={998}
+                  alt="Playground"
+                  className="block dark:hidden"
+                />
+                <Image
+                  src="/examples/tasks-dark.png"
+                  width={1280}
+                  height={998}
+                  alt="Playground"
+                  className="hidden dark:block"
+                />
+              </div>
+              <div className="hidden h-full flex-1 flex-col space-y-8 p-8 md:flex">
+                <div className="flex items-center justify-between space-y-2">
+                  <div className="flex items-center w-full">
+                    <MainNav />
+                    <div className="ml-auto flex items-center space-x-4">
+                      <UserNav />
+                    </div>
+                  </div>
+                </div>
+                {children}
+              </div>
+            </AuthSwitcher>
           </div>
         </section>
       </div>

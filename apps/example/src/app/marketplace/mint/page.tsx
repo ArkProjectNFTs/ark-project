@@ -42,18 +42,18 @@ export default function Home() {
     null
   );
 
+  console.log(config?.starknetContracts.nftContract);
   const { contract } = useContract({
     abi: ABI,
     address: config?.starknetContracts.nftContract
   });
-
   const { data, isError, isLoading, error } = useContractRead({
     functionName: "get_current_token_id",
     abi: ABI,
     address: config?.starknetContracts.nftContract,
     watch: true
   });
-
+  console.log(data);
   const calls = useMemo(() => {
     if (!address || !contract) return [];
     return contract.populateTransaction["mint"]!(

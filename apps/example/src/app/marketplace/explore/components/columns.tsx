@@ -1,16 +1,44 @@
 "use client";
 
+import { useAccount } from "@starknet-react/core";
 import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
+import Link from "next/link";
+import { SiEthereum } from "react-icons/si";
 
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { areAddressesEqual, truncateString } from "@/lib/utils";
 
-import { labels, priorities, statuses } from "../data/data";
+import { statuses } from "../data/data";
 import { Token } from "../data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
-import { DataTableRowActions } from "./data-table-row-actions";
 
 export const columns: ColumnDef<Token>[] = [
+  {
+    accessorKey: "metadata",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Image"
+        className="w-[40px]"
+      />
+    ),
+    cell: ({ row }) => {
+      const metadata = row.getValue("metadata") as Token["metadata"];
+      const url = metadata?.normalized?.image;
+      const imageUrl = url ? url.replace(/\.mp4$/, ".jpg") : "/missing.jpg";
+      return (
+        <div className="w-[40px]">
+          <Image
+            src={imageUrl}
+            width="40"
+            height="40"
+            alt={metadata?.normalized?.name || "Missing"}
+            className="rounded"
+          />
+        </div>
+      );
+    }
+  },
   {
     accessorKey: "token_id",
     header: ({ column }) => (
@@ -21,30 +49,93 @@ export const columns: ColumnDef<Token>[] = [
       />
     ),
     cell: ({ row }) => (
-      <div className="w-[80px] pl-1">{row.getValue("token_id")}</div>
+      <div className="w-[80px] pl-1">#{row.getValue("token_id")}</div>
     ),
     enableSorting: false,
     enableHiding: false
   },
   {
-    accessorKey: "metadata.normalized.image",
+    accessorKey: "price",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Image" />
+      <DataTableColumnHeader column={column} title="Buy now" />
     ),
-    cell: ({ row }) => (
-      <div className="w-[80px]">
-        {row.getValue("metadata.normalized.image")}
-      </div>
-    )
+    cell: ({ row }) => {
+      return (
+        <div className="w-[100px] items-center flex">
+          <span>0.99</span>
+          <SiEthereum />
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    }
   },
   {
-    accessorKey: "contract_address",
+    accessorKey: "price",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Contract" />
+      <DataTableColumnHeader column={column} title="Last Sale" />
     ),
-    cell: ({ row }) => (
-      <div className="w-[80px]">{row.getValue("contract_address")}</div>
-    )
+    cell: ({ row }) => {
+      return (
+        <div className="w-[100px] items-center flex">
+          <span>0.92</span>
+          <SiEthereum />
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    }
+  },
+  {
+    accessorKey: "owner",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Owner" />
+    ),
+    cell: ({ row }) => {
+      const { address } = useAccount();
+      const tokenOwner = row.getValue("owner") as string;
+      const owner =
+        address && areAddressesEqual(tokenOwner, address)
+          ? "You"
+          : truncateString(tokenOwner, 8);
+      return (
+        <div className="w-[100px] items-center">{truncateString(owner, 8)}</div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    }
+  },
+  {
+    accessorKey: "offer",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Top bid" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="w-[100px] items-center flex">
+          <span>0.77</span>
+          <SiEthereum />
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    }
+  },
+  {
+    accessorKey: "listed",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Listed" />
+    ),
+    cell: ({ row }) => {
+      return <div className="w-[100px] items-center">12m ago</div>;
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    }
   },
   {
     accessorKey: "status",
@@ -57,11 +148,11 @@ export const columns: ColumnDef<Token>[] = [
       );
 
       if (!status) {
-        return null;
+        return <div className="w-[80px]">-</div>;
       }
 
       return (
-        <div className="flex w-[100px] items-center">
+        <div className="w-[80px] items-center">
           {status.icon && (
             <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
           )}
@@ -72,36 +163,5 @@ export const columns: ColumnDef<Token>[] = [
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     }
-  },
-  {
-    accessorKey: "priority",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Priority" />
-    ),
-    cell: ({ row }) => {
-      const priority = priorities.find(
-        (priority) => priority.value === row.getValue("priority")
-      );
-
-      if (!priority) {
-        return null;
-      }
-
-      return (
-        <div className="flex items-center">
-          {priority.icon && (
-            <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{priority.label}</span>
-        </div>
-      );
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    }
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />
   }
 ];

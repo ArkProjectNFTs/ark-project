@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const config = {
-    arkchainNetwork: "dev" as Network
+    arkchainNetwork: "goerli" as Network
   };
   return (
     <html lang="en" suppressHydrationWarning>
