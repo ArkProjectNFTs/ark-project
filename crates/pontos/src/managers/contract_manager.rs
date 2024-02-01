@@ -74,6 +74,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                     contract_type: contract_type.to_string(),
                     name: None,
                     symbol: None,
+                    image: None,
                 };
 
                 self.storage
