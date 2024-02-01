@@ -213,4 +213,5 @@ pub struct ContractInfo {
     pub contract_type: String,
     pub name: Option<String>,
     pub symbol: Option<String>,
+    pub image: Option<String>,
 }
