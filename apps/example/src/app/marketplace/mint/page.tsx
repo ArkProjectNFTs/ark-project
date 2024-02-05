@@ -42,7 +42,6 @@ export default function Home() {
     null
   );
 
-  console.log(config?.starknetContracts.nftContract);
   const { contract } = useContract({
     abi: ABI,
     address: config?.starknetContracts.nftContract
@@ -53,7 +52,7 @@ export default function Home() {
     address: config?.starknetContracts.nftContract,
     watch: true
   });
-  console.log(data);
+
   const calls = useMemo(() => {
     if (!address || !contract) return [];
     return contract.populateTransaction["mint"]!(
@@ -121,10 +120,10 @@ export default function Home() {
   }, [isError, isLoading, error, data]);
 
   return (
-    <div className="hidden flex-col md:flex items-center">
+    <div className="hidden flex-col md:flex justify-center items-center h-[700px]">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle>Next Everai</CardTitle>
+          <CardTitle>Next Mint</CardTitle>
         </CardHeader>
         {tokenMetadata && (
           <CardContent className="grid gap-4">

@@ -1,6 +1,8 @@
-import { Metadata } from "next";
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 import { cn } from "@/lib/utils";
 import { Announcement } from "@/components/announcement";
@@ -16,18 +18,14 @@ import { buttonVariants } from "@/components/ui/Button";
 import { MainNav } from "./components/main-nav";
 import { UserNav } from "./components/user-nav";
 
-export const metadata: Metadata = {
-  title: "Marketplace",
-  description: "Check out some examples app built using the Ark SDK hooks."
-};
-
 interface ExamplesLayoutProps {
   children: React.ReactNode;
 }
 
 export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
+  const queryClient = new QueryClient();
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <div className="container relative">
         <PageHeader>
           <Announcement />
@@ -90,6 +88,6 @@ export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
           </div>
         </section>
       </div>
-    </>
+    </QueryClientProvider>
   );
 }

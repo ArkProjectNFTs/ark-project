@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import { Web3 } from "web3";
 import * as z from "zod";
 
-import { ListingV1 } from "@ark-project/core";
 import { useCreateListing } from "@ark-project/react";
 
 import { areAddressesEqual } from "@/lib/utils";
@@ -25,9 +24,13 @@ import { Input } from "@/components/ui/input";
 
 interface OrderBookActionsProps {
   token?: any;
+  tokenMarketData?: any;
 }
 
-const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
+const CreateListing: React.FC<OrderBookActionsProps> = ({
+  token,
+  tokenMarketData
+}) => {
   const { address, account } = useAccount();
   const isOwner = address && areAddressesEqual(token.owner, address);
   const { response, createListing, status } = useCreateListing();
@@ -45,9 +48,9 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
     }
   });
 
-  if (account === undefined || !isOwner) return;
+  if (account === undefined || !isOwner || tokenMarketData.is_listed) return;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (account === undefined || !token?.contract_address || !token?.token_id) {
       console.error("Account, token address, or token ID is missing");
       return;
@@ -64,11 +67,14 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
     const processedValues = {
       brokerId: 123, // Assuming this is a static value or received from elsewhere
       tokenAddress: token?.contract_address,
-      tokenId: token?.token_id ? parseInt(token.token_id, 10) : undefined,
+      tokenId: parseInt(token.token_id, 10),
       startAmount: Web3.utils.toWei(values.startAmount, "ether")
     };
 
-    createListing(account, processedValues as ListingV1);
+    await createListing({
+      starknetAccount: account,
+      ...processedValues
+    });
   }
 
   // Render the component
@@ -86,9 +92,9 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
               name="startAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Listing Price</FormLabel>
+                  <FormLabel>Listing Price in ETH</FormLabel>
                   <FormControl>
-                    <Input placeholder="Start Amount in ETH" {...field} />
+                    <Input placeholder="your price" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -8,11 +8,11 @@ import * as z from "zod";
 
 import { useConfig, useCreateOffer } from "@ark-project/react";
 
+import { areAddressesEqual } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,13 +22,14 @@ import { Input } from "@/components/ui/input";
 
 interface CreateOfferProps {
   token: any;
+  tokenMarketData: any;
 }
 
 export default function CreateOffer({ token }: CreateOfferProps) {
   const config = useConfig();
-  const { account } = useAccount();
+  const { account, address } = useAccount();
   const { response, createOffer, status } = useCreateOffer();
-
+  const isOwner = address && areAddressesEqual(token.owner, address);
   const formSchema = z.object({
     startAmount: z.string()
   });
@@ -40,9 +41,9 @@ export default function CreateOffer({ token }: CreateOfferProps) {
     }
   });
 
-  if (account === undefined) return;
+  if (account === undefined || isOwner) return;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (account === undefined) return;
 
     const tokenIdNumber = parseInt(token.token_id, 10);
@@ -59,12 +60,15 @@ export default function CreateOffer({ token }: CreateOfferProps) {
       startAmount: Web3.utils.toWei(values.startAmount, "ether")
     };
 
-    createOffer(account, processedValues);
+    await createOffer({
+      starknetAccount: account,
+      ...processedValues
+    });
   }
 
   return (
     <div className="w-full flex flex-col space-y-4 rounded border p-4">
-      <h1>Create a listing</h1>
+      <h1>Place a bid</h1>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -76,12 +80,9 @@ export default function CreateOffer({ token }: CreateOfferProps) {
               name="startAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Start Amount</FormLabel>
-                  <FormDescription>
-                    value sent to the function should be in wei
-                  </FormDescription>
+                  <FormLabel>Bid price in Eth</FormLabel>
                   <FormControl>
-                    <Input placeholder="Broker Id" {...field} />
+                    <Input placeholder="your price" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

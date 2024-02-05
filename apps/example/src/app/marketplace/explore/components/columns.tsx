@@ -3,13 +3,13 @@
 import { useAccount } from "@starknet-react/core";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import Link from "next/link";
 import { SiEthereum } from "react-icons/si";
+import { Web3 } from "web3";
 
-import { areAddressesEqual, truncateString } from "@/lib/utils";
+import { areAddressesEqual, timeSince, truncateString } from "@/lib/utils";
 
-import { statuses } from "../data/data";
-import { Token } from "../data/schema";
+// import { statuses } from "../data/data";
+import { Token } from "../../../../types/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 
 export const columns: ColumnDef<Token>[] = [
@@ -55,32 +55,37 @@ export const columns: ColumnDef<Token>[] = [
     enableHiding: false
   },
   {
-    accessorKey: "price",
+    accessorKey: "start_amount",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Buy now" />
     ),
     cell: ({ row }) => {
-      return (
-        <div className="w-[100px] items-center flex">
-          <span>0.99</span>
-          <SiEthereum />
-        </div>
-      );
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      if (row.getValue("start_amount") === undefined) {
+        return <div className="w-[100px] items-center">-</div>;
+      } else {
+        const price = Web3.utils.fromWei(row.getValue("start_amount"), "ether");
+
+        return (
+          <div className="w-[100px] items-center flex">
+            <span>{price}</span>
+            <SiEthereum />
+          </div>
+        );
+      }
     }
   },
   {
-    accessorKey: "price",
+    accessorKey: "last_price",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Sale" />
     ),
     cell: ({ row }) => {
+      // to do get last sell price when available in the API
       return (
         <div className="w-[100px] items-center flex">
-          <span>0.92</span>
-          <SiEthereum />
+          <span>-</span>
+          {/* <span>0.77</span>
+          <SiEthereum /> */}
         </div>
       );
     },
@@ -114,10 +119,12 @@ export const columns: ColumnDef<Token>[] = [
       <DataTableColumnHeader column={column} title="Top bid" />
     ),
     cell: ({ row }) => {
+      // to do get top bid when available in the API
       return (
         <div className="w-[100px] items-center flex">
-          <span>0.77</span>
-          <SiEthereum />
+          <span>-</span>
+          {/* <span>0.77</span>
+          <SiEthereum /> */}
         </div>
       );
     },
@@ -126,42 +133,36 @@ export const columns: ColumnDef<Token>[] = [
     }
   },
   {
-    accessorKey: "listed",
+    accessorKey: "listed_timestamp",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Listed" />
     ),
     cell: ({ row }) => {
-      return <div className="w-[100px] items-center">12m ago</div>;
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      const listedTimeStamp = row.getValue("listed_timestamp") as number;
+      if (listedTimeStamp === undefined) {
+        return <div className="w-[100px] items-center">-</div>;
+      }
+      return (
+        <div className="w-[100px] items-center">
+          {timeSince(listedTimeStamp)}
+        </div>
+      );
     }
   },
   {
-    accessorKey: "status",
+    accessorKey: "is_listed",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="Is listed" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue("status")
-      );
-
-      if (!status) {
-        return <div className="w-[80px]">-</div>;
-      }
-
       return (
-        <div className="w-[80px] items-center">
-          {status.icon && (
-            <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{status.label}</span>
+        <div className="w-[100px] items-center">
+          {row.getValue("is_listed") ? "Listed" : "Unlisted"}
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+    filterFn: (row) => {
+      return row.getValue("is_listed");
     }
   }
 ];

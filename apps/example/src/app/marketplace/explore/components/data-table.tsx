@@ -27,9 +27,9 @@ import {
   TableRow
 } from "@/components/ui/table";
 
+import { Token } from "../../../../types/schema";
 import { DataTablePagination } from "../components/data-table-pagination";
 import { DataTableToolbar } from "../components/data-table-toolbar";
-import { Token } from "../data/schema";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -72,7 +72,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-h-[707px]">
       <DataTableToolbar table={table} />
       <div className="rounded-md border">
         <Table>
@@ -105,7 +105,7 @@ export function DataTable<TData, TValue>({
                         `/marketplace/assets/${token?.contract_address}/${token?.token_id}`
                       )
                     }
-                    key={row.id}
+                    key={token.token_id}
                     className="cursor-pointer hover:slate-50"
                   >
                     {row.getVisibleCells().map((cell) => (
