@@ -42,7 +42,7 @@ const createOffer = async (
   // TODO: this is a hot fix, optional date should be
   // a cairo option and set at contract level to prevent
   // date in the past
-  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 5);
+  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 30);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
   const chainId = await config.starknetProvider.getChainId();
   // Construct the OrderV1 object from the base order and additional default values

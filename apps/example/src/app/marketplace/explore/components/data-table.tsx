@@ -16,6 +16,7 @@ import {
   useReactTable,
   VisibilityState
 } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
 
 import {
   Table,
@@ -26,6 +27,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 
+import { Token } from "../../../../types/schema";
 import { DataTablePagination } from "../components/data-table-pagination";
 import { DataTableToolbar } from "../components/data-table-toolbar";
 
@@ -45,6 +47,7 @@ export function DataTable<TData, TValue>({
     []
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const router = useRouter();
 
   const table = useReactTable({
     data,
@@ -69,7 +72,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-h-[707px]">
       <DataTableToolbar table={table} />
       <div className="rounded-md border">
         <Table>
@@ -93,21 +96,29 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const token = row.original as Token;
+                return (
+                  <TableRow
+                    onClick={() =>
+                      router.push(
+                        `/marketplace/assets/${token?.contract_address}/${token?.token_id}`
+                      )
+                    }
+                    key={token.token_id}
+                    className="cursor-pointer hover:slate-50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell

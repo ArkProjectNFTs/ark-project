@@ -55,7 +55,10 @@ export default function CreateOffer() {
       tokenId: parseInt(values.tokenId, 10),
       startAmount: Web3.utils.toWei(values.startAmount, "ether")
     };
-    createOffer(account, processedValues);
+    createOffer({
+      starknetAccount: account,
+      ...processedValues
+    });
   }
 
   return (

@@ -13,6 +13,10 @@ import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
+export type FulfillOfferParameters = {
+  starknetAccount: AccountInterface;
+} & FulfillOfferInfo;
+
 export default function useFulfillOffer() {
   const [status, setStatus] = useState<Status>("idle");
   const { approveERC721 } = useApproveERC721();
@@ -20,33 +24,33 @@ export default function useFulfillOffer() {
   const config = useConfig();
   const arkAccount = useBurnerWallet();
 
-  async function fulfillOffer(
-    starknetAccount: AccountInterface,
-    fulfillOfferInfo: FulfillOfferInfo
-  ) {
+  async function fulfillOffer(parameters: FulfillOfferParameters) {
     if (!arkAccount) {
       throw new Error("No burner wallet.");
     }
-
     try {
       setStatus("loading");
+      await approveERC721(
+        parameters.starknetAccount,
+        parameters.tokenId,
+        parameters.tokenAddress
+      );
       await fulfillOfferCore(config as Config, {
-        starknetAccount,
+        starknetAccount: parameters.starknetAccount,
         arkAccount,
-        fulfillOfferInfo,
+        fulfillOfferInfo: {
+          orderHash: parameters.orderHash,
+          tokenAddress: parameters.tokenAddress,
+          tokenId: parameters.tokenId,
+          brokerId: parameters.brokerId
+        } as FulfillOfferInfo,
         owner
       });
       setStatus("success");
-      await approveERC721(
-        starknetAccount,
-        fulfillOfferInfo.token_id,
-        fulfillOfferInfo.token_address
-      );
     } catch (error) {
       console.error(error);
       setStatus("error");
     }
   }
-
   return { fulfillOffer, status };
 }

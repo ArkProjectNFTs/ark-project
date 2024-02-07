@@ -35,14 +35,14 @@ const fulfillListing = async (
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
-    order_hash: fulfillListingInfo.order_hash,
+    order_hash: fulfillListingInfo.orderHash,
     related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),
     fulfiller: starknetAccount.address,
     token_chain_id: chainId,
-    token_address: fulfillListingInfo.token_address,
+    token_address: fulfillListingInfo.tokenAddress,
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(fulfillListingInfo.token_id)
+      cairo.uint256(fulfillListingInfo.tokenId)
     )
   };
 

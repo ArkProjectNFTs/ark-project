@@ -52,11 +52,11 @@ export type CancelInfo = {
 };
 
 export type FullCancelInfo = {
-  order_hash: BigNumberish;
+  orderHash: BigNumberish;
   canceller: BigNumberish;
-  token_chain_id: BigNumberish;
-  token_address: BigNumberish;
-  token_id: CairoOption<Uint256>;
+  tokenChainId: BigNumberish;
+  tokenAddress: BigNumberish;
+  tokenId: CairoOption<Uint256>;
 };
 
 export type FulfillInfo = {
@@ -69,9 +69,10 @@ export type FulfillInfo = {
 };
 
 export type BaseFulfillInfo = {
-  order_hash: BigNumberish;
-  token_address: BigNumberish;
-  token_id: BigNumberish;
+  orderHash: BigNumberish;
+  tokenAddress: BigNumberish;
+  tokenId: BigNumberish;
+  brokerId: BigNumberish;
 };
 
 export type FulfillListingInfo = BaseFulfillInfo;

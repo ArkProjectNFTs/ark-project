@@ -46,7 +46,6 @@ export default function Home() {
     abi: ABI,
     address: config?.starknetContracts.nftContract
   });
-
   const { data, isError, isLoading, error } = useContractRead({
     functionName: "get_current_token_id",
     abi: ABI,
@@ -121,10 +120,10 @@ export default function Home() {
   }, [isError, isLoading, error, data]);
 
   return (
-    <div className="hidden flex-col md:flex items-center">
+    <div className="hidden flex-col md:flex justify-center items-center h-[700px]">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle>Next Everai</CardTitle>
+          <CardTitle>Next Mint</CardTitle>
         </CardHeader>
         {tokenMetadata && (
           <CardContent className="grid gap-4">

@@ -42,7 +42,6 @@ jobs:
           STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI }}
         run: |
           pnpm run deploy:starknet -- --starknet goerli
-          pnpm run deploy:starknet:tokens -- --starknet goerli
   deploy-solis:
     needs: deploy-starknet
     name: Deploy Solis latest image to Amazon ECS

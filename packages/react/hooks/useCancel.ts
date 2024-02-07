@@ -15,16 +15,17 @@ import useArkRpc from "./useArkRpc";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
+type CancelParameters = {
+  starknetAccount: AccountInterface;
+} & CancelInfo;
+
 export default function useCancel() {
   const { rpcProvider } = useArkRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
   const config = useConfig();
 
-  async function cancel(
-    starknetAccount: AccountInterface,
-    cancelInfo: CancelInfo
-  ) {
+  async function cancel(parameters: CancelParameters) {
     const burner_address = localStorage.getItem("burner_address");
     const burner_private_key = localStorage.getItem("burner_private_key");
     const burner_public_key = localStorage.getItem("burner_public_key");
@@ -46,9 +47,13 @@ export default function useCancel() {
     try {
       setStatus("loading");
       await cancelOrderCore(config as Config, {
-        starknetAccount,
+        starknetAccount: parameters.starknetAccount,
         arkAccount: arkAccount,
-        cancelInfo,
+        cancelInfo: {
+          orderHash: parameters.orderHash,
+          tokenAddress: parameters.tokenAddress,
+          tokenId: parameters.tokenId
+        },
         owner
       });
       setStatus("success");

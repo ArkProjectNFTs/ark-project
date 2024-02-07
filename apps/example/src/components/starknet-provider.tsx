@@ -2,17 +2,24 @@
 
 import { ReactNode } from "react";
 
-import { goerli, mainnet, sepolia } from "@starknet-react/chains";
+import { Chain, goerli, mainnet, sepolia } from "@starknet-react/chains";
 import {
   argent,
   braavos,
-  publicProvider,
+  jsonRpcProvider,
   StarknetConfig,
   useInjectedConnectors,
   voyager
 } from "@starknet-react/core";
 
+function rpc(chain: Chain) {
+  return {
+    nodeUrl: `https://starknet-goerli.g.alchemy.com/v2/boFbY_WiA-InmepdQTgMFwSBic58A1LH`
+  };
+}
+
 export function StarknetProvider({ children }: { children: ReactNode }) {
+  const provider = jsonRpcProvider({ rpc });
   const { connectors } = useInjectedConnectors({
     // Show these connectors if the user has no connector installed.
     recommended: [argent(), braavos()],
@@ -25,7 +32,7 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
   return (
     <StarknetConfig
       chains={[goerli, mainnet, sepolia]}
-      provider={publicProvider()}
+      provider={provider}
       connectors={connectors}
       explorer={voyager}
       autoConnect

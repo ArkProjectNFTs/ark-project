@@ -18,7 +18,7 @@ export interface Config {
   starknetNetwork?: Network;
   arkchainNetwork: Network;
   arkchainRpcUrl?: string;
-  starknetCurrencyAddress?: string;
+  starknetCurrencyAddress: string;
   arkchainAccountClassHash?: string;
   arkProvider: ProviderInterface;
   starknetProvider: ProviderInterface;

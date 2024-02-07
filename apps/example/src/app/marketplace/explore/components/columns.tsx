@@ -1,16 +1,44 @@
 "use client";
 
+import { useAccount } from "@starknet-react/core";
 import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
+import { SiEthereum } from "react-icons/si";
+import { Web3 } from "web3";
 
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { areAddressesEqual, timeSince, truncateString } from "@/lib/utils";
 
-import { labels, priorities, statuses } from "../data/data";
-import { Token } from "../data/schema";
+// import { statuses } from "../data/data";
+import { Token } from "../../../../types/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
-import { DataTableRowActions } from "./data-table-row-actions";
 
 export const columns: ColumnDef<Token>[] = [
+  {
+    accessorKey: "metadata",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Image"
+        className="w-[40px]"
+      />
+    ),
+    cell: ({ row }) => {
+      const metadata = row.getValue("metadata") as Token["metadata"];
+      const url = metadata?.normalized?.image;
+      const imageUrl = url ? url.replace(/\.mp4$/, ".jpg") : "/missing.jpg";
+      return (
+        <div className="w-[40px]">
+          <Image
+            src={imageUrl}
+            width="40"
+            height="40"
+            alt={metadata?.normalized?.name || "Missing"}
+            className="rounded"
+          />
+        </div>
+      );
+    }
+  },
   {
     accessorKey: "token_id",
     header: ({ column }) => (
@@ -21,51 +49,45 @@ export const columns: ColumnDef<Token>[] = [
       />
     ),
     cell: ({ row }) => (
-      <div className="w-[80px] pl-1">{row.getValue("token_id")}</div>
+      <div className="w-[80px] pl-1">#{row.getValue("token_id")}</div>
     ),
     enableSorting: false,
     enableHiding: false
   },
   {
-    accessorKey: "metadata.normalized.image",
+    accessorKey: "start_amount",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Image" />
-    ),
-    cell: ({ row }) => (
-      <div className="w-[80px]">
-        {row.getValue("metadata.normalized.image")}
-      </div>
-    )
-  },
-  {
-    accessorKey: "contract_address",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Contract" />
-    ),
-    cell: ({ row }) => (
-      <div className="w-[80px]">{row.getValue("contract_address")}</div>
-    )
-  },
-  {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="Buy now" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue("status")
-      );
-
-      if (!status) {
-        return null;
+      if (
+        row.getValue("start_amount") === undefined ||
+        row.getValue("start_amount") === null
+      ) {
+        return <div className="w-[100px] items-center">-</div>;
+      } else {
+        const price = Web3.utils.fromWei(row.getValue("start_amount"), "ether");
+        return (
+          <div className="w-[100px] items-center flex">
+            <span>{price}</span>
+            <SiEthereum />
+          </div>
+        );
       }
-
+    }
+  },
+  {
+    accessorKey: "last_price",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Sale" />
+    ),
+    cell: ({ row }) => {
+      // to do get last sell price when available in the API
       return (
-        <div className="flex w-[100px] items-center">
-          {status.icon && (
-            <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{status.label}</span>
+        <div className="w-[100px] items-center flex">
+          <span>-</span>
+          {/* <span>0.77</span>
+          <SiEthereum /> */}
         </div>
       );
     },
@@ -74,25 +96,37 @@ export const columns: ColumnDef<Token>[] = [
     }
   },
   {
-    accessorKey: "priority",
+    accessorKey: "owner",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Priority" />
+      <DataTableColumnHeader column={column} title="Owner" />
     ),
     cell: ({ row }) => {
-      const priority = priorities.find(
-        (priority) => priority.value === row.getValue("priority")
-      );
-
-      if (!priority) {
-        return null;
-      }
-
+      const { address } = useAccount();
+      const tokenOwner = row.getValue("owner") as string;
+      const owner =
+        address && areAddressesEqual(tokenOwner, address)
+          ? "You"
+          : truncateString(tokenOwner, 8);
       return (
-        <div className="flex items-center">
-          {priority.icon && (
-            <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{priority.label}</span>
+        <div className="w-[100px] items-center">{truncateString(owner, 8)}</div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    }
+  },
+  {
+    accessorKey: "offer",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Top bid" />
+    ),
+    cell: ({ row }) => {
+      // to do get top bid when available in the API
+      return (
+        <div className="w-[100px] items-center flex">
+          <span>-</span>
+          {/* <span>0.77</span>
+          <SiEthereum /> */}
         </div>
       );
     },
@@ -101,7 +135,36 @@ export const columns: ColumnDef<Token>[] = [
     }
   },
   {
-    id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />
+    accessorKey: "listed_timestamp",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Listed" />
+    ),
+    cell: ({ row }) => {
+      const listedTimeStamp = row.getValue("listed_timestamp") as number;
+      if (listedTimeStamp === undefined) {
+        return <div className="w-[100px] items-center">-</div>;
+      }
+      return (
+        <div className="w-[100px] items-center">
+          {timeSince(listedTimeStamp)}
+        </div>
+      );
+    }
+  },
+  {
+    accessorKey: "is_listed",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Is listed" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="w-[100px] items-center">
+          {row.getValue("is_listed") ? "Listed" : "Unlisted"}
+        </div>
+      );
+    },
+    filterFn: (row) => {
+      return row.getValue("is_listed");
+    }
   }
 ];

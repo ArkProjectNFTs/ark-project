@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { AccountInterface, BigNumberish } from "starknet";
-
 import {
   Config,
   fulfillListing as fulfillListingCore
@@ -11,41 +9,46 @@ import {
 import { FulfillListingInfo } from "@ark-project/core/src/types";
 
 import { Status } from "../types";
-import useApproveERC20 from "./useApproveERC20";
+import useApproveERC20, { ApproveERC20Parameters } from "./useApproveERC20";
 import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
+export type fulfillListingParameters = ApproveERC20Parameters &
+  FulfillListingInfo;
+
 export default function useFulfillListing() {
   const [status, setStatus] = useState<Status>("idle");
   const { approveERC20 } = useApproveERC20();
-  const config = useConfig();
   const owner = useOwner();
   const arkAccount = useBurnerWallet();
-
-  async function fulfillListing(
-    starknetAccount: AccountInterface,
-    fulfillListingInfo: FulfillListingInfo,
-    amount: BigNumberish,
-    currency_address: BigNumberish
-  ) {
+  const config = useConfig();
+  async function fulfillListing(parameters: fulfillListingParameters) {
     if (!arkAccount) throw new Error("No burner wallet.");
-
     try {
       setStatus("loading");
+      await approveERC20({
+        starknetAccount: parameters.starknetAccount,
+        startAmount: parameters.startAmount,
+        currencyAddress:
+          parameters.currencyAddress || config?.starknetContracts.eth
+      });
       await fulfillListingCore(config as Config, {
-        starknetAccount,
+        starknetAccount: parameters.starknetAccount,
         arkAccount,
-        fulfillListingInfo,
+        fulfillListingInfo: {
+          orderHash: parameters.orderHash,
+          tokenAddress: parameters.tokenAddress,
+          tokenId: parameters.tokenId,
+          brokerId: parameters.brokerId
+        } as FulfillListingInfo,
         owner
       });
       setStatus("success");
-      await approveERC20(starknetAccount, amount, currency_address);
     } catch (error) {
       console.error(error);
       setStatus("error");
     }
   }
-
   return { fulfillListing, status };
 }

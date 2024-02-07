@@ -47,6 +47,8 @@ export const approveERC20 = async (
   config: Config,
   parameters: ApproveERC20Parameters
 ) => {
+  console.log("approveERC20", parameters);
+  console.log("config", config);
   const { contractAddress, amount, starknetAccount } = parameters;
   const { abi: erc20abi } =
     await config.starknetProvider.getClassAt(contractAddress);

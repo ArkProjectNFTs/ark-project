@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
+import { AccountInterface, BigNumberish } from "starknet";
 
 import {
   Config,
@@ -16,6 +16,18 @@ import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
+export type CreateOfferParameters = {
+  starknetAccount: AccountInterface;
+  startAmount: BigNumberish;
+  tokenAddress: BigNumberish;
+  tokenId: BigNumberish;
+  brokerId: BigNumberish;
+  currencyAddress?: BigNumberish;
+  currencyChainId?: BigNumberish;
+  startDate?: BigNumberish;
+  endDate?: BigNumberish;
+};
+
 export default function useCreateOffer() {
   const [status, setStatus] = useState<Status>("idle");
   const { approveERC20 } = useApproveERC20();
@@ -24,32 +36,39 @@ export default function useCreateOffer() {
   const config = useConfig();
   const arkAccount = useBurnerWallet();
 
-  async function createOffer(
-    starknetAccount: AccountInterface,
-    offer: OfferV1
-  ) {
+  async function createOffer(parameters: CreateOfferParameters) {
+    console.log("createOffer", parameters);
     if (!arkAccount) {
       throw new Error("No burner wallet.");
     }
-    offer.currencyAddress =
-      offer.currencyAddress || config?.starknetContracts.eth;
-    offer.currencyChainId =
-      offer.currencyChainId || (await config?.starknetProvider.getChainId());
+
     try {
       setStatus("loading");
+      await approveERC20({
+        starknetAccount: parameters.starknetAccount,
+        startAmount: parameters.startAmount,
+        currencyAddress:
+          parameters.currencyAddress || config?.starknetContracts.eth
+      });
       const orderHash = await createOfferCore(config as Config, {
-        starknetAccount,
+        starknetAccount: parameters.starknetAccount,
         arkAccount,
-        offer,
+        offer: {
+          startAmount: parameters.startAmount,
+          tokenAddress: parameters.tokenAddress,
+          tokenId: parameters.tokenId,
+          currencyAddress:
+            parameters.currencyAddress || config?.starknetContracts.eth,
+          currencyChainId:
+            parameters.currencyChainId || config?.starknetProvider.getChainId(),
+          brokerId: parameters.brokerId,
+          startDate: parameters.startDate,
+          endDate: parameters.endDate
+        } as OfferV1,
         owner
       });
       setResponse(orderHash);
       setStatus("success");
-      await approveERC20(
-        starknetAccount,
-        offer.startAmount,
-        offer.currencyAddress
-      );
     } catch (error) {
       setStatus("error");
       console.error(error);

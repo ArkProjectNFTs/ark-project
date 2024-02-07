@@ -50,6 +50,7 @@ export const createAccount = async (provider: ProviderInterface) => {
     constructorCalldata: CallData.compile({ publicKey }),
     addressSalt: publicKey
   });
+
   await provider.waitForTransaction(transaction_hash, {
     retryInterval: 100
   });

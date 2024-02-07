@@ -16,6 +16,10 @@ import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
+export type CreateListingParameters = {
+  starknetAccount: AccountInterface;
+} & ListingV1;
+
 export default function useCreateListing() {
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>();
@@ -24,23 +28,34 @@ export default function useCreateListing() {
   const owner = useOwner();
   const arkAccount = useBurnerWallet();
 
-  async function createListing(
-    starknetAccount: AccountInterface,
-    order: ListingV1
-  ) {
+  async function createListing(parameters: CreateListingParameters) {
     if (!arkAccount) throw new Error("No burner wallet.");
-
     try {
       setStatus("loading");
+      await approveERC721(
+        parameters.starknetAccount,
+        parameters.tokenId,
+        parameters.tokenAddress
+      );
       const orderHash = await createListingCore(config as Config, {
-        starknetAccount,
+        starknetAccount: parameters.starknetAccount,
         arkAccount,
-        order,
+        order: {
+          startAmount: parameters.startAmount,
+          tokenAddress: parameters.tokenAddress,
+          tokenId: parameters.tokenId,
+          currencyAddress:
+            parameters.currencyAddress || config?.starknetContracts.eth,
+          currencyChainId:
+            parameters.currencyChainId || config?.starknetProvider.getChainId(),
+          brokerId: parameters.brokerId,
+          startDate: parameters.startDate,
+          endDate: parameters.endDate
+        } as ListingV1,
         owner
       });
       setResponse(orderHash);
       setStatus("success");
-      await approveERC721(starknetAccount, order.tokenId, order.tokenAddress);
     } catch (error) {
       console.error(error);
       setStatus("error");

@@ -1,8 +1,11 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 import { cn } from "@/lib/utils";
 import { Announcement } from "@/components/announcement";
+import AuthSwitcher from "@/components/authSwitcher";
 import {
   PageActions,
   PageHeader,
@@ -11,28 +14,26 @@ import {
 } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/Button";
 
-export const metadata: Metadata = {
-  title: "Examples",
-  description: "Check out some examples app built using the components."
-};
+import { MainNav } from "./components/main-nav";
+import { UserNav } from "./components/user-nav";
 
 interface ExamplesLayoutProps {
   children: React.ReactNode;
 }
 
 export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
+  const queryClient = new QueryClient();
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <div className="container relative">
         <PageHeader>
           <Announcement />
           <PageHeaderHeading className="hidden md:block">
-            Mini marketplace examples
+            Mini marketplace example
           </PageHeaderHeading>
           <PageHeaderHeading className="md:hidden">Examples</PageHeaderHeading>
           <PageHeaderDescription>
-            Dashboard, cards, authentication. Some examples built using the
-            components. Use this as a guide to build your own.
+            Mint, Explore, check your portfolio, list, buys, bid and sell NFTs.
           </PageHeaderDescription>
           <PageActions>
             <Link
@@ -54,10 +55,22 @@ export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
         </PageHeader>
         <section>
           <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
-            {children}
+            <AuthSwitcher>
+              <div className="hidden h-full flex-1 flex-col space-y-8 p-8 md:flex">
+                <div className="flex items-center justify-between space-y-2">
+                  <div className="flex items-center w-full">
+                    <MainNav />
+                    <div className="ml-auto flex items-center space-x-4">
+                      <UserNav />
+                    </div>
+                  </div>
+                </div>
+                {children}
+              </div>
+            </AuthSwitcher>
           </div>
         </section>
       </div>
-    </>
+    </QueryClientProvider>
   );
 }

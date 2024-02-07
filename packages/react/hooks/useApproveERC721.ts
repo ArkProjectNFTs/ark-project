@@ -9,7 +9,7 @@ export default function useApproveERC721() {
 
   async function getApproveERC721(
     starknetAccount: AccountInterface,
-    tokenId: BigNumberish,
+
     tokenAddress: BigNumberish
   ) {
     const compressedContract = await config?.starknetProvider.getClassAt(
@@ -40,7 +40,6 @@ export default function useApproveERC721() {
   ) {
     let isApprovedForAll = await getApproveERC721(
       starknetAccount,
-      tokenId,
       tokenAddress
     );
     if (!isApprovedForAll) {
