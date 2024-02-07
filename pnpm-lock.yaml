@@ -336,8 +336,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0(eslint@8.54.0)
       eslint-config-turbo:
-        specifier: ^1.10.12
-        version: 1.10.12(eslint@8.54.0)
+        specifier: ^1.12.3
+        version: 1.12.3(eslint@8.54.0)
       eslint-plugin-only-warn:
         specifier: ^1.1.0
         version: 1.1.0
@@ -4451,13 +4451,13 @@ packages:
       eslint: 8.54.0
     dev: true
 
-  /eslint-config-turbo@1.10.12(eslint@8.54.0):
-    resolution: {integrity: sha512-z3jfh+D7UGYlzMWGh+Kqz++hf8LOE96q3o5R8X4HTjmxaBWlLAWG+0Ounr38h+JLR2TJno0hU9zfzoPNkR9BdA==}
+  /eslint-config-turbo@1.12.3(eslint@8.54.0):
+    resolution: {integrity: sha512-Q46MEOiNJpJWC3Et5/YEuIYYhbOieS04yZwQOinO2hpZw3folEXV+hbwVo8M+ap/q8gtpjIWiRMZ1A4QxmhEqQ==}
     peerDependencies:
       eslint: '>6.6.0'
     dependencies:
       eslint: 8.54.0
-      eslint-plugin-turbo: 1.10.12(eslint@8.54.0)
+      eslint-plugin-turbo: 1.12.3(eslint@8.54.0)
     dev: true
 
   /eslint-import-resolver-alias@1.1.2(eslint-plugin-import@2.29.0):
@@ -4850,8 +4850,8 @@ packages:
       '@microsoft/tsdoc-config': 0.16.2
     dev: true
 
-  /eslint-plugin-turbo@1.10.12(eslint@8.54.0):
-    resolution: {integrity: sha512-uNbdj+ohZaYo4tFJ6dStRXu2FZigwulR1b3URPXe0Q8YaE7thuekKNP+54CHtZPH9Zey9dmDx5btAQl9mfzGOw==}
+  /eslint-plugin-turbo@1.12.3(eslint@8.54.0):
+    resolution: {integrity: sha512-7hEyxa+oP898EFNoxVenHlH8jtBwV1hbbIkdQWgqDcB0EmVNGVEZkYRo5Hm6BuMAjR433B+NISBJdj0bQo4/Lg==}
     peerDependencies:
       eslint: '>6.6.0'
     dependencies:
