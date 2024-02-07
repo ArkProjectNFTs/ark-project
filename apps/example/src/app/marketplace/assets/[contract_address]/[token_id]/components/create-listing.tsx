@@ -48,7 +48,12 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({
     }
   });
 
-  if (account === undefined || !isOwner || tokenMarketData.is_listed) return;
+  if (
+    account === undefined ||
+    !isOwner ||
+    (tokenMarketData && tokenMarketData.is_listed)
+  )
+    return;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (account === undefined || !token?.contract_address || !token?.token_id) {
@@ -80,7 +85,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({
   // Render the component
   return (
     <div className="w-full flex flex-col space-y-4 rounded border p-4">
-      <h1>Create a listing</h1>
+      <h1 className="font-medium">Create a listing</h1>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

@@ -23,12 +23,7 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
   const { address, account } = useAccount();
   const isOwner = address && areAddressesEqual(token.owner, address);
 
-  if (
-    account === undefined ||
-    isOwner
-    // TODO: also return null if token doesn't have an listing
-    // || !tokenMarketData.is_listed
-  )
+  if (account === undefined || isOwner || !tokenMarketData.is_listed)
     return null;
 
   return (

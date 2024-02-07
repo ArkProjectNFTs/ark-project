@@ -60,11 +60,13 @@ export const columns: ColumnDef<Token>[] = [
       <DataTableColumnHeader column={column} title="Buy now" />
     ),
     cell: ({ row }) => {
-      if (row.getValue("start_amount") === undefined) {
+      if (
+        row.getValue("start_amount") === undefined ||
+        row.getValue("start_amount") === null
+      ) {
         return <div className="w-[100px] items-center">-</div>;
       } else {
         const price = Web3.utils.fromWei(row.getValue("start_amount"), "ether");
-
         return (
           <div className="w-[100px] items-center flex">
             <span>{price}</span>

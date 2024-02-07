@@ -37,7 +37,6 @@ async function fetchCollectionOrders() {
 
 const Explore = ({ initialData = [], orderBookData = [] }: any) => {
   const { data, error, isLoading }: any = useQuery("tokens", fetchCollection, {
-    initialData
     // refetchInterval: 1000
   });
 
@@ -46,7 +45,6 @@ const Explore = ({ initialData = [], orderBookData = [] }: any) => {
     error: collectionOrdersError,
     isLoading: collectionOrdersIsLoading
   }: any = useQuery("collectionOrders", fetchCollectionOrders, {
-    initialData: orderBookData
     // refetchInterval: 1000
   });
 
@@ -60,6 +58,7 @@ const Explore = ({ initialData = [], orderBookData = [] }: any) => {
       </div>
     );
   }
+  console.log("collectionOrdersData", collectionOrdersData);
   const tokenWithMarketData = mergeTokenData(data.result, collectionOrdersData);
   return <DataTable data={tokenWithMarketData} columns={columns} />;
 };

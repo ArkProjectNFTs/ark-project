@@ -50,3 +50,20 @@ export function timeSince(timestamp: number): string {
   const daysPast = Math.floor(hoursPast / 24);
   return `${daysPast} day${daysPast > 1 ? "s" : ""} ago`;
 }
+
+export function getRoundedRemainingTime(endTime: number): string {
+  const total = new Date(endTime * 1000).getTime() - new Date().getTime();
+  const days = Math.floor(total / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((total / 1000 / 60) % 60);
+
+  if (days > 0) {
+    return `${days} days`;
+  } else if (hours > 0) {
+    return `${hours} hours`;
+  } else if (minutes > 0) {
+    return `${minutes} minutes`;
+  } else {
+    return "Expired";
+  }
+}

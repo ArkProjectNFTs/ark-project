@@ -17,13 +17,14 @@ import {
 } from "@/components/ui/tooltip";
 
 import { getTokenMarketData, getTokenOffers } from "../data";
-import Activity from "./activity";
 import AssetsInfos from "./asset-infos";
 import CancelListing from "./cancel-listing";
 import CreateListing from "./create-listing";
 import CreateOffer from "./create-offer";
 import FulfillListing from "./fulfill-listing";
 import FulFillOffer from "./fulfill-offer";
+import Activity from "./token-activity";
+import TokenOffers from "./token-offers";
 
 interface AssetProps {
   token: any;
@@ -71,11 +72,10 @@ const Asset: React.FC<AssetProps> = ({
       initialData: tokenOffersInitialData
     }
   );
-
-  // console.log(tokenMarketData, tokenOffersData);
+  console.log(tokenMarketData, "tokenMarketData");
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="grid grid-rows-3 grid-cols-3 gap-6 h-[700px]">
+      <div className="grid grid-rows-3 grid-cols-3 gap-6 min-h-[700px]">
         <div className="row-span-3 col-span-1 flex space-y-5 flex-col">
           <div className="flex space-y-2 flex-col">
             <h1 className="text-2xl font-bold uppercase">
@@ -154,6 +154,7 @@ const Asset: React.FC<AssetProps> = ({
             token={token}
             tokenMarketData={tokenMarketData || undefined}
           />
+          <TokenOffers tokenOffers={tokenOffersData} />
           <Activity params={params} />
         </div>
       </div>

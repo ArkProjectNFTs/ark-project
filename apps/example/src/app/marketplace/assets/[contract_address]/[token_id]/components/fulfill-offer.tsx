@@ -31,9 +31,8 @@ const BuyOrder: React.FC<BuyOrderProps> = ({
   if (
     account === undefined ||
     !isOwner ||
-    !tokenOffers
-    // TODO: also return null if token doesn't have an listing
-    // || !tokenMarketData.is_listed
+    !tokenOffers ||
+    !tokenMarketData.has_offer
   )
     return null;
 
