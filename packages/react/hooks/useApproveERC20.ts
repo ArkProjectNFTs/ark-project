@@ -43,7 +43,6 @@ export default function useApproveERC20() {
   // }
 
   async function approveERC20(parameters: ApproveERC20Parameters) {
-    console.log("userapproveERC20", parameters);
     if (!parameters.currencyAddress) {
       throw new Error(
         "No currency address. Please set currency_address to approveERC20."

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { AccountInterface, BigNumberish } from "starknet";
+import { AccountInterface } from "starknet";
 
 import { Config, fulfillOffer as fulfillOfferCore } from "@ark-project/core";
 import { FulfillOfferInfo } from "@ark-project/core/src/types";
@@ -33,7 +33,7 @@ export default function useFulfillOffer() {
       await approveERC721(
         parameters.starknetAccount,
         parameters.tokenId,
-        parameters.brokerId
+        parameters.tokenAddress
       );
       await fulfillOfferCore(config as Config, {
         starknetAccount: parameters.starknetAccount,

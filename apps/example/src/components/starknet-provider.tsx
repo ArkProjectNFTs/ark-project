@@ -14,7 +14,7 @@ import {
 
 function rpc(chain: Chain) {
   return {
-    nodeUrl: `https://juno.testnet.arkproject.dev`
+    nodeUrl: `https://starknet-goerli.g.alchemy.com/v2/boFbY_WiA-InmepdQTgMFwSBic58A1LH`
   };
 }
 

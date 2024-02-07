@@ -15,6 +15,10 @@ export type TokenMarketData = {
   broker_id: string;
   is_listed: boolean;
   has_offer: boolean;
+  top_bid: {
+    amount: string;
+    order_hash: string;
+  };
 };
 
 export type ContractInfo = {

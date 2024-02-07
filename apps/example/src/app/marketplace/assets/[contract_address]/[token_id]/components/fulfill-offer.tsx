@@ -13,27 +13,16 @@ import { Button } from "@/components/ui/Button";
 interface BuyOrderProps {
   token: any;
   tokenMarketData: TokenMarketData;
-  tokenOffers: any;
 }
 
-const BuyOrder: React.FC<BuyOrderProps> = ({
-  token,
-  tokenMarketData,
-  tokenOffers
-}) => {
-  // console.log(tokenOffers);
+const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
   const { fulfillOffer, status } = useFulfillOffer();
   const { address, account } = useAccount();
 
   const isOwner = address && areAddressesEqual(token.owner, address);
 
   // TODO also return null if token doesn't have an offer
-  if (
-    account === undefined ||
-    !isOwner ||
-    !tokenOffers ||
-    !tokenMarketData.has_offer
-  )
+  if (account === undefined || !isOwner || !tokenMarketData.has_offer)
     return null;
 
   return (
@@ -46,14 +35,15 @@ const BuyOrder: React.FC<BuyOrderProps> = ({
             brokerId: 1,
             tokenAddress: token.contract_address,
             tokenId: token.token_id,
-            orderHash: tokenMarketData.order_hash
+            orderHash: tokenMarketData.top_bid.order_hash
             // TODO: add address from the api when it's available
-            // currencyAddress: tokenMarketData.currency_address,
+            // currencyAddress: tokenMarketData.top_bid.currency_address,
           })
         }
       >
         {status === "idle" && "Accept bid"}
         {status === "loading" && "Accepting..."}
+        {status === "error" && "Error"}
         {status === "success" && "Bought"}
       </Button>
     </div>

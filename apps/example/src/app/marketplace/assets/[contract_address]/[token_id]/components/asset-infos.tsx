@@ -45,7 +45,14 @@ const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
                 : "-"}
             </TableCell>
             <TableCell>-</TableCell>
-            <TableCell>-</TableCell>
+            <TableCell>
+              {tokenMarketData?.has_offer
+                ? `${Web3.utils.fromWei(
+                    tokenMarketData?.top_bid?.amount,
+                    "ether"
+                  )}  ETH`
+                : "-"}
+            </TableCell>
             <TableCell>-</TableCell>
             <TableCell>{owner}</TableCell>
             <TableCell className="text-right">{token.token_id}</TableCell>

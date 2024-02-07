@@ -37,6 +37,7 @@ export default function useCreateOffer() {
   const arkAccount = useBurnerWallet();
 
   async function createOffer(parameters: CreateOfferParameters) {
+    console.log("createOffer", parameters);
     if (!arkAccount) {
       throw new Error("No burner wallet.");
     }

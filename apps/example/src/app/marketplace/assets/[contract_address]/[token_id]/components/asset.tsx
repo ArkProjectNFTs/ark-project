@@ -16,7 +16,7 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 
-import { getTokenMarketData, getTokenOffers } from "../data";
+import { getTokenMarketData } from "../data";
 import AssetsInfos from "./asset-infos";
 import CancelListing from "./cancel-listing";
 import CreateListing from "./create-listing";
@@ -30,7 +30,6 @@ interface AssetProps {
   token: any;
   collection: any;
   tokenMarketData: any;
-  tokenOffers: any;
   params: any;
 }
 
@@ -38,8 +37,7 @@ const Asset: React.FC<AssetProps> = ({
   params,
   token,
   collection,
-  tokenMarketData: tokenMarketInitialData,
-  tokenOffers: tokenOffersInitialData
+  tokenMarketData: tokenMarketInitialData
 }) => {
   const {
     data: tokenMarketData,
@@ -53,26 +51,11 @@ const Asset: React.FC<AssetProps> = ({
         token_id: params.token_id
       }),
     {
-      initialData: tokenMarketInitialData
+      initialData: tokenMarketInitialData,
+      refetchInterval: 1000
     }
   );
 
-  const {
-    data: tokenOffersData,
-    error: tokenOffersError,
-    isLoading: tokenOffersIsLoading
-  }: any = useQuery(
-    "tokenOffers",
-    () =>
-      getTokenOffers({
-        contract_address: params.contract_address,
-        token_id: params.token_id
-      }),
-    {
-      initialData: tokenOffersInitialData
-    }
-  );
-  console.log(tokenMarketData, "tokenMarketData");
   return (
     <TooltipProvider delayDuration={0}>
       <div className="grid grid-rows-3 grid-cols-3 gap-6 min-h-[700px]">
@@ -128,11 +111,7 @@ const Asset: React.FC<AssetProps> = ({
             <FulfillListing token={token} tokenMarketData={tokenMarketData} />
           )}
           {tokenMarketData && (
-            <FulFillOffer
-              tokenMarketData={tokenMarketData}
-              token={token}
-              tokenOffers={tokenOffersData}
-            />
+            <FulFillOffer tokenMarketData={tokenMarketData} token={token} />
           )}
           {tokenMarketData && (
             <CancelListing
@@ -154,7 +133,7 @@ const Asset: React.FC<AssetProps> = ({
             token={token}
             tokenMarketData={tokenMarketData || undefined}
           />
-          <TokenOffers tokenOffers={tokenOffersData} />
+          <TokenOffers token={token} />
           <Activity params={params} />
         </div>
       </div>

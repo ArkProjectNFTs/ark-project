@@ -25,18 +25,12 @@ export default async function Token({
     token_id: params.token_id
   });
 
-  const tokenOffers = await getTokenOffers({
-    contract_address: params.contract_address,
-    token_id: params.token_id
-  });
-
   return (
     <Asset
       params={params}
       token={token}
       collection={collection}
       tokenMarketData={tokenMarketData}
-      tokenOffers={tokenOffers}
     />
   );
 }

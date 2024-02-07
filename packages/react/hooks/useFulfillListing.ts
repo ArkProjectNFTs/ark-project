@@ -24,7 +24,6 @@ export default function useFulfillListing() {
   const arkAccount = useBurnerWallet();
   const config = useConfig();
   async function fulfillListing(parameters: fulfillListingParameters) {
-    console.log("fulfillListing", parameters);
     if (!arkAccount) throw new Error("No burner wallet.");
     try {
       setStatus("loading");

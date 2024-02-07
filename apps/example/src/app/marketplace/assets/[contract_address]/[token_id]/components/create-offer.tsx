@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
 import { Web3 } from "web3";
@@ -84,27 +85,29 @@ export default function CreateOffer({ token }: CreateOfferProps) {
                   <FormControl>
                     <Input placeholder="your price" {...field} />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
           </div>
           <Button type="submit" className="w-[20%]">
-            {account
-              ? status === "loading"
-                ? "Loading..."
-                : status === "error"
-                  ? "Error"
-                  : status === "success"
-                    ? "Success"
-                    : "Create Offer"
-              : "Connect your wallet"}
+            {status === "loading" ? (
+              <ReloadIcon className="animate-spin" />
+            ) : (
+              "Create Offer"
+            )}
           </Button>
         </form>
       </Form>
-      {!!response && (
-        <div className="mt-4">response: {response?.toString()}</div>
-      )}
+
+      <div className="mt-4">
+        {status === "loading" && "Transaction in progress..."}
+        {status === "error" && "Error"}
+        {status === "success" && "Transaction successful"}
+        <br />
+        {!!response && status === "success" && (
+          <p>order_hash: {response?.toString()}</p>
+        )}
+      </div>
     </div>
   );
 }

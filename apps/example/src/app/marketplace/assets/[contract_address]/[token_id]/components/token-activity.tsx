@@ -42,7 +42,9 @@ const Activity: React.FC<ActivityProps> = ({ params }) => {
         contract_address: params.contract_address,
         token_id: params.token_id
       }),
-    {}
+    {
+      refetchInterval: 1000
+    }
   );
 
   if (isLoading) {
@@ -51,7 +53,7 @@ const Activity: React.FC<ActivityProps> = ({ params }) => {
   if (error) {
     throw error;
   }
-  console.log("data", data);
+
   return (
     <div className="space-y-2">
       <div className="flex flex-col space-y-1.5 p-y-6 pt-4 pb-2">
@@ -72,6 +74,7 @@ const Activity: React.FC<ActivityProps> = ({ params }) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Event</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>From</TableHead>
                 <TableHead>To</TableHead>
@@ -84,6 +87,7 @@ const Activity: React.FC<ActivityProps> = ({ params }) => {
                 data.history.map((activity: any) => (
                   <TableRow key={activity.event_timestamp}>
                     <TableCell>{activity.order_status}</TableCell>
+                    <TableCell>{activity.event_type}</TableCell>
                     <TableCell>
                       {activity.amount
                         ? `${Web3.utils.fromWei(activity.amount, "ether")} ETH`
