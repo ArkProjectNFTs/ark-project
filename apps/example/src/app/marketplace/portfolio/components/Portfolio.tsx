@@ -20,7 +20,7 @@ const Portfolio: React.FC = () => {
           `${env.NEXT_PUBLIC_NFT_API_URL}/v1/owners/${address}/tokens`,
           {
             headers: {
-              "x-api-key": "AY1oXgEAmF139oBoxDSomzVnHqy8ZdQ2NxLmzJ6i"
+              "x-api-key": env.NEXT_PUBLIC_NFT_API_KEY
             }
           }
         );
