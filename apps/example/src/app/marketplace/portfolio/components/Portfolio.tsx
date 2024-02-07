@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import { env } from "@/env";
 import { useAccount } from "@starknet-react/core";
 import Link from "next/link";
 
@@ -16,7 +17,7 @@ const Portfolio: React.FC = () => {
       }
       try {
         const response = await fetch(
-          `https://testnet-api.arkproject.dev/v1/owners/${address}/tokens`,
+          `${env.NEXT_PUBLIC_NFT_API_URL}/v1/owners/${address}/tokens`,
           {
             headers: {
               "x-api-key": "AY1oXgEAmF139oBoxDSomzVnHqy8ZdQ2NxLmzJ6i"

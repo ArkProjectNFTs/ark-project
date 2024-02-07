@@ -1,5 +1,6 @@
 import React from "react";
 
+import { env } from "@/env";
 import { useQuery } from "react-query";
 import { Web3 } from "web3";
 
@@ -21,7 +22,7 @@ export async function getTokenActivity({
   token_id: string;
 }) {
   const response = await fetch(
-    `http://127.0.0.1:8080/token/${contract_address}/${token_id}/history`
+    `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/token/${contract_address}/${token_id}/history`
   );
   if (!response.ok) {
     return null;

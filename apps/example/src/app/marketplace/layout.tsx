@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { QueryClient, QueryClientProvider } from "react-query";
 
@@ -57,22 +56,6 @@ export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
         <section>
           <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow-md md:shadow-xl">
             <AuthSwitcher>
-              <div className="md:hidden">
-                <Image
-                  src="/examples/tasks-light.png"
-                  width={1280}
-                  height={998}
-                  alt="Playground"
-                  className="block dark:hidden"
-                />
-                <Image
-                  src="/examples/tasks-dark.png"
-                  width={1280}
-                  height={998}
-                  alt="Playground"
-                  className="hidden dark:block"
-                />
-              </div>
               <div className="hidden h-full flex-1 flex-col space-y-8 p-8 md:flex">
                 <div className="flex items-center justify-between space-y-2">
                   <div className="flex items-center w-full">

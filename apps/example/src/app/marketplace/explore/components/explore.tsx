@@ -2,6 +2,7 @@
 
 import React from "react";
 
+import { env } from "@/env";
 import { useQuery } from "react-query";
 
 import { mergeTokenData } from "../utils";
@@ -10,10 +11,10 @@ import { DataTable } from "./data-table";
 
 const fetchCollection = async () => {
   const response = await fetch(
-    `https://testnet-api.arkproject.dev/v1/tokens/0x22411b480425fe6e627fdf4d1b6ac7f8567314ada5617a0a6d8ef3e74b69436`,
+    `${env.NEXT_PUBLIC_NFT_API_URL}/v1/tokens/0x22411b480425fe6e627fdf4d1b6ac7f8567314ada5617a0a6d8ef3e74b69436`,
     {
       headers: {
-        "x-api-key": "AY1oXgEAmF139oBoxDSomzVnHqy8ZdQ2NxLmzJ6i"
+        "x-api-key": env.NEXT_PUBLIC_NFT_API_KEY
       }
     }
   );
@@ -27,7 +28,7 @@ const fetchCollection = async () => {
 
 async function fetchCollectionOrders() {
   const response = await fetch(
-    `http://127.0.0.1:8080/tokens/collection/0x022411b480425fe6e627fdf4d1b6ac7f8567314ada5617a0a6d8ef3e74b69436`
+    `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/tokens/collection/0x022411b480425fe6e627fdf4d1b6ac7f8567314ada5617a0a6d8ef3e74b69436`
   );
   if (!response.ok) {
     throw new Error("Failed to fetch data");
@@ -37,6 +38,7 @@ async function fetchCollectionOrders() {
 
 const Explore = ({ initialData = [], orderBookData = [] }: any) => {
   const { data, error, isLoading }: any = useQuery("tokens", fetchCollection, {
+    initialData
     // refetchInterval: 1000
   });
 
@@ -45,6 +47,7 @@ const Explore = ({ initialData = [], orderBookData = [] }: any) => {
     error: collectionOrdersError,
     isLoading: collectionOrdersIsLoading
   }: any = useQuery("collectionOrders", fetchCollectionOrders, {
+    initialData: orderBookData
     // refetchInterval: 1000
   });
 
@@ -58,7 +61,7 @@ const Explore = ({ initialData = [], orderBookData = [] }: any) => {
       </div>
     );
   }
-  console.log("collectionOrdersData", collectionOrdersData);
+
   const tokenWithMarketData = mergeTokenData(data.result, collectionOrdersData);
   return <DataTable data={tokenWithMarketData} columns={columns} />;
 };

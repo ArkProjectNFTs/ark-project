@@ -1,11 +1,12 @@
-import { TokenMarketData } from "@/types";
+// import { TokenMarketData } from "@/types";
+import { env } from "@/env";
 
 export async function getTokenData(contract_address: string, token_id: string) {
   const response = await fetch(
-    `https://testnet-api.arkproject.dev/v1/tokens/${contract_address}/${token_id}`,
+    `${env.NEXT_PUBLIC_NFT_API_URL}/v1/tokens/${contract_address}/${token_id}`,
     {
       headers: {
-        "x-api-key": "AY1oXgEAmF139oBoxDSomzVnHqy8ZdQ2NxLmzJ6i"
+        "x-api-key": env.NEXT_PUBLIC_NFT_API_KEY
       }
     }
   );
@@ -23,7 +24,7 @@ export async function getTokenMarketData({
   token_id: string;
 }) {
   const response = await fetch(
-    `http://127.0.0.1:8080/token/${contract_address}/${token_id}`
+    `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/token/${contract_address}/${token_id}`
   );
   if (!response.ok) {
     return null;
@@ -39,7 +40,7 @@ export async function getTokenOffers({
   token_id: string;
 }) {
   const response = await fetch(
-    `http://127.0.0.1:8080/token/${contract_address}/${token_id}/offers`
+    `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/token/${contract_address}/${token_id}/offers`
   );
   if (!response.ok) {
     return null;
@@ -49,10 +50,10 @@ export async function getTokenOffers({
 
 export async function getCollectionMetadata(contract_address: string) {
   const response = await fetch(
-    `https://testnet-api.arkproject.dev/v1/contracts/${contract_address}`,
+    `${env.NEXT_PUBLIC_NFT_API_URL}/v1/contracts/${contract_address}`,
     {
       headers: {
-        "x-api-key": "AY1oXgEAmF139oBoxDSomzVnHqy8ZdQ2NxLmzJ6i"
+        "x-api-key": env.NEXT_PUBLIC_NFT_API_KEY
       }
     }
   );
