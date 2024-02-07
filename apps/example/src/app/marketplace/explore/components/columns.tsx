@@ -116,17 +116,22 @@ export const columns: ColumnDef<Token>[] = [
     }
   },
   {
-    accessorKey: "offer",
+    accessorKey: "top_bid",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Top bid" />
     ),
     cell: ({ row }) => {
-      // to do get top bid when available in the API
+      const topBid = row.getValue("top_bid") as
+        | { amount: string; order_hash: string }
+        | undefined;
+
+      if (!topBid || topBid.amount === undefined || topBid.amount === null) {
+        return <div className="w-[100px] items-center">-</div>;
+      }
       return (
         <div className="w-[100px] items-center flex">
-          <span>-</span>
-          {/* <span>0.77</span>
-          <SiEthereum /> */}
+          <span>{Web3.utils.fromWei(topBid.amount, "ether")}</span>
+          <SiEthereum />
         </div>
       );
     },
