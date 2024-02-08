@@ -15,7 +15,7 @@
     "test": "mocha --require ts-node/register --timeout 10000 'tests/**/*.ts'"
   },
   "dependencies": {
-    "@scure/starknet": "^0.3.0",
+    "@scure/starknet": "^1.0.0",
     "@types/chai-as-promised": "^7.1.8",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",
