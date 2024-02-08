@@ -36,28 +36,30 @@ async function deployArkchainContracts(
   console.log("\n");
 
   const arkchainSpinner = loading("💠 Deploying Arkchain Contracts...").start();
-
+  const existingContracts = await getExistingContracts();
+  const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
+  const contracts = JSON.parse(fileContent);
+  let orderbookContract = contracts[solisNetwork].orderbook;
+  const { executor: executorAddress } = contracts[starknetNetwork];
   if (arkchainAdminAccount) {
     const chain_id = await starknetProvider.getChainId();
-    const orderbookContract = await deployOrderBook(
-      ARTIFACTS_PATH,
-      arkchainAdminAccount,
-      solisProvider,
-      arkchainAdminAccount.address,
-      chain_id
-    );
-    const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
-    const contracts = JSON.parse(fileContent);
-    const { executor: executorAddress } = contracts[starknetNetwork];
+    if (existingContracts[solisNetwork].orderbook) {
+      orderbookContract = await deployOrderBook(
+        ARTIFACTS_PATH,
+        arkchainAdminAccount,
+        solisProvider,
+        arkchainAdminAccount.address,
+        chain_id
+      );
 
-    arkchainSpinner.text = "💠 Updating executor address...";
-    const existingContracts = await getExistingContracts();
-    existingContracts[solisNetwork].orderbook = orderbookContract.address;
-    await fs.writeFile(
-      getContractsFilePath(),
-      JSON.stringify(existingContracts)
-    );
+      arkchainSpinner.text = "💠 Updating executor address...";
+      existingContracts[solisNetwork].orderbook = orderbookContract.address;
 
+      await fs.writeFile(
+        getContractsFilePath(),
+        JSON.stringify(existingContracts)
+      );
+    }
     await updateExecutorAddress(
       solisProvider,
       arkchainAdminAccount,
