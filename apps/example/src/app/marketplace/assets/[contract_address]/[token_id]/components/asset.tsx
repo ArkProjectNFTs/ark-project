@@ -39,11 +39,7 @@ const Asset: React.FC<AssetProps> = ({
   collection,
   tokenMarketData: tokenMarketInitialData
 }) => {
-  const {
-    data: tokenMarketData,
-    error: tokenMarketDataError,
-    isLoading: tokenMarketDataIsLoading
-  }: any = useQuery(
+  const { data: tokenMarketData }: any = useQuery(
     "tokenMarketData",
     () =>
       getTokenMarketData({

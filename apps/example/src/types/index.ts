@@ -5,7 +5,7 @@ export type TokenMarketData = {
   listed_timestamp: number;
   updated_timestamp: number;
   current_owner: string;
-  current_price: number | null;
+  last_price: number | null;
   quantity: string;
   order_hash: string;
   start_amount: string;
