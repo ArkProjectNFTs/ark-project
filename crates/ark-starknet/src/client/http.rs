@@ -216,13 +216,14 @@ impl StarknetClient for StarknetClientHttp {
         from_block: BlockId,
         to_block: BlockId,
         keys: Option<Vec<Vec<FieldElement>>>,
+        contract_address: Option<FieldElement>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError> {
         let mut events: HashMap<u64, Vec<EmittedEvent>> = HashMap::new();
 
         let filter = EventFilter {
             from_block: Some(from_block),
             to_block: Some(to_block),
-            address: None,
+            address: contract_address,
             keys,
         };
 

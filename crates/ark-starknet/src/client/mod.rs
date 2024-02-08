@@ -84,6 +84,7 @@ pub trait StarknetClient {
         from_block: BlockId,
         to_block: BlockId,
         keys: Option<Vec<Vec<FieldElement>>>,
+        contract_address: Option<FieldElement>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError>;
 
     /// Call a contract trying all the given selectors.

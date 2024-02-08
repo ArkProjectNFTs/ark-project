@@ -169,6 +169,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         from_block: BlockId,
         to_block: BlockId,
         do_force: bool,
+        contract_address: Option<FieldElement>,
     ) -> IndexerResult<()> {
         let mut current_u64 = self.client.block_id_to_u64(&from_block).await?;
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
@@ -252,6 +253,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     BlockId::Number(current_u64),
                     BlockId::Number(current_u64),
                     self.event_manager.keys_selector(),
+                    contract_address,
                 )
                 .await
             {
@@ -265,8 +267,14 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             let total_events_count: usize = blocks_events.values().map(|events| events.len()).sum();
             info!(
-                "✨ Processing block {}. Total Events Count: {}",
-                current_u64, total_events_count
+                "✨ Processing block {}. Total Events Count: {}.{}",
+                current_u64,
+                total_events_count,
+                if let Some(address) = contract_address {
+                    format!(" Filtered by contract address: {:?}", address)
+                } else {
+                    String::new()
+                }
             );
 
             for (_, events) in blocks_events {
