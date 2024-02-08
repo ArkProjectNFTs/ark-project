@@ -2,8 +2,7 @@ import Asset from "./components/asset";
 import {
   getCollectionMetadata,
   getTokenData,
-  getTokenMarketData,
-  getTokenOffers
+  getTokenMarketData
 } from "./data";
 
 export default async function Token({

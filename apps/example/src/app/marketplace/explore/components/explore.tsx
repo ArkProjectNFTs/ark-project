@@ -26,7 +26,7 @@ const fetchCollection = async () => {
   return response.json();
 };
 
-async function fetchCollectionOrders() {
+async function fetchCollectionMarket() {
   const response = await fetch(
     `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/tokens/collection/0x022411b480425fe6e627fdf4d1b6ac7f8567314ada5617a0a6d8ef3e74b69436`
   );
@@ -37,32 +37,43 @@ async function fetchCollectionOrders() {
 }
 
 const Explore = ({ initialData = [], orderBookData = [] }: any) => {
-  const { data, error, isLoading }: any = useQuery("tokens", fetchCollection, {
+  const {
+    data: collectionData,
+    error: collectionDataError,
+    isLoading: collectionDataIsLoading
+  }: any = useQuery("tokens", fetchCollection, {
     initialData
     // refetchInterval: 1000
   });
 
   const {
-    data: collectionOrdersData,
-    error: collectionOrdersError,
-    isLoading: collectionOrdersIsLoading
-  }: any = useQuery("collectionOrders", fetchCollectionOrders, {
+    data: collectionMarketData,
+    error: collectionMarketError,
+    isLoading: collectionMarketIsLoading
+  }: any = useQuery("collectionMarket", fetchCollectionMarket, {
     initialData: orderBookData
     // refetchInterval: 1000
   });
 
-  if (isLoading || collectionOrdersIsLoading) {
+  if (collectionDataIsLoading || collectionMarketIsLoading) {
     return <div>Loading...</div>;
   }
-  if (error || collectionOrdersError) {
+
+  if (collectionDataError || collectionMarketError) {
     return (
       <div>
-        Error missing data: {error ? error.message : collectionOrdersError}
+        Error missing data:{" "}
+        {collectionDataError
+          ? collectionDataError.message
+          : collectionMarketError}
       </div>
     );
   }
 
-  const tokenWithMarketData = mergeTokenData(data.result, collectionOrdersData);
+  const tokenWithMarketData = mergeTokenData(
+    collectionData.result,
+    collectionMarketData
+  );
   return <DataTable data={tokenWithMarketData} columns={columns} />;
 };
 

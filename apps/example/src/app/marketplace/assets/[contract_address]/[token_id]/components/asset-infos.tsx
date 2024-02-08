@@ -44,7 +44,15 @@ const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
                   )}  ETH`
                 : "-"}
             </TableCell>
-            <TableCell>-</TableCell>
+            <TableCell>
+              {" "}
+              {tokenMarketData && tokenMarketData.last_price
+                ? `${Web3.utils.fromWei(
+                    tokenMarketData.last_price,
+                    "ether"
+                  )}  ETH`
+                : "-"}
+            </TableCell>
             <TableCell>
               {tokenMarketData?.has_offer
                 ? `${Web3.utils.fromWei(
