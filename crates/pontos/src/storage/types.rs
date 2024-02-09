@@ -110,7 +110,7 @@ pub struct TokenMintInfo {
     pub address: String,
     pub timestamp: u64,
     pub transaction_hash: String,
-    pub block_number: u64,
+    pub block_number: Option<u64>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
