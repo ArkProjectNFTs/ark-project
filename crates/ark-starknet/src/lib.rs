@@ -1,15 +1,22 @@
 pub mod client;
 pub mod format;
-
 use anyhow::Result;
 use format::to_hex_str;
 use num_bigint::BigUint;
 use num_traits::Num;
+use starknet::core::types::EmittedEvent;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct CairoU256 {
     pub low: u128,
     pub high: u128,
+}
+
+#[derive(Debug, Clone)]
+pub struct EventResult {
+    pub events: HashMap<u64, Vec<EmittedEvent>>,
+    pub continuation_token: Option<String>,
 }
 
 impl CairoU256 {

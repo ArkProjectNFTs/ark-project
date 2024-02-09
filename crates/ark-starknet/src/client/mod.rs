@@ -1,7 +1,7 @@
 pub mod http;
-pub use http::StarknetClientHttp;
-
+use crate::EventResult;
 use async_trait::async_trait;
+pub use http::StarknetClientHttp;
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;
 use starknet::core::{types::FieldElement, types::*};
@@ -81,10 +81,17 @@ pub trait StarknetClient {
     /// the caller process the pages.
     async fn fetch_events(
         &self,
-        from_block: BlockId,
-        to_block: BlockId,
+        from_block: Option<BlockId>,
+        to_block: Option<BlockId>,
         keys: Option<Vec<Vec<FieldElement>>>,
         contract_address: Option<FieldElement>,
+        continuation_token: Option<String>,
+    ) -> Result<EventResult, StarknetClientError>;
+
+    async fn fetch_all_block_events(
+        &self,
+        block_id: BlockId,
+        keys: Option<Vec<Vec<FieldElement>>>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError>;
 
     /// Call a contract trying all the given selectors.

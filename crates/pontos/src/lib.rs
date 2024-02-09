@@ -158,6 +158,58 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         }
     }
 
+    pub async fn index_contract_events(
+        &self,
+        from_block: Option<BlockId>,
+        to_block: Option<BlockId>,
+        contract_address: FieldElement,
+    ) -> IndexerResult<()> {
+        let mut continuation_token: Option<String> = None;
+
+        loop {
+            let result = self
+                .client
+                .fetch_events(
+                    from_block,
+                    to_block,
+                    self.event_manager.keys_selector(),
+                    Some(contract_address),
+                    continuation_token,
+                )
+                .await?;
+
+            let mut current_block_number: u64 = 0;
+            let mut current_block_timestamp: u64 = 0;
+
+            for (block_number, events) in result.events {
+                if current_block_number != block_number {
+                    current_block_number = block_number;
+
+                    match self.client.block_time(BlockId::Number(block_number)).await {
+                        Ok(ts) => {
+                            current_block_timestamp = ts;
+                            self.process_events(events, current_block_timestamp).await?;
+                        }
+                        Err(e) => {
+                            error!("Error while fetching block timestamp: {:?}", e);
+                        }
+                    };
+                } else {
+                    self.process_events(events, current_block_timestamp).await?;
+                }
+            }
+
+            if result.continuation_token.is_none() {
+                break;
+            } else {
+                continuation_token = result.continuation_token;
+                continue;
+            }
+        }
+
+        Ok(())
+    }
+
     /// If "Latest" is used for the `to_block`,
     /// this function will only index the latest block
     /// that is not pending.
@@ -169,7 +221,6 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         from_block: BlockId,
         to_block: BlockId,
         do_force: bool,
-        contract_address: Option<FieldElement>,
     ) -> IndexerResult<()> {
         let mut current_u64 = self.client.block_id_to_u64(&from_block).await?;
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
@@ -249,11 +300,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             let blocks_events = match self
                 .client
-                .fetch_events(
-                    BlockId::Number(current_u64),
+                .fetch_all_block_events(
                     BlockId::Number(current_u64),
                     self.event_manager.keys_selector(),
-                    contract_address,
                 )
                 .await
             {
@@ -267,14 +316,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             let total_events_count: usize = blocks_events.values().map(|events| events.len()).sum();
             info!(
-                "✨ Processing block {}. Total Events Count: {}.{}",
-                current_u64,
-                total_events_count,
-                if let Some(address) = contract_address {
-                    format!(" Filtered by contract address: {:?}", address)
-                } else {
-                    String::new()
-                }
+                "✨ Processing block {}. Total Events Count: {}.",
+                current_u64, total_events_count
             );
 
             for (_, events) in blocks_events {
@@ -321,6 +364,10 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
     ) -> IndexerResult<()> {
         for e in events {
             let contract_address = e.from_address;
+            info!(
+                "Processing event... Block Id: {}, Tx Hash: 0x{:064x}, Block number: {}",
+                e.block_number, e.transaction_hash, e.block_number
+            );
 
             let contract_type = match self
                 .contract_manager
@@ -362,7 +409,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             match self
                 .token_manager
-                .format_and_register_token(&token_id, &token_event, block_timestamp)
+                .format_and_register_token(&token_id, &token_event, block_timestamp, e.block_number)
                 .await
             {
                 Ok(()) => (),
