@@ -59,7 +59,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
                 address: event.to_address.clone(),
                 timestamp: event.timestamp,
                 transaction_hash: event.transaction_hash.clone(),
-                block_number,
+                block_number: Some(block_number),
             };
 
             self.storage
