@@ -24,7 +24,7 @@ pub enum StorageError {
     InvalidMintData(String),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum DisplayType {
     #[serde(rename = "number")]
     Number,
@@ -47,7 +47,7 @@ impl fmt::Display for DisplayType {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum MetadataTraitValue {
     String(String),
@@ -56,21 +56,21 @@ pub enum MetadataTraitValue {
     Boolean(bool),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct MetadataAttribute {
     pub display_type: Option<DisplayType>,
     pub trait_type: Option<String>,
     pub value: MetadataTraitValue,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct TokenMetadata {
     pub normalized: NormalizedMetadata,
     pub raw: String,
     pub metadata_updated_at: Option<i64>,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct NormalizedMetadata {
     pub image_mime_type: Option<String>,
     pub image_key: Option<String>,
@@ -102,7 +102,7 @@ pub struct RawMetadata {
     pub youtube_url: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct MetadataProperty {
     #[serde(rename = "type")]
     property_type: String,

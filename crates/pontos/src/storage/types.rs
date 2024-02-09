@@ -74,6 +74,8 @@ pub struct TokenEvent {
     pub contract_type: String,
     pub event_type: EventType,
     pub event_id: String,
+    pub block_number: Option<u64>,
+    pub updated_at: Option<u64>,
 }
 
 impl Default for TokenEvent {
@@ -89,6 +91,8 @@ impl Default for TokenEvent {
             contract_type: String::new(),
             event_type: EventType::Uninitialized,
             event_id: "0".to_string(),
+            block_number: None,
+            updated_at: None,
         }
     }
 }
@@ -106,6 +110,7 @@ pub struct TokenMintInfo {
     pub address: String,
     pub timestamp: u64,
     pub transaction_hash: String,
+    pub block_number: u64,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

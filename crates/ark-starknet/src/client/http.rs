@@ -1,6 +1,7 @@
 //! Starknet Client implementation using `JsonRpcHttp` provider.
+use super::{StarknetClient, StarknetClientError};
+use crate::EventResult;
 use async_trait::async_trait;
-
 use regex::Regex;
 use starknet::{
     core::types::*,
@@ -8,8 +9,6 @@ use starknet::{
 };
 use std::collections::HashMap;
 use url::Url;
-
-use super::{StarknetClient, StarknetClientError};
 
 const INPUT_TOO_SHORT: &str = "0x496e70757420746f6f2073686f727420666f7220617267756d656e7473";
 const INPUT_TOO_LONG: &str = "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473";
@@ -210,18 +209,55 @@ impl StarknetClient for StarknetClientHttp {
             .map_err(StarknetClientError::Provider)?)
     }
 
-    ///
     async fn fetch_events(
         &self,
-        from_block: BlockId,
-        to_block: BlockId,
+        from_block: Option<BlockId>,
+        to_block: Option<BlockId>,
+        keys: Option<Vec<Vec<FieldElement>>>,
+        contract_address: Option<FieldElement>,
+        continuation_token: Option<String>,
+    ) -> Result<EventResult, StarknetClientError> {
+        let mut events: HashMap<u64, Vec<EmittedEvent>> = HashMap::new();
+
+        let filter = EventFilter {
+            from_block,
+            to_block,
+            address: contract_address,
+            keys,
+        };
+
+        let chunk_size = 1000;
+
+        let event_page = self
+            .provider
+            .get_events(filter.clone(), continuation_token, chunk_size)
+            .await
+            .map_err(StarknetClientError::Provider)?;
+
+        event_page.events.iter().for_each(|e| {
+            events
+                .entry(e.block_number)
+                .and_modify(|v| v.push(e.clone()))
+                .or_insert(vec![e.clone()]);
+        });
+
+        Ok(EventResult {
+            events,
+            continuation_token: event_page.continuation_token,
+        })
+    }
+
+    ///
+    async fn fetch_all_block_events(
+        &self,
+        block_id: BlockId,
         keys: Option<Vec<Vec<FieldElement>>>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError> {
         let mut events: HashMap<u64, Vec<EmittedEvent>> = HashMap::new();
 
         let filter = EventFilter {
-            from_block: Some(from_block),
-            to_block: Some(to_block),
+            from_block: Some(block_id),
+            to_block: Some(block_id),
             address: None,
             keys,
         };

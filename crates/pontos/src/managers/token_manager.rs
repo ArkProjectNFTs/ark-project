@@ -29,6 +29,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         token_id: &CairoU256,
         event: &TokenEvent,
         block_timestamp: u64,
+        block_number: u64,
     ) -> Result<()> {
         let mut token = TokenInfo {
             contract_address: event.contract_address.clone(),
@@ -58,6 +59,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
                 address: event.to_address.clone(),
                 timestamp: event.timestamp,
                 transaction_hash: event.transaction_hash.clone(),
+                block_number,
             };
 
             self.storage

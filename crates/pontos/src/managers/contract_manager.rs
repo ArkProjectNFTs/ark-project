@@ -225,7 +225,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
     }
 }
 
-pub fn decode_string_array(string_array: &Vec<FieldElement>) -> Result<String> {
+pub fn decode_string_array(string_array: &[FieldElement]) -> Result<String> {
     match string_array.len() {
         0 => Ok("".to_string()),
         1 => Ok(parse_cairo_short_string(&string_array[0])?),
