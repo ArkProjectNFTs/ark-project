@@ -1,6 +1,7 @@
 //! Starknet Client implementation using `JsonRpcHttp` provider.
+use super::{StarknetClient, StarknetClientError};
+use crate::EventResult;
 use async_trait::async_trait;
-
 use regex::Regex;
 use starknet::{
     core::types::*,
@@ -8,10 +9,6 @@ use starknet::{
 };
 use std::collections::HashMap;
 use url::Url;
-
-use crate::EventResult;
-
-use super::{StarknetClient, StarknetClientError};
 
 const INPUT_TOO_SHORT: &str = "0x496e70757420746f6f2073686f727420666f7220617267756d656e7473";
 const INPUT_TOO_LONG: &str = "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473";
