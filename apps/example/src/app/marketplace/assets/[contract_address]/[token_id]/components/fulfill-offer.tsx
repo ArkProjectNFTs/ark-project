@@ -21,8 +21,12 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
 
   const isOwner = address && areAddressesEqual(token.owner, address);
 
-  // TODO also return null if token doesn't have an offer
-  if (account === undefined || !isOwner || !tokenMarketData.has_offer)
+  if (
+    account === undefined ||
+    !isOwner ||
+    !tokenMarketData ||
+    !tokenMarketData.has_offer
+  )
     return null;
 
   return (

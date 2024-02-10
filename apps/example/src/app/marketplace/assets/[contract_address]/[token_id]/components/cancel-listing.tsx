@@ -21,7 +21,13 @@ const CancelListing: React.FC<CreateOfferProps> = ({
   const { cancel, status } = useCancel();
   const { account, address } = useAccount();
   const isOwner = address && areAddressesEqual(token.owner, address);
-  if (account === undefined || !isOwner || !tokenMarketData.is_listed) return;
+  if (
+    account === undefined ||
+    !isOwner ||
+    !tokenMarketData ||
+    !tokenMarketData.is_listed
+  )
+    return;
   return (
     <div className="w-full flex flex-col space-y-4 rounded border p-4">
       <h1>Cancel listing</h1>
