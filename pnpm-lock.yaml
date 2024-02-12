@@ -106,8 +106,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       ethers:
-        specifier: ^6.9.1
-        version: 6.9.1
+        specifier: ^6.11.0
+        version: 6.11.0
       get-starknet-core:
         specifier: ^3.2.0
         version: 3.2.0(starknet@5.27.0)
@@ -389,6 +389,10 @@ packages:
 
   /@adraffy/ens-normalize@1.10.0:
     resolution: {integrity: sha512-nA9XHtlAkYfJxY7bce8DcN7eKxWWCWkU+1GR9d+U6MbNpfwQp8TI7vqOsBsMcHoT4mBu2kypKoSKnghEzOOq5Q==}
+    dev: false
+
+  /@adraffy/ens-normalize@1.10.1:
+    resolution: {integrity: sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==}
     dev: false
 
   /@alloc/quick-lru@5.2.0:
@@ -5076,11 +5080,11 @@ packages:
       '@scure/bip39': 1.2.1
     dev: false
 
-  /ethers@6.9.1:
-    resolution: {integrity: sha512-kuV8fGd4/8Gj7wkurbsuUsm1DCG6N5gKGYdw3fnWG/7QGknhy1xtHD7kbkCWQAcbAYmzLCLqCPedS3FYncFkKQ==}
+  /ethers@6.11.0:
+    resolution: {integrity: sha512-kPHNTnhVWiWU6AVo6CAeTjXEK24SpCXyZvwG9ROFjT0Vlux0EOhWKBAeC+45iDj80QNJTYaT1SDEmeunT0vDNw==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@adraffy/ens-normalize': 1.10.0
+      '@adraffy/ens-normalize': 1.10.1
       '@noble/curves': 1.2.0
       '@noble/hashes': 1.3.2
       '@types/node': 18.15.13
@@ -8622,7 +8626,7 @@ packages:
     resolution: {integrity: sha512-nj0JfeD45BbzVJcVYpUJnSo8iwDcY9CQ7CZhhIVVOFjvpMAPw0zEwjTvZEIQyCW61OoDG9xcBzwxe2tZoYhMRw==}
     engines: {node: '>=14', npm: '>=6.12.0'}
     dependencies:
-      '@adraffy/ens-normalize': 1.10.0
+      '@adraffy/ens-normalize': 1.10.1
       web3-core: 4.3.2
       web3-errors: 1.1.4
       web3-eth: 4.4.0(typescript@5.3.3)(zod@3.22.4)
