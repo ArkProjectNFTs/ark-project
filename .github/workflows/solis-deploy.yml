@@ -1,4 +1,4 @@
-name: Solis Deploy
+name: Solis Build & Push
 
 on:
   push:
