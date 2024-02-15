@@ -1,4 +1,4 @@
-export { createConfig } from "./createConfig";
+export { createConfig, networks } from "./createConfig";
 
 export { fetchOrCreateAccount, createAccount } from "./actions/account";
 
@@ -21,4 +21,4 @@ export {
 } from "./actions/read";
 
 export type { ListingV1, OfferV1, CancelInfo, RouteType } from "./types";
-export type { Config, Network } from "./createConfig";
+export type { Config, Network, ConfigParameters } from "./createConfig";

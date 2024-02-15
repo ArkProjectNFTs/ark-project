@@ -9,7 +9,12 @@ import React, {
 
 import { useAccount, useNetwork, useProvider } from "@starknet-react/core";
 
-import { Config, createConfig, Network } from "@ark-project/core";
+import {
+  Config,
+  ConfigParameters,
+  createConfig,
+  Network
+} from "@ark-project/core";
 
 import { getOwner } from "../../lib/getOwner";
 import { RpcProviderProvider } from "./RpcContext";
@@ -18,7 +23,7 @@ const OwnerDataContext = createContext<string | undefined>(undefined);
 const ConfigDataContext = createContext<Config | undefined>(undefined);
 
 export type ArkProviderProviderProps = {
-  config: Partial<Config>;
+  config: ConfigParameters;
 };
 
 function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {

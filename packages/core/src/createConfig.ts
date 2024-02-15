@@ -8,7 +8,12 @@ import {
 } from "./contracts";
 
 export type Network = "mainnet" | "goerli" | "sepolia" | "dev";
-
+export const networks: { [key: string]: Network } = {
+  mainnet: "mainnet",
+  goerli: "goerli",
+  sepolia: "sepolia",
+  dev: "dev"
+};
 const defaultCurrencyAddress =
   "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 const defaultAccountClassHash =
@@ -21,7 +26,7 @@ export interface ConfigParameters {
   starknetCurrencyAddress?: string;
   arkchainAccountClassHash?: string;
   arkProvider?: ProviderInterface;
-  starknetProvider: ProviderInterface;
+  starknetProvider?: ProviderInterface;
 }
 
 export interface Config {
