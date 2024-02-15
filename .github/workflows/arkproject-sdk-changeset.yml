@@ -10,7 +10,7 @@ concurrency:
 jobs:
   verify:
     name: Verify
-    uses: ./.github/workflows/verify.yml
+    uses: ./.github/workflows/arkproject-verify.yml
     secrets: inherit
 
   changesets:
