@@ -1,0 +1,29 @@
+name: Bump SDK Packages & Demo App Versions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Ensures you get all git history for Changesets to work correctly
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14" # or your preferred Node.js version
+      - name: Install Dependencies
+        run: npm install
+      - name: Create Version Pull Request
+        run: npx changeset version
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Version Packages"
+          git push
