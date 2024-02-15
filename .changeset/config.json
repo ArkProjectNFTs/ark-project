@@ -8,10 +8,9 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "example",
-    "deployer",
-    "dist",
-    "eslint-config",
-    "typescript-config"
+    "apps/example",
+    "package/deployer",
+    "package/eslint-config",
+    "package/typescript-config"
   ]
 }
