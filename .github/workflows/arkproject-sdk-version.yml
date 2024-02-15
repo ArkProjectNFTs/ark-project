@@ -11,13 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0 # Ensures you get all git history for Changesets to work correctly
+          fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "14" # or your preferred Node.js version
+          node-version: "18"
+      - name: Install pnpm
+        run: npm install -g pnpm
       - name: Install Dependencies
-        run: npm install
+        run: pnpm install
       - name: Create Version Pull Request
         run: npx changeset version
       - name: Commit and Push Changes
