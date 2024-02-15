@@ -1,6 +1,8 @@
 {
   "name": "cdk-solis",
   "version": "0.1.0",
+  "description": "CDK Solis",
+  "private": true,
   "bin": {
     "cdk-solis": "bin/cdk-solis.js"
   },

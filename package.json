@@ -3,6 +3,9 @@
   "private": true,
   "scripts": {
     "build": "dotenv -- turbo build",
+    "changeset:prepublish": "pnpm version:update && pnpm build && bun .scripts/formatPackageJson.ts && bun .scripts/generateProxyPackages.ts",
+    "changeset:publish": "pnpm changeset:prepublish && changeset publish",
+    "changeset:version": "changeset version && pnpm version:update",
     "dev": "dotenv -- turbo run dev --parallel",
     "lint": "dotenv -- turbo run lint",
     "lint:fix": "dotenv -- turbo run lint:fix",
@@ -12,11 +15,15 @@
     "deploy:solis": "dotenv -- turbo run deploy:solis",
     "deploy:starknet:tokens": "dotenv -- turbo run deploy:starknet:tokens",
     "deploy:starknet": "dotenv -- turbo run deploy:starknet",
-    "deploy:starknet:all": "dotenv -- turbo run deploy:starknet:all"
+    "deploy:starknet:all": "dotenv -- turbo run deploy:starknet:all",
+    "version:update": "bun .scripts/updateVersion.ts"
   },
   "devDependencies": {
     "@ark-project/eslint-config": "workspace:*",
     "@ark-project/typescript-config": "workspace:*",
+    "@changesets/cli": "^2.27.1",
+    "bun": "^1.0.26",
+    "bun-types": "^1.0.26",
     "prettier": "^3.1.0",
     "turbo": "latest"
   },
@@ -25,10 +32,9 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.1",
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
-    "add": "^2.0.6",
     "dotenv-cli": "^7.3.0",
+    "glob": "^10.3.10",
     "prettier-plugin-sort-imports": "^1.8.1"
   }
 }

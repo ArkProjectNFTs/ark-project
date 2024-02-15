@@ -1,6 +1,6 @@
 {
   "name": "@ark-project/react",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.tsx",
   "types": "index.tsx",
