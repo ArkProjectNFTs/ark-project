@@ -37,7 +37,7 @@ export const approveERC721 = async (
   await config.starknetProvider.waitForTransaction(result.transaction_hash);
 };
 
-interface ApproveERC20Parameters {
+interface ERC20Parameters {
   starknetAccount: AccountInterface;
   contractAddress: string;
   amount: BigNumberish;
@@ -45,10 +45,8 @@ interface ApproveERC20Parameters {
 
 export const approveERC20 = async (
   config: Config,
-  parameters: ApproveERC20Parameters
+  parameters: ERC20Parameters
 ) => {
-  console.log("approveERC20", parameters);
-  console.log("config", config);
   const { contractAddress, amount, starknetAccount } = parameters;
   const { abi: erc20abi } =
     await config.starknetProvider.getClassAt(contractAddress);
@@ -73,7 +71,7 @@ export const approveERC20 = async (
 
 export const increaseERC20 = async (
   config: Config,
-  parameters: ApproveERC20Parameters
+  parameters: ERC20Parameters
 ) => {
   const { contractAddress, amount, starknetAccount } = parameters;
   const { abi: erc20abi } =

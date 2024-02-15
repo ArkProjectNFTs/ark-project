@@ -8,18 +8,33 @@ import {
 } from "./contracts";
 
 export type Network = "mainnet" | "goerli" | "sepolia" | "dev";
-
+export const networks: { [key: string]: Network } = {
+  mainnet: "mainnet",
+  goerli: "goerli",
+  sepolia: "sepolia",
+  dev: "dev"
+};
 const defaultCurrencyAddress =
   "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 const defaultAccountClassHash =
   "0x05400e90f7e0ae78bd02c77cd75527280470e2fe19c54970dd79dc37a9d3645c";
 
-export interface Config {
+export interface ConfigParameters {
   starknetNetwork?: Network;
   arkchainNetwork: Network;
   arkchainRpcUrl?: string;
-  starknetCurrencyAddress: string;
+  starknetCurrencyAddress?: string;
   arkchainAccountClassHash?: string;
+  arkProvider?: ProviderInterface;
+  starknetProvider?: ProviderInterface;
+}
+
+export interface Config {
+  starknetNetwork: Network;
+  arkchainNetwork: Network;
+  arkchainRpcUrl: string;
+  starknetCurrencyAddress: string;
+  arkchainAccountClassHash: string;
   arkProvider: ProviderInterface;
   starknetProvider: ProviderInterface;
   starknetContracts: StarknetContract;
@@ -52,8 +67,8 @@ const getArkchainRpcUrl = (network: Network): string => {
   }
 };
 
-export const createConfig = (userConfig: Partial<Config>): Config => {
-  if (!userConfig.starknetProvider) {
+export const createConfig = (ConfigParameters: ConfigParameters): Config => {
+  if (!ConfigParameters.starknetProvider) {
     throw new Error("A starknetProvider must be provided");
   }
 
@@ -65,10 +80,10 @@ export const createConfig = (userConfig: Partial<Config>): Config => {
   };
 
   const selectedStarknetContracts = contracts[
-    userConfig.starknetNetwork || "dev"
+    ConfigParameters.starknetNetwork || "dev"
   ] as StarknetContract;
   const selectedArkchainContracts = contracts[
-    userConfig.arkchainNetwork || "dev"
+    ConfigParameters.arkchainNetwork || "dev"
   ] as ArkchainContract;
 
   const starknetContracts: StarknetContract = {
@@ -83,19 +98,19 @@ export const createConfig = (userConfig: Partial<Config>): Config => {
   };
 
   const arkchainRpcUrl =
-    userConfig.arkchainRpcUrl ||
-    getArkchainRpcUrl(userConfig.arkchainNetwork || "dev");
+    ConfigParameters.arkchainRpcUrl ||
+    getArkchainRpcUrl(ConfigParameters.arkchainNetwork || "dev");
   const config: Config = {
-    starknetProvider: userConfig.starknetProvider,
-    starknetNetwork: userConfig.starknetNetwork || "dev",
-    arkchainNetwork: userConfig.arkchainNetwork || "dev",
+    starknetProvider: ConfigParameters.starknetProvider,
+    starknetNetwork: ConfigParameters.starknetNetwork || "dev",
+    arkchainNetwork: ConfigParameters.arkchainNetwork || "dev",
     arkchainRpcUrl: arkchainRpcUrl,
     starknetCurrencyAddress:
-      userConfig.starknetCurrencyAddress || defaultCurrencyAddress,
+      ConfigParameters.starknetCurrencyAddress || defaultCurrencyAddress,
     arkchainAccountClassHash:
-      userConfig.arkchainAccountClassHash || defaultAccountClassHash,
+      ConfigParameters.arkchainAccountClassHash || defaultAccountClassHash,
     arkProvider:
-      userConfig.arkProvider ||
+      ConfigParameters.arkProvider ||
       new RpcProvider({
         nodeUrl: arkchainRpcUrl
       }),

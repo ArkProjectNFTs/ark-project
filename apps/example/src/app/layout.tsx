@@ -3,7 +3,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 
-import { Network } from "@ark-project/core";
+import { networks } from "@ark-project/core";
 import { ArkProvider } from "@ark-project/react";
 
 import { MainNav } from "@/components/main-nav";
@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const config = {
-    arkchainNetwork: "goerli" as Network
+    arkchainNetwork: networks.goerli
   };
   return (
     <html lang="en" suppressHydrationWarning>

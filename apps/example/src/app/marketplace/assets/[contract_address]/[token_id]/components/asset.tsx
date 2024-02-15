@@ -103,18 +103,12 @@ const Asset: React.FC<AssetProps> = ({
               />
             )}
           </div>
-          {tokenMarketData && (
-            <FulfillListing token={token} tokenMarketData={tokenMarketData} />
-          )}
-          {tokenMarketData && (
-            <FulFillOffer tokenMarketData={tokenMarketData} token={token} />
-          )}
-          {tokenMarketData && (
-            <CancelListing
-              token={token}
-              tokenMarketData={tokenMarketData || undefined}
-            />
-          )}
+          <FulfillListing token={token} tokenMarketData={tokenMarketData} />
+          <FulFillOffer tokenMarketData={tokenMarketData} token={token} />
+          <CancelListing
+            token={token}
+            tokenMarketData={tokenMarketData || undefined}
+          />
         </div>
         <div className="row-span-3 col-span-2 space-y-4">
           <AssetsInfos

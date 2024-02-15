@@ -25,7 +25,9 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@changesets/cli": "^2.27.1",
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
+    "add": "^2.0.6",
     "dotenv-cli": "^7.3.0",
     "prettier-plugin-sort-imports": "^1.8.1"
   }
