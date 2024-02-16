@@ -1,3 +1,5 @@
+import React from "react";
+
 import Balance from "react-wrap-balancer";
 
 import { cn } from "@/lib/utils";

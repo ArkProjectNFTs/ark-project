@@ -1,3 +1,5 @@
+import React from "react";
+
 import { Column } from "@tanstack/react-table";
 
 import { cn } from "@/lib/utils";

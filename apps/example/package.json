@@ -1,8 +1,9 @@
 {
-  "name": "example",
+  "name": "@ark-project/demo",
   "version": "0.2.0",
   "private": true,
   "scripts": {
+    "build": "next build",
     "dev": "next dev",
     "start": "next start",
     "lint": "next lint",

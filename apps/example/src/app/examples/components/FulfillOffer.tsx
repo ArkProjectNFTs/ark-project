@@ -21,23 +21,25 @@ export default function FulfillOffer() {
   const { fulfillOffer, status } = useFulfillOffer();
 
   const formSchema = z.object({
-    order_hash: z.string(),
-    token_address: z
+    orderHash: z.string(),
+    tokenAddress: z
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
       .length(66, { message: "Please enter a valid address" }),
-    token_id: z
+    tokenId: z
       .string()
-      .regex(/^\d+$/, { message: "Token ID must be a number" })
+      .regex(/^\d+$/, { message: "Token ID must be a number" }),
+    brokerId: z.number()
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      order_hash: undefined,
-      token_address:
+      orderHash: undefined,
+      tokenAddress:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-      token_id: "12"
+      tokenId: "12",
+      brokerId: 123
     }
   });
 
@@ -47,9 +49,12 @@ export default function FulfillOffer() {
     if (account === undefined) return;
     const processedValues = {
       ...values,
-      token_id: parseInt(values.token_id, 10)
+      token_id: parseInt(values.tokenId, 10)
     };
-    fulfillOffer(account, processedValues);
+    fulfillOffer({
+      starknetAccount: account,
+      ...processedValues
+    });
   }
 
   return (
@@ -58,7 +63,7 @@ export default function FulfillOffer() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="order_hash"
+            name="orderHash"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Order Hash</FormLabel>
@@ -71,7 +76,7 @@ export default function FulfillOffer() {
           />
           <FormField
             control={form.control}
-            name="token_address"
+            name="tokenAddress"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Address</FormLabel>
@@ -84,12 +89,25 @@ export default function FulfillOffer() {
           />
           <FormField
             control={form.control}
-            name="token_id"
+            name="tokenId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Id</FormLabel>
                 <FormControl>
                   <Input placeholder="Token Id" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="brokerId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Broker Id</FormLabel>
+                <FormControl>
+                  <Input placeholder="Broker Id" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
