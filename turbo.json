@@ -14,7 +14,7 @@
         "NEXT_PUBLIC_ORDERBOOK_API_URL",
         "NEXT_PUBLIC_NFT_API_URL"
       ],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", ".vercel/output/**"]
     },
     "dev": {
       "dependsOn": ["^dev"],
