@@ -5,7 +5,21 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".dist/**"]
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".vercel/output/**",
+        ".dist/**"
+      ]
+    },
+    "@ark-project/demo#build": {
+      "dependsOn": ["^build"],
+      "env": [
+        "NEXT_PUBLIC_NFT_API_KEY",
+        "NEXT_PUBLIC_ORDERBOOK_API_URL",
+        "NEXT_PUBLIC_NFT_API_URL"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", ".vercel/output/**"]
     },
     "dev": {
       "dependsOn": ["^dev"],

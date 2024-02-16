@@ -24,11 +24,9 @@ export default function Home() {
         </PageHeaderHeading>
         <PageHeaderHeading className="md:hidden">Examples</PageHeaderHeading>
         <PageHeaderDescription>
-          Here, you'll find comprehensive examples for creating listing and
-          offer orders, canceling orders, and fulfilling transactions. These
-          forms are designed to demonstrate both mandatory and optional data
-          required to effectively utilize our React SDK hooks for all these
-          actions.
+          {
+            "Here, you'll find comprehensive examples for creating listing and offer orders, canceling orders, and fulfilling transactions. These forms are designed to demonstrate both mandatory and optional data required to effectively utilize our React SDK hooks for all these actions."
+          }
         </PageHeaderDescription>
         <PageActions>
           <Link

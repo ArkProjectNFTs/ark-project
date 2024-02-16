@@ -75,7 +75,10 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
       tokenId: parseInt(values.tokenId, 10),
       startAmount: Web3.utils.toWei(values.startAmount, "ether")
     };
-    createListing(account, processedValues);
+    createListing({
+      starknetAccount: account,
+      ...processedValues
+    });
   }
 
   return (

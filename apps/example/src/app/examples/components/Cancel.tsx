@@ -47,7 +47,10 @@ export default function Cancel() {
       ...values,
       tokenId: parseInt(values.tokenId, 10)
     };
-    cancel(account, processedValues);
+    cancel({
+      starknetAccount: account,
+      ...processedValues
+    });
   }
 
   return (

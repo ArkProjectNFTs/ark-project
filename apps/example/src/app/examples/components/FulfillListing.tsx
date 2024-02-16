@@ -21,23 +21,25 @@ export default function FulfillListing() {
   const { fulfillListing, status } = useFulfillListing();
 
   const formSchema = z.object({
-    order_hash: z.string(),
-    token_address: z
+    orderHash: z.string(),
+    startAmount: z.string(),
+    brokerId: z.number(),
+    tokenAddress: z
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
       .length(66, { message: "Please enter a valid address" }),
-    token_id: z
-      .string()
-      .regex(/^\d+$/, { message: "Token ID must be a number" })
+    tokenId: z.string().regex(/^\d+$/, { message: "Token ID must be a number" })
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      order_hash: undefined,
-      token_address:
+      startAmount: "42000000000000000",
+      orderHash: undefined,
+      tokenAddress:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",
-      token_id: "12"
+      tokenId: "12",
+      brokerId: 123
     }
   });
 
@@ -47,9 +49,12 @@ export default function FulfillListing() {
     if (account === undefined) return;
     const processedValues = {
       ...values,
-      token_id: parseInt(values.token_id, 10)
+      tokenId: parseInt(values.tokenId, 10)
     };
-    fulfillListing(account, processedValues);
+    fulfillListing({
+      starknetAccount: account,
+      ...processedValues
+    });
   }
 
   return (
@@ -58,7 +63,7 @@ export default function FulfillListing() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="order_hash"
+            name="orderHash"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Order Hash</FormLabel>
@@ -71,7 +76,7 @@ export default function FulfillListing() {
           />
           <FormField
             control={form.control}
-            name="token_address"
+            name="tokenAddress"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Address</FormLabel>
@@ -84,10 +89,36 @@ export default function FulfillListing() {
           />
           <FormField
             control={form.control}
-            name="token_id"
+            name="tokenId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Token Id</FormLabel>
+                <FormControl>
+                  <Input placeholder="Token Id" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="brokerId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Broker Id</FormLabel>
+                <FormControl>
+                  <Input placeholder="Token Id" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="startAmount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Start amount</FormLabel>
                 <FormControl>
                   <Input placeholder="Token Id" {...field} />
                 </FormControl>
