@@ -5,7 +5,12 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".dist/**"]
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".vercel/output/**",
+        ".dist/**"
+      ]
     },
     "example#build": {
       "dependsOn": ["^build"],
