@@ -109,6 +109,7 @@ mod orderbook_event_mock {
                         start_date: 5,
                         end_date: 6,
                         broker_id: 'broker',
+                        broker_type: 0,
                         additional_data: array![].span(),
                     }
                 }
@@ -139,6 +140,7 @@ mod orderbook_event_mock {
                         start_date: 5,
                         end_date: 6,
                         broker_id: 'broker',
+                        broker_type: 1,
                         additional_data: array![].span(),
                     }
                 }
@@ -169,6 +171,7 @@ mod orderbook_event_mock {
                         start_date: 2,
                         end_date: 0,
                         broker_id: 'broker',
+                        broker_type: 0,
                         additional_data: array![].span(),
                     }
                 }

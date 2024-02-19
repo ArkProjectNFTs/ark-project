@@ -1,8 +1,8 @@
 //! # Orderbook Contract
-//! 
+//!
 //! This module defines the structure and functionalities of an orderbook contract. It includes
-//! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external functions, 
-//! and internal functions. The primary functionalities include broker whitelisting, order management 
+//! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external functions,
+//! and internal functions. The primary functionalities include broker whitelisting, order management
 //! (creation, cancellation, fulfillment), and order queries.
 
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
@@ -13,12 +13,20 @@ use ark_orderbook::order::order_v1::OrderV1;
 #[starknet::interface]
 trait Orderbook<T> {
     /// Whitelists a broker.
-    /// TODO: good first exercise to use a components for broker management.
     ///
     /// # Arguments
     ///
     /// * `broker_id` - ID of the broker.
-    fn whitelist_broker(ref self: T, broker_id: felt252);
+    /// * `broker_type` - Type of the broker (0: CREATOR, 1: FULFILLER).
+    fn whitelist_broker(ref self: T, broker_id: felt252, broker_type: felt252);
+
+    /// Remove a broker from the whitelist.
+    ///
+    /// # Arguments
+    ///
+    /// * `broker_id` - ID of the broker.
+    /// * `broker_type` - Type of the broker (0: CREATOR, 1: FULFILLER).
+    fn unwhitelist_broker(ref self: T, broker_id: felt252, broker_type: felt252);
 
     /// Submits and places an order to the orderbook if the order is valid.
     ///
@@ -74,7 +82,7 @@ trait Orderbook<T> {
     /// * `order_hash` - The order hash of order.
     fn get_order_signer(self: @T, order_hash: felt252) -> felt252;
 
-    /// Retrieves the order hash using its token hash. 
+    /// Retrieves the order hash using its token hash.
     ///
     /// # Arguments
     /// * `token_hash` - The token hash of the order.
@@ -160,6 +168,12 @@ mod orderbook {
         /// Mapping of broker addresses to their whitelisted status.
         /// Represented as felt252, set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
+        /// Mapping of creator_brokers addresses to their whitelisted status.
+        /// Represented as felt252, set to 1 if the broker is registered.
+        creator_brokers: LegacyMap<felt252, felt252>,
+        /// Mapping of fulfiller_brokers addresses to their whitelisted status.
+        /// Represented as felt252, set to 1 if the broker is registered.
+        fulfiller_brokers: LegacyMap<felt252, felt252>,
         /// Mapping of token_hash to order_hash.
         token_listings: LegacyMap<felt252, felt252>,
         /// Mapping of token_hash to auction details (order_hash and end_date, auction_offer_count).
@@ -266,6 +280,17 @@ mod orderbook {
         self.emit(OrderExecuted { order_hash: info.order_hash, order_status: order_status });
     }
 
+    /// Check if a broker is whitelisted
+    fn is_broker_whitelisted(ref self: ContractState, broker_id: felt252, broker_type: felt252) -> felt252 {
+        let mut is_whitelisted = 0;
+        if (broker_type == 0) {
+            is_whitelisted = self.creator_brokers.read(broker_id);
+        } else if (broker_type == 1) {
+            is_whitelisted = self.fulfiller_brokers.read(broker_id);
+        }
+        is_whitelisted
+    }
+
     // *************************************************************************
     // EXTERNAL FUNCTIONS
     // *************************************************************************
@@ -350,14 +375,27 @@ mod orderbook {
         }
 
         /// Whitelists a broker.
-        fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
-            // TODO: check components with OZ when ready for ownable.
-            assert(
-                self.admin.read() == starknet::get_caller_address(),
-                orderbook_errors::BROKER_UNREGISTERED
-            );
+        fn whitelist_broker(ref self: ContractState, broker_id: felt252, broker_type: felt252) {
+            assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
 
             self.brokers.write(broker_id, 1);
+
+            if (broker_type == 0) {
+                self.creator_brokers.write(broker_id, 1);
+            } else if (broker_type == 1) {
+                self.fulfiller_brokers.write(broker_id, 1);
+            }
+        }
+
+        fn unwhitelist_broker(ref self: ContractState, broker_id: felt252, broker_type: felt252) {
+            assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
+            self.brokers.write(broker_id, 0);
+
+            if (broker_type == 0) {
+                self.creator_brokers.write(broker_id, 0);
+            } else if (broker_type == 1) {
+                self.fulfiller_brokers.write(broker_id, 0);
+            }
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
@@ -489,6 +527,7 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
+
         /// Fulfill auction order
         ///
         /// # Arguments
@@ -853,12 +892,12 @@ mod orderbook {
             let auction_is_pending = current_block_timestamp < auction_end_date;
 
             if auction_is_pending {
-                // If the auction is still pending, record the new offer by linking it to the 
+                // If the auction is still pending, record the new offer by linking it to the
                 // auction order hash in the 'auction_offers' mapping.
                 self.auction_offers.write(order_hash, auction_order_hash);
 
                 if auction_end_date - current_block_timestamp < EXTENSION_TIME_IN_SECONDS {
-                    // Increment the number of offers for this auction and extend the auction 
+                    // Increment the number of offers for this auction and extend the auction
                     // end date by the predefined extension time to allow for additional offers.
                     self
                         .auctions

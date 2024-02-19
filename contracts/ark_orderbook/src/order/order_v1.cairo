@@ -2,6 +2,7 @@ use core::array::ArrayTrait;
 use core::traits::Into;
 use core::traits::TryInto;
 use core::option::OptionTrait;
+use ark_orderbook::orderbook::is_broker_whitelisted;
 //! Order v1 supported by the Orderbook.
 //!
 use starknet::ContractAddress;
@@ -45,6 +46,8 @@ struct OrderV1 {
     end_date: u64,
     // Broker public identifier.
     broker_id: felt252,
+    // Broker type (0: creator, 1: fullfiller).
+    broker_type: felt252,
     // Additional data, limited to ??? felts.
     additional_data: Span<felt252>,
 }
@@ -101,6 +104,10 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             || (*self.salt).is_zero()
             || (*self.quantity).is_zero() {
             return Result::Err(OrderValidationError::InvalidContent);
+        }
+
+        if (is_broker_whitelisted(*self.broker_id, *self.broker_type) == 0) {
+            return Result::Err(OrderValidationError::InvalidBroker);
         }
 
         Result::Ok(())
