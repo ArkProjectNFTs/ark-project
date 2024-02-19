@@ -12,6 +12,6 @@ To build:
 
 # Testing
 
-For testing, you must have [starknet forge](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html) installed (at least `0.6.0`). Then you can run:
+For testing, you must have [starknet forge](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html) installed (at least `0.9.1`). Then you can run:
 
 `snforge`

@@ -14,7 +14,7 @@ use snforge_std::{
 };
 
 use super::super::common::setup::{
-    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer, whitelist_creator_broker
 };
 
 #[test]
@@ -34,6 +34,7 @@ fn test_cancel_auction() {
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
     let cancel_info = CancelInfo {
@@ -100,6 +101,7 @@ fn test_invalid_cancel_auction_order() {
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
     let order_type = dispatcher.get_order_type(order_hash);
@@ -138,6 +140,7 @@ fn test_cancel_auction_during_the_extended_time() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
     let order_type = dispatcher.get_order_type(order_hash);
     assert(order_type == OrderType::Auction.into(), 'order is not auction');

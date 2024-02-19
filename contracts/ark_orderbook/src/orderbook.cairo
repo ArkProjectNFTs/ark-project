@@ -17,16 +17,14 @@ trait Orderbook<T> {
     /// # Arguments
     ///
     /// * `broker_id` - ID of the broker.
-    /// * `broker_type` - Type of the broker (0: CREATOR, 1: FULFILLER).
-    fn whitelist_broker(ref self: T, broker_id: felt252, broker_type: felt252);
+    fn whitelist_broker(ref self: T, broker_id: felt252);
 
     /// Remove a broker from the whitelist.
     ///
     /// # Arguments
     ///
     /// * `broker_id` - ID of the broker.
-    /// * `broker_type` - Type of the broker (0: CREATOR, 1: FULFILLER).
-    fn unwhitelist_broker(ref self: T, broker_id: felt252, broker_type: felt252);
+    fn unwhitelist_broker(ref self: T, broker_id: felt252);
 
     /// Submits and places an order to the orderbook if the order is valid.
     ///
@@ -127,6 +125,7 @@ mod orderbook_errors {
     const ORDER_OPEN: felt252 = 'OB: order is not open';
     const USE_FULFILL_AUCTION: felt252 = 'OB: must use fulfill auction';
     const OFFER_NOT_STARTED: felt252 = 'OB: offer is not started';
+    const INVALID_BROKER: felt252 = 'OB: broker is not whitelisted';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -153,6 +152,10 @@ mod orderbook {
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
 
+    use ark_orderbook::broker::database::{
+        broker_whitelist_write
+    };
+
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
     /// Storage struct for the Orderbook contract.
@@ -168,12 +171,6 @@ mod orderbook {
         /// Mapping of broker addresses to their whitelisted status.
         /// Represented as felt252, set to 1 if the broker is registered.
         brokers: LegacyMap<felt252, felt252>,
-        /// Mapping of creator_brokers addresses to their whitelisted status.
-        /// Represented as felt252, set to 1 if the broker is registered.
-        creator_brokers: LegacyMap<felt252, felt252>,
-        /// Mapping of fulfiller_brokers addresses to their whitelisted status.
-        /// Represented as felt252, set to 1 if the broker is registered.
-        fulfiller_brokers: LegacyMap<felt252, felt252>,
         /// Mapping of token_hash to order_hash.
         token_listings: LegacyMap<felt252, felt252>,
         /// Mapping of token_hash to auction details (order_hash and end_date, auction_offer_count).
@@ -280,17 +277,6 @@ mod orderbook {
         self.emit(OrderExecuted { order_hash: info.order_hash, order_status: order_status });
     }
 
-    /// Check if a broker is whitelisted
-    fn is_broker_whitelisted(ref self: ContractState, broker_id: felt252, broker_type: felt252) -> felt252 {
-        let mut is_whitelisted = 0;
-        if (broker_type == 0) {
-            is_whitelisted = self.creator_brokers.read(broker_id);
-        } else if (broker_type == 1) {
-            is_whitelisted = self.fulfiller_brokers.read(broker_id);
-        }
-        is_whitelisted
-    }
-
     // *************************************************************************
     // EXTERNAL FUNCTIONS
     // *************************************************************************
@@ -375,27 +361,15 @@ mod orderbook {
         }
 
         /// Whitelists a broker.
-        fn whitelist_broker(ref self: ContractState, broker_id: felt252, broker_type: felt252) {
+        fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
             assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
-
-            self.brokers.write(broker_id, 1);
-
-            if (broker_type == 0) {
-                self.creator_brokers.write(broker_id, 1);
-            } else if (broker_type == 1) {
-                self.fulfiller_brokers.write(broker_id, 1);
-            }
+            broker_whitelist_write(broker_id, 1);
         }
 
-        fn unwhitelist_broker(ref self: ContractState, broker_id: felt252, broker_type: felt252) {
+        /// Remove a broker from whitelist.
+        fn unwhitelist_broker(ref self: ContractState, broker_id: felt252) {
             assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
-            self.brokers.write(broker_id, 0);
-
-            if (broker_type == 0) {
-                self.creator_brokers.write(broker_id, 0);
-            } else if (broker_type == 1) {
-                self.fulfiller_brokers.write(broker_id, 0);
-            }
+            broker_whitelist_write(broker_id, 0);
         }
 
         /// Submits and places an order to the orderbook if the order is valid.

@@ -8,7 +8,7 @@ use ark_orderbook::order::order_v1::OrderV1;
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use super::super::common::setup::{
-    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer, whitelist_creator_broker
 };
 use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
@@ -30,6 +30,7 @@ fn test_create_existing_order() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
     dispatcher.create_order(order: order_listing, signer: signer);
 }
@@ -48,6 +49,7 @@ fn test_create_listing_order() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
@@ -103,8 +105,8 @@ fn test_auction_order_with_extended_time_order() {
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
-
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
 
     let order_type = dispatcher.get_order_type(order_hash);

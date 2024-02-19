@@ -2,7 +2,11 @@ use core::array::ArrayTrait;
 use core::traits::Into;
 use core::traits::TryInto;
 use core::option::OptionTrait;
-use ark_orderbook::orderbook::is_broker_whitelisted;
+
+use ark_orderbook::broker::database::{
+    broker_whitelist_read
+};
+
 //! Order v1 supported by the Orderbook.
 //!
 use starknet::ContractAddress;
@@ -10,7 +14,10 @@ use starknet::contract_address_to_felt252;
 use ark_common::protocol::order_types::{OrderTrait, OrderValidationError, OrderType, RouteType};
 use ark_common::protocol::order_types::FulfillInfo;
 use poseidon::poseidon_hash_span;
+use starknet::SyscallResultTrait;
 
+/// Must remain equal to 0 for now.
+const ADDRESS_DOMAIN: u32 = 0;
 const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).
 // Auction -> ERC721_ERC20.
@@ -46,8 +53,6 @@ struct OrderV1 {
     end_date: u64,
     // Broker public identifier.
     broker_id: felt252,
-    // Broker type (0: creator, 1: fullfiller).
-    broker_type: felt252,
     // Additional data, limited to ??? felts.
     additional_data: Span<felt252>,
 }
@@ -106,7 +111,10 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             return Result::Err(OrderValidationError::InvalidContent);
         }
 
-        if (is_broker_whitelisted(*self.broker_id, *self.broker_type) == 0) {
+        // check if the broker is whitelisted.
+        let whitelisted = broker_whitelist_read(*self.broker_id);
+
+        if whitelisted == false {
             return Result::Err(OrderValidationError::InvalidBroker);
         }
 
