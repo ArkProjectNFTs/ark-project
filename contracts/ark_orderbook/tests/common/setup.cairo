@@ -372,8 +372,13 @@ fn get_offer_order() -> OrderV1 {
     }
 }
 
-fn whitelist_creator_broker(contract_address: ContractAddress, broker_id: felt252, dispatcher: OrderbookDispatcher) {
-    start_prank(contract_address, 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078.try_into().unwrap());
+fn whitelist_creator_broker(
+    contract_address: ContractAddress, broker_id: felt252, dispatcher: OrderbookDispatcher
+) {
+    start_prank(
+        contract_address,
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078.try_into().unwrap()
+    );
     dispatcher.whitelist_broker(broker_id);
     stop_prank(contract_address);
 }

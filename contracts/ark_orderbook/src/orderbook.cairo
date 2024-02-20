@@ -152,9 +152,7 @@ mod orderbook {
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
 
-    use ark_orderbook::broker::database::{
-        broker_whitelist_write
-    };
+    use ark_orderbook::broker::database::{broker_whitelist_write};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
@@ -501,7 +499,6 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
-
         /// Fulfill auction order
         ///
         /// # Arguments

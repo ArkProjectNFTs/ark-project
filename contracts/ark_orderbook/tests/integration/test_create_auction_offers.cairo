@@ -11,7 +11,9 @@ use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
     Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{setup_auction_order, sign_mock, setup_orders, setup_offer, whitelist_creator_broker};
+use super::super::common::setup::{
+    setup_auction_order, sign_mock, setup_orders, setup_offer, whitelist_creator_broker
+};
 
 #[test]
 fn test_create_valid_auction_offer() {

@@ -24,7 +24,6 @@ const ADDRESS_DOMAIN: u32 = 0;
 const BROKER_DB_BASE_KEY: felt252 = 'broker whitelist';
 
 
-
 /// Reads whitelist status of broker.
 ///
 /// # Arguments
@@ -40,7 +39,8 @@ fn broker_whitelist_read(broker_id: felt252) -> bool {
     // First offset is the status.
     let whitelisted: felt252 = starknet::storage_read_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base(base)
-    ).unwrap_syscall();
+    )
+        .unwrap_syscall();
 
     whitelisted == 1
 }
@@ -53,7 +53,6 @@ fn broker_whitelist_read(broker_id: felt252) -> bool {
 /// * `broker_id` - ID of the broker.
 /// * `status` - 1 if whitelisted, 0 if not.
 fn broker_whitelist_write(broker_id: felt252, status: felt252) -> bool {
-
     let key = array![BROKER_DB_BASE_KEY, broker_id];
 
     let base = starknet::storage_base_address_from_felt252(

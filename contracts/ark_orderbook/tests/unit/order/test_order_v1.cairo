@@ -4,14 +4,14 @@ use core::traits::Into;
 use core::traits::TryInto;
 use ark_orderbook::order::order_v1::OrderV1;
 use ark_orderbook::order::order_v1::OrderTraitOrderV1;
-use ark_orderbook::orderbook::{orderbook, orderbook_errors, OrderbookDispatcher, OrderbookDispatcherTrait};
+use ark_orderbook::orderbook::{
+    orderbook, orderbook_errors, OrderbookDispatcher, OrderbookDispatcherTrait
+};
 use ark_common::protocol::order_types::{OrderType, OrderTrait, RouteType};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use debug::PrintTrait;
 use super::super::super::common::setup::{setup_orders, whitelist_creator_broker};
-use snforge_std::{
-    ContractClassTrait, declare
-};
+use snforge_std::{ContractClassTrait, declare};
 
 // *********************************************************
 // validate_common_data

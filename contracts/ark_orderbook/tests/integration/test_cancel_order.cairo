@@ -14,7 +14,8 @@ use snforge_std::{
 };
 
 use super::super::common::setup::{
-    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer, whitelist_creator_broker
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer,
+    whitelist_creator_broker
 };
 
 #[test]

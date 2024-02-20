@@ -12,7 +12,9 @@ use starknet::deploy_syscall;
 use snforge_std::start_warp;
 
 use super::super::common::signer::sign_mock;
-use super::super::common::setup::{setup_listing, setup_listing_order_with_sign, whitelist_creator_broker};
+use super::super::common::setup::{
+    setup_listing, setup_listing_order_with_sign, whitelist_creator_broker
+};
 
 // try to fulfill an order that doesn't exist
 #[should_panic(expected: ('OB: order not found',))]
