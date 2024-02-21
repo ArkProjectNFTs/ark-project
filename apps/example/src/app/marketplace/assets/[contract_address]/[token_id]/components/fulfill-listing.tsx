@@ -27,7 +27,8 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
     account === undefined ||
     isOwner ||
     !tokenMarketData ||
-    !tokenMarketData.is_listed
+    !tokenMarketData.is_listed ||
+    tokenMarketData.status === "FULFILLED"
   )
     return null;
 
@@ -53,8 +54,9 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
             {status === "idle" && "BUY NOW"}
             {status === "loading" && (
               <>
+                {stepStatus === "idle" && "Creating transaction..."}
                 {stepStatus === "approving" && "Approving..."}
-                {stepStatus === "listing" && "Listing..."}
+                {stepStatus === "selling" && "Sell in progress..."}
               </>
             )}
             {status === "success" && "Bought"}

@@ -4,6 +4,6 @@ export type StepStatus =
   | "idle"
   | "approving"
   | "approved"
-  | "listing"
-  | "listed"
+  | "selling"
+  | "sold"
   | "error";

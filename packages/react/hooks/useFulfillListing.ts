@@ -44,7 +44,7 @@ export default function useFulfillListing() {
       await waitForTransactionBlock(config as Config, {
         transactionHash: approvalResult.transaction_hash
       });
-      setStepStatus("listing");
+      setStepStatus("selling");
       await fulfillListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
         arkAccount,
@@ -57,7 +57,7 @@ export default function useFulfillListing() {
         owner
       });
       setStatus("success");
-      setStepStatus("listed");
+      setStepStatus("sold");
     } catch (error) {
       console.error(error);
       setStatus("error");
