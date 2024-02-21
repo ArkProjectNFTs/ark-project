@@ -66,6 +66,8 @@ export const approveERC20 = async (
   const result = await starknetAccount.execute(approuveERC20Call, [erc20abi]);
 
   await config.starknetProvider.waitForTransaction(result.transaction_hash);
+
+  return result;
 };
 
 export const increaseERC20 = async (
