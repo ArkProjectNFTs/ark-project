@@ -16,7 +16,7 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 
-import { getTokenMarketData } from "../data";
+import { getTokenData, getTokenMarketData } from "../data";
 import AssetsInfos from "./asset-infos";
 import CancelListing from "./cancel-listing";
 import CreateListing from "./create-listing";
@@ -35,7 +35,7 @@ interface AssetProps {
 
 const Asset: React.FC<AssetProps> = ({
   params,
-  token,
+  token: tokenInitialData,
   collection,
   tokenMarketData: tokenMarketInitialData
 }) => {
@@ -51,6 +51,29 @@ const Asset: React.FC<AssetProps> = ({
       refetchInterval: 1000
     }
   );
+
+  const {
+    data: tokenData,
+    loading,
+    error
+  }: any = useQuery(
+    "tokenMetadata",
+    () => getTokenData(params.contract_address, params.token_id),
+    {
+      initialData: tokenInitialData,
+      refetchInterval: 1000
+    }
+  );
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error</div>;
+  }
+
+  const token = tokenData.result;
 
   return (
     <TooltipProvider delayDuration={0}>

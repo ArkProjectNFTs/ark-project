@@ -19,7 +19,7 @@ interface BuyOrderProps {
 }
 
 const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
-  const { fulfillListing, status } = useFulfillListing();
+  const { fulfillListing, status, stepStatus } = useFulfillListing();
   const { address, account } = useAccount();
   const isOwner = address && areAddressesEqual(token.owner, address);
 
@@ -49,12 +49,17 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
         }
       >
         <div className="flex w-full justify-between">
-          <p className="uppercase font-bold">
+          <div className="uppercase font-bold">
             {status === "idle" && "BUY NOW"}
-            {status === "loading" && "Buying..."}
+            {status === "loading" && (
+              <>
+                {stepStatus === "approving" && "Approving..."}
+                {stepStatus === "listing" && "Listing..."}
+              </>
+            )}
             {status === "success" && "Bought"}
             {status === "error" && "Error"}
-          </p>
+          </div>
           <div className="flex items-center space-x-1">
             {Web3.utils.fromWei(tokenMarketData.start_amount, "ether")}{" "}
             <SiEthereum />

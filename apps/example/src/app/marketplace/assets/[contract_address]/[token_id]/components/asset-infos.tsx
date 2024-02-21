@@ -16,6 +16,7 @@ interface AssetInfosProps {
 }
 
 const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
+  console.log(token);
   const { address } = useAccount();
   const owner =
     address && areAddressesEqual(token.owner, address)

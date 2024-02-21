@@ -10,10 +10,7 @@ export default async function Token({
 }: {
   params: { contract_address: string; token_id: string };
 }) {
-  const { result: token } = await getTokenData(
-    params.contract_address,
-    params.token_id
-  );
+  const token = await getTokenData(params.contract_address, params.token_id);
 
   const { result: collection } = await getCollectionMetadata(
     params.contract_address
