@@ -4,10 +4,14 @@ use core::traits::Into;
 use core::traits::TryInto;
 use ark_orderbook::order::order_v1::OrderV1;
 use ark_orderbook::order::order_v1::OrderTraitOrderV1;
+use ark_orderbook::orderbook::{
+    orderbook, orderbook_errors, OrderbookDispatcher, OrderbookDispatcherTrait
+};
 use ark_common::protocol::order_types::{OrderType, OrderTrait, RouteType};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use debug::PrintTrait;
-use super::super::super::common::setup::setup_orders;
+use super::super::super::common::setup::{setup_orders, whitelist_creator_broker};
+use snforge_std::{ContractClassTrait, declare};
 
 // *********************************************************
 // validate_common_data
@@ -17,6 +21,9 @@ use super::super::super::common::setup::setup_orders;
 fn test_validate_common_data_with_valid_order() {
     let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
+    let mut state = orderbook::contract_state_for_testing();
+    orderbook::ImplOrderbook::whitelist_broker(ref state, order_listing.broker_id);
+
     let result = order_listing.validate_common_data(block_timestmap);
     assert(result.is_ok(), 'Invalid result');
 }
@@ -47,6 +54,8 @@ fn should_returns_invalid_order_with_zero_salt() {
 fn should_returns_invalid_order_with_no_token_id() {
     let (order_listing, _, _, _) = setup_orders();
     let block_timestmap: u64 = 1699556828;
+    let mut state = orderbook::contract_state_for_testing();
+    orderbook::ImplOrderbook::whitelist_broker(ref state, order_listing.broker_id);
 
     let mut invalid_order = order_listing.clone();
     invalid_order.token_id = Option::None;

@@ -4,9 +4,14 @@ use core::traits::Into;
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use ark_common::crypto::signer::{Signer, SignInfo};
 use ark_orderbook::order::order_v1::OrderV1;
+use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
+
 use snforge_std::signature::{
     StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer as SNSigner, Verifier
 };
+
+use snforge_std::{start_prank, stop_prank};
+use starknet::ContractAddress;
 
 use super::super::common::signer::sign_mock;
 /// Utility function to setup orders for test environment.
@@ -215,7 +220,7 @@ fn setup_listing_order(price: felt252) -> (OrderV1, felt252, felt252) {
 /// Utility function to setup a listing order for test environment.
 ///
 /// # Returns a tuple of the different orders data
-/// 
+///
 /// * order_listing
 /// * sign_info
 /// * order_hash
@@ -365,4 +370,15 @@ fn get_offer_order() -> OrderV1 {
         broker_id: 123,
         additional_data: data_span,
     }
+}
+
+fn whitelist_creator_broker(
+    contract_address: ContractAddress, broker_id: felt252, dispatcher: OrderbookDispatcher
+) {
+    start_prank(
+        contract_address,
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078.try_into().unwrap()
+    );
+    dispatcher.whitelist_broker(broker_id);
+    stop_prank(contract_address);
 }

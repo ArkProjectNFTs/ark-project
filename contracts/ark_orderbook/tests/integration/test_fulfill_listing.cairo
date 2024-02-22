@@ -12,7 +12,9 @@ use starknet::deploy_syscall;
 use snforge_std::start_warp;
 
 use super::super::common::signer::sign_mock;
-use super::super::common::setup::{setup_listing, setup_listing_order_with_sign};
+use super::super::common::setup::{
+    setup_listing, setup_listing_order_with_sign, whitelist_creator_broker
+};
 
 // try to fulfill an order that doesn't exist
 #[should_panic(expected: ('OB: order not found',))]
@@ -68,7 +70,7 @@ fn test_create_listing_order_and_fulfill() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
-
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(order_hash);
     let fulfiller = 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
@@ -112,7 +114,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
-
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(order_hash);
 
@@ -148,6 +150,8 @@ fn test_fulfill_already_fulfilled_order() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
+
     dispatcher.create_order(order: order_listing, signer: signer);
     let fulfiller = 0x00E4769a4d2F7F69C70931A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
         .try_into()
@@ -183,6 +187,7 @@ fn test_fulfill_expired_order() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
 
     start_warp(contract_address, order_listing.end_date + 10);

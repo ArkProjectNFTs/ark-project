@@ -1,8 +1,8 @@
 //! # Orderbook Contract
-//! 
+//!
 //! This module defines the structure and functionalities of an orderbook contract. It includes
-//! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external functions, 
-//! and internal functions. The primary functionalities include broker whitelisting, order management 
+//! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external functions,
+//! and internal functions. The primary functionalities include broker whitelisting, order management
 //! (creation, cancellation, fulfillment), and order queries.
 
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
@@ -13,12 +13,18 @@ use ark_orderbook::order::order_v1::OrderV1;
 #[starknet::interface]
 trait Orderbook<T> {
     /// Whitelists a broker.
-    /// TODO: good first exercise to use a components for broker management.
     ///
     /// # Arguments
     ///
     /// * `broker_id` - ID of the broker.
     fn whitelist_broker(ref self: T, broker_id: felt252);
+
+    /// Remove a broker from the whitelist.
+    ///
+    /// # Arguments
+    ///
+    /// * `broker_id` - ID of the broker.
+    fn unwhitelist_broker(ref self: T, broker_id: felt252);
 
     /// Submits and places an order to the orderbook if the order is valid.
     ///
@@ -74,7 +80,7 @@ trait Orderbook<T> {
     /// * `order_hash` - The order hash of order.
     fn get_order_signer(self: @T, order_hash: felt252) -> felt252;
 
-    /// Retrieves the order hash using its token hash. 
+    /// Retrieves the order hash using its token hash.
     ///
     /// # Arguments
     /// * `token_hash` - The token hash of the order.
@@ -119,6 +125,7 @@ mod orderbook_errors {
     const ORDER_OPEN: felt252 = 'OB: order is not open';
     const USE_FULFILL_AUCTION: felt252 = 'OB: must use fulfill auction';
     const OFFER_NOT_STARTED: felt252 = 'OB: offer is not started';
+    const INVALID_BROKER: felt252 = 'OB: broker is not whitelisted';
 }
 
 /// StarkNet smart contract module for an order book.
@@ -144,6 +151,8 @@ mod orderbook {
     use ark_orderbook::order::database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
+
+    use ark_orderbook::broker::database::{broker_whitelist_write};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
@@ -351,13 +360,14 @@ mod orderbook {
 
         /// Whitelists a broker.
         fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
-            // TODO: check components with OZ when ready for ownable.
-            assert(
-                self.admin.read() == starknet::get_caller_address(),
-                orderbook_errors::BROKER_UNREGISTERED
-            );
+            assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
+            broker_whitelist_write(broker_id, 1);
+        }
 
-            self.brokers.write(broker_id, 1);
+        /// Remove a broker from whitelist.
+        fn unwhitelist_broker(ref self: ContractState, broker_id: felt252) {
+            assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
+            broker_whitelist_write(broker_id, 0);
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
@@ -853,12 +863,12 @@ mod orderbook {
             let auction_is_pending = current_block_timestamp < auction_end_date;
 
             if auction_is_pending {
-                // If the auction is still pending, record the new offer by linking it to the 
+                // If the auction is still pending, record the new offer by linking it to the
                 // auction order hash in the 'auction_offers' mapping.
                 self.auction_offers.write(order_hash, auction_order_hash);
 
                 if auction_end_date - current_block_timestamp < EXTENSION_TIME_IN_SECONDS {
-                    // Increment the number of offers for this auction and extend the auction 
+                    // Increment the number of offers for this auction and extend the auction
                     // end date by the predefined extension time to allow for additional offers.
                     self
                         .auctions

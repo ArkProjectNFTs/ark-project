@@ -8,7 +8,8 @@ use ark_orderbook::order::order_v1::OrderV1;
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use super::super::common::setup::{
-    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer,
+    whitelist_creator_broker
 };
 use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
@@ -30,7 +31,26 @@ fn test_create_existing_order() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
+    dispatcher.create_order(order: order_listing, signer: signer);
+}
+
+#[test]
+#[should_panic(expected: ('INVALID_BROKER',))]
+fn test_create_order_not_whitelisted() {
+    let start_date = 1699556828;
+    let end_date = start_date + (10 * 24 * 60 * 60);
+    let (order_listing, signer, _order_hash, token_hash) = setup_listing(
+        start_date, end_date, Option::Some(123)
+    );
+    let contract = declare('orderbook');
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
+    let contract_address = contract.deploy(@contract_data).unwrap();
+    let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: order_listing, signer: signer);
 }
 
@@ -48,6 +68,7 @@ fn test_create_listing_order() {
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
     let order = dispatcher.get_order(_order_hash);
     let order_status = dispatcher.get_order_status(_order_hash);
@@ -103,8 +124,8 @@ fn test_auction_order_with_extended_time_order() {
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
     let contract_address = contract.deploy(@contract_data).unwrap();
-
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
 
     let order_type = dispatcher.get_order_type(order_hash);

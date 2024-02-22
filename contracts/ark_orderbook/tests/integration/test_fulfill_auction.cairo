@@ -13,7 +13,8 @@ use snforge_std::{
     Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
 use super::super::common::setup::{
-    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer
+    setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer,
+    whitelist_creator_broker
 };
 
 /// Test
@@ -39,6 +40,7 @@ fn test_fulfill_auction() {
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
 
     let (auction_offer, related_order_signer, related_order_hash, related_order_token_hash) =
@@ -61,7 +63,7 @@ fn test_fulfill_auction() {
     let offer_signer = sign_mock(fulfill_info_hash, auction_listing_order.offerer);
     let mut original_order_hash_signer = sign_mock(order_hash, auction_listing_order.offerer);
     let public_key = original_order_hash_signer.get_public_key();
-    // sign original orderhash 
+    // sign original orderhash
     // from signer send public key
     dispatcher.fulfill_order(fulfill_info, offer_signer);
 }
@@ -87,6 +89,7 @@ fn test_fulfill_auction_with_classic_offer() {
     let (offer_order, offer_signer, offer_order_hash, offer_order_token_hash) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::None
     );
+    whitelist_creator_broker(contract_address, offer_order.broker_id, dispatcher);
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
@@ -135,6 +138,8 @@ fn test_fulfill_auction_with_future_offer() {
     let (offer_order, offer_signer, offer_order_hash, offer_order_token_hash) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::None
     );
+    whitelist_creator_broker(contract_address, offer_order.broker_id, dispatcher);
+
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
@@ -182,6 +187,8 @@ fn test_fulfill_auction_with_expired_offer() {
     let (offer_order, offer_signer, offer_order_hash, offer_order_token_hash) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::None
     );
+    whitelist_creator_broker(contract_address, offer_order.broker_id, dispatcher);
+
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
@@ -229,6 +236,7 @@ fn test_fulfill_expired_auction() {
     let (offer_order, offer_signer, offer_order_hash, offer_order_token_hash) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::None
     );
+    whitelist_creator_broker(contract_address, offer_order.broker_id, dispatcher);
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
@@ -276,6 +284,7 @@ fn test_fulfill_auction_with_offer_for_different_token() {
     let (mut offer_order, offer_signer, offer_order_hash, offer_order_token_hash) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::Some(42)
     );
+    whitelist_creator_broker(contract_address, offer_order.broker_id, dispatcher);
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
@@ -323,6 +332,7 @@ fn test_fulfill_auction_with_non_existing_related_order_hash() {
     let (auction_listing_order, auction_signer, order_hash, token_hash) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
 
     start_warp(contract_address, start_date + 3600);
@@ -360,13 +370,15 @@ fn test_fulfill_auction_with_listing_order() {
     let (auction_listing_order, auction_signer, order_hash, token_hash) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
 
-    //create a listing order 
+    //create a listing order
     let (listing_order, listing_signer, listing_order_hash, listing_order_token_hash) =
         setup_listing(
         start_date, end_date, Option::Some(123)
     );
+    whitelist_creator_broker(contract_address, listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: listing_order, signer: listing_signer);
 
     start_warp(contract_address, start_date + 3600);

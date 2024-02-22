@@ -11,7 +11,9 @@ use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
     Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
 };
-use super::super::common::setup::{setup_auction_order, sign_mock, setup_orders, setup_offer};
+use super::super::common::setup::{
+    setup_auction_order, sign_mock, setup_orders, setup_offer, whitelist_creator_broker
+};
 
 #[test]
 fn test_create_valid_auction_offer() {
@@ -29,6 +31,7 @@ fn test_create_valid_auction_offer() {
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
     let (auction_offer, signer, order_hash, token_hash) = setup_offer(
@@ -53,6 +56,7 @@ fn test_accept_auction_after_expiration() {
     let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
+    whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: signer);
 
     let (auction_offer, signer, auction_offer_order_hash, token_hash) = setup_offer(

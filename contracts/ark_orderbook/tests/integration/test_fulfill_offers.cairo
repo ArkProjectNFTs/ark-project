@@ -15,7 +15,9 @@ use snforge_std::{
 };
 
 use super::super::common::signer::sign_mock;
-use super::super::common::setup::{setup_orders, setup_listing_order_with_sign};
+use super::super::common::setup::{
+    setup_orders, setup_listing_order_with_sign, whitelist_creator_broker
+};
 
 // FIX with start date
 // #[test]
@@ -70,6 +72,7 @@ fn test_fulfill_expired_offer() {
 
     let offer_order_hash = order_offer.compute_order_hash();
     let offer_signer = sign_mock(offer_order_hash, order_offer.offerer);
+    whitelist_creator_broker(contract_address, order_offer.broker_id, dispatcher);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_listing.start_date + 2000);
@@ -133,6 +136,7 @@ fn test_fulfill_classic_offer() {
 
     let listing_order_hash = order_listing.compute_order_hash();
     let signer = sign_mock(listing_order_hash, order_listing.offerer);
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
 
     order_offer.start_date = order_listing.start_date;
@@ -196,6 +200,7 @@ fn test_fulfill_collection_offer() {
 
     let offer_order_hash = order_offer.compute_order_hash();
     let offer_signer = sign_mock(offer_order_hash, order_offer.offerer);
+    whitelist_creator_broker(contract_address, order_offer.broker_id, dispatcher);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_offer.start_date);
@@ -258,6 +263,7 @@ fn test_fulfill_expired_collection_offer() {
 
     let offer_order_hash = order_offer.compute_order_hash();
     let offer_signer = sign_mock(offer_order_hash, order_offer.offerer);
+    whitelist_creator_broker(contract_address, order_offer.broker_id, dispatcher);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
     start_warp(contract_address, order_offer.end_date);
@@ -295,6 +301,8 @@ fn test_double_fulfill_offer() {
 
     let listing_order_hash = order_listing.compute_order_hash();
     let signer = sign_mock(listing_order_hash, order_listing.offerer);
+    whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
+
     dispatcher.create_order(order: order_listing, signer: signer);
 
     order_offer.start_date = order_listing.start_date;
