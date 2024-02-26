@@ -4,11 +4,12 @@ import { useState } from "react";
 
 import {
   Config,
-  fulfillListing as fulfillListingCore
+  fulfillListing as fulfillListingCore,
+  waitForTransactionBlock
 } from "@ark-project/core";
 import { FulfillListingInfo } from "@ark-project/core/src/types";
 
-import { Status } from "../types";
+import { Status, StepStatus } from "../types";
 import useApproveERC20, { ApproveERC20Parameters } from "./useApproveERC20";
 import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
@@ -19,20 +20,31 @@ export type fulfillListingParameters = ApproveERC20Parameters &
 
 export default function useFulfillListing() {
   const [status, setStatus] = useState<Status>("idle");
-  const { approveERC20 } = useApproveERC20();
+  const [stepStatus, setStepStatus] = useState<StepStatus>("idle");
+  const { approveERC20, getAllowance } = useApproveERC20();
   const owner = useOwner();
   const arkAccount = useBurnerWallet();
   const config = useConfig();
+
   async function fulfillListing(parameters: fulfillListingParameters) {
     if (!arkAccount) throw new Error("No burner wallet.");
     try {
       setStatus("loading");
-      await approveERC20({
+      const allowance = await getAllowance(
+        parameters.starknetAccount,
+        parameters.currencyAddress || config?.starknetContracts.eth
+      );
+      setStepStatus("approving");
+      const approvalResult = await approveERC20({
         starknetAccount: parameters.starknetAccount,
-        startAmount: parameters.startAmount,
+        startAmount: Number(parameters.startAmount) + Number(allowance),
         currencyAddress:
           parameters.currencyAddress || config?.starknetContracts.eth
       });
+      await waitForTransactionBlock(config as Config, {
+        transactionHash: approvalResult.transaction_hash
+      });
+      setStepStatus("selling");
       await fulfillListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
         arkAccount,
@@ -45,10 +57,13 @@ export default function useFulfillListing() {
         owner
       });
       setStatus("success");
+      setStepStatus("sold");
     } catch (error) {
       console.error(error);
       setStatus("error");
+      setStepStatus("error");
     }
   }
-  return { fulfillListing, status };
+
+  return { fulfillListing, status, stepStatus };
 }

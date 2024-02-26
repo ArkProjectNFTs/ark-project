@@ -3,6 +3,7 @@ export { createConfig, networks } from "./createConfig";
 export { fetchOrCreateAccount, createAccount } from "./actions/account";
 
 export { approveERC20, approveERC721, increaseERC20 } from "./actions/contract";
+export { waitForTransactionBlock } from "./actions/contract";
 
 export {
   createListing,

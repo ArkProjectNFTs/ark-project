@@ -1,10 +1,6 @@
 import { AccountInterface, BigNumberish, Contract } from "starknet";
 
-import {
-  approveERC20 as approveERC20Core,
-  Config,
-  increaseERC20
-} from "@ark-project/core";
+import { approveERC20 as approveERC20Core, Config } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 
@@ -19,8 +15,7 @@ export default function useApproveERC20() {
 
   async function getAllowance(
     starknetAccount: AccountInterface,
-    start_amount: BigNumberish,
-    currency_address: BigNumberish
+    currency_address?: BigNumberish
   ) {
     if (!currency_address) {
       throw new Error("no currency address.");
@@ -46,34 +41,19 @@ export default function useApproveERC20() {
     return allowance;
   }
 
-  async function approveERC20(parameters: ApproveERC20Parameters) {
+  async function approveERC20(
+    parameters: ApproveERC20Parameters
+  ): Promise<any> {
     if (!parameters.currencyAddress) {
       throw new Error(
         "No currency address. Please set currency_address to approveERC20."
       );
     }
-
-    const allowance = await getAllowance(
-      parameters.starknetAccount,
-      parameters.startAmount,
-      parameters.currencyAddress
-    );
-
-    if (allowance.gte(parameters.startAmount)) {
-      return;
-    } else if (allowance.eq(0)) {
-      await approveERC20Core(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        contractAddress: parameters.currencyAddress.toString(),
-        amount: parameters.startAmount
-      });
-    } else {
-      await increaseERC20(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        contractAddress: parameters.currencyAddress.toString(),
-        amount: parameters.startAmount
-      });
-    }
+    return await approveERC20Core(config as Config, {
+      starknetAccount: parameters.starknetAccount,
+      contractAddress: parameters.currencyAddress.toString(),
+      amount: parameters.startAmount
+    });
   }
-  return { approveERC20 };
+  return { approveERC20, getAllowance };
 }

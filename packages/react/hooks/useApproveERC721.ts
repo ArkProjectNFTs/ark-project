@@ -45,7 +45,6 @@ export default function useApproveERC721() {
     if (!isApprovedForAll) {
       await approveERC721Core(config as Config, {
         starknetAccount,
-        tokenId: tokenId.toString(),
         contractAddress: tokenAddress.toString()
       });
     }

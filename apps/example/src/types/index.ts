@@ -15,6 +15,7 @@ export type TokenMarketData = {
   broker_id: string;
   is_listed: boolean;
   has_offer: boolean;
+  status: string;
   top_bid: {
     amount: string;
     order_hash: string;
