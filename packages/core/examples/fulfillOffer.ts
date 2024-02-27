@@ -48,9 +48,12 @@ import { mintERC721 } from "./utils/mintERC721";
     `=> Minting token at contract address: ${STARKNET_NFT_ADDRESS} with fulfiller account: ${starknetFulfillerAccount.address}`
   );
   await mintERC721(starknetProvider, starknetFulfillerAccount);
-
-  console.log("=> Waiting for 5 minutes for transaction complete on goerli...");
-  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  if (config.starknetNetwork !== "dev") {
+    console.log(
+      "=> Waiting for 5 minutes for transaction complete on goerli..."
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  }
 
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   console.log("=> Token minted with tokenId: ", tokenId);
@@ -99,24 +102,28 @@ import { mintERC721 } from "./utils/mintERC721";
     offer
   });
 
-  console.log(`=> Approving token ${offer.tokenId}`);
+  console.log(`=> Approving collection ${offer.tokenId}`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
-    tokenId: offer.tokenId,
     starknetAccount: starknetFulfillerAccount
   });
 
-  console.log("=> Waiting for 5 minutes for transaction complete on goerli...");
-  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  if (config.starknetNetwork !== "dev") {
+    console.log(
+      "=> Waiting for 5 minutes for transaction complete on goerli..."
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  }
 
   // Define the fulfill details
   const fulfillOfferInfo = {
-    order_hash: orderHash,
-    token_address: offer.tokenAddress,
-    token_id: offer.tokenId
+    orderHash: orderHash,
+    tokenAddress: offer.tokenAddress,
+    tokenId: offer.tokenId,
+    brokerId: offer.brokerId
   };
 
-  console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
+  console.log(`=> Fulfilling offer by ${starknetFulfillerAccount.address}`);
   // fulfill the order
   await fulfillOffer(config, {
     starknetAccount: starknetFulfillerAccount,
@@ -124,8 +131,14 @@ import { mintERC721 } from "./utils/mintERC721";
     fulfillOfferInfo
   });
 
-  console.log("=> Waiting for 5 minutes for transaction complete on goerli...");
-  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  if (config.starknetNetwork !== "dev") {
+    console.log(
+      "=> Waiting for 5 minutes for transaction complete on goerli..."
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, 6000));
+  }
 
   console.log("=> Fetching order status...");
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {

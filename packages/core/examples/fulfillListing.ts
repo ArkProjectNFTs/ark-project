@@ -16,7 +16,6 @@ import {
   fetchOrCreateAccount,
   fulfillListing,
   getOrderStatus,
-  increaseERC20,
   ListingV1
 } from "../src";
 import { config } from "./config";
@@ -31,7 +30,6 @@ import { mintERC721 } from "./utils/mintERC721";
 (async () => {
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
-
   console.log(`=> Creating ark account`);
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
@@ -53,16 +51,19 @@ import { mintERC721 } from "./utils/mintERC721";
 
   console.log(transaction_hash);
 
-  console.log("=> Waiting for 5 minutes for transaction complete on goerli...");
-  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  if (config.starknetNetwork !== "dev") {
+    console.log(
+      "=> Waiting for 5 minutes for transaction complete on goerli..."
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  }
 
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   console.log("=> Token minted with tokenId: ", tokenId);
 
-  console.log(`=> Approving token ${tokenId}`);
+  console.log(`=> Approving for all`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
-    tokenId: tokenId,
     starknetAccount: starknetOffererAccount
   });
 
@@ -83,9 +84,9 @@ import { mintERC721 } from "./utils/mintERC721";
     order
   });
 
-  // wait 5 seconds for the transaction to be processed
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
+  if (config.starknetNetwork !== "dev") {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
   console.log(
     `=> Fetching or creating fulfiller starknet account, for test purpose only`
   );
@@ -105,7 +106,7 @@ import { mintERC721 } from "./utils/mintERC721";
   }
 
   console.log(
-    `=> Approuving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
+    `=> Approving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
   );
 
   await approveERC20(config, {
@@ -114,23 +115,16 @@ import { mintERC721 } from "./utils/mintERC721";
     amount: order.startAmount
   });
 
-  console.log(
-    `=> increase ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
-  );
-
-  await increaseERC20(config, {
-    starknetAccount: starknetFulfillerAccount,
-    contractAddress: STARKNET_ETH_ADDRESS,
-    amount: order.startAmount
-  });
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  if (config.starknetNetwork !== "dev") {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
   console.log("tokenId", tokenId);
   // Define the fulfill details
   const fulfillListingInfo = {
-    order_hash: orderHash,
-    token_address: order.tokenAddress,
-    token_id: tokenId
+    orderHash: orderHash,
+    tokenAddress: order.tokenAddress,
+    tokenId: tokenId,
+    brokerId: 123
   };
 
   console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
@@ -141,8 +135,14 @@ import { mintERC721 } from "./utils/mintERC721";
     fulfillListingInfo
   });
 
-  console.log("=> Waiting for 5 minutes for transaction complete on goerli...");
-  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  if (config.starknetNetwork !== "dev") {
+    console.log(
+      "=> Waiting for 5 minutes for transaction complete on goerli..."
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
 
   console.log("=> Fetching order status...");
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
