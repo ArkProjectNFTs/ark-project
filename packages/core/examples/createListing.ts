@@ -19,6 +19,8 @@ import {
 } from "../src";
 import { config } from "./config";
 import { STARKNET_NFT_ADDRESS } from "./constants";
+import { getCurrentTokenId } from "./utils/getCurrentTokenId";
+import { getTokenOwner } from "./utils/getTokenOwner";
 import { mintERC721 } from "./utils/mintERC721";
 
 /**
@@ -28,15 +30,6 @@ import { mintERC721 } from "./utils/mintERC721";
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(config.arkProvider);
-
-  console.log(`=> Creating order`);
-  // Define the order details
-  const order: ListingV1 = {
-    brokerId: 123, // The broker ID
-    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: Math.floor(Math.random() * 10000) + 1, // The ID of the token
-    startAmount: 100000000000000000 // The starting amount for the order
-  };
 
   console.log(
     `=> Fetching or creating offerer starknet account, for test purpose only`
@@ -49,13 +42,23 @@ import { mintERC721 } from "./utils/mintERC721";
 
   console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
   await mintERC721(config.starknetProvider, starknetOffererAccount);
-
-  console.log(`=> Approving token ${order.tokenId}`);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+  const owner = await getTokenOwner(config, STARKNET_NFT_ADDRESS, tokenId);
+  console.log(owner);
+  console.log(`=> Approving token ${tokenId}`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
-    tokenId: order.tokenId,
     starknetAccount: starknetOffererAccount
   });
+
+  console.log(`=> Creating order`);
+  // Define the order details
+  const order: ListingV1 = {
+    brokerId: 123, // The broker ID
+    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenId: tokenId, // The ID of the token
+    startAmount: 100000000000000000 // The starting amount for the order
+  };
 
   console.log("=> Creating listing...");
   // Create the listing on the arkchain using the order details
