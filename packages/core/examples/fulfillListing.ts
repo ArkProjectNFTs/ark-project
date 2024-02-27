@@ -106,7 +106,7 @@ import { mintERC721 } from "./utils/mintERC721";
   }
 
   console.log(
-    `=> Approuving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
+    `=> Approving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
   );
 
   await approveERC20(config, {
