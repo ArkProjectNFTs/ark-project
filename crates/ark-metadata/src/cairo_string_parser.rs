@@ -35,9 +35,12 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
         // and concatenate their results.
         len => {
             let first_element = field_elements.first().unwrap();
-            let a_size = first_element.add(FieldElement::from_dec_str("1").unwrap());
 
-            if len.to_string() == a_size.to_string() {
+            let a_size =
+                usize::from_str_radix(&first_element.add(FieldElement::ONE).to_string(), 10)
+                    .unwrap();
+
+            if len == a_size {
                 let results: Result<Vec<_>, _> = field_elements[1..]
                     .iter()
                     .map(parse_cairo_short_string)
