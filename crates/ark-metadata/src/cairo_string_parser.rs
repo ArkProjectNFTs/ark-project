@@ -1,10 +1,14 @@
 use anyhow::Result;
 use starknet::core::{types::FieldElement, utils::parse_cairo_short_string};
+use std::ops::Add;
+
+use crate::byte_array::ByteArray;
 
 #[derive(Debug)]
 pub enum ParseError {
     NoValueFound,
     ShortStringError,
+    ByteArrayError,
 }
 
 /// Parse a Cairo "long string" represented as a Vec of FieldElements into a Rust String.
@@ -29,19 +33,36 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
         },
         // If the long_string has more than one FieldElement, parse each FieldElement sequentially
         // and concatenate their results.
-        _ => {
-            let mut result = String::new();
-            for field_element in &field_elements[1..] {
-                match parse_cairo_short_string(field_element) {
-                    Ok(value) => {
-                        result.push_str(&value);
-                    }
-                    Err(_) => {
-                        return Err(ParseError::ShortStringError);
-                    }
-                }
+        len => {
+            let first_element = field_elements.first().unwrap();
+            let a_size = first_element.add(FieldElement::from_dec_str("1").unwrap());
+
+            if len.to_string() == a_size.to_string() {
+                let results: Result<Vec<_>, _> = field_elements[1..]
+                    .iter()
+                    .map(parse_cairo_short_string)
+                    .collect();
+
+                results
+                    .map(|strings| strings.concat())
+                    .map_err(|_| ParseError::ShortStringError)
+            } else {
+                let data = field_elements[1..field_elements.len() - 2].to_vec();
+                let pending_word = field_elements[field_elements.len() - 2].clone();
+                let pending_word_len = field_elements[field_elements.len() - 1].clone();
+                let pending_word_len =
+                    usize::from_str_radix(&pending_word_len.to_string(), 10).unwrap();
+
+                let byte_array = ByteArray {
+                    data,
+                    pending_word,
+                    pending_word_len,
+                };
+
+                byte_array
+                    .to_string()
+                    .map_err(|_| ParseError::ByteArrayError)
             }
-            Ok(result)
         }
     }
 }
