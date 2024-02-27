@@ -61,7 +61,7 @@ import { mintERC721 } from "./utils/mintERC721";
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   console.log("=> Token minted with tokenId: ", tokenId);
 
-  console.log(`=> Approving token ${tokenId}`);
+  console.log(`=> Approving for all`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
     starknetAccount: starknetOffererAccount
