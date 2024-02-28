@@ -17,17 +17,12 @@ use starknet::providers::Provider;
 use std::sync::Arc;
 use crate::contracts::starknet_utils::U256;
 
-use crate::contracts::orderbook::OrderV1;
+use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
 use crate::CHAIN_ID_SOLIS;
 
 abigen!(CallContract, "./artifacts/contract.abi.json");
 
-#[derive(Debug, Clone)]
-pub struct CairoU256 {
-    pub low: u128,
-    pub high: u128,
-}
 
 /// Hooker struct, with already instanciated contracts/readers
 /// to avoid allocating them at each transaction that is being
@@ -187,26 +182,27 @@ impl<P: Provider + Sync + Send + 'static  + std::fmt::Debug> KatanaHooker for So
 
            let sn_utils_reader = StarknetUtilsReader::new(order.token_address.into(), self.sn_utils_reader.provider());
 
-            tracing::trace!("\nCall: {:?}", call);
-            println!("\nCall: {:?}", call);
+           tracing::trace!("\nCall: {:?}", call);
+           // ERC721 to ERC20
+           if order.route == RouteType::Erc721ToErc20 {
+               // owner
+               let token_id = order.token_id.clone().unwrap();
+               let n_token_id = U256 {
+                   low: token_id.low,
+                   high: token_id.high,
+               };
 
+               let owner = sn_utils_reader.ownerOf(&n_token_id).call().await;
+               if let Ok(owner_address) = owner {
+                   if owner_address != order.offerer {
+                       tracing::trace!("\nOwner {:?} differs from offerer {:?} ", owner, order.offerer);
+                       println!("\nOwner {:?} differs from offerer {:?} ", owner, order.offerer);
+                       return false;
+                   }
+               }
 
-           // owner & balance
-           let token_id = order.token_id.clone().unwrap();
-           println!("\ntoken_id: {:?}", token_id);
-           let n_token_id = U256 {
-               low: token_id.low,
-               high: token_id.high,
-           };
-
-           println!("\nn_token_id: {:?}", n_token_id);
-
-           let owner = sn_utils_reader.ownerOf(&n_token_id).call().await;
-           println!("owner: {:?}", owner);
-
-           let balance = sn_utils_reader.balanceOf(&order.offerer).call().await;
-
-           println!("\nbalance: {:?}", balance);
+               let balance = sn_utils_reader.balanceOf(&order.offerer).call().await;
+           }
 
 
            tracing::trace!("Order to verify: {:?}", &order);

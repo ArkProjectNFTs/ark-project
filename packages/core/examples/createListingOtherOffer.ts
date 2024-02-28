@@ -58,6 +58,12 @@ import { whitelistBroker } from "./utils/whitelistBroker";
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
+  const starknetOffererAccount2 = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT2_ADDRESS,
+    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
+  );
+
   console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
   await mintERC721(config.starknetProvider, starknetOffererAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
@@ -74,7 +80,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   console.log(`=> Creating order`);
   // Define the order details
   const order: ListingV1 = {
-    brokerId, // The broker ID
+    brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
@@ -83,7 +89,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   console.log("=> Creating listing...");
   // Create the listing on the arkchain using the order details
   const orderHash = await createListing(config, {
-    starknetAccount: starknetOffererAccount,
+    starknetAccount: starknetOffererAccount2,
     arkAccount,
     order
   });

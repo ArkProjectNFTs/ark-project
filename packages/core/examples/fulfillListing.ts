@@ -23,11 +23,28 @@ import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
 import { mintERC20 } from "./utils/mintERC20";
 import { mintERC721 } from "./utils/mintERC721";
+import { whitelistBroker } from "./utils/whitelistBroker";
 
 /**
  * Creates a listing on the blockchain using provided order details.
  */
 (async () => {
+
+  const brokerId = 123;
+
+  const solisAdminAccount = await fetchOrCreateAccount(
+    config.arkProvider,
+    process.env.SOLIS_ADMIN_ADDRESS_DEV,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+  );
+
+  console.log(`=> Whitelisting broker ${brokerId}`);
+  await whitelistBroker(
+    config,
+    solisAdminAccount,
+    brokerId
+  );
+
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
   console.log(`=> Creating ark account`);
@@ -70,7 +87,7 @@ import { mintERC721 } from "./utils/mintERC721";
   console.log(`=> Creating order`);
   // Define the order details
   const order: ListingV1 = {
-    brokerId: 123, // The broker ID
+    brokerId, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
@@ -123,8 +140,8 @@ import { mintERC721 } from "./utils/mintERC721";
   const fulfillListingInfo = {
     orderHash: orderHash,
     tokenAddress: order.tokenAddress,
-    tokenId: tokenId,
-    brokerId: 123
+    tokenId,
+    brokerId
   };
 
   console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
