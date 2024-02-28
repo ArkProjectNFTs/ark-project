@@ -6,6 +6,7 @@
  */
 
 import { shortString } from "starknet";
+import { getSolisProvider, getStarknetProvider } from "../../deployer/src/providers";
 
 import "dotenv/config";
 
@@ -22,7 +23,7 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
 import { getTokenOwner } from "./utils/getTokenOwner";
 import { mintERC721 } from "./utils/mintERC721";
-import { whitelistBroker } from "./utils/whitelistBroker";
+import { whitelistBroker } from "../src/utils";
 
 /**
  * Creates a listing on the blockchain using provided order details.
@@ -37,7 +38,11 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   );
 
   console.log(`=> Whitelisting broker ${brokerId}`);
-  await whitelistBroker(config, solisAdminAccount, brokerId);
+  await whitelistBroker(
+    config,
+    solisAdminAccount,
+    brokerId
+  );
 
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
