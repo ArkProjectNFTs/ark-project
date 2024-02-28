@@ -24,29 +24,3 @@ export const getOrderbookAbi = async (config: Config) => {
     return orderbookAbi;
   }
 };
-
-
-export const whitelistBroker = async (
-  config: Config,
-  adminAccount: Account,
-  brokerId: BigNumberish
-) => {
-  const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainContracts.orderbook
-  );
-
-  if (orderbookAbi === undefined) {
-    throw new Error("no abi.");
-  }
-
-  const whitelist_hash_calldata = CallData.compile({
-    broker_id: brokerId
-  });
-
-  const result = await adminAccount.execute({
-    contractAddress: config.arkchainContracts.orderbook,
-    entrypoint: "whitelist_broker",
-    calldata: whitelist_hash_calldata
-  });
-
-};

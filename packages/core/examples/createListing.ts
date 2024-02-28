@@ -23,7 +23,7 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
 import { getTokenOwner } from "./utils/getTokenOwner";
 import { mintERC721 } from "./utils/mintERC721";
-import { whitelistBroker } from "../src/utils";
+import { whitelistBroker } from "./utils/whitelistBroker";
 
 /**
  * Creates a listing on the blockchain using provided order details.
@@ -62,7 +62,9 @@ import { whitelistBroker } from "../src/utils";
   await mintERC721(config.starknetProvider, starknetOffererAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   const owner = await getTokenOwner(config, STARKNET_NFT_ADDRESS, tokenId);
-  console.log(owner);
+  const ownerHex = "0x" + owner.toString(16).padStart(64, '0');
+  console.log("Owner of tokenId", tokenId, "is", ownerHex);
+
   console.log(`=> Approving for all`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
