@@ -4,7 +4,7 @@
   "scripts": {
     "build": "dotenv -- turbo run build",
     "build:packages": "dotenv -- turbo run build --filter='./packages/*'",
-    "changeset:prepublish": "pnpm version:update && pnpm build && bun .scripts/formatPackageJson.ts && bun .scripts/generateProxyPackages.ts",
+    "changeset:prepublish": "pnpm version:update && pnpm build:packages && bun .scripts/formatPackageJson.ts && bun .scripts/generateProxyPackages.ts",
     "changeset:publish": "pnpm changeset:prepublish && changeset publish",
     "changeset:version": "changeset version && pnpm version:update",
     "dev": "dotenv -- turbo run dev --parallel",
