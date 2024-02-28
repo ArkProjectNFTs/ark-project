@@ -6,6 +6,7 @@
  */
 
 import { shortString } from "starknet";
+import { getSolisProvider, getStarknetProvider } from "../../deployer/src/providers";
 
 import "dotenv/config";
 
@@ -22,11 +23,28 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
 import { getTokenOwner } from "./utils/getTokenOwner";
 import { mintERC721 } from "./utils/mintERC721";
+import { whitelistBroker } from "../src/utils";
 
 /**
  * Creates a listing on the blockchain using provided order details.
  */
 (async () => {
+
+  const brokerId = 123;
+
+  const solisAdminAccount = await fetchOrCreateAccount(
+    config.arkProvider,
+    process.env.SOLIS_ADMIN_ADDRESS_DEV,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+  );
+
+  console.log(`=> Whitelisting broker ${brokerId}`);
+  await whitelistBroker(
+    config,
+    solisAdminAccount,
+    brokerId
+  );
+
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(config.arkProvider);

@@ -435,6 +435,10 @@
       {
         "name": "admin",
         "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "chain_id",
+        "type": "core::felt252"
       }
     ]
   },

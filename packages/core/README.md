@@ -33,11 +33,11 @@ pnpm run test
 ## Running examples
 
 ```bash
-npx ts-node examples/create-account.ts
+npx ts-node examples/createAccount.ts
 ```
 
 ```bash
-npx ts-node examples/create-listing.ts
+npx ts-node examples/createListing.ts
 ```
 
 ```bash
