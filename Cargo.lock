@@ -961,13 +961,13 @@ dependencies = [
 [[package]]
 name = "cainome"
 version = "0.2.3"
-source = "git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-#9a217c56e7adcac81acc6576526e7e90f552333a"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord#c29e4f837fedd5cf0d842361463a33bdde7f340f"
 dependencies = [
  "anyhow",
  "async-trait",
- "cainome-cairo-serde 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
- "cainome-parser 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
- "cainome-rs 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
+ "cainome-rs 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
  "cainome-rs-macro",
  "camino",
  "clap",
@@ -994,7 +994,7 @@ dependencies = [
 [[package]]
 name = "cainome-cairo-serde"
 version = "0.1.0"
-source = "git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-#9a217c56e7adcac81acc6576526e7e90f552333a"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord#c29e4f837fedd5cf0d842361463a33bdde7f340f"
 dependencies = [
  "starknet 0.8.0",
  "thiserror",
@@ -1015,7 +1015,7 @@ dependencies = [
 [[package]]
 name = "cainome-parser"
 version = "0.1.0"
-source = "git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-#9a217c56e7adcac81acc6576526e7e90f552333a"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord#c29e4f837fedd5cf0d842361463a33bdde7f340f"
 dependencies = [
  "convert_case 0.6.0",
  "quote",
@@ -1044,11 +1044,11 @@ dependencies = [
 [[package]]
 name = "cainome-rs"
 version = "0.1.0"
-source = "git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-#9a217c56e7adcac81acc6576526e7e90f552333a"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord#c29e4f837fedd5cf0d842361463a33bdde7f340f"
 dependencies = [
  "anyhow",
- "cainome-cairo-serde 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
- "cainome-parser 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
  "proc-macro2",
  "quote",
  "serde_json",
@@ -1060,12 +1060,12 @@ dependencies = [
 [[package]]
 name = "cainome-rs-macro"
 version = "0.1.0"
-source = "git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-#9a217c56e7adcac81acc6576526e7e90f552333a"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord#c29e4f837fedd5cf0d842361463a33bdde7f340f"
 dependencies = [
  "anyhow",
- "cainome-cairo-serde 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
- "cainome-parser 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
- "cainome-rs 0.1.0 (git+https://github.com/ybensacq/cainome?branch=feat-add-partial-ord-)",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
+ "cainome-rs 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.4-fix-ord)",
  "proc-macro2",
  "quote",
  "serde_json",
