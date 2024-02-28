@@ -2,6 +2,7 @@
   "name": "turbo",
   "private": true,
   "scripts": {
+    "test": "dotenv -- turbo run test --filter='./packages/core'",
     "build": "dotenv -- turbo run build",
     "build:packages": "dotenv -- turbo run build --filter='./packages/*'",
     "changeset:prepublish": "pnpm version:update && pnpm build:packages && bun .scripts/formatPackageJson.ts && bun .scripts/generateProxyPackages.ts",
