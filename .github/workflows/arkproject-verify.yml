@@ -47,4 +47,4 @@ jobs:
         uses: ./.github/actions/install-dependencies
 
       - name: Build
-        run: pnpm build
+        run: pnpm build:packages

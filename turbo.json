@@ -3,6 +3,15 @@
   "globalDependencies": ["**/.env.*local"],
   "globalDotEnv": [".env"],
   "pipeline": {
+    "build:packages": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".vercel/output/**",
+        ".dist/**"
+      ]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": [
