@@ -1,8 +1,9 @@
 import * as starknet from "@scure/starknet";
-import { CallData } from "starknet";
+import { Account, BigNumberish, CallData, Contract } from "starknet";
 
 import { Config } from "../createConfig";
 import { OrderV1 } from "../types";
+import * as sn from "starknet";
 
 export const getOrderHashFromOrderV1 = (order: OrderV1) => {
   const compiledOrder = CallData.compile({
@@ -22,4 +23,30 @@ export const getOrderbookAbi = async (config: Config) => {
   } else {
     return orderbookAbi;
   }
+};
+
+
+export const whitelistBroker = async (
+  config: Config,
+  adminAccount: Account,
+  brokerId: BigNumberish
+) => {
+  const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
+    config.arkchainContracts.orderbook
+  );
+
+  if (orderbookAbi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const whitelist_hash_calldata = CallData.compile({
+    broker_id: brokerId
+  });
+
+  const result = await adminAccount.execute({
+    contractAddress: config.arkchainContracts.orderbook,
+    entrypoint: "whitelist_broker",
+    calldata: whitelist_hash_calldata
+  });
+
 };
