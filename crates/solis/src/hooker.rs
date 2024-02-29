@@ -1,5 +1,6 @@
 //! Solis hooker on Katana transaction lifecycle.
 //!
+use crate::contracts::starknet_utils::U256;
 use async_trait::async_trait;
 use cainome::cairo_serde::CairoSerde;
 use cainome::rs::abigen;
@@ -10,19 +11,17 @@ use katana_primitives::contract::ContractAddress;
 use katana_primitives::transaction::{ExecutableTx, ExecutableTxWithHash, L1HandlerTx};
 use katana_primitives::utils::transaction::compute_l1_message_hash;
 use starknet::accounts::Call;
-use starknet::core::types::{BroadcastedInvokeTransaction, OrderedEvent};
+use starknet::core::types::BroadcastedInvokeTransaction;
 use starknet::core::types::FieldElement;
-use starknet::macros::{felt, selector};
+use starknet::macros::selector;
 use starknet::providers::Provider;
 use std::sync::Arc;
-use crate::contracts::starknet_utils::U256;
 
 use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
 use crate::CHAIN_ID_SOLIS;
 
 abigen!(CallContract, "./artifacts/contract.abi.json");
-
 
 /// Hooker struct, with already instanciated contracts/readers
 /// to avoid allocating them at each transaction that is being
@@ -37,7 +36,7 @@ pub struct SolisHooker<P: Provider + Sync + Send + 'static + std::fmt::Debug> {
     sequencer: Option<Arc<KatanaSequencer>>,
 }
 
-impl<P: Provider + Sync + Send + 'static  + std::fmt::Debug> SolisHooker<P> {
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
     /// Initializes a new instance.
     pub fn new(
         sn_utils_reader: StarknetUtilsReader<P>,
@@ -124,7 +123,7 @@ impl<P: Provider + Sync + Send + 'static  + std::fmt::Debug> SolisHooker<P> {
 /// Solis hooker relies on verifiers to inspect and verify
 /// the transaction and starknet state before acceptance.
 #[async_trait]
-impl<P: Provider + Sync + Send + 'static  + std::fmt::Debug> KatanaHooker for SolisHooker<P> {
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for SolisHooker<P> {
     fn set_sequencer(&mut self, sequencer: Arc<KatanaSequencer>) {
         self.sequencer = Some(sequencer);
     }
@@ -157,8 +156,7 @@ impl<P: Provider + Sync + Send + 'static  + std::fmt::Debug> KatanaHooker for So
         &self,
         transaction: BroadcastedInvokeTransaction,
     ) -> bool {
-
-       let calls = match Vec::<TxCall>::cairo_deserialize(&transaction.calldata, 0) {
+        let calls = match Vec::<TxCall>::cairo_deserialize(&transaction.calldata, 0) {
             Ok(calls) => calls,
             Err(e) => {
                 tracing::error!("Fail deserializing OrderV1: {:?}", e);
@@ -166,78 +164,108 @@ impl<P: Provider + Sync + Send + 'static  + std::fmt::Debug> KatanaHooker for So
             }
         };
 
-       for call in calls {
+        for call in calls {
+            if call.selector != selector!("create_order") {
+                continue;
+            }
 
-           if call.selector != selector!("create_order") {
-               continue;
-           }
+            let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
+                Ok(order) => order,
+                Err(e) => {
+                    tracing::error!("Fail deserializing OrderV1: {:?}", e);
+                    return false;
+                }
+            };
 
-           let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
-               Ok(order) => order,
-               Err(e) => {
-                   tracing::error!("Fail deserializing OrderV1: {:?}", e);
-                   return false;
-               }
-           };
+            let sn_utils_reader_nft_address = StarknetUtilsReader::new(
+                order.token_address.into(),
+                self.sn_utils_reader.provider(),
+            );
 
-           let sn_utils_reader_nft_address = StarknetUtilsReader::new(order.token_address.into(), self.sn_utils_reader.provider());
+            // ERC721 to ERC20
+            if order.route == RouteType::Erc721ToErc20 {
+                let token_id = order.token_id.clone().unwrap();
+                let n_token_id = U256 {
+                    low: token_id.low,
+                    high: token_id.high,
+                };
 
+                // check the current owner of the token.
+                let owner = sn_utils_reader_nft_address
+                    .ownerOf(&n_token_id)
+                    .call()
+                    .await;
+                if let Ok(owner_address) = owner {
+                    if owner_address != order.offerer {
+                        tracing::trace!(
+                            "\nOwner {:?} differs from offerer {:?} ",
+                            owner,
+                            order.offerer
+                        );
+                        return false;
+                    }
+                }
+            }
 
-           // ERC721 to ERC20
-           if order.route == RouteType::Erc721ToErc20 {
-               let token_id = order.token_id.clone().unwrap();
-               let n_token_id = U256 {
-                   low: token_id.low,
-                   high: token_id.high,
-               };
+            // ERC20 to ERC721 : we check the allowance and the offerer balance.
+            if order.route == RouteType::Erc20ToErc721 {
+                let sn_utils_reader_erc20_address = StarknetUtilsReader::new(
+                    order.currency_address.into(),
+                    self.sn_utils_reader.provider(),
+                );
 
-               // check the current owner of the token.
-               let owner = sn_utils_reader_nft_address.ownerOf(&n_token_id).call().await;
-               if let Ok(owner_address) = owner {
-                   if owner_address != order.offerer {
-                       tracing::trace!("\nOwner {:?} differs from offerer {:?} ", owner, order.offerer);
-                       return false;
-                   }
-               }
+                let allowance = sn_utils_reader_erc20_address
+                    .allowance(&order.offerer, &self.sn_executor_address.into())
+                    .call()
+                    .await;
+                if let Ok(allowance) = allowance {
+                    let n_start_amount = U256 {
+                        low: order.start_amount.low,
+                        high: order.start_amount.high,
+                    };
+                    if allowance < n_start_amount {
+                        tracing::trace!(
+                            "\nAllowance {:?} is not enough {:?} ",
+                            allowance,
+                            order.start_amount
+                        );
+                        println!(
+                            "\nAllowance {:?} is not enough {:?} ",
+                            allowance, order.start_amount
+                        );
+                        return false;
+                    }
+                }
 
-           }
-
-           // ERC20 to ERC721 : we check the allowance and the offerer balance.
-           if order.route == RouteType::Erc20ToErc721 {
-               let sn_utils_reader_erc20_address = StarknetUtilsReader::new(order.currency_address.into(), self.sn_utils_reader.provider());
-
-               let allowance = sn_utils_reader_erc20_address.allowance(&order.offerer, &self.sn_executor_address.into()).call().await;
-               if let Ok(allowance) = allowance {
-                   let n_start_amount = U256 {
-                       low: order.start_amount.low,
-                       high: order.start_amount.high,
-                   };
-                   if allowance < n_start_amount {
-                       tracing::trace!("\nAllowance {:?} is not enough {:?} ", allowance, order.start_amount);
-                       println!("\nAllowance {:?} is not enough {:?} ", allowance, order.start_amount);
-                       return false;
-                   }
-               }
-
-               // check the balance
-               let balance = sn_utils_reader_erc20_address.balanceOf(&order.offerer).call().await;
-               if let Ok(balance) = balance {
-                   let n_start_amount = U256 {
-                       low: order.start_amount.low,
-                       high: order.start_amount.high,
-                   };
-                   if balance < n_start_amount {
-                       tracing::trace!("\nBalance {:?} is not enough {:?} ", balance, order.start_amount);
-                       println!("\nBalance {:?} is not enough {:?} ", balance, order.start_amount);
-                       return false;
-                   }
-               }
-           }
+                // check the balance
+                let balance = sn_utils_reader_erc20_address
+                    .balanceOf(&order.offerer)
+                    .call()
+                    .await;
+                if let Ok(balance) = balance {
+                    let n_start_amount = U256 {
+                        low: order.start_amount.low,
+                        high: order.start_amount.high,
+                    };
+                    if balance < n_start_amount {
+                        tracing::trace!(
+                            "\nBalance {:?} is not enough {:?} ",
+                            balance,
+                            order.start_amount
+                        );
+                        println!(
+                            "\nBalance {:?} is not enough {:?} ",
+                            balance, order.start_amount
+                        );
+                        return false;
+                    }
+                }
+            }
 
             // TODO: check assets on starknet.
             // TODO: if not valid, in some cases we want to send L1HandlerTransaction
             // to change the status of the order. (entrypoint to be written).
-       }
+        }
         true
     }
 
@@ -289,13 +317,14 @@ mod test {
             Ok(calls) => calls,
             Err(e) => {
                 tracing::error!("Fail deserializing OrderV1: {:?}", e);
+                Vec::new()
             }
         };
 
         assert_eq!(calls.len(), 1);
         assert_eq!(
             calls[0].to,
-            felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")
+            felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7").into()
         );
         assert_eq!(calls[0].selector, selector!("transfer"));
         assert_eq!(calls[0].calldata.len(), 3);
