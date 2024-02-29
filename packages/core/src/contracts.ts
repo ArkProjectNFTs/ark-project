@@ -13,5 +13,5 @@ export const DEV_CONTRACTS = {
   "executor": "0x32cee2469074dabb6ee8dcce24df08d79e9ffd5f978163fbdd0704bce269bab",
   "nftContract": "0x305bf776b8976a9709dde4cf307aebed4060e201ab3fca7154ca6db386f13c",
   "eth": "0x144a0c8ae6e665dc3652e164ba2881eda87ad9cb5dcc93d30ca6d61b818014c",
-  "orderbook": "0x1d79fd515a38526eace5872fb3377e5648ea921f320ea8945a09f3f77ecb58d"
+  "orderbook": "0x33b337f2c708c08e49f5e0161658ed093101dd629c3147ad9eea921e6a6afe3"
 };

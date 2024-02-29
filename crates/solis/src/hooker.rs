@@ -180,32 +180,59 @@ impl<P: Provider + Sync + Send + 'static  + std::fmt::Debug> KatanaHooker for So
                }
            };
 
-           let sn_utils_reader = StarknetUtilsReader::new(order.token_address.into(), self.sn_utils_reader.provider());
+           let sn_utils_reader_nft_address = StarknetUtilsReader::new(order.token_address.into(), self.sn_utils_reader.provider());
 
-           tracing::trace!("\nCall: {:?}", call);
+
            // ERC721 to ERC20
            if order.route == RouteType::Erc721ToErc20 {
-               // owner
                let token_id = order.token_id.clone().unwrap();
                let n_token_id = U256 {
                    low: token_id.low,
                    high: token_id.high,
                };
 
-               let owner = sn_utils_reader.ownerOf(&n_token_id).call().await;
+               // check the current owner of the token.
+               let owner = sn_utils_reader_nft_address.ownerOf(&n_token_id).call().await;
                if let Ok(owner_address) = owner {
                    if owner_address != order.offerer {
                        tracing::trace!("\nOwner {:?} differs from offerer {:?} ", owner, order.offerer);
-                       println!("\nOwner {:?} differs from offerer {:?} ", owner, order.offerer);
                        return false;
                    }
                }
 
-               let balance = sn_utils_reader.balanceOf(&order.offerer).call().await;
            }
 
+           // ERC20 to ERC721 : we check the allowance and the offerer balance.
+           if order.route == RouteType::Erc20ToErc721 {
+               let sn_utils_reader_erc20_address = StarknetUtilsReader::new(order.currency_address.into(), self.sn_utils_reader.provider());
 
-           tracing::trace!("Order to verify: {:?}", &order);
+               let allowance = sn_utils_reader_erc20_address.allowance(&order.offerer, &self.sn_executor_address.into()).call().await;
+               if let Ok(allowance) = allowance {
+                   let n_start_amount = U256 {
+                       low: order.start_amount.low,
+                       high: order.start_amount.high,
+                   };
+                   if allowance < n_start_amount {
+                       tracing::trace!("\nAllowance {:?} is not enough {:?} ", allowance, order.start_amount);
+                       println!("\nAllowance {:?} is not enough {:?} ", allowance, order.start_amount);
+                       return false;
+                   }
+               }
+
+               // check the balance
+               let balance = sn_utils_reader_erc20_address.balanceOf(&order.offerer).call().await;
+               if let Ok(balance) = balance {
+                   let n_start_amount = U256 {
+                       low: order.start_amount.low,
+                       high: order.start_amount.high,
+                   };
+                   if balance < n_start_amount {
+                       tracing::trace!("\nBalance {:?} is not enough {:?} ", balance, order.start_amount);
+                       println!("\nBalance {:?} is not enough {:?} ", balance, order.start_amount);
+                       return false;
+                   }
+               }
+           }
 
             // TODO: check assets on starknet.
             // TODO: if not valid, in some cases we want to send L1HandlerTransaction
