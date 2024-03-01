@@ -36,9 +36,11 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
         len => {
             let first_element = field_elements.first().unwrap();
 
-            let a_size =
-                usize::from_str_radix(&first_element.add(FieldElement::ONE).to_string(), 10)
-                    .unwrap();
+            let a_size = first_element
+                .add(FieldElement::ONE)
+                .to_string()
+                .parse::<usize>()
+                .unwrap();
 
             if len == a_size {
                 let results: Result<Vec<_>, _> = field_elements[1..]
@@ -51,10 +53,9 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
                     .map_err(|_| ParseError::ShortStringError)
             } else {
                 let data = field_elements[1..field_elements.len() - 2].to_vec();
-                let pending_word = field_elements[field_elements.len() - 2].clone();
-                let pending_word_len = field_elements[field_elements.len() - 1].clone();
-                let pending_word_len =
-                    usize::from_str_radix(&pending_word_len.to_string(), 10).unwrap();
+                let pending_word = field_elements[field_elements.len() - 2];
+                let pending_word_len = field_elements[field_elements.len() - 1];
+                let pending_word_len = pending_word_len.to_string().parse::<usize>().unwrap();
 
                 let byte_array = ByteArray {
                     data,
