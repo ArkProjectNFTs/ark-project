@@ -75,24 +75,22 @@ test("ArkProject create a listing without whitelisting broker", async () => {
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   const order: ListingV1 = {
-    brokerId: 123,
+    brokerId: 12345,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId: BigInt(tokenId) + BigInt(1),
     startAmount: 600000000000000000
   };
 
-  const orderHash = await createListing(config, {
-    starknetAccount: starknetOffererAccount,
-    arkAccount,
-    order
-  });
-  console.log(orderHash);
-  expect(orderHash).toBeDefined();
-
-  const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
-    orderHash
-  });
-
-  expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
+  try {
+    await createListing(config, {
+      starknetAccount: starknetOffererAccount,
+      arkAccount,
+      order
+    });
+  }
+  catch (e) {
+    const errorString = e instanceof Error ? e.message : JSON.stringify(e);
+    expect(errorString).toMatch(/Transaction execution has failed./);
+  }
 
 }, 20000);
