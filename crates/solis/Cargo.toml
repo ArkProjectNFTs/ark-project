@@ -107,7 +107,7 @@ katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.0-sol
 katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.0-solis" }
 katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.0-solis" }
 
-cainome = { git = "https://github.com/ybensacq/cainome", branch = "feat-add-partial-ord-", features = [
+cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.2.4-fix-ord", features = [
     "abigen-rs",
 ] }
 
