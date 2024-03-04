@@ -8,20 +8,14 @@ import {
   createAccount,
   fetchOrCreateAccount
 } from "../src/actions/account/account";
-import { cancelOrder, createListing } from "../src/actions/order";
+import { createListing } from "../src/actions/order";
 import { getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
 import { whitelistBroker } from "../examples/utils/whitelistBroker";
 
-test("ArkProject Cancel listing should create and then cancel a listing", async () => {
+test("ArkProject create a listing", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);
   expect(arkAccount).toBeDefined();
-
-  const starknetOffererAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
 
   const solisAdminAccount = await fetchOrCreateAccount(
     config.arkProvider,
@@ -35,13 +29,19 @@ test("ArkProject Cancel listing should create and then cancel a listing", async 
     123
   );
 
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  );
+
   await mintERC721(config.starknetProvider, starknetOffererAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   const order: ListingV1 = {
     brokerId: 123,
     tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: tokenId,
+    tokenId: BigInt(tokenId) + BigInt(1),
     startAmount: 600000000000000000
   };
 
@@ -58,25 +58,41 @@ test("ArkProject Cancel listing should create and then cancel a listing", async 
 
   expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
 
-  const cancelInfo = {
-    orderHash: orderHash,
-    tokenAddress: order.tokenAddress,
-    tokenId: order.tokenId
+}, 20000);
+
+test("ArkProject create a listing without whitelisting broker", async () => {
+  const { account: arkAccount } = await createAccount(config.arkProvider);
+  expect(arkAccount).toBeDefined();
+
+
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  );
+
+  await mintERC721(config.starknetProvider, starknetOffererAccount);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+
+  const order: ListingV1 = {
+    brokerId: 123,
+    tokenAddress: STARKNET_NFT_ADDRESS,
+    tokenId: BigInt(tokenId) + BigInt(1),
+    startAmount: 600000000000000000
   };
 
-  cancelOrder(config, {
+  const orderHash = await createListing(config, {
     starknetAccount: starknetOffererAccount,
     arkAccount,
-    cancelInfo
+    order
   });
+  console.log(orderHash);
+  expect(orderHash).toBeDefined();
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+  const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
     orderHash
   });
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
-  expect(shortString.decodeShortString(orderStatusAfter)).toBe(
-    "CANCELLED_USER"
-  );
+
+  expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
+
 }, 20000);
