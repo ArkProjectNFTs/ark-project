@@ -2,17 +2,16 @@ import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Account, AccountInterface, RpcProvider, shortString } from "starknet";
 
+import { config } from "../examples/config"; // Assuming you have a sleep utility function
 import {
   CancelInfo,
   cancelOrder,
   createAccount,
   createListing,
-  getOrderHash,
   getOrderStatus,
   ListingV1
 } from "../src";
 import { generateRandomTokenId, sleep } from "./utils";
-import { config } from "../examples/config"; // Assuming you have a sleep utility function
 
 chai.use(chaiAsPromised);
 
@@ -64,7 +63,7 @@ describe("ArkProject Cancel listing", () => {
 
     // Assert that the order is open
     await expect(
-      getOrderStatus(config, {orderHash}).then((res) =>
+      getOrderStatus(config, { orderHash }).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
@@ -88,7 +87,7 @@ describe("ArkProject Cancel listing", () => {
     await sleep(1000); // Wait for the transaction to be processed
     // Assert that the order was cancelled successfully
     await expect(
-      getOrderStatus(config, {orderHash}).then((res) =>
+      getOrderStatus(config, { orderHash }).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("CANCELLED_USER");

@@ -2,6 +2,7 @@ import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { RpcProvider, shortString } from "starknet";
 
+import { config } from "../examples/config"; // Assuming you have a sleep utility function
 import {
   createAccount,
   createListing,
@@ -9,7 +10,6 @@ import {
   ListingV1
 } from "../src";
 import { generateRandomTokenId, sleep } from "./utils";
-import { config } from "../examples/config"; // Assuming you have a sleep utility function
 
 chai.use(chaiAsPromised);
 
@@ -54,11 +54,10 @@ describe("ArkProject Create listing", () => {
 
     // Assert that the order is open
     await expect(
-      getOrderStatus(config, {orderHash}).then((res) =>
+      getOrderStatus(config, { orderHash }).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
-
   });
 
   it("should fail because offerer is not the owner", async function () {
@@ -75,7 +74,8 @@ describe("ArkProject Create listing", () => {
     // Create a new account using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
     const { account: starknetAccount } = await createAccount(starknetProvider);
-    const { account: starknetAccountOther } = await createAccount(starknetProvider);
+    const { account: starknetAccountOther } =
+      await createAccount(starknetProvider);
 
     expect(arkAccount).to.exist;
     expect(starknetAccount).to.exist;
@@ -102,11 +102,9 @@ describe("ArkProject Create listing", () => {
 
     // Assert that the order is open
     await expect(
-      getOrderStatus(config, {orderHash}).then((res) =>
+      getOrderStatus(config, { orderHash }).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).to.eventually.equal("OPEN");
-
   });
-
 });

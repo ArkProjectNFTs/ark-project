@@ -29,7 +29,6 @@ import { whitelistBroker } from "./utils/whitelistBroker";
  * Creates a listing on the blockchain using provided order details.
  */
 (async () => {
-
   const brokerId = 123;
 
   const solisAdminAccount = await fetchOrCreateAccount(
@@ -39,11 +38,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   );
 
   console.log(`=> Whitelisting broker ${brokerId}`);
-  await whitelistBroker(
-    config,
-    solisAdminAccount,
-    brokerId
-  );
+  await whitelistBroker(config, solisAdminAccount, brokerId);
 
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
