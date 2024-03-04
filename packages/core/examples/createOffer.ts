@@ -47,7 +47,8 @@ import { mintERC20 } from "./utils/mintERC20";
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: 20, // The ID of the token
-    startAmount: 100000000000000000 // The starting amount for the order
+    startAmount: 100000000000000000, // The starting amount for the order
+    currencyAddress: STARKNET_ETH_ADDRESS // The ERC20 address
   };
 
   if (process.env.STARKNET_NETWORK_ID === "dev") {

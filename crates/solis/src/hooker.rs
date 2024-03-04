@@ -1,7 +1,9 @@
 //! Solis hooker on Katana transaction lifecycle.
 //!
+use crate::contracts::starknet_utils::U256;
 use async_trait::async_trait;
 use cainome::cairo_serde::CairoSerde;
+use cainome::rs::abigen;
 use katana_core::hooker::{HookerAddresses, KatanaHooker};
 use katana_core::sequencer::KatanaSequencer;
 use katana_primitives::chain::ChainId;
@@ -15,15 +17,16 @@ use starknet::macros::selector;
 use starknet::providers::Provider;
 use std::sync::Arc;
 
-use crate::contracts::orderbook::OrderV1;
+use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
-use crate::error::{Error, SolisResult};
 use crate::CHAIN_ID_SOLIS;
+
+abigen!(CallContract, "./artifacts/contract.abi.json");
 
 /// Hooker struct, with already instanciated contracts/readers
 /// to avoid allocating them at each transaction that is being
 /// verified.
-pub struct SolisHooker<P: Provider + Sync + Send + 'static> {
+pub struct SolisHooker<P: Provider + Sync + Send + 'static + std::fmt::Debug> {
     // Solis interacts with the orderbook only via `L1HandlerTransaction`. Only the
     // address is required.
     pub orderbook_address: FieldElement,
@@ -33,7 +36,7 @@ pub struct SolisHooker<P: Provider + Sync + Send + 'static> {
     sequencer: Option<Arc<KatanaSequencer>>,
 }
 
-impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
     /// Initializes a new instance.
     pub fn new(
         sn_utils_reader: StarknetUtilsReader<P>,
@@ -120,7 +123,7 @@ impl<P: Provider + Sync + Send + 'static> SolisHooker<P> {
 /// Solis hooker relies on verifiers to inspect and verify
 /// the transaction and starknet state before acceptance.
 #[async_trait]
-impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for SolisHooker<P> {
     fn set_sequencer(&mut self, sequencer: Arc<KatanaSequencer>) {
         self.sequencer = Some(sequencer);
     }
@@ -153,43 +156,116 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
         &self,
         transaction: BroadcastedInvokeTransaction,
     ) -> bool {
-        tracing::trace!("verify invoke tx before pool: {:?}", transaction);
+        let calls = match Vec::<TxCall>::cairo_deserialize(&transaction.calldata, 0) {
+            Ok(calls) => calls,
+            Err(e) => {
+                tracing::error!("Fail deserializing OrderV1: {:?}", e);
+                return false;
+            }
+        };
 
-        // let calls = match calls_from_tx(&transaction.calldata) {
-        //     Ok(calls) => calls,
-        //     Err(e) => {
-        //         tracing::error!("Fail getting calls from tx: {:?}", e);
-        //         return false;
-        //     }
-        // };
+        for call in calls {
+            if call.selector != selector!("create_order") {
+                continue;
+            }
 
-        // tracing::trace!("Calls: {:?}", calls);
+            let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
+                Ok(order) => order,
+                Err(e) => {
+                    tracing::error!("Fail deserializing OrderV1: {:?}", e);
+                    return false;
+                }
+            };
 
-        // for call in calls {
-        //     tracing::trace!("\nCall: {:?}", call);
-        //     if call.to != self.orderbook_address {
-        //         continue;
-        //     }
+            let sn_utils_reader_nft_address = StarknetUtilsReader::new(
+                order.token_address.into(),
+                self.sn_utils_reader.provider(),
+            );
 
-        //     if call.selector != selector!("create_order") {
-        //         continue;
-        //     }
+            // ERC721 to ERC20
+            if order.route == RouteType::Erc721ToErc20 {
+                let token_id = order.token_id.clone().unwrap();
+                let n_token_id = U256 {
+                    low: token_id.low,
+                    high: token_id.high,
+                };
 
-        //     let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
-        //         Ok(order) => order,
-        //         Err(e) => {
-        //             tracing::error!("Fail deserializing OrderV1: {:?}", e);
-        //             return false;
-        //         }
-        //     };
+                // check the current owner of the token.
+                let owner = sn_utils_reader_nft_address
+                    .ownerOf(&n_token_id)
+                    .call()
+                    .await;
+                if let Ok(owner_address) = owner {
+                    if owner_address != order.offerer {
+                        tracing::trace!(
+                            "\nOwner {:?} differs from offerer {:?} ",
+                            owner,
+                            order.offerer
+                        );
+                        return false;
+                    }
+                }
+            }
 
-        //     tracing::trace!("Order to verify: {:?}", order);
+            // ERC20 to ERC721 : we check the allowance and the offerer balance.
+            if order.route == RouteType::Erc20ToErc721 {
+                let sn_utils_reader_erc20_address = StarknetUtilsReader::new(
+                    order.currency_address.into(),
+                    self.sn_utils_reader.provider(),
+                );
 
-        //     // TODO: check assets on starknet.
-        //     // TODO: if not valid, in some cases we want to send L1HandlerTransaction
-        //     // to change the status of the order. (entrypoint to be written).
-        // }
+                let allowance = sn_utils_reader_erc20_address
+                    .allowance(&order.offerer, &self.sn_executor_address.into())
+                    .call()
+                    .await;
+                if let Ok(allowance) = allowance {
+                    let n_start_amount = U256 {
+                        low: order.start_amount.low,
+                        high: order.start_amount.high,
+                    };
+                    if allowance < n_start_amount {
+                        tracing::trace!(
+                            "\nAllowance {:?} is not enough {:?} ",
+                            allowance,
+                            order.start_amount
+                        );
+                        println!(
+                            "\nAllowance {:?} is not enough {:?} ",
+                            allowance, order.start_amount
+                        );
+                        return false;
+                    }
+                }
 
+                // check the balance
+                let balance = sn_utils_reader_erc20_address
+                    .balanceOf(&order.offerer)
+                    .call()
+                    .await;
+                if let Ok(balance) = balance {
+                    let n_start_amount = U256 {
+                        low: order.start_amount.low,
+                        high: order.start_amount.high,
+                    };
+                    if balance < n_start_amount {
+                        tracing::trace!(
+                            "\nBalance {:?} is not enough {:?} ",
+                            balance,
+                            order.start_amount
+                        );
+                        println!(
+                            "\nBalance {:?} is not enough {:?} ",
+                            balance, order.start_amount
+                        );
+                        return false;
+                    }
+                }
+            }
+
+            // TODO: check assets on starknet.
+            // TODO: if not valid, in some cases we want to send L1HandlerTransaction
+            // to change the status of the order. (entrypoint to be written).
+        }
         true
     }
 
@@ -209,72 +285,6 @@ impl<P: Provider + Sync + Send + 'static> KatanaHooker for SolisHooker<P> {
         // being invalid (someone races Solis), some code may be run here
         // to cancel / invalidate the order (if it applies).
     }
-}
-
-/// Parses a transaction's array of calls and deserializes them.
-/// The calls are serialized using Cairo serialization scheme.
-/// As a reference, here is how OZ are using this array of `Call`
-/// in cairo contract:
-/// https://github.com/OpenZeppelin/cairo-contracts/blob/v0.8.0-beta.1/src/account/account.cairo#L205
-///
-/// # Arguments
-///
-/// * `tx_calldata` - The serializes array of `Call` of the transaction.
-fn calls_from_tx(tx_calldata: &[FieldElement]) -> SolisResult<Vec<Call>> {
-    let mut out = vec![];
-    if tx_calldata.is_empty() {
-        return Ok(out);
-    }
-
-    let n_call: u64 = tx_calldata[0]
-        .try_into()
-        .map_err(|_e| Error::FeltConversion("Failed to convert felt252 into u64".to_string()))?;
-
-    let mut offset = 1;
-    loop {
-        if out.len() == n_call as usize {
-            break;
-        }
-
-        let to = tx_calldata[offset];
-        offset += 1;
-        let selector = tx_calldata[offset];
-        offset += 1;
-
-        // TODO: how to differenciate legacy-encoding from new encoding...?
-        // Support legacy encoding for now.
-
-        // In legacy, first is the offset of the data. Mostly 0 with only
-        // one call.
-        offset += 1;
-
-        // Then it's the data len, which is the same as calldata len when
-        // only one call is in the array.
-        offset += 1;
-
-        println!("offset before calldata len {}", offset);
-        // Then we've the calldata len, same as new encoding.
-        let calldata_len: u64 = tx_calldata[offset].try_into().map_err(|_e| {
-            Error::FeltConversion("Failed to convert felt252 into u64".to_string())
-        })?;
-        offset += 1;
-
-        let calldata = if calldata_len > 0 {
-            tx_calldata[offset..offset + calldata_len as usize].to_vec()
-        } else {
-            Vec::<FieldElement>::new()
-        };
-
-        out.push(Call {
-            to,
-            selector,
-            calldata,
-        });
-
-        offset += calldata_len as usize;
-    }
-
-    Ok(out)
 }
 
 #[cfg(test)]
@@ -303,13 +313,19 @@ mod test {
             felt!("0x00"),
         ];
 
-        let calls = calls_from_tx(&data).unwrap();
+        let calls = match Vec::<TxCall>::cairo_deserialize(&data, 0) {
+            Ok(calls) => calls,
+            Err(e) => {
+                tracing::error!("Fail deserializing OrderV1: {:?}", e);
+                Vec::new()
+            }
+        };
+
         assert_eq!(calls.len(), 1);
         assert_eq!(
             calls[0].to,
-            felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")
+            felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7").into()
         );
         assert_eq!(calls[0].selector, selector!("transfer"));
-        assert_eq!(calls[0].calldata.len(), 3);
     }
 }

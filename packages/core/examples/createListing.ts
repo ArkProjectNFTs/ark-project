@@ -6,6 +6,7 @@
  */
 
 import { shortString } from "starknet";
+import { getSolisProvider, getStarknetProvider } from "../../deployer/src/providers";
 
 import "dotenv/config";
 
@@ -22,11 +23,28 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
 import { getTokenOwner } from "./utils/getTokenOwner";
 import { mintERC721 } from "./utils/mintERC721";
+import { whitelistBroker } from "./utils/whitelistBroker";
 
 /**
  * Creates a listing on the blockchain using provided order details.
  */
 (async () => {
+
+  const brokerId = 123;
+
+  const solisAdminAccount = await fetchOrCreateAccount(
+    config.arkProvider,
+    process.env.SOLIS_ADMIN_ADDRESS_DEV,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+  );
+
+  console.log(`=> Whitelisting broker ${brokerId}`);
+  await whitelistBroker(
+    config,
+    solisAdminAccount,
+    brokerId
+  );
+
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(config.arkProvider);
@@ -44,7 +62,9 @@ import { mintERC721 } from "./utils/mintERC721";
   await mintERC721(config.starknetProvider, starknetOffererAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   const owner = await getTokenOwner(config, STARKNET_NFT_ADDRESS, tokenId);
-  console.log(owner);
+  const ownerHex = "0x" + owner.toString(16).padStart(64, '0');
+  console.log("Owner of tokenId", tokenId, "is", ownerHex);
+
   console.log(`=> Approving for all`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
@@ -54,7 +74,7 @@ import { mintERC721 } from "./utils/mintERC721";
   console.log(`=> Creating order`);
   // Define the order details
   const order: ListingV1 = {
-    brokerId: 123, // The broker ID
+    brokerId, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order

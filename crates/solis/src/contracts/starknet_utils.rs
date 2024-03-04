@@ -7,7 +7,6 @@ use starknet::{
 use url::Url;
 
 abigen!(StarknetUtils, "./artifacts/starknet_utils.json");
-
 pub fn new_starknet_utils_reader(
     contract_address: FieldElement,
     provider_url: &str,

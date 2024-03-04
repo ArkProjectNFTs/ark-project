@@ -1,8 +1,9 @@
 import * as starknet from "@scure/starknet";
-import { CallData } from "starknet";
+import { Account, BigNumberish, CallData, Contract } from "starknet";
 
 import { Config } from "../createConfig";
 import { OrderV1 } from "../types";
+import * as sn from "starknet";
 
 export const getOrderHashFromOrderV1 = (order: OrderV1) => {
   const compiledOrder = CallData.compile({

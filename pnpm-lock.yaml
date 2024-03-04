@@ -292,7 +292,7 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1(ts-node@10.9.1)(typescript@5.2.2)
       typescript:
-        specifier: ^5.1.6
+        specifier: ^5.2.2
         version: 5.2.2
 
   packages/deployer:
