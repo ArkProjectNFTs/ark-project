@@ -15,6 +15,8 @@ import { getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
 import { config } from "./config";
 import { STARKNET_NFT_ADDRESS } from "./constants";
+import { getCurrentTokenId } from "./utils/getCurrentTokenId";
+import { mintERC721 } from "./utils/mintERC721";
 
 /**
  * Creates a listing on the blockchain using provided order details.
@@ -31,11 +33,14 @@ import { STARKNET_NFT_ADDRESS } from "./constants";
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
+  await mintERC721(config.starknetProvider, starknetOffererAccount);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+
   // Define the order details
   const order: ListingV1 = {
     brokerId: 123, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 6, // The ID of the token
+    tokenId: tokenId, // The ID of the token
     startAmount: 600000000000000000 // The starting amount for the order
   };
 
