@@ -41,7 +41,7 @@ npx ts-node examples/createListing.ts
 ```
 
 ```bash
-npx ts-node examples/create-offer.ts
+npx ts-node examples/createOffer.ts
 ```
 
 ```bash

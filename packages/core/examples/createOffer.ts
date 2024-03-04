@@ -5,7 +5,7 @@
  * checking the order status
  */
 
-import { shortString } from "starknet";
+import { Contract, shortString } from "starknet";
 
 import "dotenv/config";
 
@@ -20,6 +20,7 @@ import {
 import { config } from "./config";
 import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
 import { mintERC20 } from "./utils/mintERC20";
+import { whitelistBroker } from "./utils/whitelistBroker";
 
 /**
  * Creates a offer on the blockchain using provided order details.
@@ -27,10 +28,20 @@ import { mintERC20 } from "./utils/mintERC20";
 (async () => {
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
+  const brokerId = 123;
 
   console.log(`=> Creating account`);
   // Create a new account for the offer using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
+
+  const solisAdminAccount = await fetchOrCreateAccount(
+    config.arkProvider,
+    process.env.SOLIS_ADMIN_ADDRESS_DEV,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+  );
+
+  console.log(`=> Whitelisting broker ${brokerId}`);
+  await whitelistBroker(config, solisAdminAccount, brokerId);
 
   console.log(
     `=> Fetching or creating offerer starknet account, for test purpose only`
@@ -44,7 +55,7 @@ import { mintERC20 } from "./utils/mintERC20";
   console.log(`=> Creating order`);
   // Define the offer details
   const offer: OfferV1 = {
-    brokerId: 123, // The broker ID
+    brokerId, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: 20, // The ID of the token
     startAmount: 100000000000000000, // The starting amount for the order
