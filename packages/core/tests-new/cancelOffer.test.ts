@@ -58,24 +58,17 @@ describe("ArkProject cancel offer", () => {
       amount: order.startAmount
     });
 
-
     const orderHash = await createOffer(config,{starknetAccount, arkAccount, offer: order });
     await sleep(1000); // Wait for the transaction to be processed
-    /*
         // Use Jest's expect for promise resolution
-        await expect(
-          await getOrderStatus(config, {
-            orderHash
-          }).then((res) =>
-            shortString.decodeShortString(res.orderStatus)
-          )
-        ).resolves.toEqual("OPEN");
+        const r1 = await getOrderStatus(config, { orderHash });
+        const orderStatusBefore = shortString.decodeShortString(r1.orderStatus)
+        expect(orderStatusBefore).toEqual("OPEN");
 
-        await expect(
-          getOrderType(config, {orderHash}).then((res) =>
-            getTypeFromCairoCustomEnum(res.orderType)
-          )
-        ).resolves.toEqual("OFFER");
+        const r2 = await getOrderType(config, { orderHash });
+        const orderType = getTypeFromCairoCustomEnum(r2.orderType);
+
+        expect(orderType).toEqual("OFFER");
 
 
         const cancelInfo = {
@@ -90,10 +83,9 @@ describe("ArkProject cancel offer", () => {
           cancelInfo
         });
 
-        await expect(
-          getOrderStatus(config, {orderHash}).then((res) =>
-            shortString.decodeShortString(res.orderStatus)
-          )
-        ).resolves.toEqual("CANCELLED_USER");*/
+        const r3 = await getOrderStatus(config, { orderHash });
+        const orderStatusAfter = shortString.decodeShortString(r3.orderStatus)
+        expect(orderStatusAfter).toEqual("CANCELLED_USER");
+
   }, 30000);
 });
