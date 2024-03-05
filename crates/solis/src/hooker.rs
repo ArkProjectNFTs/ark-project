@@ -213,7 +213,6 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
                     order.currency_address.into(),
                     self.sn_utils_reader.provider(),
                 );
-
                 let allowance = sn_utils_reader_erc20_address
                     .allowance(&order.offerer, &self.sn_executor_address.into())
                     .call()
