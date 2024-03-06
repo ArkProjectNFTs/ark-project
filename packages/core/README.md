@@ -45,15 +45,15 @@ npx ts-node examples/createOffer.ts
 ```
 
 ```bash
-npx ts-node examples/cancel-offer.ts
+npx ts-node examples/cancelListing.ts
 ```
 
 ```bash
-npx ts-node examples/fulfill-listing.ts
+npx ts-node examples/fulfillListing.ts
 ```
 
 ```bash
-npx ts-node examples/fulfill-offer.ts
+npx ts-node examples/fulfillOffer.ts
 ```
 
 ## Usage
