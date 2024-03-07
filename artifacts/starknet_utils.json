@@ -1,6 +1,52 @@
 [
   {
     "type": "struct",
+    "name": "package_name::ExecutionInfo",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252"
+      },
+      {
+        "name": "nft_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "nft_from",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "nft_to",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "nft_token_id",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "payment_from",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "payment_to",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "payment_amount",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "payment_currency_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "payment_currency_chain_id",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "type": "struct",
     "name": "core::integer::u256",
     "members": [
       {
