@@ -72,7 +72,8 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
 
                 println!(
                     "\nOwner {:?} differs from offerer {:?} ",
-                    owner, ownership_verifier.current_owner
+                    owner,
+                    ownership_verifier.current_owner
                 );
 
                 return false;
@@ -162,17 +163,14 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
 
         // ERC20 to ERC721 : we check the allowance and the offerer balance.
         if order.route == RouteType::Erc20ToErc721 {
-            if !self
-                .verify_balance(&BalanceVerifier {
-                    currency_address: ContractAddress(order.currency_address.into()),
-                    offerer: cainome::cairo_serde::ContractAddress(order.offerer.into()),
-                    start_amount: U256 {
-                        low: order.start_amount.low,
-                        high: order.start_amount.high,
-                    },
-                })
-                .await
-            {
+            if !self.verify_balance(&BalanceVerifier {
+                currency_address: ContractAddress(order.currency_address.into()),
+                offerer: cainome::cairo_serde::ContractAddress(order.offerer.into()),
+                start_amount: U256 {
+                    low: order.start_amount.low,
+                    high: order.start_amount.high,
+                },
+            }).await {
                 println!("verify balance for starknet before failed");
                 return false;
             }
@@ -301,6 +299,7 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         &self,
         transaction: BroadcastedInvokeTransaction,
     ) -> bool {
+
         let calls = match Vec::<TxCall>::cairo_deserialize(&transaction.calldata, 0) {
             Ok(calls) => calls,
             Err(e) => {
@@ -361,6 +360,37 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
             })
             .await
         {
+            return false;
+        }
+
+        let execution_info = match ExecutionInfo::cairo_deserialize(&call.calldata, 0) {
+            Ok(execution_info) => execution_info,
+            Err(e) => {
+                tracing::error!("Fail deserializing ExecutionInfo: {:?}", e);
+                return false;
+            }
+        };
+
+        let verifier = OwnershipVerifier {
+            token_address: ContractAddress(execution_info.nft_address.into()),
+            token_id: execution_info.nft_token_id,
+            current_owner: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into())
+        };
+
+        let owner_ship_verification = self.verify_ownership(&verifier).await;
+        if !owner_ship_verification {
+            println!("verify ownership for starknet before failed");
+            return false;
+        }
+
+        if !self.verify_balance(&BalanceVerifier {
+            currency_address: ContractAddress(execution_info.payment_currency_address.into()),
+            offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_from.into()),
+            start_amount: U256 {
+                low: execution_info.payment_amount.low,
+                high: execution_info.payment_amount.high,
+            },
+        }).await {
             return false;
         }
 

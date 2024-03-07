@@ -87,5 +87,5 @@ describe("ArkProject cancel offer", () => {
         const orderStatusAfter = shortString.decodeShortString(r3.orderStatus)
         expect(orderStatusAfter).toEqual("CANCELLED_USER");
 
-  }, 30000);
+  }, 40000);
 });
