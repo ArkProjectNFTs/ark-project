@@ -2,7 +2,7 @@ import { BigNumberish, shortString } from "starknet";
 
 import { createAccount, fetchOrCreateAccount } from "../src/actions/account/account";
 import { createListing, fulfillListing } from "../src/actions/order";
-import { getOrderHash, getOrderStatus } from "../src/actions/read";
+import { getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
 import { generateRandomTokenId, sleep } from "./utils";
 

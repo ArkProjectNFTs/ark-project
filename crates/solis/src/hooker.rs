@@ -156,7 +156,6 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
 
             let owner_ship_verification = self.verify_ownership(&verifier).await;
             if !owner_ship_verification {
-                println!("verify ownership for starknet before failed");
                 return false;
             }
         }
@@ -379,7 +378,11 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
 
         let owner_ship_verification = self.verify_ownership(&verifier).await;
         if !owner_ship_verification {
-            println!("verify ownership for starknet before failed");
+            // rollback the status
+            self.add_l1_handler_transaction_for_orderbook(
+                selector!("rollback_status_order"),
+                &[execution_info.order_hash],
+            );
             return false;
         }
 
@@ -391,11 +394,13 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
                 high: execution_info.payment_amount.high,
             },
         }).await {
+            // rollback the status
+            self.add_l1_handler_transaction_for_orderbook(
+                selector!("rollback_status_order"),
+                &[execution_info.order_hash],
+            );
             return false;
         }
-
-        println!("order nft_address{:?}", &execution_info.nft_address);
-        println!("order nft_from{:?}", &execution_info.nft_from);
 
         true
     }

@@ -275,6 +275,12 @@ mod orderbook {
         self.emit(OrderExecuted { order_hash: info.order_hash, order_status: order_status });
     }
 
+    /// Update status : only from solis.
+    #[l1_handler]
+    fn rollback_status_order(ref self: ContractState, _from_address: felt252, order_hash: felt252) {
+        order_status_write(order_hash, OrderStatus::Open);
+    }
+
     // *************************************************************************
     // EXTERNAL FUNCTIONS
     // *************************************************************************
