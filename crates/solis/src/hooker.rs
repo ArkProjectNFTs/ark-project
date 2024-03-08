@@ -95,11 +95,6 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
 
         if let Ok(allowance) = allowance {
             if allowance < balance_verifier.start_amount {
-                tracing::trace!(
-                    "\nAllowance {:?} is not enough {:?} ",
-                    allowance,
-                    balance_verifier.start_amount
-                );
                 println!(
                     "\nAllowance {:?} is not enough {:?} for offerer {:?}",
                     allowance, balance_verifier.start_amount, balance_verifier.offerer
@@ -162,14 +157,17 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
 
         // ERC20 to ERC721 : we check the allowance and the offerer balance.
         if order.route == RouteType::Erc20ToErc721 {
-            if !self.verify_balance(&BalanceVerifier {
-                currency_address: ContractAddress(order.currency_address.into()),
-                offerer: cainome::cairo_serde::ContractAddress(order.offerer.into()),
-                start_amount: U256 {
-                    low: order.start_amount.low,
-                    high: order.start_amount.high,
-                },
-            }).await {
+            if !self
+                .verify_balance(&BalanceVerifier {
+                    currency_address: ContractAddress(order.currency_address.into()),
+                    offerer: cainome::cairo_serde::ContractAddress(order.offerer.into()),
+                    start_amount: U256 {
+                        low: order.start_amount.low,
+                        high: order.start_amount.high,
+                    },
+                })
+                .await
+            {
                 println!("verify balance for starknet before failed");
                 return false;
             }
@@ -298,7 +296,6 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         &self,
         transaction: BroadcastedInvokeTransaction,
     ) -> bool {
-
         let calls = match Vec::<TxCall>::cairo_deserialize(&transaction.calldata, 0) {
             Ok(calls) => calls,
             Err(e) => {
@@ -373,7 +370,7 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         let verifier = OwnershipVerifier {
             token_address: ContractAddress(execution_info.nft_address.into()),
             token_id: execution_info.nft_token_id,
-            current_owner: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into())
+            current_owner: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into()),
         };
 
         let owner_ship_verification = self.verify_ownership(&verifier).await;
@@ -386,14 +383,17 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
             return false;
         }
 
-        if !self.verify_balance(&BalanceVerifier {
-            currency_address: ContractAddress(execution_info.payment_currency_address.into()),
-            offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_from.into()),
-            start_amount: U256 {
-                low: execution_info.payment_amount.low,
-                high: execution_info.payment_amount.high,
-            },
-        }).await {
+        if !self
+            .verify_balance(&BalanceVerifier {
+                currency_address: ContractAddress(execution_info.payment_currency_address.into()),
+                offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_from.into()),
+                start_amount: U256 {
+                    low: execution_info.payment_amount.low,
+                    high: execution_info.payment_amount.high,
+                },
+            })
+            .await
+        {
             // rollback the status
             self.add_l1_handler_transaction_for_orderbook(
                 selector!("rollback_status_order"),
