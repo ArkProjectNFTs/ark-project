@@ -38,11 +38,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   );
 
   console.log(`=> Whitelisting broker ${brokerId}`);
-  await whitelistBroker(
-    config,
-    solisAdminAccount,
-    brokerId
-  );
+  await whitelistBroker(config, solisAdminAccount, brokerId);
 
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;

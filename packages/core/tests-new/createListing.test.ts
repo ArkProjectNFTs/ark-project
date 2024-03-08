@@ -4,6 +4,7 @@ import { config } from "../examples/config";
 import { STARKNET_NFT_ADDRESS } from "../examples/constants";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
 import { mintERC721 } from "../examples/utils/mintERC721";
+import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
   createAccount,
   fetchOrCreateAccount
@@ -11,7 +12,6 @@ import {
 import { createListing } from "../src/actions/order";
 import { getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
-import { whitelistBroker } from "../examples/utils/whitelistBroker";
 
 test("ArkProject create a listing", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);
@@ -23,11 +23,7 @@ test("ArkProject create a listing", async () => {
     process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
   );
 
-  await whitelistBroker(
-    config,
-    solisAdminAccount,
-    123
-  );
+  await whitelistBroker(config, solisAdminAccount, 123);
 
   const starknetOffererAccount = await fetchOrCreateAccount(
     config.starknetProvider,
@@ -57,13 +53,11 @@ test("ArkProject create a listing", async () => {
   });
 
   expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
-
 }, 20000);
 
 test("ArkProject create a listing without whitelisting broker", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);
   expect(arkAccount).toBeDefined();
-
 
   const starknetOffererAccount = await fetchOrCreateAccount(
     config.starknetProvider,
@@ -87,10 +81,8 @@ test("ArkProject create a listing without whitelisting broker", async () => {
       arkAccount,
       order
     });
-  }
-  catch (e) {
+  } catch (e) {
     const errorString = e instanceof Error ? e.message : JSON.stringify(e);
     expect(errorString).toMatch(/Transaction execution has failed./);
   }
-
 }, 20000);

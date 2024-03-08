@@ -8,10 +8,10 @@
   "sepolia": {},
   "mainnet": {},
   "dev": {
-    "messaging": "0x53a0b0ca4b9d248dff574299c98340b67197f7ffc79df9afef66d01e83022c6",
-    "executor": "0x32cee2469074dabb6ee8dcce24df08d79e9ffd5f978163fbdd0704bce269bab",
-    "nftContract": "0x305bf776b8976a9709dde4cf307aebed4060e201ab3fca7154ca6db386f13c",
-    "eth": "0x144a0c8ae6e665dc3652e164ba2881eda87ad9cb5dcc93d30ca6d61b818014c",
-    "orderbook": "0x33b337f2c708c08e49f5e0161658ed093101dd629c3147ad9eea921e6a6afe3"
+    "messaging": "0x7577b258cdfaee586933097fd2407ab40f73814a355b6af8508515dd5abe752",
+    "executor": "0x6c07c302d12d3798b83549356b9cd3c99607a5adbbf18ec7b7360bff75c4109",
+    "nftContract": "0x42cd09375b6744dbba98cc5e966c6de785ac5d47331df712f990c32bf3c7339",
+    "eth": "0x4007c4afac7b79c2119c1d417e3106294cb28d92bdfba26474e8e250b1e91c9",
+    "orderbook": "0x74e0489622f837f00cffe63cb4acaaed3f2ad38eec11218eabcdc4f09cfa644"
   }
 }

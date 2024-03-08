@@ -4,6 +4,7 @@ import { config } from "../examples/config";
 import { STARKNET_NFT_ADDRESS } from "../examples/constants";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
 import { mintERC721 } from "../examples/utils/mintERC721";
+import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
   createAccount,
   fetchOrCreateAccount
@@ -11,7 +12,6 @@ import {
 import { cancelOrder, createListing } from "../src/actions/order";
 import { getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
-import { whitelistBroker } from "../examples/utils/whitelistBroker";
 
 test("ArkProject Cancel listing should create and then cancel a listing", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);
@@ -29,11 +29,7 @@ test("ArkProject Cancel listing should create and then cancel a listing", async 
     process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
   );
 
-  await whitelistBroker(
-    config,
-    solisAdminAccount,
-    123
-  );
+  await whitelistBroker(config, solisAdminAccount, 123);
 
   await mintERC721(config.starknetProvider, starknetOffererAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
