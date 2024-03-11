@@ -100,8 +100,8 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
                     balance_verifier.start_amount
                 );
                 println!(
-                    "\nAllowance {:?} is not enough {:?} ",
-                    allowance, balance_verifier.start_amount
+                    "\nAllowance {:?} is not enough {:?} for offerer {:?}",
+                    allowance, balance_verifier.start_amount, balance_verifier.offerer
                 );
                 return false;
             }
@@ -336,23 +336,10 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
             }
         };
 
-        println!(
-            "verify balance for starknet before from : {:?}",
-            execution_info.nft_from
-        );
-        println!(
-            "verify balance for starknet before to : {:?}",
-            execution_info.nft_to
-        );
-        println!(
-            "verify balance for starknet before amount : {:?}",
-            execution_info.payment_amount.low
-        );
-
         let verifier = OwnershipVerifier {
             token_address: ContractAddress(execution_info.nft_address.into()),
             token_id: execution_info.nft_token_id,
-            current_owner: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into()),
+            current_owner: cainome::cairo_serde::ContractAddress(execution_info.nft_from.into()),
         };
 
         let owner_ship_verification = self.verify_ownership(&verifier).await;
@@ -364,7 +351,7 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         if !self
             .verify_balance(&BalanceVerifier {
                 currency_address: ContractAddress(execution_info.payment_currency_address.into()),
-                offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_from.into()),
+                offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into()),
                 start_amount: U256 {
                     low: execution_info.payment_amount.low,
                     high: execution_info.payment_amount.high,
