@@ -1,5 +1,6 @@
 import { shortString } from "starknet";
 
+import { OfferV1 } from "../dist";
 import { config } from "../examples/config";
 import {
   STARKNET_ETH_ADDRESS,
@@ -14,8 +15,7 @@ import {
   createOffer,
   fetchOrCreateAccount,
   getOrderStatus,
-  getOrderType,
-  ListingV1
+  getOrderType
 } from "../src";
 import { generateRandomTokenId, getTypeFromCairoCustomEnum } from "./utils";
 
@@ -32,52 +32,59 @@ describe("ArkProject cancel offer", () => {
     await whitelistBroker(config, solisAdminAccount, 123);
 
     const { account: arkAccount } = await createAccount(arkProvider);
-    const { account: starknetAccount } = await createAccount(starknetProvider);
-    const order: ListingV1 = {
+    const starknetOffererAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
+
+    const offerStarAmount = 600000000000000000;
+
+    await mintERC20(starknetProvider, starknetOffererAccount, offerStarAmount);
+
+    const offer: OfferV1 = {
       brokerId: 123,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId: generateRandomTokenId(),
-      startAmount: 600000000000000000,
+      startAmount: offerStarAmount,
       currencyAddress: STARKNET_ETH_ADDRESS // The ERC20 address
     };
 
-    await mintERC20(starknetProvider, starknetAccount, order.startAmount);
-
     await approveERC20(config, {
-      starknetAccount: starknetAccount,
+      starknetAccount: starknetOffererAccount,
       contractAddress: STARKNET_ETH_ADDRESS,
-      amount: order.startAmount
+      amount: offer.startAmount
     });
 
     const orderHash = await createOffer(config, {
-      starknetAccount,
+      starknetAccount: starknetOffererAccount,
       arkAccount,
-      offer: order
+      offer: offer
     });
-
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const r1 = await getOrderStatus(config, { orderHash });
     const orderStatusBefore = shortString.decodeShortString(r1.orderStatus);
     expect(orderStatusBefore).toEqual("OPEN");
 
     const r2 = await getOrderType(config, { orderHash });
     const orderType = getTypeFromCairoCustomEnum(r2.orderType);
-
     expect(orderType).toEqual("OFFER");
 
     const cancelInfo = {
       orderHash: orderHash,
-      tokenAddress: order.tokenAddress,
-      tokenId: order.tokenId
+      tokenAddress: offer.tokenAddress,
+      tokenId: offer.tokenId
     };
 
     await cancelOrder(config, {
-      starknetAccount,
+      starknetAccount: starknetOffererAccount,
       arkAccount,
       cancelInfo
     });
 
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const r3 = await getOrderStatus(config, { orderHash });
     const orderStatusAfter = shortString.decodeShortString(r3.orderStatus);
     expect(orderStatusAfter).toEqual("CANCELLED_USER");
-  }, 30000);
+  }, 35000);
 });

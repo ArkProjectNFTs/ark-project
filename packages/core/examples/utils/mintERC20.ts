@@ -18,7 +18,7 @@ export const mintERC20 = async (
   if (erc20abi === undefined) {
     throw new Error("no abi.");
   }
-
+  console.log(STARKNET_ETH_ADDRESS);
   const mintERC20Call: Call = {
     contractAddress: STARKNET_ETH_ADDRESS,
     entrypoint: "mint",
@@ -26,5 +26,7 @@ export const mintERC20 = async (
   };
 
   const result = await starknetAccount.execute(mintERC20Call, [erc20abi]);
+  console.log("Mint ERC20 result", result.transaction_hash);
   await provider.waitForTransaction(result.transaction_hash);
+  return result.transaction_hash;
 };
