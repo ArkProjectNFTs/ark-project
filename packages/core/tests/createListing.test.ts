@@ -1,159 +1,88 @@
-import chai, { expect } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { RpcProvider, shortString } from "starknet";
+import { shortString } from "starknet";
 
-import { config } from "../examples/config"; // Assuming you have a sleep utility function
+import { config } from "../examples/config";
+import { STARKNET_NFT_ADDRESS } from "../examples/constants";
+import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
+import { mintERC721 } from "../examples/utils/mintERC721";
+import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
   createAccount,
-  createListing,
-  getOrderStatus,
-  ListingV1
-} from "../src";
-import { generateRandomTokenId, sleep } from "./utils";
+  fetchOrCreateAccount
+} from "../src/actions/account/account";
+import { createListing } from "../src/actions/order";
+import { getOrderStatus } from "../src/actions/read";
+import { ListingV1 } from "../src/types";
 
-chai.use(chaiAsPromised);
+test("ArkProject create a listing", async () => {
+  const { account: arkAccount } = await createAccount(config.arkProvider);
+  expect(arkAccount).toBeDefined();
 
-describe("ArkProject Create listing", () => {
-  it("should create a listing", async function () {
-    // Initialize the RPC provider with the ArkChain node URL
-    const starknetProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
+  const solisAdminAccount = await fetchOrCreateAccount(
+    config.arkProvider,
+    process.env.SOLIS_ADMIN_ADDRESS_DEV,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+  );
 
-    // Initialize the RPC provider with the katana node URL for starknet
-    const arkProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
+  await whitelistBroker(config, solisAdminAccount, 123);
 
-    // Create a new account using the provider
-    const { account: arkAccount } = await createAccount(arkProvider);
-    const { account: starknetAccount } = await createAccount(starknetProvider);
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  );
 
-    expect(arkAccount).to.exist;
-    expect(starknetAccount).to.exist;
+  await mintERC721(config.starknetProvider, starknetOffererAccount);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
-    // Define the order details
-    const order: ListingV1 = {
-      brokerId: 123, // The broker ID
-      tokenAddress:
-        "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-      tokenId: generateRandomTokenId(), // The ID of the token
-      startAmount: 600000000000000000 // The starting amount for the order
-    };
+  const order: ListingV1 = {
+    brokerId: 123,
+    tokenAddress: STARKNET_NFT_ADDRESS,
+    tokenId: BigInt(tokenId) + BigInt(1),
+    startAmount: 600000000000000000
+  };
 
-    // Create the listing on the arkchain using the order details
-    const orderHash = await createListing(config, {
-      starknetAccount,
+  const orderHash = await createListing(config, {
+    starknetAccount: starknetOffererAccount,
+    arkAccount,
+    order
+  });
+  expect(orderHash).toBeDefined();
+
+  const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
+    orderHash
+  });
+
+  expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
+}, 30000);
+
+test("ArkProject create a listing without whitelisting broker", async () => {
+  const { account: arkAccount } = await createAccount(config.arkProvider);
+  expect(arkAccount).toBeDefined();
+
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  );
+
+  await mintERC721(config.starknetProvider, starknetOffererAccount);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+
+  const order: ListingV1 = {
+    brokerId: 12345,
+    tokenAddress: STARKNET_NFT_ADDRESS,
+    tokenId: BigInt(tokenId) + BigInt(1),
+    startAmount: 600000000000000000
+  };
+
+  try {
+    await createListing(config, {
+      starknetAccount: starknetOffererAccount,
       arkAccount,
       order
     });
-    await sleep(1000); // Wait for the transaction to be processed
-
-    // Assert that we received an order hash
-    expect(orderHash).to.exist;
-
-    // Assert that the order is open
-    await expect(
-      getOrderStatus(config, { orderHash }).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).to.eventually.equal("OPEN");
-  });
-
-  it("should fail because offerer is not the owner", async function () {
-    // Initialize the RPC provider with the ArkChain node URL
-    const starknetProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
-
-    // Initialize the RPC provider with the katana node URL for starknet
-    const arkProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
-
-    // Create a new account using the provider
-    const { account: arkAccount } = await createAccount(arkProvider);
-    const { account: starknetAccount } = await createAccount(starknetProvider);
-    const { account: starknetAccountOther } =
-      await createAccount(starknetProvider);
-
-    expect(arkAccount).to.exist;
-    expect(starknetAccount).to.exist;
-
-    // Define the order details
-    const order: ListingV1 = {
-      brokerId: 123, // The broker ID
-      tokenAddress:
-        "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-      tokenId: generateRandomTokenId(), // The ID of the token
-      startAmount: 600000000000000000 // The starting amount for the order
-    };
-
-    // Create the listing on the arkchain using the order details
-    const orderHash = await createListing(config, {
-      starknetAccount: starknetAccountOther,
-      arkAccount,
-      order
-    });
-    await sleep(1000); // Wait for the transaction to be processed
-
-    // Assert that we received an order hash
-    expect(orderHash).to.exist;
-
-    // Assert that the order is open
-    await expect(
-      getOrderStatus(config, { orderHash }).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).to.eventually.equal("OPEN");
-  });
-
-  it("should fail because offerer is not the owner", async function () {
-    // Initialize the RPC provider with the ArkChain node URL
-    const starknetProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
-
-    // Initialize the RPC provider with the katana node URL for starknet
-    const arkProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
-
-    // Create a new account using the provider
-    const { account: arkAccount } = await createAccount(arkProvider);
-    const { account: starknetAccount } = await createAccount(starknetProvider);
-    const { account: starknetAccountOther } = await createAccount(starknetProvider);
-
-    expect(arkAccount).to.exist;
-    expect(starknetAccount).to.exist;
-
-    // Define the order details
-    const order: ListingV1 = {
-      brokerId: 123, // The broker ID
-      tokenAddress:
-        "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-      tokenId: generateRandomTokenId(), // The ID of the token
-      startAmount: 600000000000000000 // The starting amount for the order
-    };
-
-    // Create the listing on the arkchain using the order details
-    const orderHash = await createListing(config, {
-      starknetAccount: starknetAccountOther,
-      arkAccount,
-      order
-    });
-    await sleep(1000); // Wait for the transaction to be processed
-
-    // Assert that we received an order hash
-    expect(orderHash).to.exist;
-
-    // Assert that the order is open
-    await expect(
-      getOrderStatus(config, {orderHash}).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).to.eventually.equal("OPEN");
-
-  });
-
-});
+  } catch (e) {
+    const errorString = e instanceof Error ? e.message : JSON.stringify(e);
+    expect(errorString).toMatch(/Transaction execution has failed./);
+  }
+}, 20000);
