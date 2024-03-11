@@ -6,12 +6,11 @@ import {
   STARKNET_NFT_ADDRESS
 } from "../examples/constants";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
-import { getTokenOwner } from "../examples/utils/getTokenOwner";
 import { mintERC20 } from "../examples/utils/mintERC20";
 import { mintERC721 } from "../examples/utils/mintERC721";
 import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
-  approveERC20,
+  approveERC20, approveERC721,
   createAccount,
   createOffer,
   fetchOrCreateAccount,
@@ -19,7 +18,7 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
-import { generateRandomTokenId } from "./utils";
+import { getTokenOwner } from "../examples/utils/getTokenOwner";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fulfill the offer", async function () {
@@ -35,20 +34,34 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     // Create a new account for the listing using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
-    const starknetOffererAccount = await fetchOrCreateAccount(
+
+    // Create a new account for fulfilling the offer
+    const starknetFulfillerAccount = await fetchOrCreateAccount(
       config.starknetProvider,
-      process.env.STARKNET_ACCOUNT1_ADDRESS,
-      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+      process.env.STARKNET_ACCOUNT2_ADDRESS,
+      process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
     );
+
+    expect(starknetFulfillerAccount).toBeDefined();
+
+
+    await mintERC721(starknetProvider, starknetFulfillerAccount);
+
+    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
     // Define the order details
     const order: OfferV1 = {
       brokerId: 123, // The broker ID
       tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-      tokenId: generateRandomTokenId(), // The ID of the token
+      tokenId, // The ID of the token
       startAmount: 600000000000000000, // The starting amount for the order
-      currencyAddress: STARKNET_ETH_ADDRESS // The ERC20 address
     };
+
+    const starknetOffererAccount = await fetchOrCreateAccount(
+      starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
 
     await mintERC20(
       starknetProvider,
@@ -72,6 +85,11 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     expect(orderHash).toBeDefined();
 
+    await approveERC721(config, {
+      contractAddress: STARKNET_NFT_ADDRESS,
+      starknetAccount: starknetFulfillerAccount
+    });
+
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     await expect(
@@ -80,17 +98,8 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       )
     ).resolves.toEqual("OPEN");
 
-    // Create a new account for fulfilling the offer
-    const starknetFulfillerAccount = await fetchOrCreateAccount(
-      config.starknetProvider,
-      process.env.STARKNET_ACCOUNT2_ADDRESS,
-      process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
-    );
-
-    expect(starknetFulfillerAccount).toBeDefined();
-
     // Define the fulfill details
-    const fulfill_info = {
+    const fulfillOfferInfo = {
       orderHash,
       tokenAddress: order.tokenAddress,
       tokenId: order.tokenId,
@@ -101,8 +110,9 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     await fulfillOffer(config, {
       starknetAccount: starknetFulfillerAccount,
       arkAccount,
-      fulfillOfferInfo: fulfill_info
+      fulfillOfferInfo
     });
+
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
@@ -111,7 +121,15 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
         shortString.decodeShortString(res.orderStatus)
       )
     ).resolves.toEqual("FULFILLED");
-  }, 40000);
+
+    await new Promise((resolve) => setTimeout(resolve, 6000));
+    await expect(
+      getOrderStatus(config, { orderHash }).then((res) =>
+        shortString.decodeShortString(res.orderStatus)
+      )
+    ).resolves.toEqual("EXECUTED");
+
+  }, 60000);
 
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
     const { arkProvider, starknetProvider } = config;
@@ -173,14 +191,6 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       await createAccount(starknetProvider);
 
     expect(starknetFulfillerAccount).toBeDefined();
-
-    // change owner of token
-    /* await changeTokenOwner(config,
-      STARKNET_NFT_ADDRESS,
-      starknetOwner.address,
-      starknetFulfillerAccount.address,
-      order.tokenId
-    );*/
 
     // Define the fulfill details
     const fulfill_info = {
