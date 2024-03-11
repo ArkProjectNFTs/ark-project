@@ -1,4 +1,4 @@
-import { Contract, shortString } from "starknet";
+import { shortString } from "starknet";
 
 import { config } from "../examples/config";
 import {
@@ -10,7 +10,8 @@ import { mintERC20 } from "../examples/utils/mintERC20";
 import { mintERC721 } from "../examples/utils/mintERC721";
 import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
-  approveERC20, approveERC721,
+  approveERC20,
+  approveERC721,
   createAccount,
   createOffer,
   fetchOrCreateAccount,
@@ -18,7 +19,6 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
-import { getTokenOwner } from "../examples/utils/getTokenOwner";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fulfill the offer", async function () {
@@ -44,7 +44,6 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     expect(starknetFulfillerAccount).toBeDefined();
 
-
     await mintERC721(starknetProvider, starknetFulfillerAccount);
 
     const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
@@ -54,7 +53,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       brokerId: 123, // The broker ID
       tokenAddress: STARKNET_NFT_ADDRESS, // The token address
       tokenId, // The ID of the token
-      startAmount: 600000000000000000, // The starting amount for the order
+      startAmount: 600000000000000000 // The starting amount for the order
     };
 
     const starknetOffererAccount = await fetchOrCreateAccount(
@@ -113,22 +112,17 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       fulfillOfferInfo
     });
 
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const { orderStatus: orderStatusBetween } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    await expect(
-      getOrderStatus(config, { orderHash }).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).resolves.toEqual("FULFILLED");
-
-    await new Promise((resolve) => setTimeout(resolve, 7000));
-    await expect(
-      getOrderStatus(config, { orderHash }).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).resolves.toEqual("EXECUTED");
-
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
   }, 60000);
 
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
@@ -142,14 +136,28 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await whitelistBroker(config, solisAdminAccount, 123);
 
-    const { account: starknetOwner } = await createAccount(starknetProvider);
     const { account: arkAccount } = await createAccount(arkProvider);
+    // Create a new account for the listing using the provider
+    const starknetFulfillerAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT2_ADDRESS,
+      process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
+    );
 
-    await mintERC721(config.starknetProvider, starknetOwner);
+    await mintERC721(config.starknetProvider, starknetFulfillerAccount);
+    await approveERC721(config, {
+      contractAddress: STARKNET_NFT_ADDRESS,
+      starknetAccount: starknetFulfillerAccount
+    });
+
     const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
     // Create a new account for the listing using the provider
-    const { account: starknetAccount } = await createAccount(starknetProvider);
+    const starknetAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
 
     // Define the order details
     const order: OfferV1 = {
@@ -180,15 +188,10 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    await expect(
-      getOrderStatus(config, { orderHash }).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).resolves.toEqual("OPEN");
-
-    // Create a new account for fulfilling the offer
-    const { account: starknetFulfillerAccount } =
-      await createAccount(starknetProvider);
+    const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
 
     expect(starknetFulfillerAccount).toBeDefined();
 
@@ -207,39 +210,10 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       fulfillOfferInfo: fulfill_info
     });
 
-    const compressedContract =
-      await config?.starknetProvider.getClassAt(STARKNET_ETH_ADDRESS);
-
-    const tokenContract = new Contract(
-      compressedContract?.abi,
-      STARKNET_ETH_ADDRESS,
-      config.starknetProvider
-    );
-
-    const allowance = await tokenContract.allowance(
-      starknetFulfillerAccount.address,
-      config?.starknetContracts.executor
-    );
-
-    const balance = await tokenContract.allowance(
-      starknetFulfillerAccount.address,
-      config?.starknetContracts.executor
-    );
-
-    const owner = await getTokenOwner(config, STARKNET_NFT_ADDRESS, tokenId);
-
-    console.log("allowance", allowance.toString());
-    console.log("balance", balance.toString());
-    const ownerHex = "0x" + owner.toString(16).padStart(64, "0");
-    console.log("Owner of tokenId", tokenId, "is", ownerHex);
-    console.log("offerer", starknetFulfillerAccount.address);
-
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    await expect(
-      getOrderStatus(config, { orderHash }).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).resolves.toEqual("FULFILLED");
-  }, 50000);
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const { orderStatus: orderStatusBetween } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
+  }, 60000);
 });

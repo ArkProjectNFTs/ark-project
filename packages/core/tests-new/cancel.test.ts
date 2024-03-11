@@ -71,7 +71,6 @@ test("ArkProject Cancel listing should create and then cancel a listing", async 
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash
   });
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
   expect(shortString.decodeShortString(orderStatusAfter)).toBe(
     "CANCELLED_USER"
   );
