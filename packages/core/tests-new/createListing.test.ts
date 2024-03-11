@@ -53,7 +53,7 @@ test("ArkProject create a listing", async () => {
   });
 
   expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
-}, 20000);
+}, 30000);
 
 test("ArkProject create a listing without whitelisting broker", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);

@@ -146,7 +146,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
     );
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   } else {
-    await new Promise((resolve) => setTimeout(resolve, 6000));
+    await new Promise((resolve) => setTimeout(resolve, 10000));
   }
 
   console.log("=> Fetching order status...");

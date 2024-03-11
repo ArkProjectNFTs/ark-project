@@ -114,7 +114,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     });
 
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     await expect(
       getOrderStatus(config, { orderHash }).then((res) =>
@@ -122,7 +122,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       )
     ).resolves.toEqual("FULFILLED");
 
-    await new Promise((resolve) => setTimeout(resolve, 6000));
+    await new Promise((resolve) => setTimeout(resolve, 7000));
     await expect(
       getOrderStatus(config, { orderHash }).then((res) =>
         shortString.decodeShortString(res.orderStatus)
