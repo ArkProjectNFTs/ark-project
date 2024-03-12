@@ -19,6 +19,7 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
+import { changeTokenOwner } from "../examples/utils/changeTokenOwner";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fulfill the offer", async function () {
@@ -203,6 +204,8 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       brokerId: 123
     };
 
+    await changeTokenOwner(config, STARKNET_NFT_ADDRESS, starknetFulfillerAccount, starknetAccount.address, tokenId);
+
     // Fulfill the offer
     await fulfillOffer(config, {
       starknetAccount: starknetFulfillerAccount,
@@ -210,7 +213,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       fulfillOfferInfo: fulfill_info
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 7000));
     const { orderStatus: orderStatusBetween } = await getOrderStatus(config, {
       orderHash
     });

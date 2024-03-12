@@ -1,13 +1,14 @@
-import { BigNumberish, cairo, CairoOption, CairoOptionVariant, CallData, Uint256 } from "starknet";
+import { AccountInterface, BigNumberish, cairo, CairoOption, CairoOptionVariant, CallData, Uint256 } from "starknet";
 
 import { Config } from "../../src/createConfig";
 import { fetchOrCreateAccount } from "../../src";
 import { getCurrentTokenId } from "./getCurrentTokenId";
+import { config } from "../config";
 
 export const changeTokenOwner = async (
   config: Config,
   nftContractAddress: string,
-  from: string,
+  owner: AccountInterface,
   to: string,
   tokenId: BigNumberish
 ) => {
@@ -16,26 +17,13 @@ export const changeTokenOwner = async (
     throw new Error("no abi.");
   }
 
-  const token =  new CairoOption<Uint256>(
-    CairoOptionVariant.Some,
-    cairo.uint256(tokenId)
-  );
-
-  const adminAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV
-  );
-
-  const nTokenId = await getCurrentTokenId(config, nftContractAddress) +  BigInt(1);
-  console.log("nTokenId", nTokenId)
   const hash_calldata = CallData.compile({
-    from,
+    from: owner.address,
     to,
-    tokenId: cairo.uint256(nTokenId),
+    tokenId: cairo.uint256(tokenId),
   });
 
-  const result = await adminAccount.execute({
+  const result = await owner.execute({
     contractAddress: config.starknetContracts.nftContract,
     entrypoint: "transfer_from",
     calldata: hash_calldata
