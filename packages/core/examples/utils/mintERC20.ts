@@ -26,6 +26,8 @@ export const mintERC20 = async (
   };
 
   const result = await starknetAccount.execute(mintERC20Call, [erc20abi]);
-  await provider.waitForTransaction(result.transaction_hash);
+  await provider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
+  });
   return result.transaction_hash;
 };

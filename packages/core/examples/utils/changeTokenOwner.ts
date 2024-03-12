@@ -1,9 +1,6 @@
-import { AccountInterface, BigNumberish, cairo, CairoOption, CairoOptionVariant, CallData, Uint256 } from "starknet";
+import { AccountInterface, BigNumberish, cairo, CallData } from "starknet";
 
 import { Config } from "../../src/createConfig";
-import { fetchOrCreateAccount } from "../../src";
-import { getCurrentTokenId } from "./getCurrentTokenId";
-import { config } from "../config";
 
 export const changeTokenOwner = async (
   config: Config,
@@ -20,15 +17,14 @@ export const changeTokenOwner = async (
   const hash_calldata = CallData.compile({
     from: owner.address,
     to,
-    tokenId: cairo.uint256(tokenId),
+    tokenId: cairo.uint256(tokenId)
   });
 
-  const result = await owner.execute({
+  await owner.execute({
     contractAddress: config.starknetContracts.nftContract,
     entrypoint: "transfer_from",
     calldata: hash_calldata
   });
 
-  console.log("result change", result)
   return;
 };

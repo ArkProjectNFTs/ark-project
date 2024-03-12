@@ -118,5 +118,5 @@ describe("ArkProject Listing", () => {
       orderHash
     });
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
-  }, 60000);
+  }, 30000);
 });

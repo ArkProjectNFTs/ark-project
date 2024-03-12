@@ -9,9 +9,9 @@ export const GOERLI_CONTRACTS = {
 export const SEPOLIA_CONTRACTS = {};
 export const MAINNET_CONTRACTS = {};
 export const DEV_CONTRACTS = {
-  "messaging": "0x130b19a105839bef30311cd197dea6796b5c0d0c330f75ee4109808e9710a8d",
-  "executor": "0x7c62c109647896d8b4ed0362512d421a3c7f3f3fbc91ecbf21750f51602931d",
-  "nftContract": "0x79a3ff14e4708933c59cf66c1772ff5023ffa0680b26ea819768ce7bd696dba",
-  "eth": "0x144a0c8ae6e665dc3652e164ba2881eda87ad9cb5dcc93d30ca6d61b818014c",
-  "orderbook": "0x4ef6415a131b80898f08059b9b96574d6164e13df53e46d374849b52d080cb1"
+  "nftContract": "0x6f63d7d261c2d2c5409ba80ab0b235303fdcd01daeef61ca5ae7238285d7b78",
+  "eth": "0x7b8fc5c78bf249bb4173ef45267da1a710c65d76bb9ff03deb6b8fc21f35ba4",
+  "messaging": "0x38e142d3d69cfe6757fd9d11704652f6bd8302dd23f483555e9b5698bf69d5",
+  "executor": "0x1f303987f8a61ee25d5a153791fd778f0c478947bb32613d15fc8194e0360a6",
+  "orderbook": "0x3d7a3a02741c905fdb3cccf14e376a7d64c8cb071874f47f0b01d73015eae6b"
 };

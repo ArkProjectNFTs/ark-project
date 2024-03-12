@@ -33,7 +33,9 @@ export const approveERC721 = async (
   };
 
   const result = await starknetAccount.execute(approveCall, [erc721abi]);
-  await config.starknetProvider.waitForTransaction(result.transaction_hash);
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
+  });
 };
 
 interface ERC20Parameters {
@@ -65,7 +67,9 @@ export const approveERC20 = async (
 
   const result = await starknetAccount.execute(approuveERC20Call, [erc20abi]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash);
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
+  });
 
   return result;
 };

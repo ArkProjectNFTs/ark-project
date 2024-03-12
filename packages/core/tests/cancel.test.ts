@@ -74,4 +74,4 @@ test("ArkProject Cancel listing should create and then cancel a listing", async 
   expect(shortString.decodeShortString(orderStatusAfter)).toBe(
     "CANCELLED_USER"
   );
-}, 20000);
+}, 15000);

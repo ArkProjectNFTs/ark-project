@@ -86,5 +86,5 @@ describe("ArkProject cancel offer", () => {
     const r3 = await getOrderStatus(config, { orderHash });
     const orderStatusAfter = shortString.decodeShortString(r3.orderStatus);
     expect(orderStatusAfter).toEqual("CANCELLED_USER");
-  }, 35000);
+  }, 20000);
 });

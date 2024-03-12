@@ -5,6 +5,7 @@ import {
   STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS
 } from "../examples/constants";
+import { changeTokenOwner } from "../examples/utils/changeTokenOwner";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
 import { mintERC20 } from "../examples/utils/mintERC20";
 import { mintERC721 } from "../examples/utils/mintERC721";
@@ -19,7 +20,6 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
-import { changeTokenOwner } from "../examples/utils/changeTokenOwner";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fulfill the offer", async function () {
@@ -124,7 +124,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       orderHash
     });
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
-  }, 60000);
+  }, 30000);
 
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
     const { arkProvider, starknetProvider } = config;
@@ -204,7 +204,13 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       brokerId: 123
     };
 
-    await changeTokenOwner(config, STARKNET_NFT_ADDRESS, starknetFulfillerAccount, starknetAccount.address, tokenId);
+    await changeTokenOwner(
+      config,
+      STARKNET_NFT_ADDRESS,
+      starknetFulfillerAccount,
+      starknetAccount.address,
+      tokenId
+    );
 
     // Fulfill the offer
     await fulfillOffer(config, {
@@ -218,5 +224,5 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       orderHash
     });
     expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
-  }, 60000);
+  }, 30000);
 });
