@@ -1,6 +1,6 @@
 //! Solis hooker on Katana transaction lifecycle.
 //!
-use crate::contracts::starknet_utils::U256;
+use crate::contracts::starknet_utils::{ExecutionInfo, U256};
 use async_trait::async_trait;
 use cainome::cairo_serde::CairoSerde;
 use cainome::rs::abigen;
@@ -21,6 +21,18 @@ use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
 use crate::CHAIN_ID_SOLIS;
 
+struct OwnershipVerifier {
+    token_address: ContractAddress,
+    token_id: U256,
+    current_owner: cainome::cairo_serde::ContractAddress,
+}
+
+struct BalanceVerifier {
+    currency_address: ContractAddress,
+    offerer: cainome::cairo_serde::ContractAddress,
+    start_amount: U256,
+}
+
 abigen!(CallContract, "./artifacts/contract.abi.json");
 
 /// Hooker struct, with already instanciated contracts/readers
@@ -34,6 +46,139 @@ pub struct SolisHooker<P: Provider + Sync + Send + 'static + std::fmt::Debug> {
     pub sn_executor_address: FieldElement,
     pub sn_utils_reader: StarknetUtilsReader<P>,
     sequencer: Option<Arc<KatanaSequencer>>,
+}
+
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
+    /// Verify the ownership of a token
+    async fn verify_ownership(&self, ownership_verifier: &OwnershipVerifier) -> bool {
+        let sn_utils_reader_nft_address = StarknetUtilsReader::new(
+            ownership_verifier.token_address.into(),
+            self.sn_utils_reader.provider(),
+        );
+
+        // check the current owner of the token.
+        let owner = sn_utils_reader_nft_address
+            .ownerOf(&ownership_verifier.token_id)
+            .call()
+            .await;
+
+        if let Ok(owner_address) = owner {
+            if owner_address != ownership_verifier.current_owner {
+                tracing::trace!(
+                    "\nOwner {:?} differs from offerer {:?} ",
+                    owner,
+                    ownership_verifier.current_owner
+                );
+
+                println!(
+                    "\nOwner {:?} differs from offerer {:?} ",
+                    owner, ownership_verifier.current_owner
+                );
+
+                return false;
+            }
+        }
+
+        true
+    }
+
+    async fn verify_balance(&self, balance_verifier: &BalanceVerifier) -> bool {
+        let sn_utils_reader_erc20_address = StarknetUtilsReader::new(
+            balance_verifier.currency_address.into(),
+            self.sn_utils_reader.provider(),
+        );
+        let allowance = sn_utils_reader_erc20_address
+            .allowance(&balance_verifier.offerer, &self.sn_executor_address.into())
+            .call()
+            .await;
+
+        if let Ok(allowance) = allowance {
+            if allowance < balance_verifier.start_amount {
+                tracing::trace!(
+                    "\nAllowance {:?} is not enough {:?} ",
+                    allowance,
+                    balance_verifier.start_amount
+                );
+                println!(
+                    "\nAllowance {:?} is not enough {:?} for offerer {:?}",
+                    allowance, balance_verifier.start_amount, balance_verifier.offerer
+                );
+                return false;
+            }
+        }
+
+        // check the balance
+        let balance = sn_utils_reader_erc20_address
+            .balanceOf(&balance_verifier.offerer)
+            .call()
+            .await;
+        if let Ok(balance) = balance {
+            if balance < balance_verifier.start_amount {
+                tracing::trace!(
+                    "\nBalance {:?} is not enough {:?} ",
+                    balance,
+                    balance_verifier.start_amount
+                );
+                println!(
+                    "\nBalance {:?} is not enough {:?} ",
+                    balance, balance_verifier.start_amount
+                );
+                return false;
+            }
+        }
+
+        true
+    }
+
+    async fn verify_call(&self, call: &TxCall) -> bool {
+        let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
+            Ok(order) => order,
+            Err(e) => {
+                tracing::error!("Fail deserializing OrderV1: {:?}", e);
+                return false;
+            }
+        };
+
+        // ERC721 to ERC20
+        if order.route == RouteType::Erc721ToErc20 {
+            let token_id = order.token_id.clone().unwrap();
+            let n_token_id = U256 {
+                low: token_id.low,
+                high: token_id.high,
+            };
+
+            let verifier = OwnershipVerifier {
+                token_address: ContractAddress(order.token_address.into()),
+                token_id: n_token_id,
+                current_owner: cainome::cairo_serde::ContractAddress(order.offerer.into()),
+            };
+
+            let owner_ship_verification = self.verify_ownership(&verifier).await;
+            if !owner_ship_verification {
+                println!("verify ownership for starknet before failed");
+                return false;
+            }
+        }
+
+        // ERC20 to ERC721 : we check the allowance and the offerer balance.
+        if order.route == RouteType::Erc20ToErc721 {
+            if !self
+                .verify_balance(&BalanceVerifier {
+                    currency_address: ContractAddress(order.currency_address.into()),
+                    offerer: cainome::cairo_serde::ContractAddress(order.offerer.into()),
+                    start_amount: U256 {
+                        low: order.start_amount.low,
+                        high: order.start_amount.high,
+                    },
+                })
+                .await
+            {
+                println!("verify balance for starknet before failed");
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
@@ -169,97 +314,8 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
                 continue;
             }
 
-            let order = match OrderV1::cairo_deserialize(&call.calldata, 0) {
-                Ok(order) => order,
-                Err(e) => {
-                    tracing::error!("Fail deserializing OrderV1: {:?}", e);
-                    return false;
-                }
-            };
-
-            let sn_utils_reader_nft_address = StarknetUtilsReader::new(
-                order.token_address.into(),
-                self.sn_utils_reader.provider(),
-            );
-
-            // ERC721 to ERC20
-            if order.route == RouteType::Erc721ToErc20 {
-                let token_id = order.token_id.clone().unwrap();
-                let n_token_id = U256 {
-                    low: token_id.low,
-                    high: token_id.high,
-                };
-
-                // check the current owner of the token.
-                let owner = sn_utils_reader_nft_address
-                    .ownerOf(&n_token_id)
-                    .call()
-                    .await;
-                if let Ok(owner_address) = owner {
-                    if owner_address != order.offerer {
-                        tracing::trace!(
-                            "\nOwner {:?} differs from offerer {:?} ",
-                            owner,
-                            order.offerer
-                        );
-                        return false;
-                    }
-                }
-            }
-
-            // ERC20 to ERC721 : we check the allowance and the offerer balance.
-            if order.route == RouteType::Erc20ToErc721 {
-                let sn_utils_reader_erc20_address = StarknetUtilsReader::new(
-                    order.currency_address.into(),
-                    self.sn_utils_reader.provider(),
-                );
-
-                let allowance = sn_utils_reader_erc20_address
-                    .allowance(&order.offerer, &self.sn_executor_address.into())
-                    .call()
-                    .await;
-                if let Ok(allowance) = allowance {
-                    let n_start_amount = U256 {
-                        low: order.start_amount.low,
-                        high: order.start_amount.high,
-                    };
-                    if allowance < n_start_amount {
-                        tracing::trace!(
-                            "\nAllowance {:?} is not enough {:?} ",
-                            allowance,
-                            order.start_amount
-                        );
-                        println!(
-                            "\nAllowance {:?} is not enough {:?} ",
-                            allowance, order.start_amount
-                        );
-                        return false;
-                    }
-                }
-
-                // check the balance
-                let balance = sn_utils_reader_erc20_address
-                    .balanceOf(&order.offerer)
-                    .call()
-                    .await;
-                if let Ok(balance) = balance {
-                    let n_start_amount = U256 {
-                        low: order.start_amount.low,
-                        high: order.start_amount.high,
-                    };
-                    if balance < n_start_amount {
-                        tracing::trace!(
-                            "\nBalance {:?} is not enough {:?} ",
-                            balance,
-                            order.start_amount
-                        );
-                        println!(
-                            "\nBalance {:?} is not enough {:?} ",
-                            balance, order.start_amount
-                        );
-                        return false;
-                    }
-                }
+            if !self.verify_call(&call).await {
+                return false;
             }
 
             // TODO: check assets on starknet.
@@ -271,10 +327,46 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
 
     async fn verify_tx_for_starknet(&self, call: Call) -> bool {
         println!("verify message to starknet before tx: {:?}", call);
+        if call.selector != selector!("fulfill_order") {
+            return true;
+        }
+        let execution_info = match ExecutionInfo::cairo_deserialize(&call.calldata, 0) {
+            Ok(execution_info) => execution_info,
+            Err(e) => {
+                tracing::error!("Fail deserializing ExecutionInfo: {:?}", e);
+                return false;
+            }
+        };
 
-        // TODO: Decode the ExecutionInfo from the calldata.
-        // Check that assets are still in the good location. When this function
-        // returns true, a transaction is fired on Starknet for the execution.
+        let verifier = OwnershipVerifier {
+            token_address: ContractAddress(execution_info.nft_address.into()),
+            token_id: execution_info.nft_token_id,
+            current_owner: cainome::cairo_serde::ContractAddress(execution_info.nft_from.into()),
+        };
+
+        let owner_ship_verification = self.verify_ownership(&verifier).await;
+        if !owner_ship_verification {
+            println!("verify ownership for starknet before failed");
+            return false;
+        }
+
+        if !self
+            .verify_balance(&BalanceVerifier {
+                currency_address: ContractAddress(execution_info.payment_currency_address.into()),
+                offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into()),
+                start_amount: U256 {
+                    low: execution_info.payment_amount.low,
+                    high: execution_info.payment_amount.high,
+                },
+            })
+            .await
+        {
+            return false;
+        }
+
+        println!("order nft_address{:?}", &execution_info.nft_address);
+        println!("order nft_from{:?}", &execution_info.nft_from);
+
         true
     }
 

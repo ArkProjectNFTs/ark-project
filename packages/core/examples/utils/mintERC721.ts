@@ -24,6 +24,8 @@ export async function mintERC721(
 
   const result = await starknetAccount.execute(mintCall, [erc721abi]);
 
-  await provider.waitForTransaction(result.transaction_hash);
+  await provider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
+  });
   return result.transaction_hash;
 }

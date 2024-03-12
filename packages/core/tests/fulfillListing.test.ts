@@ -1,74 +1,122 @@
-import chai, { expect } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { RpcProvider, shortString } from "starknet";
+import { shortString } from "starknet";
 
-import { createAccount } from "../src/actions/account/account";
-import { createListing, fulfillListing } from "../src/actions/order";
-import { getOrderHash, getOrderStatus } from "../src/actions/read";
-import { ListingV1 } from "../src/types";
-import { generateRandomTokenId, sleep } from "./utils";
-
-chai.use(chaiAsPromised);
+import { config } from "../examples/config";
+import {
+  STARKNET_ETH_ADDRESS,
+  STARKNET_NFT_ADDRESS
+} from "../examples/constants";
+import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
+import { mintERC20 } from "../examples/utils/mintERC20";
+import { mintERC721 } from "../examples/utils/mintERC721";
+import { whitelistBroker } from "../examples/utils/whitelistBroker";
+import {
+  approveERC20,
+  approveERC721,
+  createAccount,
+  createListing,
+  fulfillListing,
+  ListingV1
+} from "../src";
+import { fetchOrCreateAccount } from "../src/actions/account/account";
+import { getOrderStatus } from "../src/actions/read";
 
 describe("ArkProject Listing", () => {
   it("should create and fulfill a listing", async () => {
-    // Initialize the RPC provider with the ArkChain node URL
-    const starknetProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
-
-    // Initialize the RPC provider with the katana node URL for starknet
-    const arkProvider = new RpcProvider({
-      nodeUrl: "http://0.0.0.0:7777"
-    });
-
-    // Create a new account using the provider
+    const brokerId = 123;
+    const { arkProvider, starknetProvider } = config;
     const { account: arkAccount } = await createAccount(arkProvider);
-    const { account: starknetAccount } = await createAccount(starknetProvider);
+
+    const solisAdminAccount = await fetchOrCreateAccount(
+      config.arkProvider,
+      process.env.SOLIS_ADMIN_ADDRESS_DEV!,
+      process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV!
+    );
+
+    await whitelistBroker(config, solisAdminAccount, brokerId);
+
+    const starknetOffererAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS!,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY!
+    );
+
+    const transaction_hash = await mintERC721(
+      starknetProvider,
+      starknetOffererAccount
+    );
+    expect(transaction_hash).toBeDefined();
+
+    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+    expect(tokenId).toBeDefined();
+
+    await approveERC721(config, {
+      contractAddress: STARKNET_NFT_ADDRESS,
+      starknetAccount: starknetOffererAccount
+    });
 
     const order: ListingV1 = {
-      brokerId: 123, // The broker ID
-      tokenAddress:
-        "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672", // The token address
-      tokenId: generateRandomTokenId(), // The ID of the token
-      startAmount: 600000000000000000 // The starting amount for the order
+      brokerId,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId,
+      startAmount: "100000000000000000"
     };
 
-    await createListing(arkProvider, starknetAccount, arkAccount, order);
-    await sleep(2000);
-    const { orderHash } = await getOrderHash(
-      order.tokenId,
-      order.tokenAddress,
-      arkProvider
-    );
-    await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).to.eventually.equal("OPEN");
-
-    // Create a new accounts for the fulfill using the provider
-    const { account: starknetFulfillerAccount } =
-      await createAccount(starknetProvider);
-
-    const fulfill_info = {
-      order_hash: orderHash,
-      token_address: order.tokenAddress,
-      token_id: order.tokenId
-    };
-
-    fulfillListing(
-      arkProvider,
-      starknetFulfillerAccount,
+    const orderHash = await createListing(config, {
+      starknetAccount: starknetOffererAccount,
       arkAccount,
-      fulfill_info
-    );
-    await sleep(1000);
+      order
+    });
+    expect(orderHash).toBeDefined();
 
-    await expect(
-      getOrderStatus(orderHash, arkProvider).then((res) =>
-        shortString.decodeShortString(res.orderStatus)
-      )
-    ).to.eventually.equal("FULFILLED");
-  });
+    const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
+      orderHash
+    });
+
+    expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
+
+    const starknetFulfillerAccount = await fetchOrCreateAccount(
+      starknetProvider,
+      process.env.STARKNET_ACCOUNT2_ADDRESS!,
+      process.env.STARKNET_ACCOUNT2_PRIVATE_KEY!
+    );
+
+    if (process.env.STARKNET_NETWORK_ID === "dev") {
+      await mintERC20(
+        starknetProvider,
+        starknetFulfillerAccount,
+        order.startAmount
+      );
+    }
+
+    await approveERC20(config, {
+      starknetAccount: starknetFulfillerAccount,
+      contractAddress: STARKNET_ETH_ADDRESS,
+      amount: order.startAmount
+    });
+
+    const fulfillListingInfo = {
+      orderHash,
+      tokenAddress: order.tokenAddress,
+      tokenId,
+      brokerId
+    };
+
+    await fulfillListing(config, {
+      starknetAccount: starknetFulfillerAccount,
+      arkAccount,
+      fulfillListingInfo
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const { orderStatus: orderStatusBetween } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
+  }, 30000);
 });

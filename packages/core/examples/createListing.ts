@@ -6,6 +6,7 @@
  */
 
 import { shortString } from "starknet";
+import { getSolisProvider, getStarknetProvider } from "../../deployer/src/providers";
 
 import "dotenv/config";
 
@@ -37,7 +38,11 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   );
 
   console.log(`=> Whitelisting broker ${brokerId}`);
-  await whitelistBroker(config, solisAdminAccount, brokerId);
+  await whitelistBroker(
+    config,
+    solisAdminAccount,
+    brokerId
+  );
 
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
@@ -56,7 +61,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   await mintERC721(config.starknetProvider, starknetOffererAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   const owner = await getTokenOwner(config, STARKNET_NFT_ADDRESS, tokenId);
-  const ownerHex = "0x" + owner.toString(16).padStart(64, "0");
+  const ownerHex = "0x" + owner.toString(16).padStart(64, '0');
   console.log("Owner of tokenId", tokenId, "is", ownerHex);
 
   console.log(`=> Approving for all`);

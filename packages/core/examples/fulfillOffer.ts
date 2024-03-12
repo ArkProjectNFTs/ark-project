@@ -23,6 +23,7 @@ import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
 import { mintERC20 } from "./utils/mintERC20";
 import { mintERC721 } from "./utils/mintERC721";
+import { whitelistBroker } from "./utils/whitelistBroker";
 
 /**
  * Creates a listing on the blockchain using provided order details.
@@ -30,6 +31,14 @@ import { mintERC721 } from "./utils/mintERC721";
 (async () => {
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
+
+  const solisAdminAccount = await fetchOrCreateAccount(
+    config.arkProvider,
+    process.env.SOLIS_ADMIN_ADDRESS_DEV,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+  );
+
+  await whitelistBroker(config, solisAdminAccount, 123);
 
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
@@ -137,7 +146,7 @@ import { mintERC721 } from "./utils/mintERC721";
     );
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   } else {
-    await new Promise((resolve) => setTimeout(resolve, 6000));
+    await new Promise((resolve) => setTimeout(resolve, 10000));
   }
 
   console.log("=> Fetching order status...");

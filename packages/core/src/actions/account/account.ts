@@ -50,12 +50,9 @@ export const createAccount = async (provider: ProviderInterface) => {
     constructorCalldata: CallData.compile({ publicKey }),
     addressSalt: publicKey
   });
-  console.log(provider);
-  console.log(transaction_hash, contract_address);
-  const test = await provider.waitForTransaction(transaction_hash, {
-    retryInterval: 100
+  await provider.waitForTransaction(transaction_hash, {
+    retryInterval: 1000
   });
-  console.log(test);
   return {
     address: contract_address,
     privateKey,

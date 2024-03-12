@@ -25,5 +25,9 @@ export const whitelistBroker = async (
     calldata: whitelist_hash_calldata
   });
 
+  await config.arkProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
+  });
+
   return result;
 };

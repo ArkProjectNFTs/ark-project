@@ -4,6 +4,7 @@ import { config } from "../examples/config";
 import { STARKNET_NFT_ADDRESS } from "../examples/constants";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
 import { mintERC721 } from "../examples/utils/mintERC721";
+import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
   createAccount,
   fetchOrCreateAccount
@@ -21,6 +22,14 @@ test("ArkProject Cancel listing should create and then cancel a listing", async 
     process.env.STARKNET_ACCOUNT1_ADDRESS,
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
+
+  const solisAdminAccount = await fetchOrCreateAccount(
+    config.arkProvider,
+    process.env.SOLIS_ADMIN_ADDRESS_DEV,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+  );
+
+  await whitelistBroker(config, solisAdminAccount, 123);
 
   await mintERC721(config.starknetProvider, starknetOffererAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
@@ -62,8 +71,7 @@ test("ArkProject Cancel listing should create and then cancel a listing", async 
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash
   });
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
   expect(shortString.decodeShortString(orderStatusAfter)).toBe(
     "CANCELLED_USER"
   );
-}, 20000);
+}, 15000);
