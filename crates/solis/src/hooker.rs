@@ -72,8 +72,7 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> SolisHooker<P> {
 
                 println!(
                     "\nOwner {:?} differs from offerer {:?} ",
-                    owner,
-                    ownership_verifier.current_owner
+                    owner, ownership_verifier.current_owner
                 );
 
                 return false;
@@ -341,40 +340,6 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
 
         let owner_ship_verification = self.verify_ownership(&verifier).await;
         if !owner_ship_verification {
-            println!("verify ownership for starknet before failed");
-            return false;
-        }
-
-        if !self
-            .verify_balance(&BalanceVerifier {
-                currency_address: ContractAddress(execution_info.payment_currency_address.into()),
-                offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into()),
-                start_amount: U256 {
-                    low: execution_info.payment_amount.low,
-                    high: execution_info.payment_amount.high,
-                },
-            })
-            .await
-        {
-            return false;
-        }
-
-        let execution_info = match ExecutionInfo::cairo_deserialize(&call.calldata, 0) {
-            Ok(execution_info) => execution_info,
-            Err(e) => {
-                tracing::error!("Fail deserializing ExecutionInfo: {:?}", e);
-                return false;
-            }
-        };
-
-        let verifier = OwnershipVerifier {
-            token_address: ContractAddress(execution_info.nft_address.into()),
-            token_id: execution_info.nft_token_id,
-            current_owner: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into()),
-        };
-
-        let owner_ship_verification = self.verify_ownership(&verifier).await;
-        if !owner_ship_verification {
             // rollback the status
             self.add_l1_handler_transaction_for_orderbook(
                 selector!("rollback_status_order"),
@@ -386,7 +351,7 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         if !self
             .verify_balance(&BalanceVerifier {
                 currency_address: ContractAddress(execution_info.payment_currency_address.into()),
-                offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_from.into()),
+                offerer: cainome::cairo_serde::ContractAddress(execution_info.nft_to.into()),
                 start_amount: U256 {
                     low: execution_info.payment_amount.low,
                     high: execution_info.payment_amount.high,
