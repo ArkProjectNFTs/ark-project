@@ -26,7 +26,7 @@ export const whitelistBroker = async (
   });
 
   await config.arkProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 200
+    retryInterval: 1000
   });
 
   return result;

@@ -74,7 +74,7 @@ const createOrder = async (
   });
 
   await config.arkProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 200
+    retryInterval: 1000
   });
 
   const orderHash = getOrderHashFromOrderV1(order);
