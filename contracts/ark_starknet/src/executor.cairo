@@ -11,6 +11,7 @@
 
 #[starknet::contract]
 mod executor {
+    use starknet::contract_address_to_felt252;
     use core::debug::PrintTrait;
     use core::traits::TryInto;
     use core::box::BoxTrait;
@@ -33,7 +34,8 @@ mod executor {
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
         arkchain_fee: u256,
-        chain_id: felt252
+        chain_id: felt252,
+        broker_fees: LegacyMap<ContractAddress, u256>,
     }
 
     #[event]
@@ -67,6 +69,15 @@ mod executor {
 
     #[external(v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
+
+        fn add_broker_fees(ref self: ContractState, broker_address: ContractAddress, fee: u256) {
+            self.broker_fees.write(broker_address, fee);
+        }
+
+        fn get_broker_fees(ref self: ContractState, broker_address: ContractAddress) -> u256 {
+            self.broker_fees.read(broker_address)
+        }
+
         fn get_messaging_address(ref self: ContractState) -> ContractAddress {
             self.messaging_address.read()
         }
