@@ -23,3 +23,17 @@ fn test_add_broker() {
 
 }
 
+#[test]
+fn test_set_ark_fees() {
+
+    let mut state = executor::contract_state_for_testing();
+
+    let fee = 100;
+
+    executor::ExecutorImpl::set_ark_fees(ref state, fee);
+
+    let result = executor::ExecutorImpl::get_ark_fees(ref state);
+
+    assert(result == fee, 'Fees are not equal');
+
+}

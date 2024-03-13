@@ -36,6 +36,7 @@ mod executor {
         arkchain_fee: u256,
         chain_id: felt252,
         broker_fees: LegacyMap<ContractAddress, u256>,
+        ark_fees: u256,
     }
 
     #[event]
@@ -76,6 +77,14 @@ mod executor {
 
         fn get_broker_fees(ref self: ContractState, broker_address: ContractAddress) -> u256 {
             self.broker_fees.read(broker_address)
+        }
+
+        fn set_ark_fees(ref self: ContractState, fee: u256) {
+            self.ark_fees.write(fee);
+        }
+
+        fn get_ark_fees(ref self: ContractState) -> u256 {
+            self.ark_fees.read()
         }
 
         fn get_messaging_address(ref self: ContractState) -> ContractAddress {
