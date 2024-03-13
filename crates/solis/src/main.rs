@@ -38,7 +38,6 @@ use args::KatanaArgs;
 
 //mod args;
 mod contracts;
-mod error;
 mod hooker;
 mod solis_args;
 
@@ -146,18 +145,18 @@ fn print_intro(accounts: String, seed: String, address: String, account_class_ha
         Style::new().blue().apply_to(
             r"
 
- ___  ___ | (_)___ 
+ ___  ___ | (_)___
 / __|/ _ \| | / __|
 \__ \ (_) | | \__ \
-|___/\___/|_|_|___/                                                     
+|___/\___/|_|_|___/
 "
         )
     );
 
     println!(
         r"
-PREDEPLOYED CONTRACTS  
-================== 
+PREDEPLOYED CONTRACTS
+==================
 
 | Contract        | Fee Token
 | Address         | {}
@@ -178,7 +177,7 @@ PREDEPLOYED CONTRACTS
     );
 
     println!(
-        r"        
+        r"
 PREFUNDED ACCOUNTS
 ==================
 {accounts}
