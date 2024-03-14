@@ -178,6 +178,8 @@ struct FulfillInfo {
     token_address: ContractAddress,
     // Token token id.
     token_id: Option<u256>,
+    // Broker address.
+    fulfill_broker_address: ContractAddress,
 }
 
 /// The info sent from the Arkchain to Starknet
@@ -194,6 +196,8 @@ struct ExecutionInfo {
     payment_amount: u256,
     payment_currency_address: ContractAddress,
     payment_currency_chain_id: felt252,
+    listing_broker_address: ContractAddress,
+    fulfill_broker_address: ContractAddress
 // route: RouteType,
 // order_hash: felt252,
 // token_address: ContractAddress,

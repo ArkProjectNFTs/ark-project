@@ -8,6 +8,7 @@
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use ark_orderbook::order::order_v1::OrderV1;
+use starknet::ContractAddress;
 
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
@@ -17,14 +18,14 @@ trait Orderbook<T> {
     /// # Arguments
     ///
     /// * `broker_id` - ID of the broker.
-    fn whitelist_broker(ref self: T, broker_id: felt252);
+    fn whitelist_broker(ref self: T, broker_id: ContractAddress);
 
     /// Remove a broker from the whitelist.
     ///
     /// # Arguments
     ///
     /// * `broker_id` - ID of the broker.
-    fn unwhitelist_broker(ref self: T, broker_id: felt252);
+    fn unwhitelist_broker(ref self: T, broker_id: ContractAddress);
 
     /// Submits and places an order to the orderbook if the order is valid.
     ///
@@ -365,13 +366,13 @@ mod orderbook {
         }
 
         /// Whitelists a broker.
-        fn whitelist_broker(ref self: ContractState, broker_id: felt252) {
+        fn whitelist_broker(ref self: ContractState, broker_id: ContractAddress) {
             assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
             broker_whitelist_write(broker_id, 1);
         }
 
         /// Remove a broker from whitelist.
-        fn unwhitelist_broker(ref self: ContractState, broker_id: felt252) {
+        fn unwhitelist_broker(ref self: ContractState, broker_id: ContractAddress) {
             assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
             broker_whitelist_write(broker_id, 0);
         }
@@ -634,7 +635,9 @@ mod orderbook {
                     payment_to: fulfill_info.fulfiller,
                     payment_amount: order.start_amount,
                     payment_currency_address: order.currency_address,
-                    payment_currency_chain_id: order.currency_chain_id
+                    payment_currency_chain_id: order.currency_chain_id,
+                    listing_broker_address: order.broker_id,
+                    fulfill_broker_address: fulfill_info.fulfill_broker_address
                 };
                 execute_info.serialize(ref buf);
                 starknet::send_message_to_l1_syscall('EXE', buf.span());
@@ -683,7 +686,9 @@ mod orderbook {
                     payment_to: order.offerer,
                     payment_amount: order.start_amount,
                     payment_currency_address: order.currency_address,
-                    payment_currency_chain_id: order.currency_chain_id
+                    payment_currency_chain_id: order.currency_chain_id,
+                    listing_broker_address: order.broker_id,
+                    fulfill_broker_address: fulfill_info.fulfill_broker_address
                 };
                 execute_info.serialize(ref buf);
                 starknet::send_message_to_l1_syscall('EXE', buf.span());

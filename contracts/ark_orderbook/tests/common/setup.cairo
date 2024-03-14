@@ -373,7 +373,7 @@ fn get_offer_order() -> OrderV1 {
 }
 
 fn whitelist_creator_broker(
-    contract_address: ContractAddress, broker_id: felt252, dispatcher: OrderbookDispatcher
+    contract_address: ContractAddress, broker_id: ContractAddress, dispatcher: OrderbookDispatcher
 ) {
     start_prank(
         contract_address,

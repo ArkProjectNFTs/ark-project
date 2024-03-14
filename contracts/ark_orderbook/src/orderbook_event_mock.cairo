@@ -108,7 +108,7 @@ mod orderbook_event_mock {
                         end_amount: 4,
                         start_date: 5,
                         end_date: 6,
-                        broker_id: 'broker',
+                        broker_id: 0x2.try_into().unwrap(),
                         additional_data: array![].span(),
                     }
                 }
@@ -138,7 +138,7 @@ mod orderbook_event_mock {
                         end_amount: 4,
                         start_date: 5,
                         end_date: 6,
-                        broker_id: 'broker',
+                        broker_id: 0x2.try_into().unwrap(),
                         additional_data: array![].span(),
                     }
                 }
@@ -168,7 +168,7 @@ mod orderbook_event_mock {
                         end_amount: 0,
                         start_date: 2,
                         end_date: 0,
-                        broker_id: 'broker',
+                        broker_id: 0x2.try_into().unwrap(),
                         additional_data: array![].span(),
                     }
                 }

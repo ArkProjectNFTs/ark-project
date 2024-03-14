@@ -50,7 +50,7 @@ struct OrderV1 {
     // Expiry date of the order, seconds since unix epoch.
     end_date: u64,
     // Broker public identifier.
-    broker_id: felt252,
+    broker_id: ContractAddress,
     // Additional data, limited to ??? felts.
     additional_data: Span<felt252>,
 }
