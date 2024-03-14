@@ -33,7 +33,7 @@ module.exports = {
     "unused-imports/no-unused-vars": [
       "warn",
       {
-        vars: "all",
+        vars: "warn",
         varsIgnorePattern: "^_",
         args: "after-used",
         argsIgnorePattern: "^_"

@@ -26,8 +26,9 @@ export async function createNewAccounts(
     const fileData = await fs.readFile(accountsFilePath, "utf8");
     existingAccounts = JSON.parse(fileData);
   } catch (error) {
-    console.error("Error reading JSON file:", error);
-    return;
+    // console.error("Error reading JSON file:", error);
+    // return;
+    existingAccounts = [];
   }
 
   for (let i = 0; i < numberOfAccounts; i++) {

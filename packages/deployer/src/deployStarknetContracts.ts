@@ -12,6 +12,7 @@ import loading from "loading-cli";
 import { ARTIFACTS_PATH } from "./constants";
 import { deployExecutor, upgradeExecutor } from "./contracts/executor";
 import { deployMessaging, upgradeMessaging } from "./contracts/messaging";
+import { deployRouter } from "./contracts/router";
 import { getFeeAddress, getStarknetProvider } from "./providers";
 import {
   getContractsFilePath,
@@ -88,6 +89,16 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
     configData.private_key = starknetSolisAccount?.privateKey;
     await fs.writeFile(messagingFilePath, JSON.stringify(configData, null, 2));
   }
+
+  starknetSpinner.text = "⚡ Deploying Router Contract...";
+  const routerContract = await deployRouter(
+    ARTIFACTS_PATH,
+    starknetAdminAccount,
+    starknetProvider
+  );
+  existingContracts[starknetNetwork].router = routerContract.address;
+  await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
+
   starknetSpinner.stop();
   console.log("STARKNET CONTRACTS");
   console.log("==================\n");

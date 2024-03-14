@@ -1,6 +1,7 @@
 //! Interfaces for arkchain operator.
 use starknet::{ClassHash, ContractAddress};
 use ark_common::protocol::order_types::ExecutionInfo;
+use super::route_types::SwapInfos;
 
 #[starknet::interface]
 trait IExecutor<T> {
@@ -18,4 +19,9 @@ trait IExecutor<T> {
 #[starknet::interface]
 trait IUpgradable<T> {
     fn upgrade(ref self: T, class_hash: ClassHash);
+}
+
+#[starknet::interface]
+trait Irouter<T> {
+    fn execute_swap(ref self: T, swap_info: SwapInfos);
 }
