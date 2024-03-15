@@ -1,4 +1,4 @@
-import { shortString } from "starknet";
+import { stark, shortString } from "starknet";
 
 import { config } from "../examples/config";
 import {
@@ -22,17 +22,17 @@ import { getOrderStatus } from "../src/actions/read";
 
 describe("ArkProject Listing", () => {
   it("should create and fulfill a listing", async () => {
-    const brokerId = 123;
+    const brokerId = stark.randomAddress();
     const { arkProvider, starknetProvider } = config;
     const { account: arkAccount } = await createAccount(arkProvider);
-
+    console.log(brokerId);
     const solisAdminAccount = await fetchOrCreateAccount(
       config.arkProvider,
       process.env.SOLIS_ADMIN_ADDRESS_DEV!,
       process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV!
     );
 
-    await whitelistBroker(config, solisAdminAccount, brokerId);
+    await whitelistBroker(config, solisAdminAccount, brokerId.toString());
 
     const starknetOffererAccount = await fetchOrCreateAccount(
       config.starknetProvider,

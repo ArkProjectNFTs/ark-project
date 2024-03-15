@@ -9,7 +9,7 @@ use ark_common::crypto::{signer::{Signer, SignInfo, SignerTrait}, hash::serializ
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
-use snforge_std::start_warp;
+use snforge_std::{start_warp, test_address};
 
 use super::super::common::signer::sign_mock;
 use super::super::common::setup::{
@@ -47,6 +47,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
             .try_into()
             .unwrap(),
         token_id: Option::Some(8),
+        fulfill_broker_address: test_address()
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -85,6 +86,7 @@ fn test_create_listing_order_and_fulfill() {
             .try_into()
             .unwrap(),
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address()
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -127,6 +129,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
             .try_into()
             .unwrap(),
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address()
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -165,6 +168,7 @@ fn test_fulfill_already_fulfilled_order() {
             .try_into()
             .unwrap(),
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address()
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
     let signer = sign_mock(fulfill_info_hash, fulfiller);
@@ -203,6 +207,7 @@ fn test_fulfill_expired_order() {
             .try_into()
             .unwrap(),
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address()
     };
     let fulfill_info_hash = serialized_hash(fulfill_info);
     let fulfill_signer = sign_mock(fulfill_info_hash, fulfiller);

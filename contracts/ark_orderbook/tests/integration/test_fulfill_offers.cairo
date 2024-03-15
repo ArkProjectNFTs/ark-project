@@ -84,6 +84,7 @@ fn test_fulfill_expired_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: order_listing.token_id,
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -114,6 +115,7 @@ fn test_fulfill_non_existing_offer() {
             .try_into()
             .unwrap(),
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address()
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -155,6 +157,7 @@ fn test_fulfill_classic_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: order_listing.token_id,
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -194,7 +197,7 @@ fn test_fulfill_collection_offer() {
         end_amount: 0,
         start_date: 100,
         end_date: 1000,
-        broker_id: 123,
+        broker_id: test_address(),
         additional_data: data_span,
     };
 
@@ -215,7 +218,8 @@ fn test_fulfill_collection_offer() {
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
-        token_id: Option::None
+        token_id: Option::None,
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -257,7 +261,7 @@ fn test_fulfill_expired_collection_offer() {
         end_amount: 0,
         start_date: 100,
         end_date: 1000,
-        broker_id: 123,
+        broker_id: test_address(),
         additional_data: data_span,
     };
 
@@ -278,7 +282,8 @@ fn test_fulfill_expired_collection_offer() {
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
-        token_id: Option::None
+        token_id: Option::None,
+        fulfill_broker_address: test_address()
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -321,6 +326,7 @@ fn test_double_fulfill_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: order_listing.token_id,
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -334,6 +340,7 @@ fn test_double_fulfill_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: order_listing.token_id,
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);

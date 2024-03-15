@@ -10,7 +10,7 @@ use snforge_std::signature::{
     StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer as SNSigner, Verifier
 };
 
-use snforge_std::{start_prank, stop_prank};
+use snforge_std::{start_prank, stop_prank, test_address};
 use starknet::ContractAddress;
 
 use super::super::common::signer::sign_mock;
@@ -48,7 +48,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         end_amount: 0,
         start_date: 1699556828,
         end_date: 1702148828,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
     let order_offer = OrderV1 {
@@ -71,7 +71,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         end_amount: 0,
         start_date: 1699525884797,
         end_date: 1702117884797,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
     let order_auction = OrderV1 {
@@ -94,7 +94,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         end_amount: 600000000000000000,
         start_date: 1696874828,
         end_date: 1699556828,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
 
@@ -118,7 +118,7 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         end_amount: 0,
         start_date: 1699525884797,
         end_date: 1702117884797,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
 
@@ -164,7 +164,7 @@ fn setup_offer(
         end_amount: 0,
         start_date,
         end_date,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
 
@@ -209,7 +209,7 @@ fn setup_listing_order(price: felt252) -> (OrderV1, felt252, felt252) {
         end_amount: 0,
         start_date: block_timestamp,
         end_date: end_date,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
     let order_hash = order_listing.compute_order_hash();
@@ -252,7 +252,7 @@ fn setup_listing_order_with_sign() -> (OrderV1, SignInfo, felt252, felt252) {
         end_amount: 0,
         start_date: block_timestamp,
         end_date: end_date,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
     let order_hash = order_listing.compute_order_hash();
@@ -296,7 +296,7 @@ fn setup_auction_order(
         end_amount: end_price.into(),
         start_date,
         end_date,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
 
@@ -334,7 +334,7 @@ fn setup_listing(
         end_amount: 0,
         start_date: start_date,
         end_date: end_date,
-        broker_id: 123,
+        broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
     let order_hash = order_listing.compute_order_hash();
@@ -367,7 +367,7 @@ fn get_offer_order() -> OrderV1 {
         end_amount: 0,
         start_date: 1699525884797,
         end_date: 1702117884797,
-        broker_id: 123,
+        broker_id: test_address(),
         additional_data: data_span,
     }
 }

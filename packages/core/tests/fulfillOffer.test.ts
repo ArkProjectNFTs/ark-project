@@ -1,4 +1,4 @@
-import { shortString } from "starknet";
+import { shortString, stark } from "starknet";
 
 import { config } from "../examples/config";
 import {
@@ -30,8 +30,9 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       process.env.SOLIS_ADMIN_ADDRESS_DEV,
       process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
     );
+    const brokerId = stark.randomAddress();
 
-    await whitelistBroker(config, solisAdminAccount, 123);
+    await whitelistBroker(config, solisAdminAccount, brokerId);
 
     // Create a new account for the listing using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
@@ -51,7 +52,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     // Define the order details
     const order: OfferV1 = {
-      brokerId: 123, // The broker ID
+      brokerId, // The broker ID
       tokenAddress: STARKNET_NFT_ADDRESS, // The token address
       tokenId, // The ID of the token
       startAmount: 600000000000000000 // The starting amount for the order
@@ -103,7 +104,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       orderHash,
       tokenAddress: order.tokenAddress,
       tokenId: order.tokenId,
-      brokerId: 123
+      brokerId
     };
 
     // Fulfill the offer
@@ -129,13 +130,14 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
     const { arkProvider, starknetProvider } = config;
 
+    const brokerId = stark.randomAddress();
     const solisAdminAccount = await fetchOrCreateAccount(
       config.arkProvider,
       process.env.SOLIS_ADMIN_ADDRESS_DEV,
       process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
     );
 
-    await whitelistBroker(config, solisAdminAccount, 123);
+    await whitelistBroker(config, solisAdminAccount, brokerId);
 
     const { account: arkAccount } = await createAccount(arkProvider);
     // Create a new account for the listing using the provider
@@ -162,7 +164,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     // Define the order details
     const order: OfferV1 = {
-      brokerId: 123, // The broker ID
+      brokerId, // The broker ID
       tokenAddress: STARKNET_NFT_ADDRESS, // The token address
       tokenId: tokenId, // The ID of the token
       startAmount: 600000000000000000, // The starting amount for the order
@@ -201,7 +203,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       orderHash,
       tokenAddress: order.tokenAddress,
       tokenId: order.tokenId,
-      brokerId: 123
+      brokerId
     };
 
     await changeTokenOwner(
