@@ -377,6 +377,7 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
             Ok(execution_info) => execution_info,
             Err(e) => {
                 tracing::error!("Fail deserializing ExecutionInfo: {:?}", e);
+                return;
             }
         };
 
