@@ -40,8 +40,12 @@
         "type": "core::starknet::contract_address::ContractAddress"
       },
       {
-        "name": "payment_currency_chain_id",
-        "type": "core::felt252"
+        "name": "listing_broker_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "fulfill_broker_address",
+        "type": "core::starknet::contract_address::ContractAddress"
       }
     ]
   },
