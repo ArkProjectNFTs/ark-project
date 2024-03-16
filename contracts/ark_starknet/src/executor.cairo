@@ -168,32 +168,11 @@ mod executor {
                 contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
-            let fulfill_broker_fees = self.broker_fees.read(execution_info.fulfill_broker_address);
-            let listing_broker_fees = self.broker_fees.read(execution_info.listing_broker_address);
-            let creator_fees = 1;
-
-            let seller_amount = execution_info.payment_amount * (100 - fulfill_broker_fees - listing_broker_fees - creator_fees) / 100;
-            // split the fees
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from,
-                    execution_info.fulfill_broker_address,
-                    execution_info.payment_amount * (fulfill_broker_fees / 100)
-                );
-
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from,
-                    execution_info.listing_broker_address,
-                    execution_info.payment_amount * (listing_broker_fees / 100)
-                );
-
-            // finally transfer to the seller
             currency_contract
                 .transfer_from(
                     execution_info.payment_from,
                     execution_info.payment_to,
-                    seller_amount
+                    execution_info.payment_amount
                 );
 
             let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
@@ -201,8 +180,6 @@ mod executor {
                 .transfer_from(
                     execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
                 );
-
-            // self._transfer_royalties(execution_info, eth_contract);
 
             let tx_info = starknet::get_tx_info().unbox();
             let transaction_hash = tx_info.transaction_hash;

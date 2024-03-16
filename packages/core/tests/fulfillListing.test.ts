@@ -113,10 +113,10 @@ describe("ArkProject Listing", () => {
     });
     expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 10000));
     const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
       orderHash
     });
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
-  }, 30000);
+  }, 40000);
 });

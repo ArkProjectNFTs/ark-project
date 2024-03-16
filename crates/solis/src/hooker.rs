@@ -324,6 +324,8 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         if call.selector != selector!("fulfill_order") {
             return true;
         }
+        println!("verify message to starknet before tx after");
+
         let execution_info = match ExecutionInfo::cairo_deserialize(&call.calldata, 0) {
             Ok(execution_info) => execution_info,
             Err(e) => {
