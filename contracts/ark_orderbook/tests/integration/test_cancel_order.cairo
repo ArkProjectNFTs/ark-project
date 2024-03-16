@@ -4,7 +4,7 @@ use core::option::OptionTrait;
 use ark_common::crypto::{signer::{Signer, SignInfo}, hash::serialized_hash};
 use ark_common::protocol::order_types::{OrderStatus, OrderTrait, OrderType, CancelInfo, RouteType};
 use ark_orderbook::orderbook::Orderbook;
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use snforge_std::{

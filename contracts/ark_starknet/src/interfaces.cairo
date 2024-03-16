@@ -1,10 +1,13 @@
 //! Interfaces for arkchain operator.
 use starknet::{ClassHash, ContractAddress};
-use ark_common::protocol::order_types::ExecutionInfo;
+use ark_common::protocol::order_types::{ExecutionInfo};
+use ark_common::protocol::order_types::OrderV1;
 use super::route_types::SwapInfos;
+use ark_common::crypto::signer::{Signer};
 
 #[starknet::interface]
 trait IExecutor<T> {
+    fn create_order(ref self: T, order: OrderV1, signer: Signer);
     fn execute_order(ref self: T, execution_info: ExecutionInfo);
     fn update_admin_address(ref self: T, admin_address: ContractAddress);
     fn update_arkchain_fee(ref self: T, arkchain_fee: u256);

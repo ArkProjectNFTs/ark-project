@@ -4,7 +4,7 @@ use core::option::OptionTrait;
 use snforge_std::{PrintTrait, declare, ContractClassTrait};
 use ark_orderbook::orderbook::Orderbook;
 use ark_orderbook::orderbook::orderbook;
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use ark_common::crypto::{signer::{Signer, SignInfo, SignerTrait}, hash::serialized_hash};
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};

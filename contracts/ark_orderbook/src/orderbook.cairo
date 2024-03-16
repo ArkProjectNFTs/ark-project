@@ -7,7 +7,7 @@
 
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 
 /// Orderbook trait to define operations on orderbooks.
 #[starknet::interface]
@@ -133,6 +133,7 @@ mod orderbook_errors {
 mod orderbook {
     use ark_common::crypto::typed_data::{OrderSign, TypedDataTrait};
     use core::debug::PrintTrait;
+    use ark_common::protocol::order_v1::OrderV1;
     use ark_common::crypto::signer::{SignInfo, Signer, SignerTrait, SignerValidator};
     use ark_common::protocol::order_types::{
         OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo,
@@ -147,12 +148,12 @@ mod orderbook {
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
     use starknet::ContractAddress;
-    use ark_orderbook::order::order_v1::OrderV1;
-    use ark_orderbook::order::database::{
+    
+    use ark_common::protocol::order_database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
 
-    use ark_orderbook::broker::database::{broker_whitelist_write};
+    use ark_common::protocol::broker::{broker_whitelist_write};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
@@ -275,10 +276,17 @@ mod orderbook {
         self.emit(OrderExecuted { order_hash: info.order_hash, order_status: order_status });
     }
 
+    #[l1_handler]
+    fn create_order_from_l2(
+        ref self: ContractState, _from_address: felt252, order: OrderV1, signer: Signer
+    ) {
+        self.create_order(order, signer);
+    }
+
     // *************************************************************************
     // EXTERNAL FUNCTIONS
     // *************************************************************************
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
         fn upgrade(ref self: ContractState, class_hash: starknet::ClassHash) {
             assert(
@@ -371,6 +379,7 @@ mod orderbook {
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
+        
         fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
             let order_hash = order.compute_order_hash();
             let order_sign = OrderSign { hash: order_hash };

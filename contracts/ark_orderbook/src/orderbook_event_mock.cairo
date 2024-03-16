@@ -15,7 +15,7 @@ mod orderbook_event_mock {
     use core::starknet::event::EventEmitter;
     use core::traits::Into;
     use starknet::ContractAddress;
-    use ark_orderbook::order::order_v1::OrderV1;
+    use ark_common::protocol::order_v1::OrderV1;
 
     #[storage]
     struct Storage {}

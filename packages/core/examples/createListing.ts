@@ -7,9 +7,6 @@
 
 import { shortString } from "starknet";
 
-
-
-
 import "dotenv/config";
 
 import {

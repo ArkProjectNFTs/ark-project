@@ -1,6 +1,8 @@
 //! Order generic variables.
 use starknet::ContractAddress;
 use poseidon::poseidon_hash_span;
+use ark_common::protocol::order_v1::OrderV1;
+use ark_common::crypto::signer::{Signer};
 
 /// Order types.
 #[derive(Serde, Drop, PartialEq, Copy)]
@@ -217,6 +219,12 @@ struct ExecutionValidationInfo {
     order_hash: felt252,
     transaction_hash: felt252,
     starknet_block_timestamp: u64,
+}
+
+#[derive(Serde, Copy, Drop)]
+struct CreateOrderInfo {
+    order: OrderV1,
+    signer: Signer
 }
 
 /// Type of an route, that may be defined from

@@ -1,12 +1,12 @@
 use snforge_std::PrintTrait;
 use core::option::OptionTrait;
 use ark_orderbook::orderbook::{orderbook, orderbook_errors};
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use core::traits::Into;
 use core::traits::TryInto;
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use ark_common::protocol::order_types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
-use ark_orderbook::order::database::{
+use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
 use snforge_std::{
@@ -21,7 +21,7 @@ const ORDER_VERSION_V1: felt252 = 'v1';
 
 #[test]
 fn test_create_listing() {
-    let (order_listing_1, order_hash_1, token_hash_1) = setup_listing_order(600000000000000000);
+    let (order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
     let mut spy = spy_events(SpyOn::One(contract_address));

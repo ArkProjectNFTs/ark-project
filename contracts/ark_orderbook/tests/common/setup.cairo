@@ -3,7 +3,7 @@ use core::option::OptionTrait;
 use core::traits::Into;
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use ark_common::crypto::signer::{Signer, SignInfo};
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 
 use snforge_std::signature::{

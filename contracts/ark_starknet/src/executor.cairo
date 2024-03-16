@@ -14,8 +14,14 @@ mod executor {
     use core::debug::PrintTrait;
     use core::traits::TryInto;
     use core::box::BoxTrait;
+
+    use ark_common::protocol::order_v1::OrderV1;
+    use ark_common::crypto::signer::{Signer};
     use starknet::{ContractAddress, ClassHash};
-    use ark_common::protocol::order_types::{RouteType, ExecutionInfo, ExecutionValidationInfo};
+
+    use ark_common::protocol::order_types::{
+        CreateOrderInfo, RouteType, ExecutionInfo, ExecutionValidationInfo
+    };
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
@@ -64,6 +70,7 @@ mod executor {
         self.messaging_address.write(messaging_address);
         self.chain_id.write(chain_id);
     }
+
 
     #[external(v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
@@ -131,6 +138,24 @@ mod executor {
             self.admin_address.write(admin_address);
         }
 
+        fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
+            let messaging = IAppchainMessagingDispatcher {
+                contract_address: self.messaging_address.read()
+            };
+
+            let vinfo = CreateOrderInfo { order: order.clone(), signer: signer, };
+
+            let mut vinfo_buf = array![];
+            Serde::serialize(@vinfo, ref vinfo_buf);
+
+            messaging
+                .send_message_to_appchain(
+                    self.arkchain_orderbook_address.read(),
+                    selector!("validate_order_execution"),
+                    vinfo_buf.span(),
+                );
+        }
+
         fn execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
             // assert(
             //     starknet::get_caller_address() == self.messaging_address.read(),
@@ -196,7 +221,7 @@ mod executor {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExecutorUpgradeImpl of IUpgradable<ContractState> {
         fn upgrade(ref self: ContractState, class_hash: ClassHash) {
             assert(
