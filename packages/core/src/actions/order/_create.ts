@@ -1,14 +1,6 @@
-import * as starknet from "@scure/starknet";
-import {
-  Account,
-  AccountInterface,
-  CairoCustomEnum,
-  CallData,
-  shortString
-} from "starknet";
+import { Account, AccountInterface, cairo, CallData } from "starknet";
 
 import { Config } from "../../createConfig";
-import { getSignInfos } from "../../signer";
 import { OrderV1 } from "../../types";
 import { getOrderHashFromOrderV1 } from "../../utils";
 
@@ -37,43 +29,27 @@ const createOrder = async (
   config: Config,
   parameters: CreateOrderParameters
 ) => {
-  const { starknetAccount, arkAccount, order, owner } = parameters;
-  const compiledOrder = CallData.compile({
-    order
-  });
-  const compiledOrderBigInt = compiledOrder.map(BigInt);
-  const TypedOrderData = {
-    message: {
-      hash: starknet.poseidonHashMany(compiledOrderBigInt).toString()
-    },
-    domain: {
-      name: "Ark",
-      chainId: shortString.decodeShortString(order.currencyChainId.toString()),
-      version: "1.1"
-    },
-    types: {
-      StarkNetDomain: [
-        { name: "name", type: "felt252" },
-        { name: "chainId", type: "felt252" },
-        { name: "version", type: "felt252" }
-      ],
-      Order: [{ name: "hash", type: "felt252" }]
-    },
-    primaryType: "Order"
-  };
-  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
-  const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-  const create_order_calldata = CallData.compile({
-    order: order,
-    signer: signer
-  });
-  const result = await arkAccount.execute({
-    contractAddress: config.arkchainContracts.orderbook,
-    entrypoint: "create_order",
-    calldata: create_order_calldata
-  });
+  const { starknetAccount, order } = parameters;
 
-  await config.arkProvider.waitForTransaction(result.transaction_hash, {
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: config.starknetContracts.nftContract,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        to: config.starknetContracts.executor as string,
+        token_id: cairo.uint256(1)
+      })
+    },
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "create_order",
+      calldata: CallData.compile({
+        order: order
+      })
+    }
+  ]);
+
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });
 

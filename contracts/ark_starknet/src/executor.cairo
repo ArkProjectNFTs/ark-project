@@ -138,12 +138,12 @@ mod executor {
             self.admin_address.write(admin_address);
         }
 
-        fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
+        fn create_order(ref self: ContractState, order: OrderV1) {
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
 
-            let vinfo = CreateOrderInfo { order: order.clone(), signer: signer, };
+            let vinfo = CreateOrderInfo { order: order.clone() };
 
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
@@ -151,7 +151,7 @@ mod executor {
             messaging
                 .send_message_to_appchain(
                     self.arkchain_orderbook_address.read(),
-                    selector!("validate_order_execution"),
+                    selector!("create_order_from_l2"),
                     vinfo_buf.span(),
                 );
         }

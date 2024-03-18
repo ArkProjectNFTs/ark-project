@@ -93,7 +93,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             return Result::Err(OrderValidationError::EndDateTooFar);
         }
 
-        // TODO: define a real value here. 10 is an example and
+        // TODO: define a real value here. 20 is an example and
         // totally arbitrary.
         // The only consideration is that, the total order serialized
         // data must not be greater than 256 felts.

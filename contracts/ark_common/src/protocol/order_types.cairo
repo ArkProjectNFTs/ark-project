@@ -223,8 +223,7 @@ struct ExecutionValidationInfo {
 
 #[derive(Serde, Copy, Drop)]
 struct CreateOrderInfo {
-    order: OrderV1,
-    signer: Signer
+    order: OrderV1
 }
 
 /// Type of an route, that may be defined from

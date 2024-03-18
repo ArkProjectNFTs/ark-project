@@ -58,13 +58,6 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   const owner = await getTokenOwner(config, STARKNET_NFT_ADDRESS, tokenId);
   const ownerHex = "0x" + owner.toString(16).padStart(64, "0");
   console.log("Owner of tokenId", tokenId, "is", ownerHex);
-
-  console.log(`=> Approving for all`);
-  await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
-    starknetAccount: starknetOffererAccount
-  });
-
   console.log(`=> Creating order`);
   // Define the order details
   const order: ListingV1 = {

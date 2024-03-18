@@ -21,5 +21,11 @@ export {
   getOrderType
 } from "./actions/read";
 
-export type { ListingV1, OfferV1, CancelInfo, RouteType } from "./types";
+export type {
+  ListingV1,
+  OfferV1,
+  CancelInfo,
+  RouteType,
+  OrderV1
+} from "./types";
 export type { Config, Network, ConfigParameters } from "./createConfig";

@@ -32,7 +32,7 @@ trait Orderbook<T> {
     ///
     /// * `order` - The order to be placed.
     /// * `sign_info` - The signing info of the `order`.
-    fn create_order(ref self: T, order: OrderV1, signer: Signer);
+    fn create_order(ref self: T, order: OrderV1);
 
     /// Cancels an existing order in the orderbook.
     ///
@@ -278,9 +278,9 @@ mod orderbook {
 
     #[l1_handler]
     fn create_order_from_l2(
-        ref self: ContractState, _from_address: felt252, order: OrderV1, signer: Signer
+        ref self: ContractState, _from_address: felt252, order: OrderV1
     ) {
-        self.create_order(order, signer);
+        self.create_order(order);
     }
 
     // *************************************************************************
@@ -380,12 +380,7 @@ mod orderbook {
 
         /// Submits and places an order to the orderbook if the order is valid.
         
-        fn create_order(ref self: ContractState, order: OrderV1, signer: Signer) {
-            let order_hash = order.compute_order_hash();
-            let order_sign = OrderSign { hash: order_hash };
-            let order_sign_hash = order_sign
-                .compute_hash_from(from: order.offerer, chain_id: self.chain_id.read());
-            let user_pubkey = SignerValidator::verify(order_sign_hash, signer);
+        fn create_order(ref self: ContractState, order: OrderV1) {
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
             if validation.is_err() {
@@ -415,7 +410,6 @@ mod orderbook {
                     self._create_collection_offer(order, order_type, order_hash);
                 },
             };
-            self.order_signers.write(order_hash, user_pubkey);
         }
 
         fn cancel_order(ref self: ContractState, cancel_info: CancelInfo, signer: Signer) {
@@ -433,16 +427,13 @@ mod orderbook {
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
             assert(order.offerer == cancel_info.canceller, 'not the same offerrer');
-            let status = match order_status_read(order_hash) {
-                Option::Some(s) => s,
-                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
-            };
+
             let block_ts = starknet::get_block_timestamp();
             match order_type_read(order_hash) {
                 Option::Some(order_type) => {
                     if order_type == OrderType::Auction {
                         let auction_token_hash = order.compute_token_hash();
-                        let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                        let (_, auction_end_date, _) = self
                             .auctions
                             .read(auction_token_hash);
                         assert(
