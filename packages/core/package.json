@@ -12,7 +12,7 @@
     "generate-contracts": "ts-node src/generateContracts.ts",
     "build": "npm run generate-contracts && tsup src/index.ts --format cjs,esm --dts",
     "dev": "nodemon --watch ../../contracts.json --exec 'npm run generate-contracts' & tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "jest tests/fulfillListing.test"
+    "test": "jest tests -i"
   },
   "dependencies": {
     "@scure/starknet": "^0.3.0",
