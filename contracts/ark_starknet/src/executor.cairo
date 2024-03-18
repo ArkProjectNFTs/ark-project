@@ -70,8 +70,7 @@ mod executor {
 
     #[external(v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
-
-        fn add_broker_fees(ref self: ContractState, broker_address: ContractAddress, fee: u256) {
+        fn set_broker_fees(ref self: ContractState, broker_address: ContractAddress, fee: u256) {
             self.broker_fees.write(broker_address, fee);
         }
 
@@ -80,6 +79,10 @@ mod executor {
         }
 
         fn set_ark_fees(ref self: ContractState, fee: u256) {
+            assert(
+                starknet::get_caller_address() == self.admin_address.read(),
+                'Unauthorized admin address'
+            );
             self.ark_fees.write(fee);
         }
 
@@ -168,11 +171,33 @@ mod executor {
                 contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
+            let fulfill_broker_fees = self.broker_fees.read(execution_info.fulfill_broker_address);
+            let listing_broker_fees = self.broker_fees.read(execution_info.listing_broker_address);
+            let ark_fees = self.ark_fees.read();
+            let creator_fees = 1;
+
+            let seller_amount = execution_info.payment_amount
+                * (100 - fulfill_broker_fees - listing_broker_fees - creator_fees - ark_fees)
+                / 100;
+            // split the fees
             currency_contract
                 .transfer_from(
                     execution_info.payment_from,
-                    execution_info.payment_to,
-                    execution_info.payment_amount
+                    execution_info.fulfill_broker_address,
+                    execution_info.payment_amount * (fulfill_broker_fees / 100)
+                );
+
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from,
+                    execution_info.listing_broker_address,
+                    execution_info.payment_amount * (listing_broker_fees / 100)
+                );
+
+            // finally transfer to the seller
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from, execution_info.payment_to, seller_amount
                 );
 
             let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
@@ -228,44 +253,4 @@ mod executor {
             };
         }
     }
-// #[generate_trait]
-// impl InternalFunctions of InternalFunctionsTrait {
-//     fn _transfer_royalties(
-//         ref self: ContractState, execution_info: ExecutionInfo, eth_contract: IERC20Dispatcher
-//     ) {
-//         // Royalties distribution
-//         let arkchain_fee = self.arkchain_fee.read();
-//         let total_fees = execution_info.create_broker_fee
-//             + execution_info.fulfill_broker_fee
-//             + execution_info.creator_fee
-//             + arkchain_fee;
-//         assert(execution_info.price < total_fees, 'Invalid price');
-
-//         match execution_info.route {
-//             RouteType::Erc20ToErc721 => { // ...
-//             },
-//             RouteType::Erc721ToErc20 => {
-//                 eth_contract
-//                     .transfer_from(
-//                         execution_info.offerer_address, self.admin_address.read(), arkchain_fee
-//                     );
-//             // eth_contract.transfer_from(execution_info.offerer_address, self.admin_address.read(), arkchain_fee);
-//             },
-//         };
-//     // eth_contract
-//     //     .transfer_from(execution_info.taker_address, execution_info.creator_address, execution_info.creator_fee);
-
-//     // eth_contract
-//     //     .transfer_from(
-//     //         execution_info.taker_address, execution_info.create_broker_address, execution_info.create_broker_fee
-//     //     );
-
-//     // eth_contract
-//     //     .transfer_from(
-//     //         execution_info.taker_address, execution_info.fulfill_broker_address, execution_info.fulfill_broker_fee
-//     //     );
-
-//     // eth_contract.transferFrom(execution_info.taker_address, execution_info.maker_address, execution_info.price);
-//     }
-// }
 }

@@ -25,7 +25,6 @@ describe("ArkProject Listing", () => {
     const brokerId = stark.randomAddress();
     const { arkProvider, starknetProvider } = config;
     const { account: arkAccount } = await createAccount(arkProvider);
-    console.log(brokerId);
     const solisAdminAccount = await fetchOrCreateAccount(
       config.arkProvider,
       process.env.SOLIS_ADMIN_ADDRESS_DEV!,

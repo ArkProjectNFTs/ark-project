@@ -50,7 +50,7 @@ impl From<OrderPlaced> for PlacedData {
             end_amount: u256_to_hex(&value.order.end_amount),
             start_date: value.order.start_date,
             end_date: value.order.end_date,
-            broker_id: to_hex_str(&value.order.broker_id),
+            broker_id: to_hex_str(&FieldElement::from(value.order.broker_id)),
         }
     }
 }
