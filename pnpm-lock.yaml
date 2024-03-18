@@ -248,9 +248,6 @@ importers:
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
-      ethers:
-        specifier: ^6.9.1
-        version: 6.9.1
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.10.7)(ts-node@10.9.1)
