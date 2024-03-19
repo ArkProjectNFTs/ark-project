@@ -612,6 +612,18 @@
   },
   {
     "type": "event",
+    "name": "ark_orderbook::orderbook::orderbook::OrderBackToOpen",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      }
+    ]
+  },
+  {
+    "type": "event",
     "name": "ark_orderbook::orderbook::orderbook::Event",
     "kind": "enum",
     "variants": [
@@ -638,6 +650,11 @@
       {
         "name": "Upgraded",
         "type": "ark_orderbook::orderbook::orderbook::Upgraded",
+        "kind": "nested"
+      },
+      {
+        "name": "OrderBackToOpen",
+        "type": "ark_orderbook::orderbook::orderbook::OrderBackToOpen",
         "kind": "nested"
       }
     ]
