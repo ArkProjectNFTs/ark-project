@@ -535,6 +535,10 @@
       {
         "name": "CancelledAssetFault",
         "type": "()"
+      },
+      {
+        "name": "CancelledOwnership",
+        "type": "()"
       }
     ]
   },
