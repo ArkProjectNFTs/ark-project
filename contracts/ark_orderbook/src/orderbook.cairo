@@ -289,7 +289,7 @@ mod orderbook {
     fn rollback_status_order(ref self: ContractState, _from_address: felt252, order_hash: felt252, reason: felt252) {
         order_status_write(order_hash, OrderStatus::Open);
         self.emit(OrderCancelled { order_hash, reason: reason.into() });
-        self.emit(OrderBackToOPen { order_hash });
+        self.emit(OrderBackToOpen { order_hash });
     }
 
     // *************************************************************************

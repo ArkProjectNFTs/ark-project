@@ -27,6 +27,7 @@ mod orderbook_event_mock {
         OrderPlaced: OrderPlaced,
         OrderExecuted: OrderExecuted,
         OrderCancelled: OrderCancelled,
+        OrderBackToOpen: OrderBackToOpen,
         OrderFulfilled: OrderFulfilled,
     }
 
@@ -48,6 +49,13 @@ mod orderbook_event_mock {
     /// Event for when an order is executed.
     #[derive(Drop, starknet::Event)]
     struct OrderExecuted {
+        #[key]
+        order_hash: felt252,
+    }
+
+    /// Event for when an order is executed.
+    #[derive(Drop, starknet::Event)]
+    struct OrderBackToOpen {
         #[key]
         order_hash: felt252,
     }
