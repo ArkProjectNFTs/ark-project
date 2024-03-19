@@ -69,9 +69,8 @@ const createOffer = async (
 
   const orderHash = await createOrder(config, {
     starknetAccount,
-    arkAccount,
     order,
-    owner
+    tokenId: baseOrder.tokenId
   });
   return orderHash;
 };

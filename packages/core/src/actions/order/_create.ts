@@ -1,4 +1,4 @@
-import { Account, AccountInterface, cairo, CallData } from "starknet";
+import { AccountInterface, BigNumberish, cairo, CallData } from "starknet";
 
 import { Config } from "../../createConfig";
 import { OrderV1 } from "../../types";
@@ -6,9 +6,8 @@ import { getOrderHashFromOrderV1 } from "../../utils";
 
 interface CreateOrderParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   order: OrderV1;
-  owner?: string;
+  tokenId: BigNumberish;
 }
 
 /**
@@ -29,7 +28,7 @@ const createOrder = async (
   config: Config,
   parameters: CreateOrderParameters
 ) => {
-  const { starknetAccount, order } = parameters;
+  const { starknetAccount, order, tokenId } = parameters;
 
   const result = await starknetAccount.execute([
     {
@@ -37,7 +36,7 @@ const createOrder = async (
       entrypoint: "approve",
       calldata: CallData.compile({
         to: config.starknetContracts.executor as string,
-        token_id: cairo.uint256(1)
+        token_id: cairo.uint256(tokenId)
       })
     },
     {

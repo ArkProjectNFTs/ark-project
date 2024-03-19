@@ -1,21 +1,12 @@
-import * as starknet from "@scure/starknet";
-import {
-  Account,
-  AccountInterface,
-  CairoCustomEnum,
-  CallData,
-  shortString
-} from "starknet";
+import { AccountInterface, BigNumberish, cairo, CallData } from "starknet";
 
 import { Config } from "../../createConfig";
-import { getSignInfos } from "../../signer";
-import { FulfillInfo } from "../../types";
+import { ApproveInfo, FulfillInfo } from "../../types";
 
 interface fulfillOrderParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   fulfillInfo: FulfillInfo;
-  owner?: string;
+  approveInfo: ApproveInfo;
 }
 
 /**
@@ -32,49 +23,26 @@ export const _fulfillOrder = async (
   config: Config,
   parameters: fulfillOrderParameters
 ) => {
-  const { starknetAccount, arkAccount, fulfillInfo, owner } = parameters;
-  // Compile the order data
-  const compiledOrder = CallData.compile({
-    fulfillInfo
-  });
-  const compiletOrderBigInt = compiledOrder.map(BigInt);
-
-  const TypedOrderData = {
-    message: {
-      hash: starknet.poseidonHashMany(compiletOrderBigInt).toString()
-    },
-    domain: {
-      name: "Ark",
-      chainId: shortString.decodeShortString(
-        fulfillInfo.token_chain_id.toString()
-      ),
-      version: "1.1"
-    },
-    types: {
-      StarkNetDomain: [
-        { name: "name", type: "felt252" },
-        { name: "chainId", type: "felt252" },
-        { name: "version", type: "felt252" }
-      ],
-      Order: [{ name: "hash", type: "felt252" }]
-    },
-    primaryType: "Order"
-  };
-
-  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
-  const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-
-  const fulfillInfoCalldata = CallData.compile({
-    fulfill_info: fulfillInfo,
-    signer: signer
-  });
+  const { starknetAccount, fulfillInfo, approveInfo } = parameters;
 
   // Execute the transaction
-  const result = await arkAccount.execute({
-    contractAddress: config.arkchainContracts.orderbook,
-    entrypoint: "fulfill_order",
-    calldata: fulfillInfoCalldata
-  });
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: approveInfo.currencyAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        spender: config.starknetContracts.executor,
+        amount: cairo.uint256(approveInfo.amount)
+      })
+    },
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "fulfill_order",
+      calldata: CallData.compile({
+        fulfill_info: fulfillInfo
+      })
+    }
+  ]);
 
   // Wait for the transaction to be processed
   await config.arkProvider.waitForTransaction(result.transaction_hash, {

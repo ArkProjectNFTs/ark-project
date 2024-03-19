@@ -1,15 +1,15 @@
 import {
-  Account,
   AccountInterface,
   BigNumberish,
   cairo,
   CairoOption,
   CairoOptionVariant,
+  CallData,
   Uint256
 } from "starknet";
 
 import { Config } from "../../createConfig";
-import { FulfillInfo, FulfillListingInfo } from "../../types";
+import { ApproveInfo, FulfillInfo, FulfillListingInfo } from "../../types";
 import { _fulfillOrder } from "./_fulfill";
 
 /**
@@ -22,16 +22,15 @@ import { _fulfillOrder } from "./_fulfill";
  */
 interface FulfillListingParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   fulfillListingInfo: FulfillListingInfo;
-  owner?: string;
+  approveInfo: ApproveInfo;
 }
 
 const fulfillListing = async (
   config: Config,
   parameters: FulfillListingParameters
 ) => {
-  const { starknetAccount, arkAccount, fulfillListingInfo, owner } = parameters;
+  const { starknetAccount, fulfillListingInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
@@ -46,11 +45,27 @@ const fulfillListing = async (
     )
   };
 
-  _fulfillOrder(config, {
-    starknetAccount,
-    arkAccount,
-    fulfillInfo,
-    owner
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: approveInfo.currencyAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        spender: config.starknetContracts.executor,
+        amount: cairo.uint256(approveInfo.amount)
+      })
+    },
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "fulfill_order",
+      calldata: CallData.compile({
+        fulfill_info: fulfillInfo
+      })
+    }
+  ]);
+
+  // Wait for the transaction to be processed
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
   });
 };
 

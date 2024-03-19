@@ -39,10 +39,6 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   console.log(`=> Whitelisting broker ${brokerId}`);
   await whitelistBroker(config, solisAdminAccount, brokerId);
 
-  console.log(`=> Creating account`);
-  // Create a new account for the listing using the provider
-  const { account: arkAccount } = await createAccount(config.arkProvider);
-
   console.log(
     `=> Fetching or creating offerer starknet account, for test purpose only`
   );
@@ -71,7 +67,6 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   // Create the listing on the arkchain using the order details
   const orderHash = await createListing(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
     order
   });
 

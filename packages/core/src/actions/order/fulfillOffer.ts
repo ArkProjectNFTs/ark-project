@@ -9,7 +9,7 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig";
-import { FulfillInfo, FulfillOfferInfo } from "../../types";
+import { ApproveInfo, FulfillInfo, FulfillOfferInfo } from "../../types";
 import { _fulfillOrder } from "./_fulfill";
 
 /**
@@ -24,14 +24,14 @@ interface FulfillOfferParameters {
   starknetAccount: AccountInterface;
   arkAccount: Account;
   fulfillOfferInfo: FulfillOfferInfo;
-  owner?: string;
+  approveInfo: ApproveInfo;
 }
 
 const fulfillOffer = async (
   config: Config,
   parameters: FulfillOfferParameters
 ) => {
-  const { starknetAccount, arkAccount, fulfillOfferInfo, owner } = parameters;
+  const { starknetAccount, fulfillOfferInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fulfillInfo: FulfillInfo = {
     order_hash: fulfillOfferInfo.orderHash,
@@ -47,9 +47,8 @@ const fulfillOffer = async (
 
   _fulfillOrder(config, {
     starknetAccount,
-    arkAccount,
     fulfillInfo,
-    owner
+    approveInfo
   });
 };
 

@@ -75,5 +75,11 @@ export type BaseFulfillInfo = {
   brokerId: BigNumberish;
 };
 
+export type ApproveInfo = {
+  currencyAddress?: BigNumberish;
+  currencyChainId?: BigNumberish;
+  amount: BigNumberish;
+};
+
 export type FulfillListingInfo = BaseFulfillInfo;
 export type FulfillOfferInfo = BaseFulfillInfo;

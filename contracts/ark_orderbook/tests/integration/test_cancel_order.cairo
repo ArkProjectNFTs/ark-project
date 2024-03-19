@@ -36,7 +36,7 @@ fn test_cancel_auction() {
 
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
-    dispatcher.create_order(order: auction_listing_order, signer: signer);
+    dispatcher.create_order(order: auction_listing_order);
 
     let cancel_info = CancelInfo {
         order_hash: order_hash,

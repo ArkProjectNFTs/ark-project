@@ -73,12 +73,6 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   console.log("=> Token minted with tokenId: ", tokenId);
 
-  console.log(`=> Approving for all`);
-  await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
-    starknetAccount: starknetOffererAccount
-  });
-
   console.log(`=> Creating order`);
   // Define the order details
   const order: ListingV1 = {
@@ -92,7 +86,6 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   // Create the listing on the arkchain using the order details
   const orderHash = await createListing(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
     order
   });
 
@@ -117,20 +110,6 @@ import { whitelistBroker } from "./utils/whitelistBroker";
     );
   }
 
-  console.log(
-    `=> Approving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
-  );
-
-  await approveERC20(config, {
-    starknetAccount: starknetFulfillerAccount,
-    contractAddress: STARKNET_ETH_ADDRESS,
-    amount: order.startAmount
-  });
-
-  if (config.starknetNetwork !== "dev") {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-  }
-  console.log("tokenId", tokenId);
   // Define the fulfill details
   const fulfillListingInfo = {
     orderHash: orderHash,
@@ -143,8 +122,11 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   // fulfill the order
   await fulfillListing(config, {
     starknetAccount: starknetFulfillerAccount,
-    arkAccount,
-    fulfillListingInfo
+    fulfillListingInfo,
+    approveInfo: {
+      currencyAddress: STARKNET_ETH_ADDRESS,
+      amount: order.startAmount
+    }
   });
 
   if (config.starknetNetwork !== "dev") {
@@ -153,7 +135,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
     );
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   } else {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 
   console.log("=> Fetching order status...");

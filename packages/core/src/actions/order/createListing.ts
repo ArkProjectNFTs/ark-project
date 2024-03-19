@@ -13,7 +13,6 @@ import { createOrder } from "./_create";
 
 interface CreateListingParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   order: ListingV1;
   owner?: string;
 }
@@ -36,7 +35,7 @@ const createListing = async (
   config: Config,
   parameters: CreateListingParameters
 ) => {
-  const { starknetAccount, arkAccount, order: baseOrder, owner } = parameters;
+  const { starknetAccount, order: baseOrder, owner } = parameters;
 
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
@@ -66,9 +65,8 @@ const createListing = async (
 
   const orderHash = await createOrder(config, {
     starknetAccount,
-    arkAccount,
     order,
-    owner
+    tokenId: baseOrder.tokenId
   });
 
   return orderHash;

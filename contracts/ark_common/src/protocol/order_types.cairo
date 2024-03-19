@@ -226,6 +226,12 @@ struct CreateOrderInfo {
     order: OrderV1
 }
 
+#[derive(Serde, Copy, Drop)]
+struct FulfillOrderInfo {
+    fulfillInfo: FulfillInfo
+}
+
+
 /// Type of an route, that may be defined from
 /// incoming order.
 #[derive(Serde, Drop, PartialEq, Copy)]

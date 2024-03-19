@@ -16,11 +16,12 @@ mod executor {
     use core::box::BoxTrait;
 
     use ark_common::protocol::order_v1::OrderV1;
+    use ark_common::protocol::order_types::{FulfillInfo};
     use ark_common::crypto::signer::{Signer};
     use starknet::{ContractAddress, ClassHash};
 
     use ark_common::protocol::order_types::{
-        CreateOrderInfo, RouteType, ExecutionInfo, ExecutionValidationInfo
+        FulfillOrderInfo, CreateOrderInfo, RouteType, ExecutionInfo, ExecutionValidationInfo
     };
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
     use ark_starknet::appchain_messaging::{
@@ -152,6 +153,24 @@ mod executor {
                 .send_message_to_appchain(
                     self.arkchain_orderbook_address.read(),
                     selector!("create_order_from_l2"),
+                    vinfo_buf.span(),
+                );
+        }
+
+        fn fulfill_order(ref self: ContractState, fulfillInfo: FulfillInfo) {
+            let messaging = IAppchainMessagingDispatcher {
+                contract_address: self.messaging_address.read()
+            };
+
+            let vinfo = FulfillOrderInfo { fulfillInfo: fulfillInfo.clone() };
+
+            let mut vinfo_buf = array![];
+            Serde::serialize(@vinfo, ref vinfo_buf);
+
+            messaging
+                .send_message_to_appchain(
+                    self.arkchain_orderbook_address.read(),
+                    selector!("fulfill_order_from_l2"),
                     vinfo_buf.span(),
                 );
         }

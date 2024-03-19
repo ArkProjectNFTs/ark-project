@@ -48,7 +48,7 @@ trait Orderbook<T> {
     ///
     /// * `order_hash` - The order to be fulfil.
     /// * `sign_info` - The signing information associated with the order fulfillment.
-    fn fulfill_order(ref self: T, fulfill_info: FulfillInfo, signer: Signer);
+    fn fulfill_order(ref self: T, fulfill_info: FulfillInfo);
 
     /// Retrieves the type of an order using its hash.
     ///
@@ -148,7 +148,7 @@ mod orderbook {
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
     use starknet::ContractAddress;
-    
+
     use ark_common::protocol::order_database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
@@ -277,10 +277,15 @@ mod orderbook {
     }
 
     #[l1_handler]
-    fn create_order_from_l2(
-        ref self: ContractState, _from_address: felt252, order: OrderV1
-    ) {
+    fn create_order_from_l2(ref self: ContractState, _from_address: felt252, order: OrderV1) {
         self.create_order(order);
+    }
+
+    #[l1_handler]
+    fn fulfill_order_from_l2(
+        ref self: ContractState, _from_address: felt252, fulfillInfo: FulfillInfo
+    ) {
+        self.fulfill_order(fulfillInfo);
     }
 
     // *************************************************************************
@@ -379,7 +384,7 @@ mod orderbook {
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
-        
+
         fn create_order(ref self: ContractState, order: OrderV1) {
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
@@ -433,9 +438,7 @@ mod orderbook {
                 Option::Some(order_type) => {
                     if order_type == OrderType::Auction {
                         let auction_token_hash = order.compute_token_hash();
-                        let (_, auction_end_date, _) = self
-                            .auctions
-                            .read(auction_token_hash);
+                        let (_, auction_end_date, _) = self.auctions.read(auction_token_hash);
                         assert(
                             block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
                         );
@@ -455,14 +458,7 @@ mod orderbook {
             self.emit(OrderCancelled { order_hash, reason: OrderStatus::CancelledUser.into() });
         }
 
-        fn fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo, signer: Signer) {
-            let fulfill_hash = serialized_hash(fulfill_info);
-            let fulfill_sign = OrderSign { hash: fulfill_hash };
-            let fulfill_sign_hash = fulfill_sign
-                .compute_hash_from(from: fulfill_info.fulfiller, chain_id: self.chain_id.read());
-
-            SignerValidator::verify(fulfill_sign_hash, signer);
-
+        fn fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo) {
             let order_hash = fulfill_info.order_hash;
             let order: OrderV1 = match order_read(order_hash) {
                 Option::Some(o) => o,
@@ -480,12 +476,6 @@ mod orderbook {
             match order_type {
                 OrderType::Listing => { self._fulfill_listing_order(fulfill_info, order); },
                 OrderType::Auction => {
-                    let original_signer_public_key = self
-                        .order_signers
-                        .read(fulfill_info.order_hash);
-                    let mut origin_signer = signer.clone();
-                    origin_signer.set_public_key(original_signer_public_key);
-                    SignerValidator::verify(fulfill_sign_hash, origin_signer);
                     self._fulfill_auction_order(fulfill_info, order)
                 },
                 OrderType::Offer => { self._fulfill_offer(fulfill_info, order); },
