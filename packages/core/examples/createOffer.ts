@@ -5,7 +5,7 @@
  * checking the order status
  */
 
-import { shortString } from "starknet";
+import { Contract, shortString } from "starknet";
 
 import "dotenv/config";
 

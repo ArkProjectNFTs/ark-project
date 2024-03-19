@@ -373,9 +373,19 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
     async fn on_starknet_tx_failed(&self, call: Call) {
         println!("Starknet tx failed: {:?}", call);
 
-        // TODO: in the case a transaction reverts on Starknet for the ExecutionInfo
-        // being invalid (someone races Solis), some code may be run here
-        // to cancel / invalidate the order (if it applies).
+        let execution_info = match ExecutionInfo::cairo_deserialize(&call.calldata, 0) {
+            Ok(execution_info) => execution_info,
+            Err(e) => {
+                tracing::error!("Fail deserializing ExecutionInfo: {:?}", e);
+                return;
+            }
+        };
+
+        // rollback the status
+        self.add_l1_handler_transaction_for_orderbook(
+            selector!("rollback_status_order"),
+            &[execution_info.order_hash],
+        );
     }
 }
 
