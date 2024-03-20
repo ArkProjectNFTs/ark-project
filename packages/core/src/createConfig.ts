@@ -61,7 +61,7 @@ const getArkchainRpcUrl = (network: Network): string => {
     case "sepolia":
       return "https://sepolia.solis.arkproject.dev";
     case "mainnet":
-      return "https://solis.arkproject.dev";
+      return "https://staging.solis.arkproject.dev";
     default:
       return "http://0.0.0.0:7777";
   }

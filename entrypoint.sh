@@ -10,7 +10,7 @@ cat >crates/solis/messaging.json <<EOF
   "sender_address": "$STARKNET_SOLIS_ACCOUNT_ADDRESS",
   "private_key": "$STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY",
   "interval": 2,
-  "from_block": 929303
+  "from_block": 630600
 }
 EOF
 

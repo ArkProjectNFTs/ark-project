@@ -14,7 +14,7 @@ import {
 
 function rpc(chain: Chain) {
   return {
-    nodeUrl: `https://starknet-goerli.g.alchemy.com/v2/boFbY_WiA-InmepdQTgMFwSBic58A1LH`
+    nodeUrl: `https://starknet-mainnet.public.blastapi.io/rpc/v0.5`
   };
 }
 
@@ -31,7 +31,7 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
 
   return (
     <StarknetConfig
-      chains={[goerli, mainnet, sepolia]}
+      chains={[mainnet]}
       provider={provider}
       connectors={connectors}
       explorer={voyager}

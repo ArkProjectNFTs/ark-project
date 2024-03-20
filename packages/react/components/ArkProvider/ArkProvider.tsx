@@ -89,8 +89,8 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
     };
     fetchOwner();
   }, [address, config.starknetProvider, connector]);
-
-  if (starknetChain.network !== "goerli") {
+  console.log(starknetChain.network);
+  if (starknetChain.network !== "mainnet") {
     return (
       <div className="flex flex-col items-center justify-center w-full min-h-screen space-y-4">
         <div className="flex items-center justify-center rounded-full p-3 bg-red-50">
@@ -98,7 +98,7 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
         </div>
         <h1 className="text-3xl font-bold tracking-tighter">Wrong Network</h1>
         <p className="mx-auto max-w-[600px] text-center text-gray-500 md:text-xl/relaxed dark:text-gray-400">
-          Please switch to the <b>goerli</b> network in your connected wallet.
+          Please switch to the <b>mainnet</b> network in your connected wallet.
         </p>
       </div>
     );

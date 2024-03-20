@@ -72,3 +72,10 @@ cargo run -p solis -- \
 cd scripts/deployer
 node index.js
 ```
+
+<!-- 4. Deploy the `appchain_messaging` contract on Katana:
+
+```bash
+cd scripts/deployer
+node index.js
+``` -->
