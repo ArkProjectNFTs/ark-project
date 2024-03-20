@@ -12,11 +12,17 @@ export function getStarknetProvider(starknetNetwork: string) {
     case "goerli":
       starknetNodeUrl = process.env.STARKNET_NODE_URL_GOERLI || "";
       break;
+    case "sepolia":
+      starknetNodeUrl = process.env.STARKNET_NODE_URL_GOERLI || "";
+      break;
     default:
       throw new Error(`Unsupported starknetNetwork: ${starknetNetwork}`);
   }
 
-  return new RpcProvider({ nodeUrl: starknetNodeUrl });
+  return {
+    provider: new RpcProvider({ nodeUrl: starknetNodeUrl }),
+    nodeUrl: starknetNodeUrl
+  };
 }
 
 export function getSolisProvider(solisNetwork?: string) {
@@ -31,11 +37,17 @@ export function getSolisProvider(solisNetwork?: string) {
     case "goerli":
       solisNodeUrl = process.env.SOLIS_NODE_URL_GOERLI || "";
       break;
+    case "sepolia":
+      solisNodeUrl = process.env.SOLIS_NODE_URL_GOERLI || "";
+      break;
     default:
       throw new Error(`Unsupported solisNetwork: ${solisNetwork}`);
   }
 
-  return new RpcProvider({ nodeUrl: solisNodeUrl });
+  return {
+    provider: new RpcProvider({ nodeUrl: solisNodeUrl }),
+    nodeUrl: solisNodeUrl
+  };
 }
 
 export function getFeeAddress(network: string) {
@@ -43,6 +55,8 @@ export function getFeeAddress(network: string) {
     case "dev":
       return "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
     case "goerli":
+      return "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+    case "sepolia":
       return "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
     case "mainnet":
       return "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";

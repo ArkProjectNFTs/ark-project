@@ -5,7 +5,7 @@ import { buildAccounts, filterAccounts } from "./accounts";
 import "dotenv/config";
 
 export function getSolisAccounts(solisNetwork: ProviderNetwork) {
-  const solisProvider = getSolisProvider(solisNetwork);
+  const { provider: solisProvider } = getSolisProvider(solisNetwork);
 
   const solisAdminAccounts = [
     {

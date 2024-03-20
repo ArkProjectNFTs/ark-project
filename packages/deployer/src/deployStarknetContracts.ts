@@ -21,7 +21,7 @@ import {
 } from "./utils";
 
 async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
-  const starknetProvider = getStarknetProvider(starknetNetwork);
+  const { provider: starknetProvider } = getStarknetProvider(starknetNetwork);
   const { starknetAdminAccount, starknetSolisAccount } =
     getStarknetAccounts(starknetNetwork);
   const existingContracts = await getExistingContracts();

@@ -22,8 +22,9 @@ async function deployArkchainContracts(
   starknetNetwork: ProviderNetwork,
   solisNetwork: ProviderNetwork
 ) {
-  const starknetProvider = getStarknetProvider(starknetNetwork);
-  const solisProvider = getSolisProvider(solisNetwork);
+  const { provider: starknetProvider } = getStarknetProvider(starknetNetwork);
+  const { provider: solisProvider, nodeUrl: solisNodeUrl } =
+    getSolisProvider(solisNetwork);
   const { starknetAdminAccount } = getStarknetAccounts(starknetNetwork);
   const { arkchainAdminAccount } = getSolisAccounts(solisNetwork);
 
@@ -80,7 +81,7 @@ async function deployArkchainContracts(
     await setSolisAddresses(
       orderbookContract.address,
       executorAddress,
-      solisProvider.nodeUrl
+      solisNodeUrl
     );
 
     arkchainSpinner.stop();

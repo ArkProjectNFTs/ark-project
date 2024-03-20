@@ -18,7 +18,7 @@ import {
 export async function deployStarknetContracts(
   starknetNetwork: ProviderNetwork
 ) {
-  const starknetProvider = getStarknetProvider(starknetNetwork);
+  const { provider: starknetProvider } = getStarknetProvider(starknetNetwork);
   const { starknetAdminAccount } = getStarknetAccounts(starknetNetwork);
   let existingContracts = await getExistingContracts();
 
@@ -32,8 +32,8 @@ export async function deployStarknetContracts(
 
   const contractCallData = new CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
-    name: "ARK",
-    symbol: "ARK"
+    name: "ARKTEST",
+    symbol: "ARKTEST"
   });
 
   const deployR = await starknetAdminAccount.declareAndDeploy({

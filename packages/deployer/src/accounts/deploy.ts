@@ -17,8 +17,9 @@ interface Iaccount {
 }
 
 async function deployAccount(starknetNetwork: string) {
-  const starknetProvider = getStarknetProvider(starknetNetwork);
-  console.log("Using StarkNet provider:", starknetProvider.nodeUrl);
+  const { provider: starknetProvider, nodeUrl } =
+    getStarknetProvider(starknetNetwork);
+  console.log("Using StarkNet provider:", nodeUrl);
   const accountsFilePath = join(
     __dirname,
     `../../accounts/${starknetNetwork}.json`
@@ -32,9 +33,9 @@ async function deployAccount(starknetNetwork: string) {
     return;
   }
 
-  const noDeployedAccounts = accounts.filter((a) => a.deployed === false);
+  const notDeployedAccounts = accounts.filter((a) => a.deployed === false);
 
-  for (const accountToDeploy of noDeployedAccounts) {
+  for (const accountToDeploy of notDeployedAccounts) {
     const account = new Account(
       starknetProvider,
       accountToDeploy.address,
@@ -50,7 +51,7 @@ async function deployAccount(starknetNetwork: string) {
     });
 
     console.log("Deploying account... Transaction hash:", transaction_hash);
-    // await provider.waitForTransaction(transaction_hash);
+    // await starknetProvider.waitForTransaction(transaction_hash);
 
     console.log("✅ Account deployed.");
 

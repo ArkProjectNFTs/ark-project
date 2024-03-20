@@ -5,7 +5,7 @@ import { buildAccounts, filterAccounts } from "./accounts";
 import "dotenv/config";
 
 export function getStarknetAccounts(starknetNetwork: ProviderNetwork) {
-  const starknetProvider = getStarknetProvider(starknetNetwork);
+  const { provider: starknetProvider } = getStarknetProvider(starknetNetwork);
 
   const starknetAdminAccounts = [
     {
