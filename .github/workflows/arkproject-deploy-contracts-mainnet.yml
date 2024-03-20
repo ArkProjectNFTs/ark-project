@@ -41,7 +41,7 @@ jobs:
           STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
           STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET }}
         run: |
-          pnpm run deploy:starknet -- --starknet MAINNET
+          pnpm run deploy:starknet -- --starknet mainnet
   deploy-solis:
     needs: deploy-starknet
     name: Deploy Solis latest image to Amazon ECS
@@ -78,7 +78,7 @@ jobs:
         run: |
           cd aws/cdk-solis-ecs
           pnpm install
-      - name: Deploy CDK Stack MAINNET
+      - name: Deploy CDK Stack mainnet
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -133,4 +133,4 @@ jobs:
           SOLIS_ADMIN_PRIVATE_KEY_MAINNET: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_MAINNET }}
           SOLIS_ADMIN_PUBLIC_KEY_MAINNET: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_MAINNET }}
         run: |
-          pnpm run deploy:solis -- --solis MAINNET --starknet MAINNET
+          pnpm run deploy:solis -- --solis mainnet --starknet mainnet
