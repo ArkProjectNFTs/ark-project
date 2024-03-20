@@ -7,7 +7,7 @@ export function getStarknetProvider(starknetNetwork: string) {
       starknetNodeUrl = process.env.STARKNET_NODE_URL_DEV || "";
       break;
     case "mainnet":
-      starknetNodeUrl = process.env.STARKNET_NODE_URL_MAINNET || "";
+      starknetNodeUrl = process.env.STARKNET_NODE_URL_MAINNET_V5 || "";
       break;
     case "goerli":
       starknetNodeUrl = process.env.STARKNET_NODE_URL_GOERLI || "";
