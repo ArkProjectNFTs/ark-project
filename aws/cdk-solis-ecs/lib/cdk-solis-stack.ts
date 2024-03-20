@@ -18,7 +18,7 @@ export class CdkSolisStack extends cdk.Stack {
     });
 
     // ECS Cluster
-    const cluster = new ecs.Cluster(this, "ArkSolisCluster", {
+    const cluster = new ecs.Cluster(this, "ark-solis-production", {
       vpc: vpc
     });
 
@@ -121,7 +121,7 @@ export class CdkSolisStack extends cdk.Stack {
     });
 
     // ECS Service
-    const ecsService = new ecs.FargateService(this, "SolisService", {
+    const ecsService = new ecs.FargateService(this, "ark-solis-service", {
       cluster,
       taskDefinition,
       healthCheckGracePeriod: cdk.Duration.seconds(60)

@@ -10,7 +10,7 @@ import { CdkSolisStack } from "../lib/cdk-solis-stack";
 dotenv.config();
 
 const app = new cdk.App();
-new CdkSolisStack(app, "CdkSolisStack", {
+new CdkSolisStack(app, "ark-solis-production", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION
