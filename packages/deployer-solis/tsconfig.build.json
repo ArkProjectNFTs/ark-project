@@ -1,0 +1,15 @@
+{
+  "extends": "@ark-project/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationDir": "./dist",
+    "sourceMap": true
+  },
+  "include": [
+    "**/*.ts",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

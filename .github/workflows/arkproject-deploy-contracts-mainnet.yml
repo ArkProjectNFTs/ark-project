@@ -133,4 +133,4 @@ jobs:
           SOLIS_ADMIN_PRIVATE_KEY_MAINNET: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_MAINNET }}
           SOLIS_ADMIN_PUBLIC_KEY_MAINNET: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_MAINNET }}
         run: |
-          pnpm run deploy:solis -- --solis mainnet --starknet mainnet
+          pnpm run deploy:v5:solis -- --solis mainnet --starknet mainnet
