@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import Explore from "./explore/components/explore";
 
 const CURRENT_COLLECTION =
-  "0x022411b480425fe6e627fdf4d1b6ac7f8567314ada5617a0a6d8ef3e74b69436";
+  "0x32d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546";
 export const metadata: Metadata = {
   title: "Marketplace - examples",
   description: "Check out some examples app built using the Ark SDK hooks."
