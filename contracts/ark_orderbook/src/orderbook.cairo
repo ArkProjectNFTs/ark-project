@@ -193,7 +193,7 @@ mod orderbook {
         OrderPlaced: OrderPlaced,
         OrderExecuted: OrderExecuted,
         OrderCancelled: OrderCancelled,
-        OrderBackToOpen: OrderBackToOpen,
+        RollbackStatus: RollbackStatus,
         OrderFulfilled: OrderFulfilled,
         Upgraded: Upgraded,
     }
@@ -234,9 +234,11 @@ mod orderbook {
 
     /// Event for when an order has been rollbacked to placed.
     #[derive(Drop, starknet::Event)]
-    struct OrderBackToOpen {
+    struct RollbackStatus {
         #[key]
-        order_hash: felt252
+        order_hash: felt252,
+        #[key]
+        reason: felt252
     }
 
     /// Event for when an order is fulfilled.
@@ -286,10 +288,11 @@ mod orderbook {
 
     /// Update status : only from solis.
     #[l1_handler]
-    fn rollback_status_order(ref self: ContractState, _from_address: felt252, order_hash: felt252, reason: felt252) {
+    fn rollback_status_order(
+        ref self: ContractState, _from_address: felt252, order_hash: felt252, reason: felt252
+    ) {
         order_status_write(order_hash, OrderStatus::Open);
-        self.emit(OrderCancelled { order_hash, reason: reason.into() });
-        self.emit(OrderBackToOpen { order_hash });
+        self.emit(RollbackStatus { order_hash, reason: reason.into() });
     }
 
     // *************************************************************************

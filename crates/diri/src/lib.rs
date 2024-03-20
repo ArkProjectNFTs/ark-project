@@ -112,8 +112,8 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                             .register_executed(block_number, block_timestamp, &ev.into())
                             .await?;
                     }
-                    Event::OrderBackToOpen(ev) => {
-                        trace!("OrderBackToOpen found: {:?}", ev);
+                    Event::RollbackStatus(ev) => {
+                        trace!("RollbackStatus found: {:?}", ev);
                         self.storage
                             .order_back_to_open(block_number, block_timestamp, &ev.into())
                             .await?;

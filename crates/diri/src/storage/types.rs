@@ -5,7 +5,7 @@ use starknet::core::utils::parse_cairo_short_string;
 use std::fmt::LowerHex;
 
 use crate::orderbook::{
-    OrderBackToOpen, OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced, U256,
+    OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced, RollbackStatus, U256,
 };
 
 #[derive(Debug, Clone)]
@@ -73,14 +73,16 @@ impl From<OrderCancelled> for CancelledData {
 }
 
 #[derive(Debug, Clone)]
-pub struct BackToOpenData {
+pub struct RollbackStatusData {
     pub order_hash: String,
+    pub reason: String,
 }
 
-impl From<OrderBackToOpen> for BackToOpenData {
-    fn from(value: OrderBackToOpen) -> Self {
+impl From<RollbackStatus> for RollbackStatusData {
+    fn from(value: RollbackStatus) -> Self {
         Self {
             order_hash: to_hex_str(&value.order_hash),
+            reason: parse_cairo_short_string(&value.reason).unwrap_or(to_hex_str(&value.reason)),
         }
     }
 }

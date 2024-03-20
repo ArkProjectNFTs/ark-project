@@ -616,11 +616,16 @@
   },
   {
     "type": "event",
-    "name": "ark_orderbook::orderbook::orderbook::OrderBackToOpen",
+    "name": "ark_orderbook::orderbook::orderbook::RollbackStatus",
     "kind": "struct",
     "members": [
       {
         "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "reason",
         "type": "core::felt252",
         "kind": "key"
       }
@@ -657,8 +662,8 @@
         "kind": "nested"
       },
       {
-        "name": "OrderBackToOpen",
-        "type": "ark_orderbook::orderbook::orderbook::OrderBackToOpen",
+        "name": "RollbackStatus",
+        "type": "ark_orderbook::orderbook::orderbook::RollbackStatus",
         "kind": "nested"
       }
     ]
