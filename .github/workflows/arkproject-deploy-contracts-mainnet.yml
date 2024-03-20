@@ -72,7 +72,7 @@ jobs:
         id: vars
         run: |
           content=`cat contracts.json`
-          STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET=$(echo $content | jq -r '.MAINNET.messaging')
+          STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET=$(echo $content | jq -r '.mainnet.messaging')
           echo "STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET=$STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET" >> $GITHUB_ENV
       - name: Install dependencies
         run: |
