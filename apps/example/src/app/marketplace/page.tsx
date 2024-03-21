@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 async function getData() {
   const response = await fetch(
-    `${env.NEXT_PUBLIC_NFT_API_URL}/v1/tokens/0x22411b480425fe6e627fdf4d1b6ac7f8567314ada5617a0a6d8ef3e74b69436`,
+    `${env.NEXT_PUBLIC_NFT_API_URL}/v1/tokens/0x32d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546`,
     {
       headers: {
         "x-api-key": env.NEXT_PUBLIC_NFT_API_KEY
@@ -30,7 +30,8 @@ async function getMarketData() {
     `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/tokens/collection/${CURRENT_COLLECTION}`
   );
   if (!response.ok) {
-    throw new Error("Failed to fetch data");
+    return [];
+    // throw new Error("Failed to fetch data");
   }
   return response.json();
 }
