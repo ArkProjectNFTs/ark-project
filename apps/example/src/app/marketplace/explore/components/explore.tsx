@@ -36,24 +36,18 @@ async function fetchCollectionMarket() {
   return response.json();
 }
 
-const Explore = ({ initialData = [], orderBookData = [] }: any) => {
+const Explore = () => {
   const {
     data: collectionData,
     error: collectionDataError,
     isLoading: collectionDataIsLoading
-  }: any = useQuery("tokens", fetchCollection, {
-    initialData
-    // refetchInterval: 1000
-  });
+  }: any = useQuery("tokens", fetchCollection);
 
   const {
     data: collectionMarketData,
     error: collectionMarketError,
     isLoading: collectionMarketIsLoading
-  }: any = useQuery("collectionMarket", fetchCollectionMarket, {
-    initialData: orderBookData
-    // refetchInterval: 1000
-  });
+  }: any = useQuery("collectionMarket", fetchCollectionMarket);
 
   if (collectionDataIsLoading || collectionMarketIsLoading) {
     return <div>Loading...</div>;

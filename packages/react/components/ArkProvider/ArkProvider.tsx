@@ -89,7 +89,6 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
     };
     fetchOwner();
   }, [address, config.starknetProvider, connector]);
-  console.log(starknetChain.network);
   if (starknetChain.network !== "mainnet") {
     return (
       <div className="flex flex-col items-center justify-center w-full min-h-screen space-y-4">

@@ -27,18 +27,11 @@ import Activity from "./token-activity";
 import TokenOffers from "./token-offers";
 
 interface AssetProps {
-  token: any;
   collection: any;
-  tokenMarketData: any;
   params: any;
 }
 
-const Asset: React.FC<AssetProps> = ({
-  params,
-  token: tokenInitialData,
-  collection,
-  tokenMarketData: tokenMarketInitialData
-}) => {
+const Asset: React.FC<AssetProps> = ({ params, collection }) => {
   const { data: tokenMarketData }: any = useQuery(
     "tokenMarketData",
     () =>
@@ -47,25 +40,23 @@ const Asset: React.FC<AssetProps> = ({
         token_id: params.token_id
       }),
     {
-      initialData: tokenMarketInitialData,
-      refetchInterval: 1000
+      refetchInterval: 10000
     }
   );
 
   const {
     data: tokenData,
-    loading,
+    isLoading,
     error
   }: any = useQuery(
     "tokenMetadata",
     () => getTokenData(params.contract_address, params.token_id),
     {
-      initialData: tokenInitialData,
-      refetchInterval: 1000
+      refetchInterval: 10000
     }
   );
 
-  if (loading) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 

@@ -1,43 +1,5 @@
-import { env } from "@/env";
-import { Metadata } from "next";
-
 import Explore from "./explore/components/explore";
 
-const CURRENT_COLLECTION =
-  "0x32d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546";
-export const metadata: Metadata = {
-  title: "Marketplace - examples",
-  description: "Check out some examples app built using the Ark SDK hooks."
-};
-
-async function getData() {
-  const response = await fetch(
-    `${env.NEXT_PUBLIC_NFT_API_URL}/v1/tokens/0x32d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546`,
-    {
-      headers: {
-        "x-api-key": env.NEXT_PUBLIC_NFT_API_KEY
-      }
-    }
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch data");
-  }
-  return response.json();
-}
-
-async function getMarketData() {
-  const response = await fetch(
-    `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/tokens/collection/${CURRENT_COLLECTION}`
-  );
-  if (!response.ok) {
-    return [];
-    // throw new Error("Failed to fetch data");
-  }
-  return response.json();
-}
-
-export default async function TaskPage() {
-  const data = await getData();
-  const orderBookData = await getMarketData();
-  return <Explore initialData={data} orderbookData={orderBookData} />;
+export default async function ExplorePage() {
+  return <Explore />;
 }

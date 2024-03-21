@@ -43,7 +43,7 @@ const Activity: React.FC<ActivityProps> = ({ params }) => {
         token_id: params.token_id
       }),
     {
-      refetchInterval: 1000
+      refetchInterval: 10000
     }
   );
 

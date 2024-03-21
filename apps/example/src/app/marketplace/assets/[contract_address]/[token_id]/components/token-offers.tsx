@@ -40,7 +40,7 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
         token_id: token.token_id
       }),
     {
-      refetchInterval: 1000
+      refetchInterval: 10000
     }
   );
 
