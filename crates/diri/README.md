@@ -17,6 +17,7 @@ which is the one state among the following: 0. The order is created and open (`O
 1. The order is cancelled (`OrderCancelled`).
 2. The order is fulfilled (`OrderFulfilled`).
 3. The order is executed (`OrderExecuted`).
+4. The order can be rollbacked and status back to placed (`RollbackStatus`).
 
 The concept of `expiry` does not apply to Diri logic. We only care about the
 lifecycle of an order through the events.

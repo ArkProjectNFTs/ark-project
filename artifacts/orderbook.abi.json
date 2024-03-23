@@ -539,6 +539,10 @@
       {
         "name": "CancelledAssetFault",
         "type": "()"
+      },
+      {
+        "name": "CancelledOwnership",
+        "type": "()"
       }
     ]
   },
@@ -612,6 +616,23 @@
   },
   {
     "type": "event",
+    "name": "ark_orderbook::orderbook::orderbook::RollbackStatus",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "reason",
+        "type": "core::felt252",
+        "kind": "key"
+      }
+    ]
+  },
+  {
+    "type": "event",
     "name": "ark_orderbook::orderbook::orderbook::Event",
     "kind": "enum",
     "variants": [
@@ -638,6 +659,11 @@
       {
         "name": "Upgraded",
         "type": "ark_orderbook::orderbook::orderbook::Upgraded",
+        "kind": "nested"
+      },
+      {
+        "name": "RollbackStatus",
+        "type": "ark_orderbook::orderbook::orderbook::RollbackStatus",
         "kind": "nested"
       }
     ]
