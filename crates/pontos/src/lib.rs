@@ -100,6 +100,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
     /// Starts a loop to only index the pending block.
     pub async fn index_pending(&self) -> IndexerResult<()> {
+
+        
         match self.client.block_number().await {
             Ok(block_number) => {
                 let mut current_block_number = block_number;
@@ -169,9 +171,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             }
             Err(e) => {
                 error!("Error while fetching latest block number: {:?}", e);
-                return Err(IndexerError::Anyhow(
-                    "Error while fetching latest block number".to_string(),
-                ));
+                return Err(IndexerError::Starknet(e));
             }
         };
     }
