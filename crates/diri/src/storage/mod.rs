@@ -43,7 +43,7 @@ pub trait Storage {
         order: &ExecutedData,
     ) -> StorageResult<()>;
 
-    async fn order_back_to_open(
+    async fn status_back_to_open(
         &self,
         block_id: u64,
         block_timestamp: u64,
