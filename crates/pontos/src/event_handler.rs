@@ -28,5 +28,5 @@ pub trait EventHandler {
     async fn on_event_registered(&self, event: TokenEvent) {}
 
     // A new latest block has been detected.
-    async fn on_new_latest_block(&self, block_number: u64) {}
+    async fn on_new_latest_blocks(&self, block_numbers: Vec<u64>) {}
 }
