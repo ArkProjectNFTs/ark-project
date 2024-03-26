@@ -100,6 +100,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
     /// Starts a loop to only index the pending block.
     pub async fn index_pending(&self) -> IndexerResult<()> {
+        let mut current_block_number = self.client.block_number().await?;
         loop {
             let mut cache = self.pending_cache.write().await;
 
@@ -140,7 +141,13 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     }
                 };
 
-                self.event_handler.on_new_latest_block(block_number).await;
+                let blocks = if block_number > current_block_number + 1 {
+                    (current_block_number + 1..block_number).collect()
+                } else {
+                    vec![block_number]
+                };
+                self.event_handler.on_new_latest_blocks(blocks).await;
+                current_block_number = block_number;
 
                 info!(
                     "Pending block {} is now latest block number #{}",
