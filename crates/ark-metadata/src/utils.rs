@@ -56,17 +56,35 @@ pub fn get_metadata_type(uri: &str) -> MetadataType {
     }
 }
 
+fn extract_string(value: &serde_json::Value, key: &str) -> Option<String> {
+    value.get(key).and_then(|v| v.as_str()).map(String::from)
+}
+
 fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
-    match serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
-        Ok(v) => {
-            trace!("Successfully parsed metadata");
-            Ok(v)
-        }
-        Err(e) => {
-            error!("Failed to parse metadata: {:?}", e);
-            Err(anyhow!("Failed to parse metadata"))
-        }
+    // Attempt to parse directly into NormalizedMetadata
+    if let Ok(metadata) = serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
+        trace!("Successfully parsed metadata");
+        return Ok(metadata);
     }
+
+    // Fallback: Try parsing as a generic JSON Value for manual extraction
+    let value = serde_json::from_str::<serde_json::Value>(raw_metadata).map_err(|e| {
+        error!("Failed to parse metadata: {:?}", e);
+        anyhow!("Failed to parse metadata")
+    })?;
+
+    // Use the helper function for cleaner extraction
+    let image = extract_string(&value, "image");
+    let name = extract_string(&value, "name");
+    let description = extract_string(&value, "description");
+
+    // Construct and return the NormalizedMetadata with extracted values
+    Ok(NormalizedMetadata {
+        image,
+        name,
+        description,
+        ..Default::default()
+    })
 }
 
 async fn fetch_metadata(
