@@ -1,5 +1,15 @@
 # @ark-project/core
 
+## 0.4.0
+
+### Minor Changes
+
+- aad63d4: new function to whitelist the broker before listing
+
+### Patch Changes
+
+- e573daa: test(sdk-core): use jest instead of mocha
+
 ## 0.3.0
 
 ### Minor Changes
