@@ -1,4 +1,4 @@
-import { stark, shortString } from "starknet";
+import { shortString, stark } from "starknet";
 
 import { config } from "../examples/config";
 import {

@@ -1,11 +1,11 @@
-import { AccountInterface, cairo, CallData, Contract } from "starknet";
+import { AccountInterface, Contract } from "starknet";
 
 import { Config } from "../../src/createConfig";
 
 export const getBalance = async (
   config: Config,
   currencyAddress: string,
-  userAddress: AccountInterface,
+  userAddress: AccountInterface
 ) => {
   const { abi } = await config.starknetProvider.getClassAt(currencyAddress);
   if (abi === undefined) {
@@ -18,9 +18,7 @@ export const getBalance = async (
     config.starknetProvider
   );
 
-  const balance: bigint = await currencyContract.balanceOf(
-    userAddress.address
-  );
+  const balance: bigint = await currencyContract.balanceOf(userAddress.address);
 
   return balance;
 };

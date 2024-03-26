@@ -1,7 +1,7 @@
-import { AccountInterface, cairo, Contract } from "starknet";
+import { cairo } from "starknet";
+import * as sn from "starknet";
 
 import { Config } from "../../src/createConfig";
-import * as sn from "starknet";
 
 export const setArkFees = async (
   config: Config,
@@ -14,10 +14,12 @@ export const setArkFees = async (
     throw new Error("no abi.");
   }
 
-  const executorContract = new sn.Contract(abi, starknetAddress, config.starknetProvider);
+  const executorContract = new sn.Contract(
+    abi,
+    starknetAddress,
+    config.starknetProvider
+  );
   executorContract.connect(deployerAccount);
-  const response =
-    await executorContract.set_ark_fees(cairo.uint256(fees));
+  const response = await executorContract.set_ark_fees(cairo.uint256(fees));
   await config.starknetProvider.waitForTransaction(response.transaction_hash);
-
 };

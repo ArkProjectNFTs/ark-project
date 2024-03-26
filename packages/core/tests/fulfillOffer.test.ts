@@ -3,14 +3,16 @@ import { shortString, stark } from "starknet";
 import { config } from "../examples/config";
 import {
   STARKNET_ETH_ADDRESS,
-  STARKNET_NFT_ADDRESS,
-  STARKNET_EXECUTOR_ADDRESS
+  STARKNET_EXECUTOR_ADDRESS,
+  STARKNET_NFT_ADDRESS
 } from "../examples/constants";
 import { changeTokenOwner } from "../examples/utils/changeTokenOwner";
 import { getBalance } from "../examples/utils/getBalance";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
 import { mintERC20 } from "../examples/utils/mintERC20";
 import { mintERC721 } from "../examples/utils/mintERC721";
+import { setArkFees } from "../examples/utils/setArkFees";
+import { setBrokerFees } from "../examples/utils/setBrokerFees";
 import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
   approveERC20,
@@ -22,8 +24,6 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
-import { setBrokerFees } from "../examples/utils/setBrokerFees";
-import { setArkFees } from "../examples/utils/setArkFees";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fulfill the offer", async function () {
@@ -259,17 +259,25 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     );
 
     // define fees
-    await setBrokerFees(config,
+    await setBrokerFees(
+      config,
       starknetAdminAccount,
       STARKNET_EXECUTOR_ADDRESS,
       brokerId,
-      2);
+      2
+    );
 
-    await setArkFees(config,
+    await setArkFees(
+      config,
       starknetAdminAccount,
       STARKNET_EXECUTOR_ADDRESS,
-      5);
-    const balanceBefore = await getBalance(config, STARKNET_ETH_ADDRESS, starknetFulfillerAccount)
+      5
+    );
+    const balanceBefore = await getBalance(
+      config,
+      STARKNET_ETH_ADDRESS,
+      starknetFulfillerAccount
+    );
 
     expect(starknetFulfillerAccount).toBeDefined();
 
@@ -354,12 +362,15 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
 
     // check balances
-    const balanceAfter = await getBalance(config, STARKNET_ETH_ADDRESS, starknetFulfillerAccount)
+    const balanceAfter = await getBalance(
+      config,
+      STARKNET_ETH_ADDRESS,
+      starknetFulfillerAccount
+    );
     // 5% ark fees + 2% broker fees + 1% creator (defined inside the contract)
     const fees = (BigInt(order.startAmount) * BigInt(8)) / BigInt(100);
-    const amount = BigInt(order.startAmount) - fees
+    const amount = BigInt(order.startAmount) - fees;
 
-    expect(balanceAfter).toEqual(balanceBefore + amount)
-
+    expect(balanceAfter).toEqual(balanceBefore + amount);
   }, 50000);
 });
