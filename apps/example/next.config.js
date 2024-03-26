@@ -5,9 +5,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "everai-collection-v0.s3.us-west-2.amazonaws.com",
-        port: "",
-        pathname: "/**"
+        hostname: "**"
       }
     ]
   }

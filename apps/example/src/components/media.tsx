@@ -1,7 +1,5 @@
 import React from "react";
 
-import Image from "next/image";
-
 type MediaProps = {
   url: string;
   name: string;
@@ -25,11 +23,9 @@ const Media = ({ url, name }: MediaProps) => {
       Your browser does not support the video tag.
     </video>
   ) : (
-    <Image
-      src={url}
+    <img
+      src={url ? url : "https://via.placeholder.com/350"}
       alt={name ? name : "Image"}
-      width={550}
-      height={550}
       className="w-full h-full object-cover"
     />
   );
