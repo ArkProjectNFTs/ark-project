@@ -4,7 +4,9 @@ use starknet::core::types::FieldElement;
 use starknet::core::utils::parse_cairo_short_string;
 use std::fmt::LowerHex;
 
-use crate::orderbook::{OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced, U256};
+use crate::orderbook::{
+    OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced, RollbackStatus, U256,
+};
 
 #[derive(Debug, Clone)]
 pub struct PlacedData {
@@ -50,7 +52,7 @@ impl From<OrderPlaced> for PlacedData {
             end_amount: u256_to_hex(&value.order.end_amount),
             start_date: value.order.start_date,
             end_date: value.order.end_date,
-            broker_id: to_hex_str(&value.order.broker_id),
+            broker_id: to_hex_str(&FieldElement::from(value.order.broker_id)),
         }
     }
 }
@@ -63,6 +65,21 @@ pub struct CancelledData {
 
 impl From<OrderCancelled> for CancelledData {
     fn from(value: OrderCancelled) -> Self {
+        Self {
+            order_hash: to_hex_str(&value.order_hash),
+            reason: parse_cairo_short_string(&value.reason).unwrap_or(to_hex_str(&value.reason)),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RollbackStatusData {
+    pub order_hash: String,
+    pub reason: String,
+}
+
+impl From<RollbackStatus> for RollbackStatusData {
+    fn from(value: RollbackStatus) -> Self {
         Self {
             order_hash: to_hex_str(&value.order_hash),
             reason: parse_cairo_short_string(&value.reason).unwrap_or(to_hex_str(&value.reason)),

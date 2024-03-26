@@ -308,6 +308,7 @@ fn test_create_listing_order_and_fulfill_the_order() {
         token_chain_id: order_listing_1.token_chain_id,
         token_address: order_listing_1.token_address,
         token_id: order_listing_1.token_id,
+        fulfill_broker_address: test_address()
     };
 
     // Try to fulfill the order
@@ -346,6 +347,7 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
         token_chain_id: order_listing_1.token_chain_id,
         token_address: order_listing_1.token_address,
         token_id: order_listing_1.token_id,
+        fulfill_broker_address: test_address()
     };
 
     // Try to fulfill the order
@@ -356,6 +358,7 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
 fn test_fulfill_classic_token_offer() {
     let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
     let contract_address = test_address();
+    let fulfill_broker_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
 
     let mut spy = spy_events(SpyOn::One(contract_address));
@@ -369,7 +372,8 @@ fn test_fulfill_classic_token_offer() {
         fulfiller: order_listing.offerer,
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
-        token_id: order_listing.token_id
+        token_id: order_listing.token_id,
+        fulfill_broker_address: fulfill_broker_address
     };
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
@@ -410,7 +414,8 @@ fn test_fulfill_classic_collection_offer() {
         fulfiller: order_listing.offerer,
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
-        token_id: Option::None
+        token_id: Option::None,
+        fulfill_broker_address: test_address()
     };
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
@@ -437,6 +442,7 @@ fn test_fulfill_classic_collection_offer() {
 fn test_fulfill_expired_offer() {
     let (order_listing, order_offer, order_auction, order_collection_offer) = setup_orders();
     let contract_address = test_address();
+    let fulfill_broker_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
 
     start_warp(contract_address, order_listing.end_date + 3600); // +1 hour
@@ -447,7 +453,8 @@ fn test_fulfill_expired_offer() {
         fulfiller: order_listing.offerer,
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
-        token_id: order_listing.token_id
+        token_id: order_listing.token_id,
+        fulfill_broker_address: fulfill_broker_address
     };
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);

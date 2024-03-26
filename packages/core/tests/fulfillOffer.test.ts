@@ -1,11 +1,13 @@
-import { shortString } from "starknet";
+import { shortString, stark } from "starknet";
 
 import { config } from "../examples/config";
 import {
   STARKNET_ETH_ADDRESS,
-  STARKNET_NFT_ADDRESS
+  STARKNET_NFT_ADDRESS,
+  STARKNET_EXECUTOR_ADDRESS
 } from "../examples/constants";
 import { changeTokenOwner } from "../examples/utils/changeTokenOwner";
+import { getBalance } from "../examples/utils/getBalance";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
 import { mintERC20 } from "../examples/utils/mintERC20";
 import { mintERC721 } from "../examples/utils/mintERC721";
@@ -20,6 +22,8 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
+import { setBrokerFees } from "../examples/utils/setBrokerFees";
+import { setArkFees } from "../examples/utils/setArkFees";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fulfill the offer", async function () {
@@ -30,8 +34,9 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       process.env.SOLIS_ADMIN_ADDRESS_DEV,
       process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
     );
+    const brokerId = stark.randomAddress();
 
-    await whitelistBroker(config, solisAdminAccount, 123);
+    await whitelistBroker(config, solisAdminAccount, brokerId);
 
     // Create a new account for the listing using the provider
     const { account: arkAccount } = await createAccount(arkProvider);
@@ -51,7 +56,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     // Define the order details
     const order: OfferV1 = {
-      brokerId: 123, // The broker ID
+      brokerId, // The broker ID
       tokenAddress: STARKNET_NFT_ADDRESS, // The token address
       tokenId, // The ID of the token
       startAmount: 600000000000000000 // The starting amount for the order
@@ -103,7 +108,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       orderHash,
       tokenAddress: order.tokenAddress,
       tokenId: order.tokenId,
-      brokerId: 123
+      brokerId
     };
 
     // Fulfill the offer
@@ -129,13 +134,14 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
     const { arkProvider, starknetProvider } = config;
 
+    const brokerId = stark.randomAddress();
     const solisAdminAccount = await fetchOrCreateAccount(
       config.arkProvider,
       process.env.SOLIS_ADMIN_ADDRESS_DEV,
       process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
     );
 
-    await whitelistBroker(config, solisAdminAccount, 123);
+    await whitelistBroker(config, solisAdminAccount, brokerId);
 
     const { account: arkAccount } = await createAccount(arkProvider);
     // Create a new account for the listing using the provider
@@ -162,7 +168,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     // Define the order details
     const order: OfferV1 = {
-      brokerId: 123, // The broker ID
+      brokerId, // The broker ID
       tokenAddress: STARKNET_NFT_ADDRESS, // The token address
       tokenId: tokenId, // The ID of the token
       startAmount: 600000000000000000, // The starting amount for the order
@@ -201,7 +207,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       orderHash,
       tokenAddress: order.tokenAddress,
       tokenId: order.tokenId,
-      brokerId: 123
+      brokerId
     };
 
     await changeTokenOwner(
@@ -225,4 +231,135 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     });
     expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
   }, 30000);
+  it("should update balance of the owner", async function () {
+    const { arkProvider, starknetProvider } = config;
+
+    const starknetAdminAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.SOLIS_ADMIN_ADDRESS_DEV,
+      process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+    );
+
+    const solisAdminAccount = await fetchOrCreateAccount(
+      config.arkProvider,
+      process.env.SOLIS_ADMIN_ADDRESS_DEV,
+      process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+    );
+    const brokerId = stark.randomAddress();
+    await whitelistBroker(config, solisAdminAccount, brokerId);
+
+    // Create a new account for the listing using the provider
+    const { account: arkAccount } = await createAccount(arkProvider);
+
+    // Create a new account for fulfilling the offer
+    const starknetFulfillerAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT2_ADDRESS,
+      process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
+    );
+
+    // define fees
+    await setBrokerFees(config,
+      starknetAdminAccount,
+      STARKNET_EXECUTOR_ADDRESS,
+      brokerId,
+      2);
+
+    await setArkFees(config,
+      starknetAdminAccount,
+      STARKNET_EXECUTOR_ADDRESS,
+      5);
+    const balanceBefore = await getBalance(config, STARKNET_ETH_ADDRESS, starknetFulfillerAccount)
+
+    expect(starknetFulfillerAccount).toBeDefined();
+
+    await mintERC721(starknetProvider, starknetFulfillerAccount);
+
+    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+
+    // Define the order details
+    const order: OfferV1 = {
+      brokerId, // The broker ID
+      tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+      tokenId, // The ID of the token
+      startAmount: 600000000000000000 // The starting amount for the order
+    };
+
+    const starknetOffererAccount = await fetchOrCreateAccount(
+      starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
+
+    await mintERC20(
+      starknetProvider,
+      starknetOffererAccount,
+      order.startAmount
+    );
+
+    // for allowance
+    await approveERC20(config, {
+      starknetAccount: starknetOffererAccount,
+      contractAddress: STARKNET_ETH_ADDRESS,
+      amount: order.startAmount
+    });
+
+    // Create the listing on the arkchain using the order details
+    const orderHash = await createOffer(config, {
+      starknetAccount: starknetOffererAccount,
+      arkAccount,
+      offer: order
+    });
+
+    expect(orderHash).toBeDefined();
+
+    await approveERC721(config, {
+      contractAddress: STARKNET_NFT_ADDRESS,
+      starknetAccount: starknetFulfillerAccount
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    await expect(
+      getOrderStatus(config, { orderHash }).then((res) =>
+        shortString.decodeShortString(res.orderStatus)
+      )
+    ).resolves.toEqual("OPEN");
+
+    // Define the fulfill details
+    const fulfillOfferInfo = {
+      orderHash,
+      tokenAddress: order.tokenAddress,
+      tokenId: order.tokenId,
+      brokerId
+    };
+
+    // Fulfill the offer
+    await fulfillOffer(config, {
+      starknetAccount: starknetFulfillerAccount,
+      arkAccount,
+      fulfillOfferInfo
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const { orderStatus: orderStatusBetween } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+      orderHash
+    });
+    expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
+
+    // check balances
+    const balanceAfter = await getBalance(config, STARKNET_ETH_ADDRESS, starknetFulfillerAccount)
+    // 5% ark fees + 2% broker fees + 1% creator (defined inside the contract)
+    const fees = (BigInt(order.startAmount) * BigInt(8)) / BigInt(100);
+    const amount = BigInt(order.startAmount) - fees
+
+    expect(balanceAfter).toEqual(balanceBefore + amount)
+
+  }, 50000);
 });

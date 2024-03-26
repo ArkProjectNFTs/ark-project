@@ -109,6 +109,41 @@ trait OrderTrait<T, +Serde<T>, +Drop<T>> {
     fn compute_token_hash(self: @T) -> felt252;
 }
 
+// Cancel status
+enum CancelStatus {
+    CancelledUser,
+    CancelledByNewOrder,
+    CancelledAssetFault,
+    CancelledOwnership
+}
+
+impl CancelStatusIntoFelt252 of Into<CancelStatus, felt252> {
+    fn into(self: CancelStatus) -> felt252 {
+        match self {
+            CancelStatus::CancelledUser => 'CANCELLED_USER',
+            CancelStatus::CancelledByNewOrder => 'CANCELLED_NEW_ORDER',
+            CancelStatus::CancelledAssetFault => 'CANCELLED_ASSET_FAULT',
+            CancelStatus::CancelledOwnership => 'CANCELLED_OWNERSHIP'
+        }
+    }
+}
+
+impl CancelStatusTryIntoOrderStatus of TryInto<felt252, CancelStatus> {
+    fn try_into(self: felt252) -> Option<CancelStatus> {
+        if self == 1 {
+            Option::Some(CancelStatus::CancelledUser)
+        } else if self == 2 {
+            Option::Some(CancelStatus::CancelledByNewOrder)
+        } else if self == 3 {
+            Option::Some(CancelStatus::CancelledAssetFault)
+        } else if self == 4 {
+            Option::Some(CancelStatus::CancelledOwnership)
+        } else {
+            Option::None
+        }
+    }
+}
+
 /// Status of an order, that may be defined from
 /// incoming transactions or messages from Starknet.
 #[derive(Serde, Drop, PartialEq, Debug)]
@@ -119,6 +154,7 @@ enum OrderStatus {
     CancelledUser,
     CancelledByNewOrder,
     CancelledAssetFault,
+    CancelledOwnership
 }
 
 impl OrderStatusIntoFelt252 of Into<OrderStatus, felt252> {
@@ -130,6 +166,7 @@ impl OrderStatusIntoFelt252 of Into<OrderStatus, felt252> {
             OrderStatus::CancelledUser => 'CANCELLED_USER',
             OrderStatus::CancelledByNewOrder => 'CANCELLED_NEW_ORDER',
             OrderStatus::CancelledAssetFault => 'CANCELLED_ASSET_FAULT',
+            OrderStatus::CancelledOwnership => 'CANCELLED_OWNERSHIP',
         }
     }
 }
@@ -148,6 +185,8 @@ impl Felt252TryIntoOrderStatus of TryInto<felt252, OrderStatus> {
             Option::Some(OrderStatus::CancelledByNewOrder)
         } else if self == 'CANCELLED_ASSET_FAULT' {
             Option::Some(OrderStatus::CancelledAssetFault)
+        } else if self == 'CANCELLED_OWNERSHIP' {
+            Option::Some(OrderStatus::CancelledOwnership)
         } else {
             Option::None
         }
@@ -178,6 +217,8 @@ struct FulfillInfo {
     token_address: ContractAddress,
     // Token token id.
     token_id: Option<u256>,
+    // Broker address.
+    fulfill_broker_address: ContractAddress,
 }
 
 /// The info sent from the Arkchain to Starknet
@@ -194,6 +235,8 @@ struct ExecutionInfo {
     payment_amount: u256,
     payment_currency_address: ContractAddress,
     payment_currency_chain_id: felt252,
+    listing_broker_address: ContractAddress,
+    fulfill_broker_address: ContractAddress
 // route: RouteType,
 // order_hash: felt252,
 // token_address: ContractAddress,

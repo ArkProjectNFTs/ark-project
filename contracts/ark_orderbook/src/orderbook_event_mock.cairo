@@ -27,6 +27,7 @@ mod orderbook_event_mock {
         OrderPlaced: OrderPlaced,
         OrderExecuted: OrderExecuted,
         OrderCancelled: OrderCancelled,
+        RollbackStatus: RollbackStatus,
         OrderFulfilled: OrderFulfilled,
     }
 
@@ -50,6 +51,15 @@ mod orderbook_event_mock {
     struct OrderExecuted {
         #[key]
         order_hash: felt252,
+    }
+
+    /// Event for when an order is executed.
+    #[derive(Drop, starknet::Event)]
+    struct RollbackStatus {
+        #[key]
+        order_hash: felt252,
+        #[key]
+        reason: felt252,
     }
 
     /// Event for when an order is cancelled.
@@ -108,7 +118,7 @@ mod orderbook_event_mock {
                         end_amount: 4,
                         start_date: 5,
                         end_date: 6,
-                        broker_id: 'broker',
+                        broker_id: 0x2.try_into().unwrap(),
                         additional_data: array![].span(),
                     }
                 }
@@ -138,7 +148,7 @@ mod orderbook_event_mock {
                         end_amount: 4,
                         start_date: 5,
                         end_date: 6,
-                        broker_id: 'broker',
+                        broker_id: 0x2.try_into().unwrap(),
                         additional_data: array![].span(),
                     }
                 }
@@ -168,7 +178,7 @@ mod orderbook_event_mock {
                         end_amount: 0,
                         start_date: 2,
                         end_date: 0,
-                        broker_id: 'broker',
+                        broker_id: 0x2.try_into().unwrap(),
                         additional_data: array![].span(),
                     }
                 }

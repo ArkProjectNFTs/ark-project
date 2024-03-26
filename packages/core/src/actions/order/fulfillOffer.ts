@@ -42,7 +42,8 @@ const fulfillOffer = async (
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
       cairo.uint256(fulfillOfferInfo.tokenId)
-    )
+    ),
+    fulfill_broker_address: starknetAccount.address
   };
 
   _fulfillOrder(config, {

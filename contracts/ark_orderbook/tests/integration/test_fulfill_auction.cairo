@@ -57,6 +57,7 @@ fn test_fulfill_auction() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -108,6 +109,7 @@ fn test_fulfill_auction_with_classic_offer() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -157,6 +159,7 @@ fn test_fulfill_auction_with_future_offer() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address(),
     };
 
     start_warp(contract_address, start_date + 3600);
@@ -208,6 +211,7 @@ fn test_fulfill_auction_with_expired_offer() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -256,6 +260,7 @@ fn test_fulfill_expired_auction() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address(),
     };
     start_warp(contract_address, 1700869684);
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -304,6 +309,7 @@ fn test_fulfill_auction_with_offer_for_different_token() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(11),
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -344,6 +350,7 @@ fn test_fulfill_auction_with_non_existing_related_order_hash() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);
@@ -390,6 +397,7 @@ fn test_fulfill_auction_with_listing_order() {
         token_chain_id: auction_listing_order.token_chain_id,
         token_address: auction_listing_order.token_address,
         token_id: Option::Some(10),
+        fulfill_broker_address: test_address(),
     };
 
     let fulfill_info_hash = serialized_hash(fulfill_info);

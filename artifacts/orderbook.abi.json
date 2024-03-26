@@ -114,7 +114,7 @@
       },
       {
         "name": "broker_id",
-        "type": "core::felt252"
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
         "name": "additional_data",
@@ -217,6 +217,10 @@
       {
         "name": "token_id",
         "type": "core::option::Option::<core::integer::u256>"
+      },
+      {
+        "name": "fulfill_broker_address",
+        "type": "core::starknet::contract_address::ContractAddress"
       }
     ]
   },
@@ -252,7 +256,7 @@
         "inputs": [
           {
             "name": "broker_id",
-            "type": "core::felt252"
+            "type": "core::starknet::contract_address::ContractAddress"
           }
         ],
         "outputs": [],
@@ -535,6 +539,10 @@
       {
         "name": "CancelledAssetFault",
         "type": "()"
+      },
+      {
+        "name": "CancelledOwnership",
+        "type": "()"
       }
     ]
   },
@@ -608,6 +616,23 @@
   },
   {
     "type": "event",
+    "name": "ark_orderbook::orderbook::orderbook::RollbackStatus",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "order_hash",
+        "type": "core::felt252",
+        "kind": "key"
+      },
+      {
+        "name": "reason",
+        "type": "core::felt252",
+        "kind": "key"
+      }
+    ]
+  },
+  {
+    "type": "event",
     "name": "ark_orderbook::orderbook::orderbook::Event",
     "kind": "enum",
     "variants": [
@@ -634,6 +659,11 @@
       {
         "name": "Upgraded",
         "type": "ark_orderbook::orderbook::orderbook::Upgraded",
+        "kind": "nested"
+      },
+      {
+        "name": "RollbackStatus",
+        "type": "ark_orderbook::orderbook::orderbook::RollbackStatus",
         "kind": "nested"
       }
     ]

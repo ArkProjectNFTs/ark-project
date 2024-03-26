@@ -21,6 +21,25 @@ use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
 use crate::CHAIN_ID_SOLIS;
 
+#[allow(dead_code)]
+pub enum CancelStatus {
+    CancelledUser,
+    CancelledByNewOrder,
+    CancelledAssetFault,
+    CancelledOwnership,
+}
+
+impl CancelStatus {
+    fn to_u32(&self) -> u32 {
+        match self {
+            CancelStatus::CancelledUser => 1,
+            CancelStatus::CancelledByNewOrder => 2,
+            CancelStatus::CancelledAssetFault => 3,
+            CancelStatus::CancelledOwnership => 4,
+        }
+    }
+}
+
 struct OwnershipVerifier {
     token_address: ContractAddress,
     token_id: U256,
@@ -324,6 +343,8 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         if call.selector != selector!("fulfill_order") {
             return true;
         }
+        println!("verify message to starknet before tx after");
+
         let execution_info = match ExecutionInfo::cairo_deserialize(&call.calldata, 0) {
             Ok(execution_info) => execution_info,
             Err(e) => {
@@ -341,9 +362,11 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
         let owner_ship_verification = self.verify_ownership(&verifier).await;
         if !owner_ship_verification {
             // rollback the status
+            let status = CancelStatus::CancelledOwnership;
+
             self.add_l1_handler_transaction_for_orderbook(
                 selector!("rollback_status_order"),
-                &[execution_info.order_hash],
+                &[execution_info.order_hash, status.to_u32().into()],
             );
             return false;
         }
@@ -360,9 +383,11 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug> KatanaHooker for Sol
             .await
         {
             // rollback the status
+            let status = CancelStatus::CancelledAssetFault;
+
             self.add_l1_handler_transaction_for_orderbook(
                 selector!("rollback_status_order"),
-                &[execution_info.order_hash],
+                &[execution_info.order_hash, status.to_u32().into()],
             );
             return false;
         }

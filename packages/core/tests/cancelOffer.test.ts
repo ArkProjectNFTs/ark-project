@@ -1,4 +1,4 @@
-import { shortString } from "starknet";
+import { shortString, stark } from "starknet";
 
 import { OfferV1 } from "../dist";
 import { config } from "../examples/config";
@@ -22,14 +22,14 @@ import { generateRandomTokenId, getTypeFromCairoCustomEnum } from "./utils";
 describe("ArkProject cancel offer", () => {
   it("should cancel an offer and verify its status and type", async () => {
     const { arkProvider, starknetProvider } = config;
-
+    const brokerId = stark.randomAddress();
     const solisAdminAccount = await fetchOrCreateAccount(
       config.arkProvider,
       process.env.SOLIS_ADMIN_ADDRESS_DEV,
       process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
     );
 
-    await whitelistBroker(config, solisAdminAccount, 123);
+    await whitelistBroker(config, solisAdminAccount, brokerId);
 
     const { account: arkAccount } = await createAccount(arkProvider);
     const starknetOffererAccount = await fetchOrCreateAccount(
@@ -43,7 +43,7 @@ describe("ArkProject cancel offer", () => {
     await mintERC20(starknetProvider, starknetOffererAccount, offerStarAmount);
 
     const offer: OfferV1 = {
-      brokerId: 123,
+      brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId: generateRandomTokenId(),
       startAmount: offerStarAmount,

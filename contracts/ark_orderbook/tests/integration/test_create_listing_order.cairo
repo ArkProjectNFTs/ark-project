@@ -74,7 +74,7 @@ fn test_create_listing_order() {
     let order_status = dispatcher.get_order_status(_order_hash);
     let order_type = dispatcher.get_order_type(_order_hash);
     let order_hash = dispatcher.get_order_hash(token_hash);
-    assert(order.broker_id == 123, 'Broker id is not equal');
+    assert(order.broker_id == order_listing.broker_id, 'Broker id is not equal');
     assert(order.token_id.is_some(), 'No Token id');
     assert(order.token_id.unwrap() == 10, 'Token id is not equal');
     assert(

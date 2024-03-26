@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 pub mod types;
-use types::{CancelledData, ExecutedData, FulfilledData, PlacedData};
+use types::{CancelledData, ExecutedData, FulfilledData, PlacedData, RollbackStatusData};
 
 pub type StorageResult<T> = Result<T, StorageError>;
 
@@ -41,5 +41,12 @@ pub trait Storage {
         block_id: u64,
         block_timestamp: u64,
         order: &ExecutedData,
+    ) -> StorageResult<()>;
+
+    async fn status_back_to_open(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &RollbackStatusData,
     ) -> StorageResult<()>;
 }

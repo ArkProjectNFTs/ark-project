@@ -66,6 +66,7 @@ export type FulfillInfo = {
   token_chain_id: BigNumberish;
   token_address: BigNumberish;
   token_id: CairoOption<Uint256>;
+  fulfill_broker_address: BigNumberish;
 };
 
 export type BaseFulfillInfo = {

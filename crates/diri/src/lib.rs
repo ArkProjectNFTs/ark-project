@@ -112,6 +112,12 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                             .register_executed(block_number, block_timestamp, &ev.into())
                             .await?;
                     }
+                    Event::RollbackStatus(ev) => {
+                        trace!("RollbackStatus found: {:?}", ev);
+                        self.storage
+                            .status_back_to_open(block_number, block_timestamp, &ev.into())
+                            .await?;
+                    }
                     _ => warn!("Orderbook event not handled: {:?}", orderbook_event),
                 };
             }
