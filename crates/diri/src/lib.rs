@@ -71,6 +71,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                     selector!("OrderFulfilled"),
                     selector!("OrderCancelled"),
                     selector!("OrderExecuted"),
+                    selector!("RollbackStatus"),
                 ]]),
             )
             .await?;
