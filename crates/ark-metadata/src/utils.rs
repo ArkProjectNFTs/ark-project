@@ -73,12 +73,10 @@ fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
         anyhow!("Failed to parse metadata")
     })?;
 
-    // Use the helper function for cleaner extraction
     let image = extract_string(&value, "image");
     let name = extract_string(&value, "name");
     let description = extract_string(&value, "description");
 
-    // Construct and return the NormalizedMetadata with extracted values
     Ok(NormalizedMetadata {
         image,
         name,
