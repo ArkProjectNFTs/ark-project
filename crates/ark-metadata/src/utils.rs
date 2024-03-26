@@ -76,11 +76,13 @@ fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
     let image = extract_string(&value, "image");
     let name = extract_string(&value, "name");
     let description = extract_string(&value, "description");
+    let external_url = extract_string(&value, "external_url");
 
     Ok(NormalizedMetadata {
         image,
         name,
         description,
+        external_url,
         ..Default::default()
     })
 }
