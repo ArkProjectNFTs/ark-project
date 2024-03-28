@@ -164,13 +164,11 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             let decoded = general_purpose::STANDARD.decode(uri)?;
             let raw_metadata = std::str::from_utf8(&decoded)?;
             match serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
-                Ok(normalized_metadata) => {
-                    return Ok(TokenMetadata {
-                        raw: raw_metadata.to_string(),
-                        normalized: normalized_metadata,
-                        metadata_updated_at: Some(now.timestamp()),
-                    });
-                }
+                Ok(normalized_metadata) => Ok(TokenMetadata {
+                    raw: raw_metadata.to_string(),
+                    normalized: normalized_metadata,
+                    metadata_updated_at: Some(now.timestamp()),
+                }),
                 Err(_) => {
                     let metadata = serde_json::from_str::<serde_json::Value>(raw_metadata)?;
                     let normalized_metadata = NormalizedMetadata {
