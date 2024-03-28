@@ -56,17 +56,35 @@ pub fn get_metadata_type(uri: &str) -> MetadataType {
     }
 }
 
+fn extract_string(value: &serde_json::Value, key: &str) -> Option<String> {
+    value.get(key).and_then(|v| v.as_str()).map(String::from)
+}
+
 fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
-    match serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
-        Ok(v) => {
-            trace!("Successfully parsed metadata");
-            Ok(v)
-        }
-        Err(e) => {
-            error!("Failed to parse metadata: {:?}", e);
-            Err(anyhow!("Failed to parse metadata"))
-        }
+    // Attempt to parse directly into NormalizedMetadata
+    if let Ok(metadata) = serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
+        trace!("Successfully parsed metadata");
+        return Ok(metadata);
     }
+
+    // Fallback: Try parsing as a generic JSON Value for manual extraction
+    let value = serde_json::from_str::<serde_json::Value>(raw_metadata).map_err(|e| {
+        error!("Failed to parse metadata: {:?}", e);
+        anyhow!("Failed to parse metadata: {}", e)
+    })?;
+
+    let image = extract_string(&value, "image");
+    let name = extract_string(&value, "name");
+    let description = extract_string(&value, "description");
+    let external_url = extract_string(&value, "external_url");
+
+    Ok(NormalizedMetadata {
+        image,
+        name,
+        description,
+        external_url,
+        ..Default::default()
+    })
 }
 
 async fn fetch_metadata(
@@ -144,14 +162,38 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
         Some(("data:application/json;base64", uri)) => {
             // If it is base64 encoded, decode it, parse and return
             let decoded = general_purpose::STANDARD.decode(uri)?;
-            let decoded = std::str::from_utf8(&decoded)?;
+            let raw_metadata = std::str::from_utf8(&decoded)?;
+            match serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
+                Ok(normalized_metadata) => Ok(TokenMetadata {
+                    raw: raw_metadata.to_string(),
+                    normalized: normalized_metadata,
+                    metadata_updated_at: Some(now.timestamp()),
+                }),
+                Err(_) => {
+                    let metadata = serde_json::from_str::<serde_json::Value>(raw_metadata)?;
+                    let normalized_metadata = NormalizedMetadata {
+                        name: extract_string(&metadata, "name"),
+                        animation_key: extract_string(&metadata, "animation_key"),
+                        image: extract_string(&metadata, "image"),
+                        animation_mime_type: extract_string(&metadata, "animation_mime_type"),
+                        animation_url: extract_string(&metadata, "animation_url"),
+                        background_color: extract_string(&metadata, "background_color"),
+                        description: extract_string(&metadata, "description"),
+                        external_url: extract_string(&metadata, "external_url"),
+                        image_mime_type: extract_string(&metadata, "image_mime_type"),
+                        image_data: extract_string(&metadata, "image_data"),
+                        image_key: extract_string(&metadata, "image_key"),
+                        youtube_url: extract_string(&metadata, "youtube_url"),
+                        ..Default::default()
+                    };
 
-            let metadata: NormalizedMetadata = serde_json::from_str::<NormalizedMetadata>(decoded)?;
-            Ok(TokenMetadata {
-                raw: decoded.to_string(),
-                normalized: metadata,
-                metadata_updated_at: Some(now.timestamp()),
-            })
+                    Ok(TokenMetadata {
+                        raw: raw_metadata.to_string(),
+                        normalized: normalized_metadata,
+                        metadata_updated_at: Some(now.timestamp()),
+                    })
+                }
+            }
         }
         Some(("data:application/json", uri)) => {
             let metadata = serde_json::from_str::<NormalizedMetadata>(uri)?;
