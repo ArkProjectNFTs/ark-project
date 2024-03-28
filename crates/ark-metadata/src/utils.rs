@@ -70,7 +70,7 @@ fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
     // Fallback: Try parsing as a generic JSON Value for manual extraction
     let value = serde_json::from_str::<serde_json::Value>(raw_metadata).map_err(|e| {
         error!("Failed to parse metadata: {:?}", e);
-        anyhow!("Failed to parse metadata")
+        anyhow!("Failed to parse metadata: {}", e)
     })?;
 
     let image = extract_string(&value, "image");
