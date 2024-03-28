@@ -286,7 +286,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     });
     expect(orderHashListing2).toBeDefined();
 
-    const orderHash2 = await createOffer(config, {
+    await createOffer(config, {
       starknetAccount: starknetFulfillerAccount,
       arkAccount,
       offer: order
@@ -295,7 +295,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     await expect(
-      getOrderStatus(config, { orderHash: orderHash2 }).then((res) =>
+      getOrderStatus(config, { orderHash: orderHashListing2 }).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).resolves.toEqual("OPEN");
@@ -309,7 +309,6 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     expect(orderHash3).toBeDefined();
     await new Promise((resolve) => setTimeout(resolve, 2000));
-
 
     // Define the fulfill details
     const fulfillOfferInfo2 = {
@@ -340,7 +339,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     expect(shortString.decodeShortString(orderStatusAfter2)).toBe("EXECUTED");
 
     const orderHashListing3 = await createListing(config, {
-      starknetAccount: starknetFulfillerAccount,
+      starknetAccount: starknetOffererAccount,
       arkAccount,
       order: orderListing1
     });
