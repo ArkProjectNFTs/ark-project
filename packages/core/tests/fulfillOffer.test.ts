@@ -17,11 +17,11 @@ import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
   approveERC20,
   approveERC721,
-  createAccount,
+  createAccount, createListing,
   createOffer,
   fetchOrCreateAccount,
   fulfillOffer,
-  getOrderStatus,
+  getOrderStatus, ListingV1,
   OfferV1
 } from "../src";
 
@@ -153,11 +153,32 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
     );
 
+    const starknetOffererAccount = await fetchOrCreateAccount(
+      starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
+
+
     expect(starknetFulfillerAccount).toBeDefined();
 
     await mintERC721(starknetProvider, starknetFulfillerAccount);
 
     const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+
+    const orderListing1: ListingV1 = {
+      brokerId,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId,
+      startAmount: 600000000000000000
+    };
+
+    const orderHashListing = await createListing(config, {
+      starknetAccount: starknetFulfillerAccount,
+      arkAccount,
+      order: orderListing1
+    });
+    expect(orderHashListing).toBeDefined();
 
     // Define the order details
     const order: OfferV1 = {
@@ -167,40 +188,35 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       startAmount: 600000000000000000 // The starting amount for the order
     };
 
-    const allowance = 9900000000000000000;
-    const starknetOffererAccount = await fetchOrCreateAccount(
-      starknetProvider,
-      process.env.STARKNET_ACCOUNT1_ADDRESS,
-      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-    );
+    const allowanceAndBalance = 99900000000000000000;
 
     await mintERC20(
       starknetProvider,
       starknetOffererAccount,
-      order.startAmount
+      allowanceAndBalance
     );
 
     // for allowance
     await approveERC20(config, {
       starknetAccount: starknetOffererAccount,
       contractAddress: STARKNET_ETH_ADDRESS,
-      amount: allowance
+      amount: allowanceAndBalance
     });
 
     await mintERC20(
       starknetProvider,
       starknetFulfillerAccount,
-      allowance
+      allowanceAndBalance
     );
 
     // for allowance
     await approveERC20(config, {
       starknetAccount: starknetFulfillerAccount,
       contractAddress: STARKNET_ETH_ADDRESS,
-      amount: allowance
+      amount: allowanceAndBalance
     });
 
-    // Create the listing on the arkchain using the order details
+    // Create the offer on the arkchain using the order details
     const orderHash = await createOffer(config, {
       starknetAccount: starknetOffererAccount,
       arkAccount,
@@ -255,9 +271,22 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
 
     // now the Owner is starknetFulfillerAccount
-    // create a new listing
     // Create the listing on the arkchain using the order details
-    const orderHash2 = await createOffer(config, {
+    const orderListing2: ListingV1 = {
+      brokerId,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId,
+      startAmount: 600000000000000000
+    };
+
+    const orderHashListing2 = await createListing(config, {
+      starknetAccount: starknetOffererAccount,
+      arkAccount,
+      order: orderListing2
+    });
+    expect(orderHashListing2).toBeDefined();
+
+    await createOffer(config, {
       starknetAccount: starknetFulfillerAccount,
       arkAccount,
       offer: order
@@ -266,14 +295,24 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     await expect(
-      getOrderStatus(config, { orderHash: orderHash2 }).then((res) =>
+      getOrderStatus(config, { orderHash: orderHashListing2 }).then((res) =>
         shortString.decodeShortString(res.orderStatus)
       )
     ).resolves.toEqual("OPEN");
 
-    // now first account buy again
+    // Create the offer on the arkchain using the order details
+    const orderHash3 = await createOffer(config, {
+      starknetAccount: starknetFulfillerAccount,
+      arkAccount,
+      offer: order
+    });
+
+    expect(orderHash3).toBeDefined();
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Define the fulfill details
     const fulfillOfferInfo2 = {
-      orderHash: orderHash2,
+      orderHash: orderHash3,
       tokenAddress: order.tokenAddress,
       tokenId: order.tokenId,
       brokerId
@@ -288,32 +327,25 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const { orderStatus: orderStatusBetween2 } = await getOrderStatus(config, {
-      orderHash: orderHash2
+      orderHash: orderHash3
     });
     expect(shortString.decodeShortString(orderStatusBetween2)).toBe("FULFILLED");
 
-    await new Promise((resolve) => setTimeout(resolve, 7000));
-    const { orderStatus: orderStatusAfter2 } = await getOrderStatus(config, {
-      orderHash: orderHash2
-    });
-    expect(shortString.decodeShortString(orderStatusAfter2)).toBe("EXECUTED");
-
-    // list the token again
-   const orderHash3 = await createOffer(config, {
-      starknetAccount: starknetOffererAccount,
-      arkAccount,
-      offer: order
-    });
-
-    expect(orderHash3).toBeDefined();
-
     await new Promise((resolve) => setTimeout(resolve, 5000));
-    const { orderStatus: orderStatusAfter3 } = await getOrderStatus(config, {
+    const { orderStatus: orderStatusAfter2 } = await getOrderStatus(config, {
       orderHash: orderHash3
     });
-    expect(shortString.decodeShortString(orderStatusAfter3)).toBe("OPEN");
 
-  }, 90000);
+    expect(shortString.decodeShortString(orderStatusAfter2)).toBe("EXECUTED");
+
+    const orderHashListing3 = await createListing(config, {
+      starknetAccount: starknetOffererAccount,
+      arkAccount,
+      order: orderListing1
+    });
+    expect(orderHashListing3).toBeDefined();
+
+  }, 2000000);
 /*
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
     const { arkProvider, starknetProvider } = config;

@@ -14,9 +14,9 @@ export const MAINNET_CONTRACTS = {
   "orderbook": "0x3cc1c3cb060462445c43e3496e4eb32ba6e8ceff9b1e9fe11de4337b83f1439"
 };
 export const DEV_CONTRACTS = {
-  "messaging": "0x5dff9a99bf9aec9c4add9f0d0e94d85b157c82aacea8947dd5a1996246bac6b",
-  "executor": "0x304bb67872136253d91666b7a2f2aefe6e5573ea3ffd0112926c1ecc6499a3",
-  "nftContract": "0x521bb5526534995113215f4634c606fd3cb6d15b45f63fca36ccc7aa618dd68",
+  "messaging": "0x1813f3cbeff15b9c2348ff640c506aaa180d67607bbfa565996d2af959665c8",
+  "executor": "0x5e2997068824c09f5567775d705764eba1a1e4631876fc49da32e32a93860e",
+  "nftContract": "0x3ce4edbadac8cc966c7ca7514625eb0fd8ca9d76d91eb9cdcfd00be6c0473c2",
   "eth": "0x36a5814a7c94ebf2987b6d53fefa27b63cce5ac20e8b9a763e3faa35252df5e",
-  "orderbook": "0x5cfc141f112c6017b52e497a40b551860ac88c28df318fbb7da90adfd5e8e4e"
+  "orderbook": "0x56ad3dc38b9fefd75225d08a6b2b6d4adc86e64fdad059df0b8c93f6fbdc4fe"
 };
