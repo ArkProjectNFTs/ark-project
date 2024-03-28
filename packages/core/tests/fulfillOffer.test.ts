@@ -167,7 +167,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       startAmount: 600000000000000000 // The starting amount for the order
     };
 
-    const allowance = 9900000000000000000;
+    const allowanceAndBalance = 99900000000000000000;
     const starknetOffererAccount = await fetchOrCreateAccount(
       starknetProvider,
       process.env.STARKNET_ACCOUNT1_ADDRESS,
@@ -177,27 +177,27 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     await mintERC20(
       starknetProvider,
       starknetOffererAccount,
-      order.startAmount
+      allowanceAndBalance
     );
 
     // for allowance
     await approveERC20(config, {
       starknetAccount: starknetOffererAccount,
       contractAddress: STARKNET_ETH_ADDRESS,
-      amount: allowance
+      amount: allowanceAndBalance
     });
 
     await mintERC20(
       starknetProvider,
       starknetFulfillerAccount,
-      allowance
+      allowanceAndBalance
     );
 
     // for allowance
     await approveERC20(config, {
       starknetAccount: starknetFulfillerAccount,
       contractAddress: STARKNET_ETH_ADDRESS,
-      amount: allowance
+      amount: allowanceAndBalance
     });
 
     // Create the listing on the arkchain using the order details
@@ -299,7 +299,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     expect(shortString.decodeShortString(orderStatusAfter2)).toBe("EXECUTED");
 
     // list the token again
-   const orderHash3 = await createOffer(config, {
+    const orderHash3 = await createOffer(config, {
       starknetAccount: starknetOffererAccount,
       arkAccount,
       offer: order
@@ -313,7 +313,97 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     });
     expect(shortString.decodeShortString(orderStatusAfter3)).toBe("OPEN");
 
-  }, 90000);
+    // now first account buy again
+    const fulfillOfferInfo3 = {
+      orderHash: orderHash3,
+      tokenAddress: order.tokenAddress,
+      tokenId: order.tokenId,
+      brokerId
+    };
+
+    // Fulfill the offer
+    await fulfillOffer(config, {
+      starknetAccount: starknetFulfillerAccount,
+      arkAccount,
+      fulfillOfferInfo: fulfillOfferInfo3
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const { orderStatus: orderStatusBetween3 } = await getOrderStatus(config, {
+      orderHash: orderHash3
+    });
+    expect(shortString.decodeShortString(orderStatusBetween3)).toBe("FULFILLED");
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await expect(
+      getOrderStatus(config, { orderHash: orderHash3 }).then((res) =>
+        shortString.decodeShortString(res.orderStatus)
+      )
+    ).resolves.toEqual("EXECUTED");
+
+
+    // list the token again
+    const orderHash4 = await createOffer(config, {
+      starknetAccount: starknetOffererAccount,
+      arkAccount,
+      offer: order
+    });
+
+    expect(orderHash4).toBeDefined();
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const { orderStatus: orderStatusAfter4 } = await getOrderStatus(config, {
+      orderHash: orderHash4
+    });
+    expect(shortString.decodeShortString(orderStatusAfter4)).toBe("OPEN");
+
+
+    // now first account buy again
+    const fulfillOfferInfo4 = {
+      orderHash: orderHash4,
+      tokenAddress: order.tokenAddress,
+      tokenId: order.tokenId,
+      brokerId
+    };
+
+    // Fulfill the offer
+    await fulfillOffer(config, {
+      starknetAccount: starknetOffererAccount,
+      arkAccount,
+      fulfillOfferInfo: fulfillOfferInfo4
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await expect(
+      getOrderStatus(config, { orderHash: orderHash4 }).then((res) =>
+        shortString.decodeShortString(res.orderStatus)
+      )
+    ).resolves.toEqual("FULFILLED");
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await expect(
+      getOrderStatus(config, { orderHash: orderHash4 }).then((res) =>
+        shortString.decodeShortString(res.orderStatus)
+      )
+    ).resolves.toEqual("EXECUTED");
+
+    // list the token again
+    const orderHash5 = await createOffer(config, {
+      starknetAccount: starknetOffererAccount,
+      arkAccount,
+      offer: order
+    });
+
+    expect(orderHash5).toBeDefined();
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const { orderStatus: orderStatusAfter5 } = await getOrderStatus(config, {
+      orderHash: orderHash5
+    });
+    expect(shortString.decodeShortString(orderStatusAfter5)).toBe("OPEN");
+
+
+  }, 2000000);
 /*
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
     const { arkProvider, starknetProvider } = config;
