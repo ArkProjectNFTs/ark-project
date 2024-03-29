@@ -30,13 +30,7 @@ pub async fn get_token_metadata(
         }
         MetadataType::Http(uri) => {
             trace!("Fetching metadata from HTTPS: {}", uri.as_str());
-            fetch_metadata(
-                &uri.replace("https", "http"),
-                client,
-                request_timeout_duration,
-                request_referrer,
-            )
-            .await?
+            fetch_metadata(&uri, client, request_timeout_duration, request_referrer).await?
         }
         MetadataType::OnChain(uri) => {
             trace!("Fetching on-chain metadata: {}", uri);
