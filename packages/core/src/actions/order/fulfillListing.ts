@@ -33,7 +33,7 @@ const fulfillListing = async (
 ) => {
   const { starknetAccount, arkAccount, fulfillListingInfo, owner } = parameters;
   const chainId = await config.starknetProvider.getChainId();
-
+  console.log(fulfillListingInfo);
   const fulfillInfo: FulfillInfo = {
     order_hash: fulfillListingInfo.orderHash,
     related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),

@@ -2,6 +2,7 @@
 
 import React from "react";
 
+import { env } from "@/env";
 import { TokenMarketData } from "@/types";
 import { useAccount } from "@starknet-react/core";
 
@@ -36,7 +37,7 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
         onClick={() =>
           fulfillOffer({
             starknetAccount: account,
-            brokerId: 1,
+            brokerId: env.NEXT_PUBLIC_BROKER_ID,
             tokenAddress: token.contract_address,
             tokenId: token.token_id,
             orderHash: tokenMarketData.top_bid.order_hash

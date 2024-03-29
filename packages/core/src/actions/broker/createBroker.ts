@@ -4,13 +4,17 @@ import { Config } from "../../createConfig";
 
 import "dotenv/config";
 
-export const createBroker = async (config: Config) => {
+interface Params {
+  brokerID: string;
+}
+
+export const createBroker = async (config: Config, params: Params) => {
   const address = process.env.SOLIS_ADMIN_ADDRESS as string;
   const privateKey = process.env.SOLIS_ADMIN_PRIVATE_KEY as string;
   const account = new Account(config.arkProvider, address, privateKey, "1");
 
   const whitelist_broker_calldata = CallData.compile({
-    broker_id: 123
+    broker_id: params.brokerID
   });
 
   const result = await account.execute({
@@ -24,6 +28,7 @@ export const createBroker = async (config: Config) => {
   console.log("Broker created");
   console.log("Transaction hash: " + result.transaction_hash);
   return {
+    brokerID: params.brokerID,
     transactionHash: result.transaction_hash
   };
 };

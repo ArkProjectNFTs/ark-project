@@ -1,5 +1,6 @@
 import React from "react";
 
+import { env } from "@/env";
 import { useAccount } from "@starknet-react/core";
 import { useQuery } from "react-query";
 import { Web3 } from "web3";
@@ -109,7 +110,7 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
                             onClick={() => {
                               fulfillOffer({
                                 starknetAccount: account,
-                                brokerId: 1, // to change to your broker id
+                                brokerId: env.NEXT_PUBLIC_BROKER_ID,
                                 tokenAddress: token.contract_address,
                                 tokenId: token.token_id,
                                 orderHash: offer.order_hash

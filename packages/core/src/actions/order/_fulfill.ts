@@ -63,7 +63,6 @@ export const _fulfillOrder = async (
 
   const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-
   const fulfillInfoCalldata = CallData.compile({
     fulfill_info: fulfillInfo,
     signer: signer
@@ -75,7 +74,6 @@ export const _fulfillOrder = async (
     entrypoint: "fulfill_order",
     calldata: fulfillInfoCalldata
   });
-
   // Wait for the transaction to be processed
   await config.arkProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000

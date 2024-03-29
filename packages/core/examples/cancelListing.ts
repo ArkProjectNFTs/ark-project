@@ -4,12 +4,13 @@
  * submitting a listing order and cancelling it.
  */
 
-import { shortString } from "starknet";
+import { shortString, stark } from "starknet";
 
 import {
   createAccount,
   fetchOrCreateAccount
 } from "../src/actions/account/account";
+import { createBroker } from "../src/actions/broker/createBroker";
 import { cancelOrder, createListing } from "../src/actions/order";
 import { getOrderStatus } from "../src/actions/read";
 import { ListingV1 } from "../src/types";
@@ -24,6 +25,8 @@ import { mintERC721 } from "./utils/mintERC721";
  * @param {RpcProvider} provider - The RPC provider instance.
  */
 (async () => {
+  const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
   // Create a new account using the provider
   const { account: arkAccount } = await createAccount(config.arkProvider);
 
@@ -38,7 +41,7 @@ import { mintERC721 } from "./utils/mintERC721";
 
   // Define the order details
   const order: ListingV1 = {
-    brokerId: 123, // The broker ID
+    brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: 600000000000000000 // The starting amount for the order

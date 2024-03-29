@@ -9,6 +9,8 @@ import { shortString } from "starknet";
 
 import "dotenv/config";
 
+import { stark } from "starknet";
+
 import {
   approveERC721,
   createAccount,
@@ -17,6 +19,7 @@ import {
   getOrderStatus,
   ListingV1
 } from "../src";
+import { createBroker } from "../src/actions/broker/createBroker";
 import { config } from "./config";
 import { STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
@@ -28,7 +31,8 @@ import { whitelistBroker } from "./utils/whitelistBroker";
  * Creates a listing on the blockchain using provided order details.
  */
 (async () => {
-  const brokerId = 123;
+  const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
 
   const solisAdminAccount = await fetchOrCreateAccount(
     config.arkProvider,

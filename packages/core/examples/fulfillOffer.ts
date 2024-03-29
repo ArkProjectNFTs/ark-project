@@ -4,7 +4,7 @@
  * submitting a listing order and cancelling it.
  */
 
-import { shortString } from "starknet";
+import { shortString, stark } from "starknet";
 
 import "dotenv/config";
 
@@ -18,6 +18,7 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
+import { createBroker } from "../src/actions/broker/createBroker";
 import { config } from "./config";
 import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId";
@@ -31,6 +32,8 @@ import { whitelistBroker } from "./utils/whitelistBroker";
 (async () => {
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
+  const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
 
   const solisAdminAccount = await fetchOrCreateAccount(
     config.arkProvider,
@@ -38,7 +41,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
     process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
   );
 
-  await whitelistBroker(config, solisAdminAccount, 123);
+  await whitelistBroker(config, solisAdminAccount, brokerId);
 
   console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
@@ -70,7 +73,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   console.log(`=> Creating offer for tokenId: ${tokenId}`);
   // Define the order details
   const offer: OfferV1 = {
-    brokerId: 123, // The broker ID
+    brokerId, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
@@ -129,7 +132,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
     orderHash: orderHash,
     tokenAddress: offer.tokenAddress,
     tokenId: offer.tokenId,
-    brokerId: offer.brokerId
+    brokerId
   };
 
   console.log(`=> Fulfilling offer by ${starknetFulfillerAccount.address}`);

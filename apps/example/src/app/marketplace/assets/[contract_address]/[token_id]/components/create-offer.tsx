@@ -1,5 +1,6 @@
 "use client";
 
+import { env } from "@/env";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
@@ -53,7 +54,7 @@ export default function CreateOffer({ token }: CreateOfferProps) {
     }
 
     const processedValues = {
-      brokerId: 123,
+      brokerId: env.NEXT_PUBLIC_BROKER_ID,
       currencyAddress: config?.starknetContracts.eth,
       tokenAddress: token.contract_address,
       tokenId: tokenIdNumber,

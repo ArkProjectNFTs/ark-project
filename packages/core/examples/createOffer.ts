@@ -9,6 +9,8 @@ import { shortString } from "starknet";
 
 import "dotenv/config";
 
+import { stark } from "starknet";
+
 import {
   approveERC20,
   createAccount,
@@ -17,6 +19,7 @@ import {
   getOrderStatus,
   OfferV1
 } from "../src";
+import { createBroker } from "../src/actions/broker/createBroker";
 import { config } from "./config";
 import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
 import { mintERC20 } from "./utils/mintERC20";
@@ -28,7 +31,8 @@ import { whitelistBroker } from "./utils/whitelistBroker";
 (async () => {
   console.log(`=> Getting config...`);
   const { arkProvider, starknetProvider } = config;
-  const brokerId = 123;
+  const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
 
   console.log(`=> Creating account`);
   // Create a new account for the offer using the provider

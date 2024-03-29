@@ -2,6 +2,7 @@
 
 import React from "react";
 
+import { env } from "@/env";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
@@ -70,7 +71,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({
 
     // Prepare the data for submission, including props data
     const processedValues = {
-      brokerId: 123, // Assuming this is a static value or received from elsewhere
+      brokerId: env.NEXT_PUBLIC_BROKER_ID, // Assuming this is a static value or received from elsewhere
       tokenAddress: token?.contract_address,
       tokenId: parseInt(token.token_id, 10),
       startAmount: Web3.utils.toWei(values.startAmount, "ether")
