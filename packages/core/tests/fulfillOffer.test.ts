@@ -26,7 +26,7 @@ import {
 } from "../src";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
-  /*it("should create an offer and fulfill the offer", async function () {
+  it("should create an offer and fulfill the offer", async function () {
     const { arkProvider, starknetProvider } = config;
 
     const solisAdminAccount = await fetchOrCreateAccount(
@@ -129,7 +129,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       orderHash
     });
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
-  }, 30000);*/
+  }, 30000);
 
   it("should create an offer and fulfill the offer then create a new listing", async function () {
     const { arkProvider, starknetProvider } = config;
@@ -270,7 +270,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     });
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
 
-    // now the Owner is starknetFulfillerAccount
+    // now the Owner is starknetOffererAccount
     // Create the listing on the arkchain using the order details
     const orderListing2: ListingV1 = {
       brokerId,
@@ -338,15 +338,24 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     expect(shortString.decodeShortString(orderStatusAfter2)).toBe("EXECUTED");
 
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const orderListing3: ListingV1 = {
+      brokerId,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId,
+      startAmount: 600000000000000000
+    }
+
     const orderHashListing3 = await createListing(config, {
-      starknetAccount: starknetOffererAccount,
+      starknetAccount: starknetFulfillerAccount,
       arkAccount,
-      order: orderListing1
+      order: orderListing3
     });
     expect(orderHashListing3).toBeDefined();
 
   }, 2000000);
-/*
+
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
     const { arkProvider, starknetProvider } = config;
 
@@ -588,5 +597,5 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     const amount = BigInt(order.startAmount) - fees;
 
     expect(balanceAfter).toEqual(balanceBefore + amount);
-  }, 50000);*/
+  }, 50000);
 });
