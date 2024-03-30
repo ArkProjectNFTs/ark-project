@@ -190,12 +190,70 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             }
         }
         Some(("data:application/json", uri)) => {
-            let metadata = serde_json::from_str::<NormalizedMetadata>(uri)?;
-            Ok(TokenMetadata {
-                raw: uri.to_string(),
-                normalized: metadata,
-                metadata_updated_at: Some(now.timestamp()),
-            })
+            match serde_json::from_str::<NormalizedMetadata>(uri) {
+                Ok(normalized_metadata) => Ok(TokenMetadata {
+                    raw: uri.to_string(),
+                    normalized: normalized_metadata,
+                    metadata_updated_at: Some(now.timestamp()),
+                }),
+                Err(_) => {
+                    let metadata = serde_json::from_str::<serde_json::Value>(uri)?;
+                    let normalized_metadata = NormalizedMetadata {
+                        name: extract_string(&metadata, "name"),
+                        animation_key: extract_string(&metadata, "animation_key"),
+                        image: extract_string(&metadata, "image"),
+                        animation_mime_type: extract_string(&metadata, "animation_mime_type"),
+                        animation_url: extract_string(&metadata, "animation_url"),
+                        background_color: extract_string(&metadata, "background_color"),
+                        description: extract_string(&metadata, "description"),
+                        external_url: extract_string(&metadata, "external_url"),
+                        image_mime_type: extract_string(&metadata, "image_mime_type"),
+                        image_data: extract_string(&metadata, "image_data"),
+                        image_key: extract_string(&metadata, "image_key"),
+                        youtube_url: extract_string(&metadata, "youtube_url"),
+                        ..Default::default()
+                    };
+
+                    Ok(TokenMetadata {
+                        raw: uri.to_string(),
+                        normalized: normalized_metadata,
+                        metadata_updated_at: Some(now.timestamp()),
+                    })
+                }
+            }
+        }
+        Some(("data:application/json;utf8", uri)) => {
+            match serde_json::from_str::<NormalizedMetadata>(uri) {
+                Ok(normalized_metadata) => Ok(TokenMetadata {
+                    raw: uri.to_string(),
+                    normalized: normalized_metadata,
+                    metadata_updated_at: Some(now.timestamp()),
+                }),
+                Err(_) => {
+                    let metadata = serde_json::from_str::<serde_json::Value>(uri)?;
+                    let normalized_metadata = NormalizedMetadata {
+                        name: extract_string(&metadata, "name"),
+                        animation_key: extract_string(&metadata, "animation_key"),
+                        image: extract_string(&metadata, "image"),
+                        animation_mime_type: extract_string(&metadata, "animation_mime_type"),
+                        animation_url: extract_string(&metadata, "animation_url"),
+                        background_color: extract_string(&metadata, "background_color"),
+                        description: extract_string(&metadata, "description"),
+                        external_url: extract_string(&metadata, "external_url"),
+                        image_mime_type: extract_string(&metadata, "image_mime_type"),
+                        image_data: extract_string(&metadata, "image_data"),
+                        image_key: extract_string(&metadata, "image_key"),
+                        youtube_url: extract_string(&metadata, "youtube_url"),
+                        ..Default::default()
+                    };
+
+                    Ok(TokenMetadata {
+                        raw: uri.to_string(),
+                        normalized: normalized_metadata,
+                        metadata_updated_at: Some(now.timestamp()),
+                    })
+                }
+            }
         }
         _ => match serde_json::from_str(uri) {
             // If it is only the URI without the data format information, try to format it
@@ -237,7 +295,9 @@ pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, u64
 mod tests {
 
     use super::*;
+    use base64::engine::general_purpose::STANDARD;
     use reqwest::header::{HeaderMap, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
+    use serde_json::json;
 
     #[test]
     fn normalize_metadata_with_array_value() {
@@ -364,6 +424,61 @@ mod tests {
         let uri = "invalid_uri";
         let metadata =
             fetch_metadata(uri, &client, request_timeout_duration, request_referrer).await;
+
         assert!(metadata.is_err());
+    }
+
+    fn base64_encode(input: &str) -> String {
+        STANDARD.encode(input)
+    }
+
+    #[test]
+    fn fetch_base64_encoded_onchain_metadata() {
+        let metadata_json = json!({
+            "name": "Test Token",
+            "description": "A test token",
+            "image": "https://example.com/image.png"
+        })
+        .to_string();
+        let encoded_metadata = base64_encode(&metadata_json);
+        let uri = format!("data:application/json;base64,{}", encoded_metadata);
+
+        let fetched_metadata = fetch_onchain_metadata(&uri).unwrap();
+
+        assert_eq!(fetched_metadata.raw, metadata_json);
+        assert_eq!(
+            fetched_metadata.normalized.name,
+            Some("Test Token".to_string())
+        );
+        assert!(fetched_metadata.metadata_updated_at.is_some());
+    }
+
+    #[test]
+    fn fetch_direct_json_onchain_metadata() {
+        let metadata_json = json!({
+            "name": "Direct Test Token",
+            "description": "A directly provided test token",
+            "image": "https://example.com/direct_image.png"
+        })
+        .to_string();
+        let uri = format!("data:application/json,{}", metadata_json);
+
+        let fetched_metadata = fetch_onchain_metadata(&uri).unwrap();
+
+        assert_eq!(fetched_metadata.raw, metadata_json);
+        assert_eq!(
+            fetched_metadata.normalized.name,
+            Some("Direct Test Token".to_string())
+        );
+        assert!(fetched_metadata.metadata_updated_at.is_some());
+    }
+
+    #[test]
+    fn handle_invalid_onchain_metadata_format() {
+        let invalid_uri = "data:application/json;utf8,invalid_json";
+
+        let result = fetch_onchain_metadata(invalid_uri);
+
+        assert!(result.is_err() || result.unwrap().normalized.name.is_none());
     }
 }
