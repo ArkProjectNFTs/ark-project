@@ -14,7 +14,7 @@ serde_json = "1.0"
 
 # TODO: add more stuff to the workspace after merge.
 url = "2.3.1"
-clap = { version = "4.3.19", features = ["derive", "env", "string"] }
+clap = { version = "4.5.4", features = ["derive", "env", "string"] }
 regex = "1.9.1"
 env_logger = "0.10.0"
 log = "0.4.17"
