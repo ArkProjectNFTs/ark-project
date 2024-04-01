@@ -90,6 +90,7 @@ jobs:
           STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
         run: |
           cd aws/cdk-solis-ecs
+          pnpm cdk context --clear
           pnpm cdk deploy --all --require-approval never --force
   deploy-orderbook:
     needs: deploy-solis
