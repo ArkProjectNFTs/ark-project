@@ -364,12 +364,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         event: EmittedEvent,
         block_timestamp: u64,
     ) -> Result<()> {
-        let element_sale_event = FieldElement::from_hex_be(ELEMENT_MARKETPLACE_EVENT_HEX)?;
-
+        let element_sale_event_name = FieldElement::from_hex_be(ELEMENT_MARKETPLACE_EVENT_HEX)?;
         if let Some(event_name) = event.keys.first() {
-            if *event_name == element_sale_event {
-                info!("=> NFT Sale detected on Element Marketplace");
-
+            if *event_name == element_sale_event_name {
                 let mut token_sale_event = self
                     .event_manager
                     .format_element_sale_event(&event, block_timestamp)
