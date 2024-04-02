@@ -17,11 +17,13 @@ import { whitelistBroker } from "../examples/utils/whitelistBroker";
 import {
   approveERC20,
   approveERC721,
-  createAccount, createListing,
+  createAccount,
+  createListing,
   createOffer,
   fetchOrCreateAccount,
   fulfillOffer,
-  getOrderStatus, ListingV1,
+  getOrderStatus,
+  ListingV1,
   OfferV1
 } from "../src";
 
@@ -158,7 +160,6 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       process.env.STARKNET_ACCOUNT1_ADDRESS,
       process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
     );
-
 
     expect(starknetFulfillerAccount).toBeDefined();
 
@@ -329,7 +330,9 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     const { orderStatus: orderStatusBetween2 } = await getOrderStatus(config, {
       orderHash: orderHash3
     });
-    expect(shortString.decodeShortString(orderStatusBetween2)).toBe("FULFILLED");
+    expect(shortString.decodeShortString(orderStatusBetween2)).toBe(
+      "FULFILLED"
+    );
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const { orderStatus: orderStatusAfter2 } = await getOrderStatus(config, {
@@ -345,7 +348,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
       startAmount: 600000000000000000
-    }
+    };
 
     const orderHashListing3 = await createListing(config, {
       starknetAccount: starknetFulfillerAccount,
@@ -353,7 +356,6 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       order: orderListing3
     });
     expect(orderHashListing3).toBeDefined();
-
   }, 2000000);
 
   it("should create an offer and fail to fulfill the offer because owner of token changed", async function () {
