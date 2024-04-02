@@ -35,6 +35,7 @@ pub enum EventType {
     Burn,
     Transfer,
     Uninitialized,
+    Sale,
 }
 
 impl fmt::Display for EventType {
@@ -44,6 +45,7 @@ impl fmt::Display for EventType {
             EventType::Burn => write!(f, "BURN"),
             EventType::Transfer => write!(f, "TRANSFER"),
             EventType::Uninitialized => write!(f, "UNINITIALIZED"),
+            EventType::Sale => write!(f, "SALE"),
         }
     }
 }
@@ -63,7 +65,13 @@ impl FromStr for EventType {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct TokenEvent {
+pub enum TokenEvent {
+    Transfer(TokenTransferEvent),
+    Sale(TokenSaleEvent),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TokenTransferEvent {
     pub timestamp: u64,
     pub from_address: String,
     pub to_address: String,
@@ -78,9 +86,30 @@ pub struct TokenEvent {
     pub updated_at: Option<u64>,
 }
 
-impl Default for TokenEvent {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TokenSaleEvent {
+    pub timestamp: u64,
+    pub from_address: String,
+    pub to_address: String,
+    pub nft_contract_address: String,
+    pub nft_type: Option<String>,
+    pub marketplace_contract_address: String,
+    pub marketplace_name: String,
+    pub transaction_hash: String,
+    pub token_id: String,
+    pub token_id_hex: String,
+    pub event_type: EventType,
+    pub event_id: String,
+    pub block_number: Option<u64>,
+    pub updated_at: Option<u64>,
+    pub quantity: u64,
+    pub currency_address: String,
+    pub price: String,
+}
+
+impl Default for TokenTransferEvent {
     fn default() -> Self {
-        TokenEvent {
+        TokenTransferEvent {
             timestamp: 0,
             from_address: String::new(),
             to_address: String::new(),

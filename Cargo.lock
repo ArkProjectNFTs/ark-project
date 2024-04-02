@@ -320,6 +320,8 @@ dependencies = [
  "starknet 0.10.0",
  "thiserror",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "url",
 ]
 

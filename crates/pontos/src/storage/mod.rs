@@ -1,18 +1,17 @@
-pub mod types;
-pub mod utils;
-
 #[cfg(feature = "sqlxdb")]
 pub mod sqlx;
-#[cfg(feature = "sqlxdb")]
-pub use sqlx::DefaultSqlxStorage;
-
+pub mod types;
+pub mod utils;
+use self::types::TokenSaleEvent;
 use crate::storage::types::{
-    BlockInfo, ContractInfo, ContractType, StorageError, TokenEvent, TokenInfo, TokenMintInfo,
+    BlockInfo, ContractInfo, ContractType, StorageError, TokenInfo, TokenMintInfo,
+    TokenTransferEvent,
 };
 use async_trait::async_trait;
-
 #[cfg(test)]
 use mockall::automock;
+#[cfg(feature = "sqlxdb")]
+pub use sqlx::DefaultSqlxStorage;
 
 #[async_trait]
 #[cfg_attr(test, automock)]
@@ -30,9 +29,15 @@ pub trait Storage {
         block_timestamp: u64,
     ) -> Result<(), StorageError>;
 
-    async fn register_event(
+    async fn register_sale_event(
         &self,
-        event: &TokenEvent,
+        event: &TokenSaleEvent,
+        block_timestamp: u64,
+    ) -> Result<(), StorageError>;
+
+    async fn register_transfer_event(
+        &self,
+        event: &TokenTransferEvent,
         block_timestamp: u64,
     ) -> Result<(), StorageError>;
 
