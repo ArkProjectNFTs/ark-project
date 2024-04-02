@@ -359,7 +359,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         Ok(())
     }
 
-    async fn process_marketplace_events(
+    async fn process_marketplace_event(
         &self,
         event: EmittedEvent,
         block_timestamp: u64,
@@ -493,7 +493,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             let contract_address = e.from_address;
             let is_marketplace_event = marketplace_contracts.contains(&contract_address);
             if is_marketplace_event {
-                let _ = self.process_marketplace_events(e, block_timestamp).await;
+                let _ = self.process_marketplace_event(e, block_timestamp).await;
             } else {
                 let _ = self
                     .process_nft_transfers(e, block_timestamp, contract_address)
