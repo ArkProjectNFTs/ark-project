@@ -8,9 +8,8 @@ export default function useApproveERC721() {
   const config = useConfig();
 
   async function getApproveERC721(
-    starknetAccount: AccountInterface,
-
-    tokenAddress: BigNumberish
+    tokenAddress: BigNumberish,
+    tokenId: BigNumberish
   ) {
     const compressedContract = await config?.starknetProvider.getClassAt(
       tokenAddress.toString()
@@ -25,10 +24,7 @@ export default function useApproveERC721() {
       config?.starknetProvider
     );
 
-    const approved = await tokenContract.isApprovedForAll(
-      starknetAccount.address,
-      config?.starknetContracts.executor
-    );
+    const approved = await tokenContract.get_approved(tokenId);
 
     return approved;
   }
@@ -38,14 +34,12 @@ export default function useApproveERC721() {
     tokenId: BigNumberish,
     tokenAddress: BigNumberish
   ) {
-    let isApprovedForAll = await getApproveERC721(
-      starknetAccount,
-      tokenAddress
-    );
-    if (!isApprovedForAll) {
+    let isApproved = await getApproveERC721(tokenAddress, tokenId);
+    if (!isApproved) {
       await approveERC721Core(config as Config, {
         starknetAccount,
-        contractAddress: tokenAddress.toString()
+        contractAddress: tokenAddress.toString(),
+        tokenId
       });
     }
   }

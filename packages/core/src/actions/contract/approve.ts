@@ -11,13 +11,14 @@ import { Config } from "../../createConfig";
 interface ApproveERC721Parameters {
   starknetAccount: AccountInterface;
   contractAddress: string;
+  tokenId: BigNumberish;
 }
 
 export const approveERC721 = async (
   config: Config,
   parameters: ApproveERC721Parameters
 ) => {
-  const { contractAddress, starknetAccount } = parameters;
+  const { contractAddress, starknetAccount, tokenId } = parameters;
 
   const { abi: erc721abi } =
     await config.starknetProvider.getClassAt(contractAddress);
@@ -28,8 +29,11 @@ export const approveERC721 = async (
 
   const approveCall: Call = {
     contractAddress: contractAddress,
-    entrypoint: "set_approval_for_all",
-    calldata: CallData.compile([config.starknetContracts.executor, true])
+    entrypoint: "approve",
+    calldata: CallData.compile({
+      to: config.starknetContracts.executor,
+      tokenId: cairo.uint256(tokenId)
+    })
   };
 
   const result = await starknetAccount.execute(approveCall, [erc721abi]);
