@@ -638,6 +638,9 @@ mod orderbook {
             ];
 
             if order.token_id.is_some() {
+                // remove token from listed tokens
+                self.token_listings.write(order.compute_token_hash(), 0);
+
                 let execute_info = ExecutionInfo {
                     order_hash: order.compute_order_hash(),
                     nft_address: order.token_address,
