@@ -26,6 +26,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          RPC_USER: ${{ secrets.RPC_USER }}
+          RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
       - name: Build Solis, tag, and push image to Amazon ECR
         run: |
           docker buildx create --use --name ecr-deploy-builder-solis
