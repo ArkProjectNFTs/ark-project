@@ -51,6 +51,8 @@ pub const CHAIN_ID_SOLIS: FieldElement = FieldElement::from_mont([
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
+
     let config = KatanaArgs::parse();
     config.init_logging()?;
 

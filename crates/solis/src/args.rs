@@ -21,6 +21,7 @@ use katana_core::sequencer::SequencerConfig;
 use katana_primitives::chain::ChainId;
 use katana_rpc::config::ServerConfig;
 use katana_rpc_api::ApiKind;
+use std::env;
 use tracing::Subscriber;
 use tracing_subscriber::{fmt, EnvFilter};
 use url::Url;
@@ -190,11 +191,17 @@ impl KatanaArgs {
             apis.push(ApiKind::Katana);
         }
 
+        let rpc_user = env::var("RPC_USER").unwrap_or_else(|_| "userDefault".to_string());
+        let rpc_password =
+            env::var("RPC_PASSWORD").unwrap_or_else(|_| "passwordDefault".to_string());
+
         ServerConfig {
             apis,
             port: self.server.port,
             host: self.server.host.clone().unwrap_or("0.0.0.0".into()),
             max_connections: self.server.max_connections,
+            rpc_user,
+            rpc_password,
         }
     }
 
