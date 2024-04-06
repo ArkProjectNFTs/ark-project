@@ -103,8 +103,8 @@ impl StarknetClient for StarknetClientHttp {
                     from_address: e.from_address,
                     keys: e.keys,
                     data: e.data,
-                    block_hash,
-                    block_number,
+                    block_hash: Some(block_hash),
+                    block_number: Some(block_number),
                     transaction_hash,
                 })
             }
@@ -235,10 +235,12 @@ impl StarknetClient for StarknetClientHttp {
             .map_err(StarknetClientError::Provider)?;
 
         event_page.events.iter().for_each(|e| {
-            events
-                .entry(e.block_number)
-                .and_modify(|v| v.push(e.clone()))
-                .or_insert(vec![e.clone()]);
+            if let Some(block_number) = e.block_number {
+                events
+                    .entry(block_number)
+                    .and_modify(|v| v.push(e.clone()))
+                    .or_insert(vec![e.clone()]);
+            }
         });
 
         Ok(EventResult {
@@ -273,10 +275,12 @@ impl StarknetClient for StarknetClientHttp {
                 .map_err(StarknetClientError::Provider)?;
 
             event_page.events.iter().for_each(|e| {
-                events
-                    .entry(e.block_number)
-                    .and_modify(|v| v.push(e.clone()))
-                    .or_insert(vec![e.clone()]);
+                if let Some(block_number) = e.block_number {
+                    events
+                        .entry(block_number)
+                        .and_modify(|v| v.push(e.clone()))
+                        .or_insert_with(|| vec![e.clone()]);
+                }
             });
 
             continuation_token = event_page.continuation_token;

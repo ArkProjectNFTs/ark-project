@@ -71,7 +71,7 @@ impl<S: Storage> EventManager<S> {
         token_event.contract_type = contract_type.to_string();
         token_event.event_type = Self::get_event_type(from, to);
         token_event.event_id = to_hex_str(&event_id);
-        token_event.block_number = Some(event.block_number);
+        token_event.block_number = event.block_number;
         token_event.updated_at = Some(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
