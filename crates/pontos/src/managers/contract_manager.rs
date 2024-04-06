@@ -3,13 +3,18 @@ use crate::storage::{
     Storage,
 };
 use anyhow::Result;
-use ark_starknet::client::{StarknetClient, StarknetClientError};
-use ark_starknet::format::to_hex_str;
-use starknet::core::types::{BlockId, BlockTag, FieldElement};
-use starknet::core::utils::{get_selector_from_name, parse_cairo_short_string};
+use ark_starknet::{
+    cairo_string_parser::parse_cairo_string,
+    client::{StarknetClient, StarknetClientError},
+    format::to_hex_str,
+};
+use starknet::core::{
+    types::{BlockId, BlockTag, FieldElement},
+    utils::get_selector_from_name,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::trace;
+use tracing::{error, info, trace};
 
 pub struct ContractManager<S: Storage, C: StarknetClient> {
     storage: Arc<S>,
@@ -49,7 +54,17 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         Ok(contract_type)
     }
 
-    /// Identifies a contract from its address only.
+    /// Identifies a contract from its address and caches its info.
+    ///
+    /// This function attempts to identify a contract by its address,
+    /// fetching its type, name, and symbol, and caching these details for future use.
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contract as a `FieldElement`.
+    /// * `block_timestamp` - The timestamp of the current block.
+    ///
+    /// # Returns
+    /// * `Result<ContractType>` - The type of the contract if identified successfully.
     pub async fn identify_contract(
         &mut self,
         address: FieldElement,
@@ -58,28 +73,61 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         match self.get_cached_or_fetch_info(address).await {
             Ok(contract_type) => Ok(contract_type),
             Err(_) => {
-                // Can't find info, try to identify with calls.
+                if let Ok(contract_type) = self.get_cached_or_fetch_info(address).await {
+                    return Ok(contract_type);
+                }
+
+                // If the contract info is not cached, identify and cache it.
                 let contract_type = self.get_contract_type(address).await?;
 
-                trace!(
-                    "New contract identified [0x{:064x}] : {}",
-                    address,
-                    contract_type.to_string()
-                );
-
                 self.cache.insert(address, contract_type.clone());
+
+                let name = self
+                    .get_contract_property_string(
+                        address,
+                        "name",
+                        vec![],
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await
+                    .ok();
+
+                let symbol = self
+                    .get_contract_property_string(
+                        address,
+                        "symbol",
+                        vec![],
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await
+                    .ok();
+
+                info!(
+                    "Contract [0x{:064x}] details - Type: {}, Name: {:?}, Symbol: {:?}",
+                    address,
+                    contract_type.to_string(),
+                    name,
+                    symbol
+                );
 
                 let info = ContractInfo {
                     contract_address: to_hex_str(&address),
                     contract_type: contract_type.to_string(),
-                    name: None,
-                    symbol: None,
+                    name,
+                    symbol,
                     image: None,
                 };
 
-                self.storage
+                if let Err(e) = self
+                    .storage
                     .register_contract_info(&info, block_timestamp)
-                    .await?;
+                    .await
+                {
+                    error!(
+                        "Failed to store contract info for [0x{:064x}]: {:?}",
+                        address, e
+                    );
+                }
 
                 Ok(contract_type)
             }
@@ -219,31 +267,8 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
             )
             .await?;
 
-        decode_string_array(&response).map_err(|e| {
-            StarknetClientError::Other(format!("Impossible to decode response string: {}", e))
+        parse_cairo_string(response).map_err(|e| {
+            StarknetClientError::Other(format!("Impossible to decode response string: {:?}", e))
         })
-    }
-}
-
-pub fn decode_string_array(string_array: &[FieldElement]) -> Result<String> {
-    match string_array.len() {
-        0 => Ok("".to_string()),
-        1 => Ok(parse_cairo_short_string(&string_array[0])?),
-        2 => Ok(format!(
-            "{}{}",
-            parse_cairo_short_string(&string_array[0])?,
-            parse_cairo_short_string(&string_array[1])?,
-        )),
-        _ => {
-            // The first element is the length of the string,
-            // we can skip it as it's implicitely given by the vector itself.
-            let mut result = String::new();
-
-            for s in &string_array[1..] {
-                result.push_str(&parse_cairo_short_string(s)?);
-            }
-
-            Ok(result)
-        }
     }
 }

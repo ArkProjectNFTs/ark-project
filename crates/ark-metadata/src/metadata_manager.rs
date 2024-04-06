@@ -1,12 +1,11 @@
 use crate::{
-    cairo_string_parser::parse_cairo_long_string,
     file_manager::{FileInfo, FileManager},
     storage::Storage,
     types::StorageError,
     utils::{extract_metadata_from_headers, file_extension_from_mime_type, get_token_metadata},
 };
 use anyhow::{anyhow, Result};
-use ark_starknet::{client::StarknetClient, CairoU256};
+use ark_starknet::{cairo_string_parser::parse_cairo_string, client::StarknetClient, CairoU256};
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
@@ -385,7 +384,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 
         trace!("Call contract: value={:?}", value);
 
-        parse_cairo_long_string(value).map_err(|_| anyhow!("Error parsing string"))
+        parse_cairo_string(value).map_err(|_| anyhow!("Error parsing string"))
     }
 }
 
