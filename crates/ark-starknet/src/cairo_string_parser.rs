@@ -18,7 +18,7 @@ pub enum ParseError {
 ///
 /// # Returns
 /// * A `Result` which is either the parsed Rust string or an error.
-pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<String, ParseError> {
+pub fn parse_cairo_string(field_elements: Vec<FieldElement>) -> Result<String, ParseError> {
     match field_elements.len() {
         0 => Err(ParseError::NoValueFound),
         // If the long_string contains only one FieldElement, try to parse it using the short string parser.
@@ -75,13 +75,13 @@ pub fn parse_cairo_long_string(field_elements: Vec<FieldElement>) -> Result<Stri
 mod tests {
     use crate::cairo_string_parser::ParseError;
 
-    use super::parse_cairo_long_string;
+    use super::parse_cairo_string;
     use starknet::core::types::FieldElement;
 
     #[test]
     fn should_handle_single_field_element() {
         let long_string = vec![FieldElement::from_hex_be("0x68").unwrap()];
-        let result = parse_cairo_long_string(long_string);
+        let result = parse_cairo_string(long_string);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "h");
     }
@@ -90,7 +90,7 @@ mod tests {
     fn should_return_error_for_empty_vector() {
         let long_string = vec![];
 
-        let result = parse_cairo_long_string(long_string);
+        let result = parse_cairo_string(long_string);
 
         // First, check that the result is an error.
         assert!(result.is_err());
@@ -115,7 +115,7 @@ mod tests {
             FieldElement::from_hex_be("0x2e6a736f6e").unwrap(),
         ];
 
-        let result = parse_cairo_long_string(long_string);
+        let result = parse_cairo_string(long_string);
         assert!(result.is_ok());
 
         let value = result.unwrap();
@@ -174,7 +174,7 @@ mod tests {
             FieldElement::from_hex_be("0x30").unwrap(),
         ];
 
-        let result = parse_cairo_long_string(long_string);
+        let result = parse_cairo_string(long_string);
         assert!(result.is_ok());
         assert!(result.unwrap() == "https://api.starknet.quest/quests/uri?level=0");
     }
@@ -253,7 +253,7 @@ mod tests {
             FieldElement::from_hex_be("0x30").unwrap(),
         ];
 
-        let result = parse_cairo_long_string(long_string);
+        let result = parse_cairo_string(long_string);
         assert!(result.is_ok());
 
         let value = result.unwrap();

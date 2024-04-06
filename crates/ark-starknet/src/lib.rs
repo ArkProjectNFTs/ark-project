@@ -1,3 +1,5 @@
+pub mod byte_array;
+pub mod cairo_string_parser;
 pub mod client;
 pub mod format;
 use anyhow::Result;
