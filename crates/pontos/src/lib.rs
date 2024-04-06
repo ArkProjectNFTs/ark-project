@@ -365,7 +365,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         for e in events {
             let contract_address = e.from_address;
             info!(
-                "Processing event... Block Id: {}, Tx Hash: 0x{:064x}",
+                "Processing event... Block Id: {:?}, Tx Hash: 0x{:064x}",
                 e.block_number, e.transaction_hash
             );
 
