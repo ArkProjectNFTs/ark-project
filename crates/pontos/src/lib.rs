@@ -444,7 +444,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         }
 
         info!(
-            "Processing event... Block Id: {}, Tx Hash: 0x{:064x}, contract_type: {:?}",
+            "Processing event... Block Id: {:?}, Tx Hash: 0x{:064x}, contract_type: {:?}",
             event.block_number, event.transaction_hash, contract_type
         );
 
