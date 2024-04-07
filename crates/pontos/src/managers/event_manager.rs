@@ -107,7 +107,7 @@ impl<S: Storage> EventManager<S> {
         Ok(TokenSaleEvent {
             event_id: to_hex_str(&event_id),
             event_type: EventType::Sale,
-            block_number: Some(event.block_number),
+            block_number: event.block_number,
             from_address: to_hex_str(taker_address),
             to_address: to_hex_str(maker_address),
             nft_contract_address: to_hex_str(nft_contract_address),
