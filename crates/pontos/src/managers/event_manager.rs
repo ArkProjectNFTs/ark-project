@@ -72,19 +72,19 @@ impl<S: Storage> EventManager<S> {
             .ok_or_else(|| anyhow!("Taker address not found"))?;
         let nft_contract_address = event
             .data
-            .get(6)
+            .get(8)
             .ok_or_else(|| anyhow!("NFT contract address not found"))?;
         let token_id_low = event
             .data
-            .get(7)
+            .get(9)
             .ok_or_else(|| anyhow!("Token id low not found"))?;
         let token_id_high = event
             .data
-            .get(8)
+            .get(10)
             .ok_or_else(|| anyhow!("Token id high not found"))?;
         let quantity = event
             .data
-            .get(9)
+            .get(11)
             .ok_or_else(|| anyhow!("Quantity not found"))?;
 
         let token_id = CairoU256 {

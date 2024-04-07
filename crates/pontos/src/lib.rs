@@ -417,29 +417,23 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         block_timestamp: u64,
         contract_address: FieldElement,
     ) -> Result<()> {
-        let contract_type = match self
+        let contract_address_hex = to_hex_str(&contract_address);
+        let contract_type = self
             .contract_manager
             .write()
             .await
             .identify_contract(contract_address, block_timestamp)
             .await
-        {
-            Ok(info) => info,
-            Err(e) => {
+            .map_err(|e| {
                 error!(
                     "Error while identifying contract {}: {:?}",
-                    to_hex_str(&contract_address),
-                    e
+                    contract_address_hex, e
                 );
-                return Ok(());
-            }
-        };
+                e
+            })?;
 
         if contract_type == ContractType::Other {
-            debug!(
-                "Contract identified as OTHER: {}",
-                to_hex_str(&contract_address),
-            );
+            debug!("Contract identified as OTHER: {}", contract_address_hex);
             return Ok(());
         }
 
@@ -448,29 +442,22 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             event.block_number, event.transaction_hash, contract_type
         );
 
-        let (token_id, token_event) = match self
+        let (token_id, token_event) = self
             .event_manager
             .format_and_register_event(&event, contract_type, block_timestamp)
             .await
-        {
-            Ok(te) => te,
-            Err(err) => {
+            .map_err(|err| {
                 error!("Error while registering event {:?}\n{:?}", err, event);
-                return Ok(());
-            }
-        };
+                err
+            })?;
 
-        match self
-            .token_manager
+        self.token_manager
             .format_and_register_token(&token_id, &token_event, block_timestamp, event.block_number)
             .await
-        {
-            Ok(()) => (),
-            Err(err) => {
+            .map_err(|err| {
                 error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
-                return Ok(());
-            }
-        }
+                err
+            })?;
 
         Ok(())
     }
@@ -489,12 +476,18 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         for e in events {
             let contract_address = e.from_address;
             let is_marketplace_event = marketplace_contracts.contains(&contract_address);
+
             if is_marketplace_event {
-                let _ = self.process_marketplace_event(e, block_timestamp).await;
+                if let Err(e) = self.process_marketplace_event(e, block_timestamp).await {
+                    error!("Error while processing marketplace event: {:?}", e);
+                }
             } else {
-                let _ = self
+                if let Err(e) = self
                     .process_nft_transfers(e, block_timestamp, contract_address)
-                    .await;
+                    .await
+                {
+                    error!("Error while processing NFT transfers: {:?}", e);
+                }
             }
         }
 
