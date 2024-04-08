@@ -59,6 +59,7 @@ impl FromStr for EventType {
             "BURN" => Ok(EventType::Burn),
             "TRANSFER" => Ok(EventType::Transfer),
             "UNINITIALIZED" => Ok(EventType::Uninitialized),
+            "SALE" => Ok(EventType::Sale),
             _ => Err(()),
         }
     }
