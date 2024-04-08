@@ -1,5 +1,7 @@
 ---
-"@ark-project/core": minor
+"@ark-project/core": major
 ---
 
-new function to whitelist the broker before listing
+feat(broker): new function & script in examples to whitelist the broker before listing
+fix: use broker id from env variable
+feat(broker): update hooks, examples, and core function to support broker as a variable

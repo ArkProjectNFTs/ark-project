@@ -49,6 +49,11 @@ export default function useApproveERC20() {
         "No currency address. Please set currency_address to approveERC20."
       );
     }
+    let allowance = await getAllowance(
+      parameters.starknetAccount,
+      parameters.currencyAddress
+    );
+    console.log("allowance", allowance);
     return await approveERC20Core(config as Config, {
       starknetAccount: parameters.starknetAccount,
       contractAddress: parameters.currencyAddress.toString(),

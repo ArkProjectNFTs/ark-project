@@ -4,8 +4,7 @@ import { useState } from "react";
 
 import {
   Config,
-  fulfillListing as fulfillListingCore,
-  waitForTransactionBlock
+  fulfillListing as fulfillListingCore
 } from "@ark-project/core";
 import { FulfillListingInfo } from "@ark-project/core/src/types";
 
@@ -35,14 +34,11 @@ export default function useFulfillListing() {
         parameters.currencyAddress || config?.starknetContracts.eth
       );
       setStepStatus("approving");
-      const approvalResult = await approveERC20({
+      await approveERC20({
         starknetAccount: parameters.starknetAccount,
         startAmount: Number(parameters.startAmount) + Number(allowance),
         currencyAddress:
           parameters.currencyAddress || config?.starknetContracts.eth
-      });
-      await waitForTransactionBlock(config as Config, {
-        transactionHash: approvalResult.transaction_hash
       });
       setStepStatus("selling");
       await fulfillListingCore(config as Config, {
@@ -64,6 +60,5 @@ export default function useFulfillListing() {
       setStepStatus("error");
     }
   }
-
   return { fulfillListing, status, stepStatus };
 }
