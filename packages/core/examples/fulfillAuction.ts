@@ -76,7 +76,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   const offer: OfferV1 = {
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: tokenId,
+    tokenId,
     startAmount: 1
   };
 
