@@ -25,6 +25,19 @@ export type ListingV1 = {
   currencyAddress?: BigNumberish;
   currencyChainId?: BigNumberish;
   startAmount: BigNumberish;
+  endAmount?: BigNumberish;
+  startDate?: number;
+  endDate?: number;
+};
+
+export type AuctionV1 = {
+  brokerId: BigNumberish;
+  tokenAddress: BigNumberish;
+  tokenId: BigNumberish;
+  currencyAddress?: BigNumberish;
+  currencyChainId?: BigNumberish;
+  startAmount: BigNumberish;
+  endAmount: BigNumberish;
   startDate?: number;
   endDate?: number;
 };
@@ -77,4 +90,9 @@ export type BaseFulfillInfo = {
 };
 
 export type FulfillListingInfo = BaseFulfillInfo;
+
+export type FulfillAuctionInfo = BaseFulfillInfo & {
+  relatedOrderHash: BigNumberish;
+};
+
 export type FulfillOfferInfo = BaseFulfillInfo;

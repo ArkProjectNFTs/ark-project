@@ -6,9 +6,11 @@ export { approveERC20, approveERC721, increaseERC20 } from "./actions/contract";
 export { waitForTransactionBlock } from "./actions/contract";
 
 export {
+  createAuction,
   createListing,
   createOffer,
   cancelOrder,
+  fulfillAuction,
   fulfillListing,
   fulfillOffer
 } from "./actions/order";
@@ -21,5 +23,11 @@ export {
   getOrderType
 } from "./actions/read";
 
-export type { ListingV1, OfferV1, CancelInfo, RouteType } from "./types";
+export type {
+  AuctionV1,
+  ListingV1,
+  OfferV1,
+  CancelInfo,
+  RouteType
+} from "./types";
 export type { Config, Network, ConfigParameters } from "./createConfig";
