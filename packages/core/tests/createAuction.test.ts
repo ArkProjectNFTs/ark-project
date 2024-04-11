@@ -34,7 +34,7 @@ test("default", async () => {
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   const order: AuctionV1 = {
-    brokerId: 123,
+    brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId: BigInt(tokenId),
     startAmount: 1,
@@ -55,6 +55,7 @@ test("default", async () => {
 
 test("error: invalid start date", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);
+  const brokerId = stark.randomAddress();
 
   const starknetOffererAccount = await fetchOrCreateAccount(
     config.starknetProvider,
@@ -67,7 +68,7 @@ test("error: invalid start date", async () => {
   const invalidStartDate = Math.floor(Date.now() / 1000 - 30);
 
   const order: AuctionV1 = {
-    brokerId: 12345,
+    brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId: BigInt(tokenId),
     startDate: invalidStartDate,
@@ -86,6 +87,7 @@ test("error: invalid start date", async () => {
 
 test("error: invalid end date", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);
+  const brokerId = stark.randomAddress();
 
   const starknetOffererAccount = await fetchOrCreateAccount(
     config.starknetProvider,
@@ -98,7 +100,7 @@ test("error: invalid end date", async () => {
   const invalidEndDate = Math.floor(Date.now() / 1000);
 
   const order: AuctionV1 = {
-    brokerId: 12345,
+    brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId: BigInt(tokenId),
     endDate: invalidEndDate,
@@ -117,6 +119,7 @@ test("error: invalid end date", async () => {
 
 test("error: invalid end amount", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);
+  const brokerId = stark.randomAddress();
 
   const starknetOffererAccount = await fetchOrCreateAccount(
     config.starknetProvider,
@@ -128,7 +131,7 @@ test("error: invalid end amount", async () => {
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   const order: AuctionV1 = {
-    brokerId: 12345,
+    brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId: BigInt(tokenId),
     startAmount: 1,
