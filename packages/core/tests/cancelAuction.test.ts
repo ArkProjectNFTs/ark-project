@@ -1,37 +1,35 @@
-import { shortString } from "starknet";
+import { shortString, stark } from "starknet";
 
 import { config } from "../examples/config";
 import { STARKNET_NFT_ADDRESS } from "../examples/constants";
 import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
 import { mintERC721 } from "../examples/utils/mintERC721";
 import { whitelistBroker } from "../examples/utils/whitelistBroker";
-import {
-  createAccount,
-  fetchOrCreateAccount
-} from "../src/actions/account/account";
+import { fetchOrCreateAccount } from "../src/actions/account/account";
 import { cancelOrder, createAuction } from "../src/actions/order";
 import { getOrderStatus } from "../src/actions/read";
 import { AuctionV1 } from "../src/types";
 
 test("cancelListing", async () => {
-  const { account: arkAccount } = await createAccount(config.arkProvider);
-  const starknetOffererAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
-  const solisAdminAccount = await fetchOrCreateAccount(
+  const adminAccount = await fetchOrCreateAccount(
     config.arkProvider,
     process.env.SOLIS_ADMIN_ADDRESS_DEV,
     process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
   );
+  const sellerAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  );
 
-  await whitelistBroker(config, solisAdminAccount, 123);
-  await mintERC721(config.starknetProvider, starknetOffererAccount);
+  const brokerId = stark.randomAddress();
+  await whitelistBroker(config, adminAccount, brokerId);
+
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+  await mintERC721(config.starknetProvider, sellerAccount);
 
   const order: AuctionV1 = {
-    brokerId: 123,
+    brokerId: brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId,
     startAmount: 1,
@@ -39,8 +37,8 @@ test("cancelListing", async () => {
   };
 
   const orderHash = await createAuction(config, {
-    starknetAccount: starknetOffererAccount,
-    arkAccount,
+    starknetAccount: sellerAccount,
+    arkAccount: adminAccount,
     order
   });
 
@@ -51,8 +49,8 @@ test("cancelListing", async () => {
   };
 
   cancelOrder(config, {
-    starknetAccount: starknetOffererAccount,
-    arkAccount,
+    starknetAccount: sellerAccount,
+    arkAccount: adminAccount,
     cancelInfo
   });
 
