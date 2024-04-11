@@ -61,7 +61,7 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   const order: AuctionV1 = {
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: tokenId,
+    tokenId,
     startAmount: 1,
     endAmount: 10
   };
