@@ -76,7 +76,7 @@ test("error: invalid start date", async () => {
   const order: AuctionV1 = {
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: BigInt(tokenId),
+    tokenId,
     startDate: invalidStartDate,
     startAmount: 1,
     endAmount: 10
@@ -115,7 +115,7 @@ test("error: invalid end date", async () => {
   const order: AuctionV1 = {
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: BigInt(tokenId),
+    tokenId,
     endDate: invalidEndDate,
     startAmount: 1,
     endAmount: 10
@@ -152,7 +152,7 @@ test("error: invalid end amount", async () => {
   const order: AuctionV1 = {
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: BigInt(tokenId),
+    tokenId,
     startAmount: 1,
     endAmount: 0
   };
@@ -187,7 +187,7 @@ test("error: broker not whitelisted", async () => {
   const order: AuctionV1 = {
     brokerId: 12345,
     tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: BigInt(tokenId),
+    tokenId,
     startAmount: 1,
     endAmount: 10
   };
