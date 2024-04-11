@@ -132,7 +132,7 @@ test("error: invalid end amount", async () => {
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId: BigInt(tokenId) + BigInt(1),
     startAmount: 1,
-    endAmount: 1
+    endAmount: 0
   };
 
   await expect(
