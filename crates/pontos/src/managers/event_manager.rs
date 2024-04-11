@@ -111,7 +111,7 @@ impl<S: Storage> EventManager<S> {
             from_address: to_hex_str(taker_address),
             to_address: to_hex_str(maker_address),
             nft_contract_address: to_hex_str(nft_contract_address),
-            nft_type: None, // This will be set later as needed
+            nft_type: None,
             transaction_hash: to_hex_str(&event.transaction_hash),
             token_id_hex: token_id.to_hex(),
             token_id: token_id.to_decimal(false),
@@ -167,7 +167,6 @@ impl<S: Storage> EventManager<S> {
         token_event.token_id_hex = token_id.to_hex();
         token_event.token_id = token_id.to_decimal(false);
         token_event.timestamp = block_timestamp;
-        token_event.contract_type = contract_type.to_string();
         token_event.event_type = Self::get_event_type(from, to);
         token_event.event_id = to_hex_str(&event_id);
         token_event.block_number = event.block_number;

@@ -65,17 +65,11 @@ impl FromStr for EventType {
     }
 }
 
-// #[derive(Debug, Clone, PartialEq, Deserialize)]
-// pub enum TokenEvent {
-//     Transfer(TokenTransferEvent),
-//     Sale(TokenSaleEvent),
-// }
 // impl Serialize for TokenEvent {
 //     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 //     where
 //         S: Serializer,
 //     {
-
 //         let fields_to_serialize = match self {
 //             TokenEvent::Transfer(event) => {
 //                 vec![
@@ -92,7 +86,7 @@ impl FromStr for EventType {
 //                 ]
 //             }
 //             TokenEvent::Sale(event) => {
-//                 let properties = vec![
+//                 let mut properties = vec![
 //                     ("event_id", event.token_id_hex.clone()),
 //                     ("event_type", "sale".to_string()),
 //                     ("from_address", event.from_address.clone()),
@@ -112,22 +106,48 @@ impl FromStr for EventType {
 //                     ("price", event.price.clone()),
 //                 ];
 
-//                 if event.nft_type.is_some() {
-//                     properties.push(("contract_type", event.nft_type.clone().unwrap()));
-//                 }
-
-//                 event.block_number
-//                 properties.push(("block_number",));
-
-//                 if event.updated_at.is_some() {
-//                     properties.push(("updated_at", event.updated_at.clone().unwrap().to_string()));
-//                 }
+//                 properties.push((
+//                     "block_number",
+//                     event
+//                         .block_number
+//                         .map_or("".to_string(), |block_number| block_number.to_string()),
+//                 ));
 
 //                 properties
 //             }
 //         };
+
+//         fields_to_serialize.serialize(serializer)
 //     }
 // }
+
+impl Serialize for TokenEvent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            TokenEvent::Transfer(event) => {
+                let mut state = serializer.serialize_struct("TokenTransferEvent", 2)?;
+                state.serialize_field("from_address", &event.from_address)?;
+                state.serialize_field("property2", &event.property2)?;
+                state.end()
+            }
+            TokenEvent::Sale(event) => {
+                let mut state = serializer.serialize_struct("TokenSaleEvent", 2)?;
+                state.serialize_field("property1", &event.property1)?;
+                state.serialize_field("property3", &event.property3)?;
+                state.end()
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub enum TokenEvent {
+    Transfer(TokenTransferEvent),
+    Sale(TokenSaleEvent),
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TokenTransferEvent {
@@ -135,6 +155,7 @@ pub struct TokenTransferEvent {
     pub from_address: String,
     pub to_address: String,
     pub contract_address: String,
+    pub contract_type: String,
     pub transaction_hash: String,
     pub token_id: String,
     pub token_id_hex: String,
@@ -172,10 +193,10 @@ impl Default for TokenTransferEvent {
             from_address: String::new(),
             to_address: String::new(),
             contract_address: String::new(),
+            contract_type: String::new(),
             transaction_hash: String::new(),
             token_id: String::new(),
             token_id_hex: String::new(),
-            contract_type: String::new(),
             event_type: EventType::Uninitialized,
             event_id: "0".to_string(),
             block_number: None,
@@ -306,4 +327,52 @@ pub struct ContractInfo {
     pub name: Option<String>,
     pub symbol: Option<String>,
     pub image: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_token_event_transfer_serialization() {
+        let event = TokenEvent::Transfer(TokenTransferEvent {
+            timestamp: 1625097600,
+            from_address: "0xfrom".to_string(),
+            to_address: "0xto".to_string(),
+            contract_address: "0xcontract".to_string(),
+            contract_type: "ERC721".to_string(),
+            transaction_hash: "0xhash".to_string(),
+            token_id: "123".to_string(),
+            token_id_hex: "0x123".to_string(),
+            event_type: EventType::Transfer,
+            event_id: "evt123".to_string(),
+            block_number: None,
+            updated_at: Some(1625101200),
+        });
+
+        let serialized = serde_json::to_string(&event).expect("Failed to serialize TokenEvent");
+
+        let expected_json = json!({
+            "event_type": "transfer",
+            "timestamp": "1625097600",
+            "from_address": "0xfrom",
+            "to_address": "0xto",
+            "contract_address": "0xcontract",
+            "transaction_hash": "0xhash",
+            "token_id": "123",
+            "token_id_hex": "0x123",
+            "contract_type": "ERC721",
+            "event_id": "evt123",
+            "block_number": "null",
+            "updated_at": "1625101200",
+        });
+
+        let expected = expected_json.to_string();
+
+        assert_eq!(
+            serialized, expected,
+            "Serialized TokenEvent does not match expected JSON"
+        );
+    }
 }
