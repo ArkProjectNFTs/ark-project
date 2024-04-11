@@ -1,5 +1,17 @@
 # @ark-project/core
 
+## 1.0.0
+
+### Major Changes
+
+- aad63d4: feat(broker): new function & script in examples to whitelist the broker before listing
+  fix: use broker id from env variable
+  feat(broker): update hooks, examples, and core function to support broker as a variable
+
+### Patch Changes
+
+- e573daa: test(sdk-core): use jest instead of mocha
+
 ## 0.3.0
 
 ### Minor Changes

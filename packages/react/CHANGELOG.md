@@ -1,5 +1,13 @@
 # @ark-project/react
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [aad63d4]
+- Updated dependencies [e573daa]
+  - @ark-project/core@1.0.0
+
 ## 0.3.0
 
 ### Minor Changes
