@@ -40,7 +40,7 @@ test("default", async () => {
     order: {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
-      tokenId: tokenId,
+      tokenId,
       startAmount: 1,
       endAmount: 10
     }
