@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use std::fmt;
 use std::str::FromStr;
 
@@ -65,11 +65,69 @@ impl FromStr for EventType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum TokenEvent {
-    Transfer(TokenTransferEvent),
-    Sale(TokenSaleEvent),
-}
+// #[derive(Debug, Clone, PartialEq, Deserialize)]
+// pub enum TokenEvent {
+//     Transfer(TokenTransferEvent),
+//     Sale(TokenSaleEvent),
+// }
+// impl Serialize for TokenEvent {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer,
+//     {
+
+//         let fields_to_serialize = match self {
+//             TokenEvent::Transfer(event) => {
+//                 vec![
+//                     ("timestamp", event.timestamp.to_string()),
+//                     ("from_address", event.from_address.clone()),
+//                     ("to_address", event.to_address.clone()),
+//                     ("contract_address", event.contract_address.clone()),
+//                     ("transaction_hash", event.transaction_hash.clone()),
+//                     ("token_id", event.token_id.clone()),
+//                     ("token_id_hex", event.token_id_hex.clone()),
+//                     ("contract_type", String::from("transfer")),
+//                     ("event_type", event.token_id.clone()),
+//                     ("event_id", event.token_id_hex.clone()),
+//                 ]
+//             }
+//             TokenEvent::Sale(event) => {
+//                 let properties = vec![
+//                     ("event_id", event.token_id_hex.clone()),
+//                     ("event_type", "sale".to_string()),
+//                     ("from_address", event.from_address.clone()),
+//                     ("timestamp", event.timestamp.to_string()),
+//                     ("to_address", event.to_address.clone()),
+//                     ("nft_contract_address", event.nft_contract_address.clone()),
+//                     (
+//                         "marketplace_contract_address",
+//                         event.marketplace_contract_address.clone(),
+//                     ),
+//                     ("marketplace_name", event.marketplace_name.clone()),
+//                     ("transaction_hash", event.transaction_hash.clone()),
+//                     ("token_id", event.token_id.clone()),
+//                     ("token_id_hex", event.token_id_hex.clone()),
+//                     ("quantity", event.quantity.to_string()),
+//                     ("currency_address", event.currency_address.clone()),
+//                     ("price", event.price.clone()),
+//                 ];
+
+//                 if event.nft_type.is_some() {
+//                     properties.push(("contract_type", event.nft_type.clone().unwrap()));
+//                 }
+
+//                 event.block_number
+//                 properties.push(("block_number",));
+
+//                 if event.updated_at.is_some() {
+//                     properties.push(("updated_at", event.updated_at.clone().unwrap().to_string()));
+//                 }
+
+//                 properties
+//             }
+//         };
+//     }
+// }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TokenTransferEvent {
@@ -80,7 +138,6 @@ pub struct TokenTransferEvent {
     pub transaction_hash: String,
     pub token_id: String,
     pub token_id_hex: String,
-    pub contract_type: String,
     pub event_type: EventType,
     pub event_id: String,
     pub block_number: Option<u64>,
