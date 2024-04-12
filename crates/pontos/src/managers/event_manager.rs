@@ -151,11 +151,21 @@ mod tests {
 
     /// Sets up sample data and event for testing purposes.
     fn setup_sample_event() -> EmittedEvent {
+        let block_hash = match FieldElement::from_dec_str("786") {
+            Ok(value) => value,
+            Err(e) => panic!("Failed to parse string to FieldElement: {}", e),
+        };
+
+        let transaction_hash = match FieldElement::from_dec_str("5432") {
+            Ok(value) => value,
+            Err(e) => panic!("Failed to parse string to FieldElement: {}", e),
+        };
+
         EmittedEvent {
             from_address: FieldElement::from_hex_be("0x0").unwrap(),
-            block_hash: FieldElement::from_dec_str("786").unwrap(),
-            transaction_hash: FieldElement::from_dec_str("5432").unwrap(),
-            block_number: 111,
+            block_hash: Some(block_hash),
+            transaction_hash: transaction_hash,
+            block_number: Some(111),
             keys: vec![
                 TRANSFER_SELECTOR,
                 FieldElement::from_hex_be("0x1234").unwrap(),
@@ -213,9 +223,9 @@ mod tests {
         // and not in `event.keys`.
         let sample_event = EmittedEvent {
             from_address: FieldElement::from_hex_be("0x0").unwrap(),
-            block_hash: FieldElement::from_dec_str("786").unwrap(),
+            block_hash: Some(FieldElement::from_dec_str("786").unwrap()),
             transaction_hash: FieldElement::from_dec_str("5432").unwrap(),
-            block_number: 111,
+            block_number: Some(111),
             keys: vec![
                 TRANSFER_SELECTOR, // This is the selector, so it's not used to extract event data
             ],

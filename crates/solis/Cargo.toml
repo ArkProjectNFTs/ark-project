@@ -44,6 +44,7 @@ console = "0.15.7"
 convert_case = "0.6.0"
 crypto-bigint = { version = "0.5.3", features = ["serde"] }
 derive_more = "0.99.17"
+dotenv = "0.15.0"
 env_logger = "0.10.0"
 flate2 = "1.0.24"
 futures = "0.3.28"
@@ -58,8 +59,8 @@ parking_lot = "0.12.1"
 pretty_assertions = "1.2.1"
 rayon = "1.8.0"
 salsa = "0.16.1"
-scarb = { git = "https://github.com/software-mansion/scarb", tag = "v2.4.0" }
-scarb-ui = { git = "https://github.com/software-mansion/scarb", tag = "v2.4.0" }
+scarb = { git = "https://github.com/ArkProjectNFTs/scarb.git", tag = "v2.4.0-fix-version" }
+scarb-ui = { git = "https://github.com/ArkProjectNFTs/scarb.git", tag = "v2.4.0-fix-version" }
 semver = "1.0.5"
 serde = { version = "1.0.192", features = ["derive"] }
 serde_json = "1.0"
@@ -99,13 +100,13 @@ warp = "0.3"
 # katana-rpc-api = { path = "../../../dojo/crates/katana/rpc/rpc-api" }
 # katana-primitives = { path = "../../../dojo/crates/katana/primitives" }
 
-katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.2-solis", features = [
+katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.3-solis", features = [
     "messaging",
     "starknet-messaging",
 ] }
-katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.2-solis" }
-katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.2-solis" }
-katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.2-solis" }
+katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.3-solis" }
+katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.3-solis" }
+katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.2.3-solis" }
 
 cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.2.4-fix-ord", features = [
     "abigen-rs",

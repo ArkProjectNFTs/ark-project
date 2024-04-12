@@ -62,7 +62,9 @@ export class CdkSolisStack extends cdk.Stack {
           "default_sender_address",
         STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY:
           process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY ||
-          "default_private_key"
+          "default_private_key",
+        RPC_USER: process.env.RPC_USER || "default_rpc_user",
+        RPC_PASSWORD: process.env.RPC_PASSWORD || "default_rpc_password"
       },
       memoryLimitMiB: 512,
       logging

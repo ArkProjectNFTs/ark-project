@@ -345,10 +345,7 @@ mod tests {
     #[tokio::test]
     async fn test_contract_error_entrypoint_not_found() {
         let client = Arc::new(
-            StarknetClientHttp::new(
-                "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-            )
-            .unwrap(),
+            StarknetClientHttp::new("https://starknet-sepolia.public.blastapi.io").unwrap(),
         );
 
         // Starkgate.
@@ -393,15 +390,12 @@ mod tests {
     #[tokio::test]
     async fn test_contract_error_input_too_short() {
         let client = Arc::new(
-            StarknetClientHttp::new(
-                "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-            )
-            .unwrap(),
+            StarknetClientHttp::new("https://starknet-mainnet.public.blastapi.io").unwrap(),
         );
 
         // Pragma v2.
         let contract_address = FieldElement::from_hex_be(
-            "0x06df335982dddce41008e4c03f2546fa27276567b5274c7d0c1262f3c2b5d167",
+            "0x02a85bd616f912537c50a49a4076db02c00b29b2cdc8a197ce92ed1837fa875b",
         )
         .unwrap();
 
@@ -428,15 +422,12 @@ mod tests {
     #[tokio::test]
     async fn test_contract_error_input_too_long() {
         let client = Arc::new(
-            StarknetClientHttp::new(
-                "https://starknet-goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-            )
-            .unwrap(),
+            StarknetClientHttp::new("https://starknet-mainnet.public.blastapi.io").unwrap(),
         );
 
         // Pragma v2.
         let contract_address = FieldElement::from_hex_be(
-            "0x06df335982dddce41008e4c03f2546fa27276567b5274c7d0c1262f3c2b5d167",
+            "0x02a85bd616f912537c50a49a4076db02c00b29b2cdc8a197ce92ed1837fa875b",
         )
         .unwrap();
 

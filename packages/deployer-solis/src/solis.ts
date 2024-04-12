@@ -4,6 +4,14 @@ export async function setSolisAddresses(
   nodeUrl: string
 ) {
   const url = nodeUrl;
+  const user = process.env.RPC_USER;
+  const password = process.env.RPC_PASSWORD;
+  if (!user || !password) {
+    throw new Error('RPC_USER and RPC_PASSWORD must be set in the .env file');
+  }
+
+  const basic_auth = Buffer.from(`${user}:${password}`).toString('base64');
+
   const postData = {
     jsonrpc: "2.0",
     id: "1",
@@ -12,7 +20,8 @@ export async function setSolisAddresses(
       addresses: {
         orderbook_arkchain: orderbookAddress,
         executor_starknet: executorAddress
-      }
+      },
+      basic_auth
     }
   };
 
