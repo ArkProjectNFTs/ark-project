@@ -7,10 +7,10 @@ export async function setSolisAddresses(
   const user = process.env.RPC_USER;
   const password = process.env.RPC_PASSWORD;
   if (!user || !password) {
-    throw new Error('RPC_USER and RPC_PASSWORD must be set in the .env file');
+    throw new Error("RPC_USER and RPC_PASSWORD must be set in the .env file");
   }
 
-  const basic_auth = Buffer.from(`${user}:${password}`).toString('base64');
+  const basic_auth = Buffer.from(`${user}:${password}`).toString("base64");
 
   const postData = {
     jsonrpc: "2.0",
