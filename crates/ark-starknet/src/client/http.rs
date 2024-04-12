@@ -345,10 +345,7 @@ mod tests {
     #[tokio::test]
     async fn test_contract_error_entrypoint_not_found() {
         let client = Arc::new(
-            StarknetClientHttp::new(
-                "https://starknet-sepolia.public.blastapi.io",
-            )
-            .unwrap(),
+            StarknetClientHttp::new("https://starknet-sepolia.public.blastapi.io").unwrap(),
         );
 
         // Starkgate.
@@ -393,10 +390,7 @@ mod tests {
     #[tokio::test]
     async fn test_contract_error_input_too_short() {
         let client = Arc::new(
-            StarknetClientHttp::new(
-                "https://starknet-mainnet.public.blastapi.io",
-            )
-            .unwrap(),
+            StarknetClientHttp::new("https://starknet-mainnet.public.blastapi.io").unwrap(),
         );
 
         // Pragma v2.
@@ -428,10 +422,7 @@ mod tests {
     #[tokio::test]
     async fn test_contract_error_input_too_long() {
         let client = Arc::new(
-            StarknetClientHttp::new(
-                "https://starknet-mainnet.public.blastapi.io",
-            )
-            .unwrap(),
+            StarknetClientHttp::new("https://starknet-mainnet.public.blastapi.io").unwrap(),
         );
 
         // Pragma v2.
