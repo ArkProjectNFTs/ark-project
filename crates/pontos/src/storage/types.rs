@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize, Serializer};
+use serde_json::Value;
+use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
-use std::collections::HashMap;
-use serde_json::Value;
 
 #[derive(Debug, Clone)]
 pub enum StorageError {
@@ -95,7 +95,10 @@ impl Serialize for TokenEvent {
                 map.insert("timestamp", event.timestamp.to_string());
                 map.insert("to_address", event.to_address.clone());
                 map.insert("nft_contract_address", event.nft_contract_address.clone());
-                map.insert("marketplace_contract_address", event.marketplace_contract_address.clone());
+                map.insert(
+                    "marketplace_contract_address",
+                    event.marketplace_contract_address.clone(),
+                );
                 map.insert("marketplace_name", event.marketplace_name.clone());
                 map.insert("transaction_hash", event.transaction_hash.clone());
                 map.insert("token_id", event.token_id.clone());
@@ -359,6 +362,5 @@ mod tests {
         let expected_value = expected_value.unwrap();
 
         assert_eq!(serialized_value, expected_value, "json are not equal");
-
     }
 }
