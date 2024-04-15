@@ -346,19 +346,19 @@ mod tests {
 
         let serialized_value: Result<Value, _> = serde_json::from_str(&serialized);
         if serialized_value.is_err() {
-            println!("`serialized` n'est pas un JSON valide");
+            println!("`serialized` is not a valid json");
             return;
         }
         let serialized_value = serialized_value.unwrap();
 
         let expected_value: Result<Value, _> = serde_json::from_str(&expected);
         if expected_value.is_err() {
-            println!("`expected` n'est pas un JSON valide");
+            println!("`expected` is not a valid json");
             return;
         }
         let expected_value = expected_value.unwrap();
 
-        assert_eq!(serialized_value, expected_value, "Les deux objets JSON ne sont pas égaux");
+        assert_eq!(serialized_value, expected_value, "json are not equal");
 
     }
 }
