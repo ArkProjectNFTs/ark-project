@@ -10,7 +10,7 @@ const contractsFilePath = path.join(
   "contracts.json"
 );
 // Output path for the generated TypeScript file within the core package
-const outputFilePath = path.join(__dirname, "contracts.ts");
+const outputFilePath = path.join(__dirname, "../src/contracts.ts");
 
 const generateContractsFile = () => {
   const contracts = JSON.parse(fs.readFileSync(contractsFilePath, "utf8"));

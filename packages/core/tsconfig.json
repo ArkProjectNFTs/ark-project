@@ -1,6 +1,7 @@
 {
   "extends": "@ark-project/typescript-config/base.json",
   "compilerOptions": {
+    "target": "esnext",
     "plugins": [
       {}
     ]

@@ -2,9 +2,11 @@
   "name": "@ark-project/react",
   "version": "0.3.1",
   "description": "",
-  "main": "index.tsx",
-  "types": "index.tsx",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/types.d.ts",
   "scripts": {
+    "build": "rollup -c",
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --ext .ts,.tsx . --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@ark-project/core": "workspace:*",
+    "@ark-project/core": "1.0.0",
     "@starknet-react/chains": "^0.1.0",
     "@starknet-react/core": "^2.2.2",
     "get-starknet-core": "^3.2.0",
@@ -23,7 +25,15 @@
   "devDependencies": {
     "@ark-project/eslint-config": "workspace:*",
     "@ark-project/typescript-config": "workspace:*",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/react": "^18",
+    "rollup": "^4.14.3",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
     "typescript": "^5.3.3"
   }
 }

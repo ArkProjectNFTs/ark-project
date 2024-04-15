@@ -9,8 +9,6 @@ import {
 
 import { SOLIS_ACCOUNT_CLASS_HASH } from "../../constants";
 
-import "dotenv/config";
-
 /**
  * Creates a new account on the StarkNet testnet.
  * This function generates a private key, derives the corresponding public key,
