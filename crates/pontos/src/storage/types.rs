@@ -310,7 +310,7 @@ pub struct ContractInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
+    use serde_json::{json, Value};
 
     #[test]
     fn test_token_event_transfer_serialization() {
