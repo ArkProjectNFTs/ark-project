@@ -468,7 +468,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         events: Vec<EmittedEvent>,
         block_timestamp: u64,
     ) -> IndexerResult<()> {
-        let marketplace_contracts = vec![FieldElement::from_hex_be(
+        let marketplace_contracts = [FieldElement::from_hex_be(
             "0x04d8bb956e6bd7a50fcb8b49d8e9fd8269cfadbeb73f457fd6d3fc1dff4b879e", // Element Marketplace
         )
         .unwrap()];
@@ -481,13 +481,11 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 if let Err(e) = self.process_marketplace_event(e, block_timestamp).await {
                     error!("Error while processing marketplace event: {:?}", e);
                 }
-            } else {
-                if let Err(e) = self
-                    .process_nft_transfers(e, block_timestamp, contract_address)
-                    .await
-                {
-                    error!("Error while processing NFT transfers: {:?}", e);
-                }
+            } else if let Err(e) = self
+                .process_nft_transfers(e, block_timestamp, contract_address)
+                .await
+            {
+                error!("Error while processing NFT transfers: {:?}", e);
             }
         }
 

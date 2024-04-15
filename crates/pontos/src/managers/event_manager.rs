@@ -68,7 +68,7 @@ impl<S: Storage> EventManager<S> {
             .ok_or_else(|| anyhow!("Price not found"))?;
         let taker_address = event
             .data
-            .get(0)
+            .first()
             .ok_or_else(|| anyhow!("Taker address not found"))?;
         let nft_contract_address = event
             .data
