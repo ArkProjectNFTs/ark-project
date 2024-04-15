@@ -65,81 +65,59 @@ impl FromStr for EventType {
     }
 }
 
-// impl Serialize for TokenEvent {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: Serializer,
-//     {
-//         let fields_to_serialize = match self {
-//             TokenEvent::Transfer(event) => {
-//                 vec![
-//                     ("timestamp", event.timestamp.to_string()),
-//                     ("from_address", event.from_address.clone()),
-//                     ("to_address", event.to_address.clone()),
-//                     ("contract_address", event.contract_address.clone()),
-//                     ("transaction_hash", event.transaction_hash.clone()),
-//                     ("token_id", event.token_id.clone()),
-//                     ("token_id_hex", event.token_id_hex.clone()),
-//                     ("contract_type", String::from("transfer")),
-//                     ("event_type", event.token_id.clone()),
-//                     ("event_id", event.token_id_hex.clone()),
-//                 ]
-//             }
-//             TokenEvent::Sale(event) => {
-//                 let mut properties = vec![
-//                     ("event_id", event.token_id_hex.clone()),
-//                     ("event_type", "sale".to_string()),
-//                     ("from_address", event.from_address.clone()),
-//                     ("timestamp", event.timestamp.to_string()),
-//                     ("to_address", event.to_address.clone()),
-//                     ("nft_contract_address", event.nft_contract_address.clone()),
-//                     (
-//                         "marketplace_contract_address",
-//                         event.marketplace_contract_address.clone(),
-//                     ),
-//                     ("marketplace_name", event.marketplace_name.clone()),
-//                     ("transaction_hash", event.transaction_hash.clone()),
-//                     ("token_id", event.token_id.clone()),
-//                     ("token_id_hex", event.token_id_hex.clone()),
-//                     ("quantity", event.quantity.to_string()),
-//                     ("currency_address", event.currency_address.clone()),
-//                     ("price", event.price.clone()),
-//                 ];
-
-//                 properties.push((
-//                     "block_number",
-//                     event
-//                         .block_number
-//                         .map_or("".to_string(), |block_number| block_number.to_string()),
-//                 ));
-
-//                 properties
-//             }
-//         };
-
-//         fields_to_serialize.serialize(serializer)
-//     }
-// }
-
 impl Serialize for TokenEvent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        match self {
+        let fields_to_serialize = match self {
             TokenEvent::Transfer(event) => {
-                let mut state = serializer.serialize_struct("TokenTransferEvent", 2)?;
-                state.serialize_field("from_address", &event.from_address)?;
-                state.serialize_field("property2", &event.property2)?;
-                state.end()
+                vec![
+                    ("timestamp", event.timestamp.to_string()),
+                    ("from_address", event.from_address.clone()),
+                    ("to_address", event.to_address.clone()),
+                    ("contract_address", event.contract_address.clone()),
+                    ("transaction_hash", event.transaction_hash.clone()),
+                    ("token_id", event.token_id.clone()),
+                    ("token_id_hex", event.token_id_hex.clone()),
+                    ("contract_type", String::from("transfer")),
+                    ("event_type", "transfer".to_string()),
+                    ("event_id", event.event_id.clone()),
+                ]
             }
             TokenEvent::Sale(event) => {
-                let mut state = serializer.serialize_struct("TokenSaleEvent", 2)?;
-                state.serialize_field("property1", &event.property1)?;
-                state.serialize_field("property3", &event.property3)?;
-                state.end()
+                let mut properties = vec![
+                    ("event_id", event.token_id_hex.clone()),
+                    ("event_type", "sale".to_string()),
+                    ("from_address", event.from_address.clone()),
+                    ("timestamp", event.timestamp.to_string()),
+                    ("to_address", event.to_address.clone()),
+                    ("nft_contract_address", event.nft_contract_address.clone()),
+                    (
+                        "marketplace_contract_address",
+                        event.marketplace_contract_address.clone(),
+                    ),
+                    ("marketplace_name", event.marketplace_name.clone()),
+                    ("transaction_hash", event.transaction_hash.clone()),
+                    ("token_id", event.token_id.clone()),
+                    ("token_id_hex", event.token_id_hex.clone()),
+                    ("quantity", event.quantity.to_string()),
+                    ("currency_address", event.currency_address.clone()),
+                    ("price", event.price.clone()),
+                ];
+
+                properties.push((
+                    "block_number",
+                    event
+                        .block_number
+                        .map_or("".to_string(), |block_number| block_number.to_string()),
+                ));
+
+                properties
             }
-        }
+        };
+
+        fields_to_serialize.serialize(serializer)
     }
 }
 
