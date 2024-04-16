@@ -189,9 +189,17 @@ impl Storage for DefaultSqlxStorage {
         Ok(())
     }
 
-    async fn register_event(
+    async fn register_sale_event(
         &self,
-        event: &TokenEvent,
+        event: &TokenSaleEvent,
+        _block_timestamp: u64,
+    ) -> Result<(), StorageError> {
+        Ok(())
+    }
+
+    async fn register_transfer_event(
+        &self,
+        event: &TokenTransferEvent,
         _block_timestamp: u64,
     ) -> Result<(), StorageError> {
         trace!("Registering event {:?}", event);

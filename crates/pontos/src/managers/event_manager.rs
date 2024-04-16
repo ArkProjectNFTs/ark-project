@@ -1,4 +1,4 @@
-use crate::storage::types::{EventType, TokenEvent};
+use crate::storage::types::{EventType, TokenSaleEvent, TokenTransferEvent};
 use crate::storage::Storage;
 use crate::ContractType;
 use anyhow::{anyhow, Result};
@@ -8,9 +8,11 @@ use starknet::core::utils::starknet_keccak;
 use starknet::macros::selector;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{debug, trace};
+use tracing::trace;
 
 const TRANSFER_SELECTOR: FieldElement = selector!("Transfer");
+const ELEMENT_NFT_MARKETPLACE_HEX: &str =
+    "0x351e5a57ea6ca22e3e3cd212680ef7f3b57404609bda942a5e75ba4724b55e0";
 
 #[derive(Debug)]
 pub struct EventManager<S: Storage> {
@@ -27,7 +29,102 @@ impl<S: Storage> EventManager<S> {
 
     /// Returns the selectors used to filter events.
     pub fn keys_selector(&self) -> Option<Vec<Vec<FieldElement>>> {
-        Some(vec![vec![TRANSFER_SELECTOR]])
+        let element_nft_marketplace = FieldElement::from_hex_be(ELEMENT_NFT_MARKETPLACE_HEX)
+            .expect("Failed to parse element nft marketplace hex");
+        Some(vec![vec![TRANSFER_SELECTOR, element_nft_marketplace]])
+    }
+
+    pub async fn register_sale_event(
+        &self,
+        event: &TokenSaleEvent,
+        block_timestamp: u64,
+    ) -> Result<()> {
+        self.storage
+            .register_sale_event(event, block_timestamp)
+            .await?;
+        Ok(())
+    }
+
+    pub async fn format_element_sale_event(
+        &self,
+        event: &EmittedEvent,
+        block_timestamp: u64,
+    ) -> Result<TokenSaleEvent> {
+        if event.keys.len() < 4 {
+            return Err(anyhow!("Can't find event data into this event"));
+        }
+
+        let maker_address = event
+            .keys
+            .get(3)
+            .ok_or_else(|| anyhow!("Maker address not found"))?;
+        let currency_address = event
+            .data
+            .get(1)
+            .ok_or_else(|| anyhow!("Currency address not found"))?;
+        let price = event
+            .data
+            .get(2)
+            .ok_or_else(|| anyhow!("Price not found"))?;
+        let taker_address = event
+            .data
+            .first()
+            .ok_or_else(|| anyhow!("Taker address not found"))?;
+        let nft_contract_address = event
+            .data
+            .get(8)
+            .ok_or_else(|| anyhow!("NFT contract address not found"))?;
+        let token_id_low = event
+            .data
+            .get(9)
+            .ok_or_else(|| anyhow!("Token id low not found"))?;
+        let token_id_high = event
+            .data
+            .get(10)
+            .ok_or_else(|| anyhow!("Token id high not found"))?;
+        let quantity = event
+            .data
+            .get(11)
+            .ok_or_else(|| anyhow!("Quantity not found"))?;
+
+        let token_id = CairoU256 {
+            low: (*token_id_low)
+                .try_into()
+                .map_err(|_| anyhow!("Failed to parse token id low"))?,
+            high: (*token_id_high)
+                .try_into()
+                .map_err(|_| anyhow!("Failed to parse token id high"))?,
+        };
+
+        let event_id = Self::get_event_id(
+            &token_id,
+            maker_address,
+            taker_address,
+            block_timestamp,
+            event,
+        );
+
+        Ok(TokenSaleEvent {
+            event_id: to_hex_str(&event_id),
+            event_type: EventType::Sale,
+            block_number: event.block_number,
+            from_address: to_hex_str(taker_address),
+            to_address: to_hex_str(maker_address),
+            nft_contract_address: to_hex_str(nft_contract_address),
+            nft_type: None,
+            transaction_hash: to_hex_str(&event.transaction_hash),
+            token_id_hex: token_id.to_hex(),
+            token_id: token_id.to_decimal(false),
+            timestamp: block_timestamp,
+            updated_at: Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
+            quantity: (*quantity)
+                .try_into()
+                .map_err(|_| anyhow!("Failed to parse quantity"))?,
+            currency_address: to_hex_str(currency_address),
+            marketplace_contract_address: to_hex_str(&event.from_address),
+            marketplace_name: "Element".to_string(),
+            price: price.to_big_decimal(0).to_string(),
+        })
     }
 
     /// Formats & register a token event based on the event content.
@@ -37,12 +134,14 @@ impl<S: Storage> EventManager<S> {
         event: &EmittedEvent,
         contract_type: ContractType,
         block_timestamp: u64,
-    ) -> Result<(CairoU256, TokenEvent)> {
-        let mut token_event = TokenEvent::default();
+    ) -> Result<(CairoU256, TokenTransferEvent)> {
+        let mut token_event = TokenTransferEvent::default();
 
-        debug!(
-            "Processing event: event={:?}, contract_type={:?}, timestamp={}",
-            event, contract_type, block_timestamp
+        trace!(
+            "Format transfer event to insert: event={:?}, contract_type={:?}, timestamp={}",
+            event,
+            contract_type,
+            block_timestamp
         );
 
         // As cairo didn't have keys before, we first check if the data
@@ -68,10 +167,10 @@ impl<S: Storage> EventManager<S> {
         token_event.token_id_hex = token_id.to_hex();
         token_event.token_id = token_id.to_decimal(false);
         token_event.timestamp = block_timestamp;
-        token_event.contract_type = contract_type.to_string();
         token_event.event_type = Self::get_event_type(from, to);
         token_event.event_id = to_hex_str(&event_id);
         token_event.block_number = event.block_number;
+        token_event.contract_type = contract_type.to_string();
         token_event.updated_at = Some(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -82,7 +181,7 @@ impl<S: Storage> EventManager<S> {
         trace!("Registering event: {:?}", token_event);
 
         self.storage
-            .register_event(&token_event, block_timestamp)
+            .register_transfer_event(&token_event, block_timestamp)
             .await?;
 
         Ok((token_id, token_event.clone()))
@@ -185,7 +284,7 @@ mod tests {
         let mut storage = MockStorage::default();
 
         storage
-            .expect_register_event()
+            .expect_register_transfer_event()
             .returning(|_, _| Box::pin(futures::future::ready(Ok(()))));
 
         let manager = EventManager::new(Arc::new(storage));
@@ -214,7 +313,7 @@ mod tests {
         let mut storage = MockStorage::default();
 
         storage
-            .expect_register_event()
+            .expect_register_transfer_event()
             .returning(|_, _| Box::pin(futures::future::ready(Ok(()))));
 
         let manager = EventManager::new(Arc::new(storage));
@@ -271,7 +370,10 @@ mod tests {
         let result = manager.keys_selector().unwrap();
 
         // Define expected result
-        let expected = vec![vec![selector!("Transfer")]];
+        let expected = vec![vec![
+            selector!("Transfer"),
+            FieldElement::from_hex_be(ELEMENT_NFT_MARKETPLACE_HEX).unwrap(),
+        ]];
 
         // Assert the output
         assert_eq!(result, expected);

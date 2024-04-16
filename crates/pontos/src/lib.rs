@@ -18,6 +18,9 @@ use tracing::{debug, error, info, trace, warn};
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
+const ELEMENT_MARKETPLACE_EVENT_HEX: &str =
+    "0x351e5a57ea6ca22e3e3cd212680ef7f3b57404609bda942a5e75ba4724b55e0";
+
 /// Generic errors for Pontos.
 #[derive(Debug)]
 pub enum IndexerError {
@@ -356,67 +359,133 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         Ok(())
     }
 
+    async fn process_marketplace_event(
+        &self,
+        event: EmittedEvent,
+        block_timestamp: u64,
+    ) -> Result<()> {
+        let element_sale_event_name = FieldElement::from_hex_be(ELEMENT_MARKETPLACE_EVENT_HEX)?;
+        if let Some(event_name) = event.keys.first() {
+            if *event_name == element_sale_event_name {
+                let mut token_sale_event = self
+                    .event_manager
+                    .format_element_sale_event(&event, block_timestamp)
+                    .await?;
+
+                let contract_addr =
+                    FieldElement::from_hex_be(token_sale_event.nft_contract_address.as_str())
+                        .unwrap();
+
+                let contract_type = match self
+                    .contract_manager
+                    .write()
+                    .await
+                    .identify_contract(contract_addr, block_timestamp)
+                    .await
+                {
+                    Ok(info) => info,
+                    Err(e) => {
+                        error!(
+                            "Error while identifying contract {}: {:?}",
+                            token_sale_event.nft_contract_address, e
+                        );
+                        return Ok(());
+                    }
+                };
+
+                if contract_type == ContractType::Other {
+                    debug!(
+                        "Contract identified as OTHER: {}",
+                        token_sale_event.nft_contract_address,
+                    );
+                    return Ok(());
+                }
+
+                token_sale_event.nft_type = Some(contract_type.to_string());
+                self.event_manager
+                    .register_sale_event(&token_sale_event, block_timestamp)
+                    .await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn process_nft_transfers(
+        &self,
+        event: EmittedEvent,
+        block_timestamp: u64,
+        contract_address: FieldElement,
+    ) -> Result<()> {
+        let contract_address_hex = to_hex_str(&contract_address);
+        let contract_type = self
+            .contract_manager
+            .write()
+            .await
+            .identify_contract(contract_address, block_timestamp)
+            .await
+            .map_err(|e| {
+                error!(
+                    "Error while identifying contract {}: {:?}",
+                    contract_address_hex, e
+                );
+                e
+            })?;
+
+        if contract_type == ContractType::Other {
+            debug!("Contract identified as OTHER: {}", contract_address_hex);
+            return Ok(());
+        }
+
+        info!(
+            "Processing event... Block Id: {:?}, Tx Hash: 0x{:064x}, contract_type: {:?}",
+            event.block_number, event.transaction_hash, contract_type
+        );
+
+        let (token_id, token_event) = self
+            .event_manager
+            .format_and_register_event(&event, contract_type, block_timestamp)
+            .await
+            .map_err(|err| {
+                error!("Error while registering event {:?}\n{:?}", err, event);
+                err
+            })?;
+
+        self.token_manager
+            .format_and_register_token(&token_id, &token_event, block_timestamp, event.block_number)
+            .await
+            .map_err(|err| {
+                error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
+                err
+            })?;
+
+        Ok(())
+    }
+
     /// Inner function to process events.
     async fn process_events(
         &self,
         events: Vec<EmittedEvent>,
         block_timestamp: u64,
     ) -> IndexerResult<()> {
+        let marketplace_contracts = [FieldElement::from_hex_be(
+            "0x04d8bb956e6bd7a50fcb8b49d8e9fd8269cfadbeb73f457fd6d3fc1dff4b879e", // Element Marketplace
+        )
+        .unwrap()];
+
         for e in events {
             let contract_address = e.from_address;
-            info!(
-                "Processing event... Block Id: {:?}, Tx Hash: 0x{:064x}",
-                e.block_number, e.transaction_hash
-            );
+            let is_marketplace_event = marketplace_contracts.contains(&contract_address);
 
-            let contract_type = match self
-                .contract_manager
-                .write()
-                .await
-                .identify_contract(contract_address, block_timestamp)
+            if is_marketplace_event {
+                if let Err(e) = self.process_marketplace_event(e, block_timestamp).await {
+                    error!("Error while processing marketplace event: {:?}", e);
+                }
+            } else if let Err(e) = self
+                .process_nft_transfers(e, block_timestamp, contract_address)
                 .await
             {
-                Ok(info) => info,
-                Err(e) => {
-                    warn!(
-                        "Error while identifying contract {}: {:?}",
-                        to_hex_str(&contract_address),
-                        e
-                    );
-                    continue;
-                }
-            };
-
-            if contract_type == ContractType::Other {
-                debug!(
-                    "Contract identified as OTHER: {}",
-                    to_hex_str(&contract_address),
-                );
-                continue;
-            }
-
-            let (token_id, token_event) = match self
-                .event_manager
-                .format_and_register_event(&e, contract_type, block_timestamp)
-                .await
-            {
-                Ok(te) => te,
-                Err(err) => {
-                    error!("Error while registering event {:?}\n{:?}", err, e);
-                    continue;
-                }
-            };
-
-            match self
-                .token_manager
-                .format_and_register_token(&token_id, &token_event, block_timestamp, e.block_number)
-                .await
-            {
-                Ok(()) => (),
-                Err(err) => {
-                    error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
-                    continue;
-                }
+                error!("Error while processing NFT transfers: {:?}", e);
             }
         }
 

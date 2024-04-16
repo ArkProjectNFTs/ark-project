@@ -1,4 +1,4 @@
-use crate::storage::types::{EventType, TokenEvent, TokenInfo, TokenMintInfo};
+use crate::storage::types::{EventType, TokenInfo, TokenMintInfo, TokenTransferEvent};
 use crate::storage::Storage;
 use anyhow::{anyhow, Result};
 use ark_starknet::client::StarknetClient;
@@ -27,7 +27,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
     pub async fn format_and_register_token(
         &self,
         token_id: &CairoU256,
-        event: &TokenEvent,
+        event: &TokenTransferEvent,
         block_timestamp: u64,
         block_number: Option<u64>,
     ) -> Result<()> {

@@ -237,7 +237,7 @@ dependencies = [
  "base64 0.21.5",
  "chrono",
  "dotenv",
- "mockall",
+ "mockall 0.11.4",
  "reqwest",
  "serde",
  "serde_derive",
@@ -313,13 +313,15 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "mockall",
+ "mockall 0.11.4",
  "num-bigint",
  "num-traits 0.2.17",
  "regex",
  "starknet 0.10.0",
  "thiserror",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "url",
 ]
 
@@ -344,7 +346,7 @@ dependencies = [
  "diri",
  "futures",
  "log",
- "mockall",
+ "mockall 0.11.4",
  "pontos",
  "sqlx",
  "starknet 0.7.0",
@@ -5434,8 +5436,23 @@ dependencies = [
  "downcast",
  "fragile",
  "lazy_static",
- "mockall_derive",
- "predicates",
+ "mockall_derive 0.11.4",
+ "predicates 2.1.5",
+ "predicates-tree",
+]
+
+[[package]]
+name = "mockall"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43766c2b5203b10de348ffe19f7e54564b64f3d6018ff7648d1e2d6d3a0f0a48"
+dependencies = [
+ "cfg-if",
+ "downcast",
+ "fragile",
+ "lazy_static",
+ "mockall_derive 0.12.1",
+ "predicates 3.1.0",
  "predicates-tree",
 ]
 
@@ -5449,6 +5466,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "mockall_derive"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af7cbce79ec385a1d4f54baa90a76401eb15d9cab93685f62e7e9f942aa00ae2"
+dependencies = [
+ "cfg-if",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.41",
 ]
 
 [[package]]
@@ -6216,7 +6245,7 @@ dependencies = [
  "dotenv",
  "futures",
  "log",
- "mockall",
+ "mockall 0.12.1",
  "num-bigint",
  "serde",
  "serde_json",
@@ -6275,6 +6304,16 @@ dependencies = [
  "normalize-line-endings",
  "predicates-core",
  "regex",
+]
+
+[[package]]
+name = "predicates"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68b87bfd4605926cdfefc1c3b5f8fe560e3feca9d5552cf68c466d3d8236c7e8"
+dependencies = [
+ "anstyle",
+ "predicates-core",
 ]
 
 [[package]]
@@ -9191,9 +9230,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version-compare"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "579a42fc0b8e0c63b76519a339be31bed574929511fa53c1a3acae26eb258f29"
+checksum = "852e951cb7832cb45cb1169900d19760cfa39b82bc0ea9c0e5a14ae88411c98b"
 
 [[package]]
 name = "version_check"
