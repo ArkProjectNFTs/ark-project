@@ -9,8 +9,8 @@ const contractsFilePath = path.join(
   "..",
   "contracts.json"
 );
-// Output path for the generated file within the core package
-const outputFilePath = path.join(__dirname, "../src/contracts.js");
+// Output path for the generated TypeScript file within the core package
+const outputFilePath = path.join(__dirname, "../src/contracts.ts");
 
 const generateContractsFile = () => {
   const contracts = JSON.parse(fs.readFileSync(contractsFilePath, "utf8"));
@@ -18,7 +18,7 @@ const generateContractsFile = () => {
   let fileContent = "// This file is auto-generated. Do not edit directly.\n\n";
 
   Object.keys(contracts).forEach((network) => {
-    fileContent += `exports.${network.toUpperCase()}_CONTRACTS = ${JSON.stringify(
+    fileContent += `export const ${network.toUpperCase()}_CONTRACTS = ${JSON.stringify(
       contracts[network],
       null,
       2
