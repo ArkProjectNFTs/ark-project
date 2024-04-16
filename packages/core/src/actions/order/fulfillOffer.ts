@@ -8,9 +8,9 @@ import {
   Uint256
 } from "starknet";
 
-import { Config } from "../../createConfig";
-import { FulfillInfo, FulfillOfferInfo } from "../../types";
-import { _fulfillOrder } from "./_fulfill";
+import { Config } from "../../createConfig.js";
+import { FulfillInfo, FulfillOfferInfo } from "../../types/index.js";
+import { _fulfillOrder } from "./_fulfill.js";
 
 /**
  * Fulfill an offer on the Arkchain.

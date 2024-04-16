@@ -1,2 +1,5 @@
-./src
-src
+node_modules/
+src/
+test/
+example/
+scripts/

@@ -11,9 +11,9 @@ import {
   Uint256
 } from "starknet";
 
-import { Config } from "../../createConfig";
-import { getSignInfos } from "../../signer";
-import { CancelInfo, FullCancelInfo } from "../../types";
+import { Config } from "../../createConfig.js";
+import { getSignInfos } from "../../signer/index.js";
+import { CancelInfo, FullCancelInfo } from "../../types/index.js";
 
 /**
  * Executes a transaction to cancel an order on the Arkchain.

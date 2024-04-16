@@ -5,7 +5,7 @@ import {
   GOERLI_CONTRACTS,
   MAINNET_CONTRACTS,
   SEPOLIA_CONTRACTS
-} from "./contracts";
+} from "./contracts.js";
 
 export type Network = "mainnet" | "goerli" | "sepolia" | "dev";
 export const networks: { [key: string]: Network } = {

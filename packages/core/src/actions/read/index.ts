@@ -1,5 +1,5 @@
-export { getOrderHash } from "./getOrderHash";
-export { getOrder } from "./getOrder";
-export { getOrderStatus } from "./getOrderStatus";
-export { getOrderSigner } from "./getOrderSigner";
-export { getOrderType } from "./getOrderType";
+export { getOrderHash } from "./getOrderHash.js";
+export { getOrder } from "./getOrder.js";
+export { getOrderStatus } from "./getOrderStatus.js";
+export { getOrderSigner } from "./getOrderSigner.js";
+export { getOrderType } from "./getOrderType.js";

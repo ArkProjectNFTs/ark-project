@@ -3,7 +3,7 @@ module.exports = {
   root: true,
   extends: ["@ark-project/eslint-config/library.js"],
   parser: "@typescript-eslint/parser",
-  ignorePatterns: ["rollup.config.mjs"],
+  ignorePatterns: ["generateContracts.cjs"],
   env: {
     mocha: true
   },

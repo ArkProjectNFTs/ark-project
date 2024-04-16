@@ -7,10 +7,10 @@ import {
   shortString
 } from "starknet";
 
-import { Config } from "../../createConfig";
-import { getSignInfos } from "../../signer";
-import { OrderV1 } from "../../types";
-import { getOrderHashFromOrderV1 } from "../../utils";
+import { Config } from "../../createConfig.js";
+import { getSignInfos } from "../../signer/index.js";
+import { OrderV1 } from "../../types/index.js";
+import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
 interface CreateOrderParameters {
   starknetAccount: AccountInterface;

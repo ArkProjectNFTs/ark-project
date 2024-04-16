@@ -1,6 +1,6 @@
 import { Account, CallData } from "starknet";
 
-import { Config } from "../../createConfig";
+import { Config } from "../../createConfig.js";
 
 import "dotenv/config";
 

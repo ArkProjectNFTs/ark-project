@@ -5,7 +5,7 @@ import {
   InvokeTransactionReceiptResponse
 } from "starknet";
 
-import { Config } from "../../createConfig";
+import { Config } from "../../createConfig.js";
 
 interface parameters {
   transactionHash: string;

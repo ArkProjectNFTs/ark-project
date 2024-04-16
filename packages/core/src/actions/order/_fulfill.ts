@@ -7,9 +7,9 @@ import {
   shortString
 } from "starknet";
 
-import { Config } from "../../createConfig";
-import { getSignInfos } from "../../signer";
-import { FulfillInfo } from "../../types";
+import { Config } from "../../createConfig.js";
+import { getSignInfos } from "../../signer/index.js";
+import { FulfillInfo } from "../../types/index.js";
 
 interface fulfillOrderParameters {
   starknetAccount: AccountInterface;
