@@ -1,6 +1,8 @@
+"use client";
+
 import React from "react";
 
-import type { Metadata } from "next";
+// import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 
 import { networks } from "@ark-project/core";
@@ -15,11 +17,6 @@ import { UserNav } from "@/components/user-nav";
 import "./globals.css";
 
 import { cn } from "@/lib/utils";
-
-export const metadata: Metadata = {
-  title: "Ark Project",
-  description: "Ark Project SDK Examples"
-};
 
 export const fontSans = FontSans({
   subsets: ["latin"],

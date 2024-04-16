@@ -16,7 +16,7 @@ import {
   Network
 } from "@ark-project/core";
 
-import { getOwner } from "../../lib/getOwner";
+import { getOwner } from "../lib/getOwner";
 import { RpcProviderProvider } from "./RpcContext";
 
 const OwnerDataContext = createContext<string | undefined>(undefined);

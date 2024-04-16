@@ -10,7 +10,7 @@ export type ApproveERC20Parameters = {
   currencyAddress?: BigNumberish;
 };
 
-export default function useApproveERC20() {
+function useApproveERC20() {
   const config = useConfig();
 
   async function getAllowance(
@@ -62,3 +62,5 @@ export default function useApproveERC20() {
   }
   return { approveERC20, getAllowance };
 }
+
+export { useApproveERC20 };

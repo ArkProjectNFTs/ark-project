@@ -11,7 +11,7 @@ import {
 } from "@ark-project/core";
 
 import { Status } from "../types";
-import useArkRpc from "./useArkRpc";
+import { useArkRpc } from "./useArkRpc";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
@@ -19,7 +19,7 @@ type CancelParameters = {
   starknetAccount: AccountInterface;
 } & CancelInfo;
 
-export default function useCancel() {
+function useCancel() {
   const { rpcProvider } = useArkRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
@@ -65,3 +65,5 @@ export default function useCancel() {
 
   return { cancel, status };
 }
+
+export { useCancel };

@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 
-import { OwnerDataContext } from "../components/ArkProvider/ArkProvider";
+import { OwnerDataContext } from "../components/ArkProvider";
 
 function useOwner() {
   const context = useContext(OwnerDataContext);

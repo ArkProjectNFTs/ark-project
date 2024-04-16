@@ -4,7 +4,7 @@ import { approveERC721 as approveERC721Core, Config } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 
-export default function useApproveERC721() {
+function useApproveERC721() {
   const config = useConfig();
 
   async function getApproveERC721(
@@ -45,3 +45,5 @@ export default function useApproveERC721() {
   }
   return { approveERC721, getApproveERC721 };
 }
+
+export { useApproveERC721 };

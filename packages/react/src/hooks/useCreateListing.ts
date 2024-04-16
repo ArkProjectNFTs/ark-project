@@ -11,8 +11,8 @@ import {
 } from "@ark-project/core";
 
 import { Status } from "../types";
-import useApproveERC721 from "./useApproveERC721";
-import useBurnerWallet from "./useBurnerWallet";
+import { useApproveERC721 } from "./useApproveERC721";
+import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
@@ -20,7 +20,7 @@ export type CreateListingParameters = {
   starknetAccount: AccountInterface;
 } & ListingV1;
 
-export default function useCreateListing() {
+function useCreateListing() {
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>();
   const { approveERC721 } = useApproveERC721();
@@ -64,3 +64,5 @@ export default function useCreateListing() {
 
   return { createListing, status, response };
 }
+
+export { useCreateListing };

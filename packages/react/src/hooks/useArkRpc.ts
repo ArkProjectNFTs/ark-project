@@ -1,8 +1,8 @@
 import { useContext } from "react";
 
-import { RpcContext } from "../components/ArkProvider/RpcContext";
+import { RpcContext } from "../components/RpcContext";
 
-export default function useArkRpc() {
+function useArkRpc() {
   const rpcContext = useContext(RpcContext);
 
   if (rpcContext === undefined) {
@@ -13,3 +13,5 @@ export default function useArkRpc() {
 
   return { rpcProvider };
 }
+
+export { useArkRpc };
