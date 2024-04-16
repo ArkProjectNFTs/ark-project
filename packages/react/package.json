@@ -2,9 +2,13 @@
   "name": "@ark-project/react",
   "version": "0.3.1",
   "description": "",
-  "main": "index.tsx",
-  "types": "index.tsx",
+  "main": "./dist/esm/src/index.js",
+  "types": "./dist/types/src/index.d.ts",
+  "typings": "./dist/types/src/index.d.ts",
   "scripts": {
+    "build": "pnpm run clean && pnpm run build:esm+types",
+    "build:esm+types": "tsc --project tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo actions chains codegen connectors query",
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --ext .ts,.tsx . --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,10 +18,9 @@
   "license": "ISC",
   "dependencies": {
     "@ark-project/core": "workspace:*",
-    "@starknet-react/chains": "^0.1.0",
     "@starknet-react/core": "^2.2.2",
-    "get-starknet-core": "^3.2.0",
-    "react": "^18",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "starknet": "5.27.0"
   },
   "devDependencies": {

@@ -28,7 +28,7 @@ const fetchCollection = async () => {
 
 async function fetchCollectionMarket() {
   const response = await fetch(
-    `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/tokens/collection/0x32d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546`
+    `${env.NEXT_PUBLIC_ORDERBOOK_API_URL}/tokens/collection/0x032d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546`
   );
   if (!response.ok) {
     throw new Error("Failed to fetch data");
@@ -40,6 +40,7 @@ const Explore = () => {
   const {
     data: collectionData,
     error: collectionDataError,
+    isError: collectionDataIsError,
     isLoading: collectionDataIsLoading
   }: any = useQuery("tokens", fetchCollection);
 
@@ -53,7 +54,7 @@ const Explore = () => {
     return <div>Loading...</div>;
   }
 
-  if (collectionDataError || collectionMarketError) {
+  if (collectionDataIsError || collectionDataError || collectionMarketError) {
     return (
       <div>
         Error missing data:{" "}

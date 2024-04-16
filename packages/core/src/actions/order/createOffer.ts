@@ -7,9 +7,9 @@ import {
   Uint256
 } from "starknet";
 
-import { Config } from "../../createConfig";
-import { OfferV1, OrderV1, RouteType } from "../../types";
-import { createOrder } from "./_create";
+import { Config } from "../../createConfig.js";
+import { OfferV1, OrderV1, RouteType } from "../../types/index.js";
+import { createOrder } from "./_create.js";
 
 interface CreateOfferParameters {
   starknetAccount: AccountInterface;

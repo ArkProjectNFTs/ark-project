@@ -6,7 +6,7 @@ import {
   type BigNumberish
 } from "starknet";
 
-import { Config } from "../../createConfig";
+import { Config } from "../../createConfig.js";
 
 interface ApproveERC721Parameters {
   starknetAccount: AccountInterface;

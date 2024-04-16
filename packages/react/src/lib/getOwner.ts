@@ -1,7 +1,7 @@
 import { Contract, ProviderInterface } from "starknet";
 
-import { argentAbi } from "../abi/argentAbi";
-import { braavosAbi } from "../abi/braavosAbi";
+import { argentAbi } from "../../abi/argentAbi";
+import { braavosAbi } from "../../abi/braavosAbi";
 
 const getOwner = async (
   address: string,

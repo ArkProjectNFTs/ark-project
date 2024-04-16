@@ -1,35 +1,42 @@
 {
   "name": "@ark-project/core",
   "version": "1.0.0",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
   "license": "Apache-2.0",
   "scripts": {
-    "clean": "rm -rf .turbo node_modules",
+    "build": "npm run generate-contracts && pnpm run clean && pnpm run build:esm+types",
+    "build:esm+types": "tsc --project tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo actions chains codegen internal query",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
-    "generate-contracts": "ts-node src/generateContracts.ts",
-    "build": "npm run generate-contracts && tsup src/index.ts --format cjs,esm --dts",
+    "generate-contracts": "ts-node scripts/generateContracts.cjs",
     "dev": "nodemon --watch ../../contracts.json --exec 'npm run generate-contracts' & tsup src/index.ts --format cjs,esm --dts --watch",
     "test": "jest tests -i"
   },
+  "type": "module",
+  "main": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "typings": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/esm/index.js"
+    }
+  },
   "dependencies": {
     "@scure/starknet": "^0.3.0",
-    "@types/jest": "^29.5.5",
-    "commander": "^11.1.0",
-    "cross-env": "^7.0.3",
-    "dotenv": "^16.3.1",
-    "jest": "^29.7.0",
-    "nodemon": "^3.0.2",
-    "path": "^0.12.7",
-    "starknet": "5.27.0",
-    "ts-jest": "^29.1.1"
+    "starknet": "5.27.0"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
+    "@types/jest": "^29.5.5",
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
     "@ark-project/eslint-config": "workspace:*",
     "@ark-project/typescript-config": "workspace:*",
     "@types/node": "^20.10.7",
+    "esbuild": "^0.20.2",
     "eslint": "^8.48.0",
     "eslint-plugin-mocha": "^10.2.0",
     "mocha": "^10.3.0",

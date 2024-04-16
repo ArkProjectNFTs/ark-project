@@ -1,6 +1,6 @@
 import { BigNumberish, CairoCustomEnum, CallData, Contract } from "starknet";
 
-import { Config } from "../../createConfig";
+import { Config } from "../../createConfig.js";
 
 interface GetOrderTypeParameters {
   orderHash: BigNumberish;

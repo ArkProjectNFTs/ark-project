@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 
-import { ConfigDataContext } from "../components/ArkProvider/ArkProvider";
+import { ConfigDataContext } from "../components/ArkProvider";
 
 function useConfig() {
   const context = useContext(ConfigDataContext);

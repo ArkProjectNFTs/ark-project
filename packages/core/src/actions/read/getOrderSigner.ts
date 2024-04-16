@@ -1,6 +1,6 @@
 import { BigNumberish, CallData, Contract } from "starknet";
 
-import { Config } from "../../createConfig";
+import { Config } from "../../createConfig.js";
 
 interface GetOrderSignerParameters {
   orderHash: BigNumberish;

@@ -7,9 +7,7 @@ import {
   stark
 } from "starknet";
 
-import { SOLIS_ACCOUNT_CLASS_HASH } from "../../constants";
-
-import "dotenv/config";
+import { SOLIS_ACCOUNT_CLASS_HASH } from "../../constants.js";
 
 /**
  * Creates a new account on the StarkNet testnet.

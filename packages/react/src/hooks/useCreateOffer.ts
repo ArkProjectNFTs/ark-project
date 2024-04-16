@@ -11,8 +11,8 @@ import {
 } from "@ark-project/core";
 
 import { Status } from "../types";
-import useApproveERC20 from "./useApproveERC20";
-import useBurnerWallet from "./useBurnerWallet";
+import { useApproveERC20 } from "./useApproveERC20";
+import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
@@ -77,3 +77,4 @@ export default function useCreateOffer() {
 
   return { createOffer, status, response };
 }
+export { useCreateOffer };

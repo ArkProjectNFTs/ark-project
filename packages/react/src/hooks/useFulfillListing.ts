@@ -9,15 +9,15 @@ import {
 import { FulfillListingInfo } from "@ark-project/core/src/types";
 
 import { Status, StepStatus } from "../types";
-import useApproveERC20, { ApproveERC20Parameters } from "./useApproveERC20";
-import useBurnerWallet from "./useBurnerWallet";
+import { ApproveERC20Parameters, useApproveERC20 } from "./useApproveERC20";
+import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
 export type fulfillListingParameters = ApproveERC20Parameters &
   FulfillListingInfo;
 
-export default function useFulfillListing() {
+function useFulfillListing() {
   const [status, setStatus] = useState<Status>("idle");
   const [stepStatus, setStepStatus] = useState<StepStatus>("idle");
   const { approveERC20, getAllowance } = useApproveERC20();
@@ -62,3 +62,4 @@ export default function useFulfillListing() {
   }
   return { fulfillListing, status, stepStatus };
 }
+export { useFulfillListing };

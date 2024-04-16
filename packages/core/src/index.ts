@@ -1,9 +1,16 @@
-export { createConfig, networks } from "./createConfig";
+export { createConfig, networks } from "./createConfig.js";
 
-export { fetchOrCreateAccount, createAccount } from "./actions/account";
+export {
+  fetchOrCreateAccount,
+  createAccount
+} from "./actions/account/index.js";
 
-export { approveERC20, approveERC721, increaseERC20 } from "./actions/contract";
-export { waitForTransactionBlock } from "./actions/contract";
+export {
+  approveERC20,
+  approveERC721,
+  increaseERC20
+} from "./actions/contract/index.js";
+export { waitForTransactionBlock } from "./actions/contract/index.js";
 
 export {
   createAuction,
@@ -13,7 +20,7 @@ export {
   fulfillAuction,
   fulfillListing,
   fulfillOffer
-} from "./actions/order";
+} from "./actions/order/index.js";
 
 export {
   getOrderHash,
@@ -21,7 +28,7 @@ export {
   getOrderStatus,
   getOrderSigner,
   getOrderType
-} from "./actions/read";
+} from "./actions/read/index.js";
 
 export type {
   AuctionV1,
@@ -29,5 +36,5 @@ export type {
   OfferV1,
   CancelInfo,
   RouteType
-} from "./types";
-export type { Config, Network, ConfigParameters } from "./createConfig";
+} from "./types/index.js";
+export type { Config, Network, ConfigParameters } from "./createConfig.js";

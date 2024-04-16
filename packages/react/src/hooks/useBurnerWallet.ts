@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 
 import { Account } from "starknet";
 
-import useArkRpc from "./useArkRpc";
+import { useArkRpc } from "./useArkRpc";
 
-export default function useBurnerWallet() {
+function useBurnerWallet() {
   const { rpcProvider } = useArkRpc();
   const [arkAccount, setArkAccount] = useState<Account | null>(null);
 
@@ -25,3 +25,5 @@ export default function useBurnerWallet() {
 
   return arkAccount;
 }
+
+export { useBurnerWallet };
