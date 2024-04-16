@@ -50,7 +50,8 @@ describe("ArkProject Listing", () => {
 
     await approveERC721(config, {
       contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: starknetOffererAccount
+      starknetAccount: starknetOffererAccount,
+      tokenId
     });
 
     const order: ListingV1 = {

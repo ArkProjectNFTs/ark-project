@@ -66,7 +66,8 @@ import { whitelistBroker } from "./utils/whitelistBroker";
   console.log(`=> Approving for all`);
   await approveERC721(config, {
     contractAddress: STARKNET_NFT_ADDRESS,
-    starknetAccount: starknetOffererAccount
+    starknetAccount: starknetOffererAccount,
+    tokenId
   });
 
   console.log(`=> Creating order`);

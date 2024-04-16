@@ -94,7 +94,8 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await approveERC721(config, {
       contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: starknetFulfillerAccount
+      starknetAccount: starknetFulfillerAccount,
+      tokenId
     });
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -133,7 +134,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
   }, 30000);
 
-  it("should create an offer and fulfill the offer then create a new listing", async function () {
+  it.only("should create an offer and fulfill the offer then create a new listing", async function () {
     const { arkProvider, starknetProvider } = config;
 
     const solisAdminAccount = await fetchOrCreateAccount(
@@ -228,12 +229,8 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await approveERC721(config, {
       contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: starknetFulfillerAccount
-    });
-
-    await approveERC721(config, {
-      contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: starknetOffererAccount
+      starknetAccount: starknetFulfillerAccount,
+      tokenId
     });
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -378,13 +375,14 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
       process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
     );
 
+    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+
     await mintERC721(config.starknetProvider, starknetFulfillerAccount);
     await approveERC721(config, {
       contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: starknetFulfillerAccount
+      starknetAccount: starknetFulfillerAccount,
+      tokenId
     });
-
-    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
     // Create a new account for the listing using the provider
     const starknetAccount = await fetchOrCreateAccount(
@@ -458,6 +456,7 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
     });
     expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
   }, 30000);
+
   it("should update balance of the owner", async function () {
     const { arkProvider, starknetProvider } = config;
 
@@ -550,7 +549,8 @@ describe("ArkProject Listing and Offer Fulfillment", () => {
 
     await approveERC721(config, {
       contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: starknetFulfillerAccount
+      starknetAccount: starknetFulfillerAccount,
+      tokenId
     });
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
