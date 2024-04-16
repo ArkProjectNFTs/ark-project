@@ -81,7 +81,7 @@ impl Serialize for TokenEvent {
                 map.insert("transaction_hash", event.transaction_hash.clone());
                 map.insert("token_id", event.token_id.clone());
                 map.insert("token_id_hex", event.token_id_hex.clone());
-                map.insert("contract_type", String::from("transfer"));
+                map.insert("contract_type", event.contract_type.clone());
                 map.insert("event_type", "transfer".to_string());
                 map.insert("event_id", event.event_id.clone());
                 map
