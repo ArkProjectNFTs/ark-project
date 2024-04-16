@@ -382,7 +382,7 @@ importers:
   packages/react:
     dependencies:
       '@ark-project/core':
-        specifier: 1.0.0
+        specifier: workspace:*
         version: link:../core
       '@starknet-react/core':
         specifier: ^2.2.2
