@@ -84,6 +84,13 @@ impl Serialize for TokenEvent {
                 map.insert("contract_type", event.contract_type.clone());
                 map.insert("event_type", "transfer".to_string());
                 map.insert("event_id", event.event_id.clone());
+                map.insert(
+                    "block_number",
+                    event
+                        .block_number
+                        .map_or("".to_string(), |block_number| block_number.to_string()),
+                );
+
                 map
             }
             TokenEvent::Sale(event) => {
