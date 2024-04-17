@@ -555,11 +555,6 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             let contract_address = e.from_address;
             let is_marketplace_event = marketplace_contracts.contains(&contract_address);
 
-            // info!(
-            //     "contract_address: {:?} - transaction_hash: {:?}",
-            //     contract_address, e.transaction_hash
-            // );
-
             if is_marketplace_event {
                 if let Err(e) = self.process_marketplace_event(e, block_timestamp).await {
                     error!("Error while processing marketplace event: {:?}", e);
