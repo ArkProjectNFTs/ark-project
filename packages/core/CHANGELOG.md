@@ -1,5 +1,13 @@
 # @ark-project/core
 
+## 1.1.0
+
+### Minor Changes
+
+- 32420dc: add auction actions to sdk core
+- 7482d04: Update build with rollup & fix exported files from packages
+- 32420dc: use approveERC721 with tokenId
+
 ## 1.0.0
 
 ### Major Changes
