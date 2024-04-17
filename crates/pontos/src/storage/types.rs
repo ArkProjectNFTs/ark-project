@@ -110,9 +110,12 @@ impl Serialize for TokenEvent {
                 map.insert("token_id", event.token_id.clone());
                 map.insert("token_id_hex", event.token_id_hex.clone());
                 map.insert("quantity", event.quantity.to_string());
-                map.insert("currency_address", event.currency_address.clone());
-                map.insert("price", event.price.clone());
 
+                if let Some(currency_address) = event.currency_address.clone() {
+                    map.insert("currency_address", currency_address);
+                }
+
+                map.insert("price", event.price.clone());
                 map.insert(
                     "block_number",
                     event
@@ -167,7 +170,7 @@ pub struct TokenSaleEvent {
     pub block_number: Option<u64>,
     pub updated_at: Option<u64>,
     pub quantity: u64,
-    pub currency_address: String,
+    pub currency_address: Option<String>,
     pub price: String,
 }
 

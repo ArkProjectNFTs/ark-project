@@ -1,6 +1,6 @@
 use crate::storage::types::{EventType, TokenSaleEvent, TokenTransferEvent};
 use crate::storage::Storage;
-use crate::ContractType;
+use crate::{ContractType, VENTORY_MARKETPLACE_EVENT_HEX};
 use anyhow::{anyhow, Result};
 use ark_starknet::{format::to_hex_str, CairoU256};
 use starknet::core::types::{EmittedEvent, FieldElement};
@@ -31,7 +31,15 @@ impl<S: Storage> EventManager<S> {
     pub fn keys_selector(&self) -> Option<Vec<Vec<FieldElement>>> {
         let element_nft_marketplace = FieldElement::from_hex_be(ELEMENT_NFT_MARKETPLACE_HEX)
             .expect("Failed to parse element nft marketplace hex");
-        Some(vec![vec![TRANSFER_SELECTOR, element_nft_marketplace]])
+
+        let ventory_nft_marketplace = FieldElement::from_hex_be(VENTORY_MARKETPLACE_EVENT_HEX)
+            .expect("Failed to parse ventory nft marketplace hex");
+
+        Some(vec![vec![
+            TRANSFER_SELECTOR,
+            element_nft_marketplace,
+            ventory_nft_marketplace,
+        ]])
     }
 
     pub async fn register_sale_event(
@@ -43,6 +51,70 @@ impl<S: Storage> EventManager<S> {
             .register_sale_event(event, block_timestamp)
             .await?;
         Ok(())
+    }
+
+    pub async fn format_ventory_sale_event(
+        &self,
+        event: &EmittedEvent,
+        block_timestamp: u64,
+    ) -> Result<TokenSaleEvent> {
+        let _listing_counter = event
+            .data
+            .first()
+            .ok_or_else(|| anyhow!("Listing counter not found"))?;
+        let token_id = event
+            .data
+            .get(1)
+            .ok_or_else(|| anyhow!("Token id not found"))?;
+        let price = event
+            .data
+            .get(2)
+            .ok_or_else(|| anyhow!("Price not found"))?;
+        let asset_contract = event
+            .data
+            .get(3)
+            .ok_or_else(|| anyhow!("Asset contract not found"))?;
+        let seller = event
+            .data
+            .get(4)
+            .ok_or_else(|| anyhow!("Seller not found"))?;
+        let buyer = event
+            .data
+            .get(5)
+            .ok_or_else(|| anyhow!("Buyer not found"))?;
+        let _status = event
+            .data
+            .get(6)
+            .ok_or_else(|| anyhow!("Status not found"))?;
+
+        let token_id = CairoU256 {
+            low: (*token_id)
+                .try_into()
+                .map_err(|_| anyhow!("Failed to parse token id"))?,
+            high: 0,
+        };
+
+        let event_id = Self::get_event_id(&token_id, seller, buyer, block_timestamp, event);
+
+        Ok(TokenSaleEvent {
+            event_id: to_hex_str(&event_id),
+            event_type: EventType::Sale,
+            block_number: event.block_number,
+            from_address: to_hex_str(seller),
+            to_address: to_hex_str(buyer),
+            nft_contract_address: to_hex_str(asset_contract),
+            nft_type: None,
+            transaction_hash: to_hex_str(&event.transaction_hash),
+            token_id_hex: token_id.to_hex(),
+            token_id: token_id.to_decimal(false),
+            timestamp: block_timestamp,
+            updated_at: Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
+            quantity: 1,
+            currency_address: None,
+            marketplace_contract_address: to_hex_str(&event.from_address),
+            marketplace_name: "Ventory".to_string(),
+            price: price.to_big_decimal(0).to_string(),
+        })
     }
 
     pub async fn format_element_sale_event(
@@ -58,6 +130,11 @@ impl<S: Storage> EventManager<S> {
             .keys
             .get(3)
             .ok_or_else(|| anyhow!("Maker address not found"))?;
+
+        let taker_address = event
+            .data
+            .first()
+            .ok_or_else(|| anyhow!("Taker address not found"))?;
         let currency_address = event
             .data
             .get(1)
@@ -66,25 +143,49 @@ impl<S: Storage> EventManager<S> {
             .data
             .get(2)
             .ok_or_else(|| anyhow!("Price not found"))?;
-        let taker_address = event
+
+        let number_of_fee_recipients = event
             .data
-            .first()
-            .ok_or_else(|| anyhow!("Taker address not found"))?;
+            .get(3)
+            .ok_or_else(|| anyhow!("Number of fee recipients not found"))?;
+
+        let number_of_fee_recipients_u64: u32 = (*number_of_fee_recipients)
+            .try_into()
+            .map_err(|_| anyhow!("Failed to parse number of fee recipients"))?;
+
+        let mut index = 4;
+        // for loop with number_of_fee_recipients_u64 iterations
+        for _ in 0..number_of_fee_recipients_u64 {
+            let _fee0_recipient = event.data.get(index);
+            index += 1;
+            let _fee0_value = event.data.get(index);
+            index += 1;
+        }
+
         let nft_contract_address = event
             .data
-            .get(8)
+            .get(index)
             .ok_or_else(|| anyhow!("NFT contract address not found"))?;
+
+        index += 1;
+
         let token_id_low = event
             .data
-            .get(9)
+            .get(index)
             .ok_or_else(|| anyhow!("Token id low not found"))?;
+
+        index += 1;
+
         let token_id_high = event
             .data
-            .get(10)
+            .get(index)
             .ok_or_else(|| anyhow!("Token id high not found"))?;
+
+        index += 1;
+
         let quantity = event
             .data
-            .get(11)
+            .get(index)
             .ok_or_else(|| anyhow!("Quantity not found"))?;
 
         let token_id = CairoU256 {
@@ -120,7 +221,7 @@ impl<S: Storage> EventManager<S> {
             quantity: (*quantity)
                 .try_into()
                 .map_err(|_| anyhow!("Failed to parse quantity"))?,
-            currency_address: to_hex_str(currency_address),
+            currency_address: Some(to_hex_str(currency_address)),
             marketplace_contract_address: to_hex_str(&event.from_address),
             marketplace_name: "Element".to_string(),
             price: price.to_big_decimal(0).to_string(),
