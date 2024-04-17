@@ -1,5 +1,18 @@
 # @ark-project/react
 
+## 0.4.0
+
+### Minor Changes
+
+- 7482d04: Update build with rollup & fix exported files from packages
+
+### Patch Changes
+
+- Updated dependencies [32420dc]
+- Updated dependencies [7482d04]
+- Updated dependencies [32420dc]
+  - @ark-project/core@1.1.0
+
 ## 0.3.1
 
 ### Patch Changes
