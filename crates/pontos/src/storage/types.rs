@@ -335,13 +335,14 @@ mod tests {
             token_id_hex: "0x123".to_string(),
             event_type: EventType::Transfer,
             event_id: "evt123".to_string(),
-            block_number: None,
+            block_number: Some(123),
             updated_at: Some(1625101200),
         });
 
         let serialized = serde_json::to_string(&event).expect("Failed to serialize TokenEvent");
 
         let expected_json = json!({
+            "block_number": "123",
             "event_type": "transfer",
             "timestamp": "1625097600",
             "from_address": "0xfrom",
@@ -350,7 +351,7 @@ mod tests {
             "transaction_hash": "0xhash",
             "token_id": "123",
             "token_id_hex": "0x123",
-            "contract_type": "transfer",
+            "contract_type": "ERC721",
             "event_id": "evt123"
         });
 

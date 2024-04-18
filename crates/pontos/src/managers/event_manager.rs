@@ -474,6 +474,7 @@ mod tests {
         let expected = vec![vec![
             selector!("Transfer"),
             FieldElement::from_hex_be(ELEMENT_NFT_MARKETPLACE_HEX).unwrap(),
+            FieldElement::from_hex_be(VENTORY_MARKETPLACE_EVENT_HEX).unwrap(),
         ]];
 
         // Assert the output
