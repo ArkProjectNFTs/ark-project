@@ -6,4 +6,7 @@
 pub mod default_storage;
 pub use default_storage::DefaultSqlxStorage;
 
+pub mod marketplace_storage;
+pub use marketplace_storage::MarketplaceSqlxStorage;
+
 pub mod types;

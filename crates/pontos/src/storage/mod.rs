@@ -11,7 +11,7 @@ use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
 #[cfg(feature = "sqlxdb")]
-pub use sqlx::DefaultSqlxStorage;
+pub use sqlx::MarketplaceSqlxStorage;
 
 #[async_trait]
 #[cfg_attr(test, automock)]
