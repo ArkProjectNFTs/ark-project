@@ -82,7 +82,7 @@ Execute the following commands in the `root` directory:
 
 **2. Install the dojo dependencies:**
 Follow the dojo installation guide:
-https://book.dojoengine.org/getting-started/quick-start.html
+https://book.dojoengine.org/getting-started/quick-start
 
 **3. Start a katana for starknet**
 With the previously installed dojo, start katana using the following command:

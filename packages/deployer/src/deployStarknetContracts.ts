@@ -29,8 +29,10 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   console.log("\nSTARKNET ACCOUNTS");
   console.log("=================\n");
   console.log(`| Admin account |  ${starknetAdminAccount.address}`);
+
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
   let messagingContract: sn.Contract;
+
   if (existingContracts[starknetNetwork].messaging) {
     console.log("⚡ Upgrading Messaging Contract...");
     starknetSpinner.text = "⚡ Upgrading Messaging Contract...";
@@ -55,8 +57,10 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
       JSON.stringify(existingContracts)
     );
   }
+
   starknetSpinner.text = "⚡ Deploying Executor Contract...";
   let executorContract: sn.Contract;
+
   if (existingContracts[starknetNetwork].executor) {
     console.log("⚡ Upgrading Executor Contract..");
     starknetSpinner.text = "⚡ Upgrading Executor Contract...";
@@ -88,6 +92,7 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
     configData.private_key = starknetSolisAccount?.privateKey;
     await fs.writeFile(messagingFilePath, JSON.stringify(configData, null, 2));
   }
+
   starknetSpinner.stop();
   console.log("STARKNET CONTRACTS");
   console.log("==================\n");
