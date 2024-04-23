@@ -2,12 +2,6 @@ import * as sn from "starknet";
 
 import { loadArtifacts } from "./common";
 
-// ARTIFACTS_PATH,
-// arkchainAdminAccount,
-// solisProvider,
-// arkchainAdminAccount.address,
-// chain_id
-
 export async function upgradeOrderbook(
   artifactsPath: string,
   account: sn.Account,
@@ -35,7 +29,7 @@ export async function upgradeOrderbook(
   const response = await orderbookContract.upgrade(class_hash);
   const transactionHash: string = response.transaction_hash;
 
-  if (transaction_hash) {
+  if (transactionHash) {
     await provider.waitForTransaction(transactionHash);
   }
 

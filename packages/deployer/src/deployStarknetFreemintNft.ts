@@ -7,6 +7,7 @@ import { CallData, Contract } from "starknet";
 import { ARTIFACTS_PATH } from "./constants";
 import { loadArtifacts } from "./contracts/common";
 import { deployERC20 } from "./contracts/erc20";
+import { upgradefreeMintNft } from "./contracts/freeMintNft";
 import { getStarknetProvider } from "./providers";
 import { ProviderNetwork } from "./types";
 import {
@@ -28,53 +29,44 @@ export async function deployStarknetContracts(
   console.log("");
 
   const starknetSpinner = loading("Deploying Nft Contract...").start();
-  const artifacts = loadArtifacts(ARTIFACTS_PATH, "ark_tokens_FreeMintNFT");
-
-  const contractCallData = new CallData(artifacts.sierra.abi);
-  const contractConstructor = contractCallData.compile("constructor", {
-    name: "ARKTEST",
-    symbol: "ARKTEST"
-  });
-
-  const deployR = await starknetAdminAccount.declareAndDeploy({
-    contract: artifacts.sierra,
-    casm: artifacts.casm,
-    constructorCalldata: contractConstructor
-  });
-
-  const nftContract = new Contract(
-    artifacts.sierra.abi,
-    deployR.deploy.contract_address,
-    starknetProvider
-  );
-
-  existingContracts = {
-    ...existingContracts,
-    [starknetNetwork]: {
-      ...existingContracts[starknetNetwork],
-      nftContract: nftContract.address
-    }
-  };
-
-  await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
-
+  let nftContract: Contract;
   let ethContract: Contract | undefined;
-  if (starknetNetwork === "dev") {
-    starknetSpinner.text = "Deploying Eth Contract...";
 
-    ethContract = await deployERC20(
+  if (existingContracts[starknetNetwork].nftContract) {
+    console.log("Upgrading Nft contract...");
+    starknetSpinner.text = "Upgrading Nft contract... ";
+    nftContract = await upgradefreeMintNft(
       ARTIFACTS_PATH,
       starknetAdminAccount,
       starknetProvider,
-      "ETH",
-      "ETH"
+      existingContracts[starknetNetwork].nftContract
+    );
+  } else {
+    const artifacts = loadArtifacts(ARTIFACTS_PATH, "ark_tokens_FreeMintNFT");
+
+    const contractCallData = new CallData(artifacts.sierra.abi);
+    const contractConstructor = contractCallData.compile("constructor", {
+      name: "ARKTEST",
+      symbol: "ARKTEST"
+    });
+
+    const deployR = await starknetAdminAccount.declareAndDeploy({
+      contract: artifacts.sierra,
+      casm: artifacts.casm,
+      constructorCalldata: contractConstructor
+    });
+
+    nftContract = new Contract(
+      artifacts.sierra.abi,
+      deployR.deploy.contract_address,
+      starknetProvider
     );
 
     existingContracts = {
       ...existingContracts,
       [starknetNetwork]: {
         ...existingContracts[starknetNetwork],
-        eth: ethContract.address
+        nftContract: nftContract.address
       }
     };
 
@@ -82,9 +74,35 @@ export async function deployStarknetContracts(
       getContractsFilePath(),
       JSON.stringify(existingContracts)
     );
+
+    if (starknetNetwork === "dev") {
+      starknetSpinner.text = "Deploying Eth Contract...";
+
+      ethContract = await deployERC20(
+        ARTIFACTS_PATH,
+        starknetAdminAccount,
+        starknetProvider,
+        "ETH",
+        "ETH"
+      );
+
+      existingContracts = {
+        ...existingContracts,
+        [starknetNetwork]: {
+          ...existingContracts[starknetNetwork],
+          eth: ethContract.address
+        }
+      };
+
+      await fs.writeFile(
+        getContractsFilePath(),
+        JSON.stringify(existingContracts)
+      );
+    }
+
+    starknetSpinner.stop();
   }
 
-  starknetSpinner.stop();
   console.log("- Nft contract: ", nftContract.address);
   if (ethContract) {
     console.log("- Eth contract: ", ethContract.address);
