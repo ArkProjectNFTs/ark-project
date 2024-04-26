@@ -3,11 +3,11 @@
   "sepolia": {},
   "mainnet": {},
   "dev": {
-    "messaging": "0x2eae60072fb5d08df5dc3190bf1e6dbd543479de9d20618d36f3760f4532a97",
-    "executor": "0x54fc5024a729c665af60fb126939722d600eaebacf22b09eb5c872aa309120e",
-    "router": "0x497fba3f599aa82c7ecfa949f807c1d2256636d2b3da41c6ece7df32b737d3e",
-    "nftContract": "0x695068ecf307d640b28e8aa7a00cf6b0cd00fc9d6cf8fe50cd26a4d093ecee9",
+    "messaging": "0x3e8d2de2c2dd9de0f0c2554d95099fa614e79b8f01ebabb103e77468c2014bf",
+    "executor": "0x522c7a9b76eb8d2a42891a7548bc5d3e771ddcb6e17875a8ba7611643fa254e",
+    "router": "0x754818fff78081d774ad1f0b54d34e493289f857084ea6501d0699a9f03619",
+    "nftContract": "0x5652989d2bb59823afcf30bbbf5f07140c5c754e1f059f6dd16fd74c06bb337",
     "eth": "0x7b8fc5c78bf249bb4173ef45267da1a710c65d76bb9ff03deb6b8fc21f35ba4",
-    "orderbook": "0x2c5c279e8dab71435d068731a4006e1a93ac8db40fd9513a1d004dc165b9185"
+    "orderbook": "0x2744743bc77b7d4760c6706db00d6f560ab8a3320d30d32dbb7deb252ed0ad0"
   }
 }

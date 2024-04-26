@@ -11,7 +11,6 @@ import { Status } from "../types";
 import useApproveERC721 from "./useApproveERC721";
 import useBurnerWallet from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
-import { useOwner } from "./useOwner";
 
 export type FulfillOfferParameters = {
   starknetAccount: AccountInterface;
@@ -19,8 +18,7 @@ export type FulfillOfferParameters = {
 
 export default function useFulfillOffer() {
   const [status, setStatus] = useState<Status>("idle");
-  const { approveERC721 } = useApproveERC721();
-  const owner = useOwner();
+  const { getApproved } = useApproveERC721();
   const config = useConfig();
   const arkAccount = useBurnerWallet();
 
@@ -30,11 +28,6 @@ export default function useFulfillOffer() {
     }
     try {
       setStatus("loading");
-      await approveERC721(
-        parameters.starknetAccount,
-        parameters.tokenId,
-        parameters.tokenAddress
-      );
       await fulfillOfferCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
         arkAccount,
@@ -44,7 +37,16 @@ export default function useFulfillOffer() {
           tokenId: parameters.tokenId,
           brokerId: parameters.brokerId
         } as FulfillOfferInfo,
-        owner
+        approveInfo: {
+          tokenAddress:
+            parameters.tokenAddress ||
+            (config?.starknetContracts.eth as string),
+          tokenId: parameters.tokenId,
+          isApproved: await getApproved(
+            parameters.starknetAccount,
+            parameters.tokenAddress
+          )
+        }
       });
       setStatus("success");
     } catch (error) {

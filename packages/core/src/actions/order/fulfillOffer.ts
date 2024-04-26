@@ -5,12 +5,12 @@ import {
   cairo,
   CairoOption,
   CairoOptionVariant,
+  CallData,
   Uint256
 } from "starknet";
 
 import { Config } from "../../createConfig";
-import { ApproveInfo, FulfillInfo, FulfillOfferInfo } from "../../types";
-import { _fulfillOrder } from "./_fulfill";
+import { ApproveErc721Info, FulfillInfo, FulfillOfferInfo } from "../../types";
 
 /**
  * Fulfill an offer on the Arkchain.
@@ -24,7 +24,7 @@ interface FulfillOfferParameters {
   starknetAccount: AccountInterface;
   arkAccount: Account;
   fulfillOfferInfo: FulfillOfferInfo;
-  approveInfo: ApproveInfo;
+  approveInfo: ApproveErc721Info;
 }
 
 const fulfillOffer = async (
@@ -45,10 +45,27 @@ const fulfillOffer = async (
     )
   };
 
-  _fulfillOrder(config, {
-    starknetAccount,
-    fulfillInfo,
-    approveInfo
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: approveInfo.tokenAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        to: config.starknetContracts.executor,
+        token_id: cairo.uint256(approveInfo.tokenId)
+      })
+    },
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "fulfill_order",
+      calldata: CallData.compile({
+        fulfill_info: fulfillInfo
+      })
+    }
+  ]);
+
+  // Wait for the transaction to be processed
+  await config.arkProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
   });
 };
 

@@ -39,7 +39,6 @@ export default function useCreateListing() {
       );
       const orderHash = await createListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
-        arkAccount,
         order: {
           startAmount: parameters.startAmount,
           tokenAddress: parameters.tokenAddress,

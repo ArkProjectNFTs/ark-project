@@ -9,8 +9,7 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig";
-import { ApproveInfo, FulfillInfo, FulfillListingInfo } from "../../types";
-import { _fulfillOrder } from "./_fulfill";
+import { ApproveErc20Info, FulfillInfo, FulfillListingInfo } from "../../types";
 
 /**
  * Fulfill a listing on the Arkchain.
@@ -23,7 +22,7 @@ import { _fulfillOrder } from "./_fulfill";
 interface FulfillListingParameters {
   starknetAccount: AccountInterface;
   fulfillListingInfo: FulfillListingInfo;
-  approveInfo: ApproveInfo;
+  approveInfo: ApproveErc20Info;
 }
 
 const fulfillListing = async (
