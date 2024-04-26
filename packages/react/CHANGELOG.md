@@ -1,5 +1,11 @@
 # @ark-project/react
 
+## 0.6.0
+
+### Minor Changes
+
+- 90fa414: Change useCancel ark account creation with useBurnerWallet
+
 ## 0.5.0
 
 ### Minor Changes
