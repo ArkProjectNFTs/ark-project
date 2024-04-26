@@ -1,5 +1,17 @@
 # @ark-project/react
 
+## 0.5.0
+
+### Minor Changes
+
+- 5dcd498: Use temp arkchain accounts to create txs & remove burner account creation
+  Bump contracts
+
+### Patch Changes
+
+- Updated dependencies [5dcd498]
+  - @ark-project/core@1.1.1
+
 ## 0.4.0
 
 ### Minor Changes
