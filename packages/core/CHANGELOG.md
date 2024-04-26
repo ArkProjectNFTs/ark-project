@@ -1,5 +1,12 @@
 # @ark-project/core
 
+## 1.1.1
+
+### Patch Changes
+
+- 5dcd498: Use temp arkchain accounts to create txs & remove burner account creation
+  Bump contracts
+
 ## 1.1.0
 
 ### Minor Changes
