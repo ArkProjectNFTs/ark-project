@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Account, AccountInterface } from "starknet";
+import { AccountInterface } from "starknet";
 
 import {
   CancelInfo,
@@ -11,7 +11,7 @@ import {
 } from "@ark-project/core";
 
 import { Status } from "../types";
-import { useArkRpc } from "./useArkRpc";
+import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
@@ -20,30 +20,12 @@ type CancelParameters = {
 } & CancelInfo;
 
 function useCancel() {
-  const { rpcProvider } = useArkRpc();
   const [status, setStatus] = useState<Status>("idle");
   const owner = useOwner();
   const config = useConfig();
-
+  const arkAccount = useBurnerWallet();
   async function cancel(parameters: CancelParameters) {
-    const burner_address = localStorage.getItem("burner_address");
-    const burner_private_key = localStorage.getItem("burner_private_key");
-    const burner_public_key = localStorage.getItem("burner_public_key");
-
-    if (
-      burner_address === null ||
-      burner_private_key === null ||
-      burner_public_key === null
-    ) {
-      throw new Error("No burner wallet in local storage");
-    }
-
-    const arkAccount = new Account(
-      rpcProvider,
-      burner_address,
-      burner_private_key
-    );
-
+    if (!arkAccount) throw new Error("No burner wallet.");
     try {
       setStatus("loading");
       await cancelOrderCore(config as Config, {
