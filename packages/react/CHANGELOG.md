@@ -1,5 +1,11 @@
 # @ark-project/react
 
+## 0.6.1
+
+### Patch Changes
+
+- 572c5f3: Add missing comparison for approve erc20
+
 ## 0.6.0
 
 ### Minor Changes
