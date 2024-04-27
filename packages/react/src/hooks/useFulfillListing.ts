@@ -20,7 +20,7 @@ export type fulfillListingParameters = ApproveERC20Parameters &
 function useFulfillListing() {
   const [status, setStatus] = useState<Status>("idle");
   const [stepStatus, setStepStatus] = useState<StepStatus>("idle");
-  const { approveERC20, getAllowance } = useApproveERC20();
+  const { approveERC20 } = useApproveERC20();
   const owner = useOwner();
   const arkAccount = useBurnerWallet();
   const config = useConfig();
@@ -29,14 +29,10 @@ function useFulfillListing() {
     if (!arkAccount) throw new Error("No burner wallet.");
     try {
       setStatus("loading");
-      const allowance = await getAllowance(
-        parameters.starknetAccount,
-        parameters.currencyAddress || config?.starknetContracts.eth
-      );
       setStepStatus("approving");
       await approveERC20({
         starknetAccount: parameters.starknetAccount,
-        startAmount: Number(parameters.startAmount) + Number(allowance),
+        startAmount: Number(parameters.startAmount),
         currencyAddress:
           parameters.currencyAddress || config?.starknetContracts.eth
       });
