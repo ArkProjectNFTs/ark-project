@@ -53,12 +53,13 @@ function useApproveERC20() {
       parameters.starknetAccount,
       parameters.currencyAddress
     );
-    console.log("allowance", allowance);
-    return await approveERC20Core(config as Config, {
-      starknetAccount: parameters.starknetAccount,
-      contractAddress: parameters.currencyAddress.toString(),
-      amount: parameters.startAmount
-    });
+    if (Number(BigInt(allowance)) < Number(BigInt(parameters.startAmount))) {
+      return await approveERC20Core(config as Config, {
+        starknetAccount: parameters.starknetAccount,
+        contractAddress: parameters.currencyAddress.toString(),
+        amount: parameters.startAmount
+      });
+    }
   }
   return { approveERC20, getAllowance };
 }
