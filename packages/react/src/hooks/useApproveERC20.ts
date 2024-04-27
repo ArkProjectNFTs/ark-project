@@ -53,11 +53,6 @@ function useApproveERC20() {
       parameters.starknetAccount,
       parameters.currencyAddress
     );
-    console.log("startAmount", Number(BigInt(parameters.startAmount)));
-    console.log("allowance", Number(BigInt(allowance)));
-    console.log(
-      Number(BigInt(allowance)) >= Number(BigInt(parameters.startAmount))
-    );
     if (Number(BigInt(allowance)) < Number(BigInt(parameters.startAmount))) {
       return await approveERC20Core(config as Config, {
         starknetAccount: parameters.starknetAccount,
