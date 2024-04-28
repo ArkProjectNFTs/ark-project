@@ -2,7 +2,7 @@ use core::result::ResultTrait;
 use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
-use snforge_std::{ declare, ContractClassTrait};
+use snforge_std::{declare, ContractClassTrait};
 use ark_orderbook::orderbook::Orderbook;
 use ark_orderbook::orderbook::orderbook;
 use ark_common::protocol::order_v1::OrderV1;
@@ -24,9 +24,7 @@ use super::super::common::setup::{
 fn test_create_listing_order_and_fulfill_non_existing_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
-    let (_, _, _order_hash, _) = setup_listing(
-        start_date, end_date, Option::Some(123)
-    );
+    let (_, _, _order_hash, _) = setup_listing(start_date, end_date, Option::Some(123));
     let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
@@ -66,7 +64,7 @@ fn test_create_listing_order_and_fulfill() {
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare("orderbook").unwrap();   
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
@@ -145,7 +143,7 @@ fn test_fulfill_already_fulfilled_order() {
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare("orderbook").unwrap();   
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id

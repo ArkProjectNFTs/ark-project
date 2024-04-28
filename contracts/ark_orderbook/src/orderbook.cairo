@@ -453,9 +453,7 @@ mod orderbook {
                 Option::Some(order_type) => {
                     if order_type == OrderType::Auction {
                         let auction_token_hash = order.compute_token_hash();
-                        let (_, auction_end_date, _) = self
-                            .auctions
-                            .read(auction_token_hash);
+                        let (_, auction_end_date, _) = self.auctions.read(auction_token_hash);
                         assert(
                             block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
                         );
@@ -609,9 +607,7 @@ mod orderbook {
         ///
         fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
             if order.token_id.is_some() {
-                let (auction_order_hash, _, _) = self
-                    .auctions
-                    .read(order.compute_token_hash());
+                let (auction_order_hash, _, _) = self.auctions.read(order.compute_token_hash());
 
                 assert(auction_order_hash.is_zero(), orderbook_errors::USE_FULFILL_AUCTION);
             }
@@ -733,12 +729,7 @@ mod orderbook {
             self: @ContractState, token_hash: felt252
         ) -> Option<(felt252, bool, OrderV1)> {
             let previous_listing_orderhash = self.token_listings.read(token_hash);
-            let (
-                previous_auction_orderhash, _, _
-            ) =
-                self
-                .auctions
-                .read(token_hash);
+            let (previous_auction_orderhash, _, _) = self.auctions.read(token_hash);
             let mut previous_orderhash = 0;
             if (previous_listing_orderhash.is_non_zero()) {
                 previous_orderhash = previous_listing_orderhash;

@@ -12,7 +12,8 @@ use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
-    Event, SpyOn, test_address, signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl}
+    Event, SpyOn, test_address,
+    signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl}
 };
 use super::super::common::setup::{
     setup_auction_order, setup_listing, sign_mock, setup_orders, setup_offer,
@@ -42,8 +43,7 @@ fn test_fulfill_auction() {
     whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
 
-    let (auction_offer, related_order_signer, related_order_hash, _) =
-        setup_offer(
+    let (auction_offer, related_order_signer, related_order_hash, _) = setup_offer(
         start_date, end_date, Option::None, Option::None
     );
 
@@ -370,8 +370,7 @@ fn test_fulfill_auction_with_listing_order() {
     dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
 
     //create a listing order
-    let (listing_order, listing_signer, listing_order_hash, _) =
-        setup_listing(
+    let (listing_order, listing_signer, listing_order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
     whitelist_creator_broker(contract_address, listing_order.broker_id, dispatcher);

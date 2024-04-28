@@ -35,7 +35,12 @@ mod FreeMintERC20 {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, initial_supply: u256, name: core::byte_array::ByteArray, symbol: core::byte_array::ByteArray) {
+    fn constructor(
+        ref self: ContractState,
+        initial_supply: u256,
+        name: core::byte_array::ByteArray,
+        symbol: core::byte_array::ByteArray
+    ) {
         self.erc20.initializer(name, symbol);
     }
 

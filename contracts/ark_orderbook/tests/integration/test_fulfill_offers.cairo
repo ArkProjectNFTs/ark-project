@@ -126,7 +126,6 @@ fn test_fulfill_non_existing_offer() {
 
 #[test]
 fn test_fulfill_classic_offer() {
-    
     let (order_listing, mut order_offer, _, _) = setup_orders();
 
     let contract = declare("orderbook").unwrap();
@@ -168,7 +167,7 @@ fn test_fulfill_classic_offer() {
 
 #[test]
 fn test_fulfill_collection_offer() {
-    let contract = declare("orderbook").unwrap();   
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id

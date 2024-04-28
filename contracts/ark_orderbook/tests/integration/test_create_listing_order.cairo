@@ -14,7 +14,8 @@ use super::super::common::setup::{
 };
 use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
-    Event, SpyOn, test_address, signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl}
+    Event, SpyOn, test_address,
+    signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl}
 };
 
 #[test]
@@ -114,8 +115,7 @@ fn test_auction_order_with_extended_time_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
 
-    let (auction_listing_order, auction_listing_signer, order_hash, _) =
-        setup_auction_order(
+    let (auction_listing_order, auction_listing_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
 

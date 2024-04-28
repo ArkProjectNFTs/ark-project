@@ -16,7 +16,10 @@ mod executor {
     use core::traits::TryInto;
     use core::box::BoxTrait;
     use starknet::{ContractAddress, ClassHash};
-    use ark_common::protocol::order_types::{RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo, FulfillOrderInfo};
+    use ark_common::protocol::order_types::{
+        RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
+        FulfillOrderInfo
+    };
     use ark_common::protocol::order_v1::OrderV1;
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
     use ark_starknet::appchain_messaging::{

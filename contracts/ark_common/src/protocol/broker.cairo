@@ -41,7 +41,8 @@ fn broker_whitelist_read(broker_id: ContractAddress) -> bool {
     // First offset is the status.
     let whitelisted: felt252 = starknet::storage_read_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base(base)
-    ).unwrap_syscall();
+    )
+        .unwrap_syscall();
 
     whitelisted == 1
 }

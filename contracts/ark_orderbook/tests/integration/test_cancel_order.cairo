@@ -130,8 +130,7 @@ fn test_cancel_auction_during_the_extended_time() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
 
-    let (auction_listing_order, auction_listing_signer, order_hash, _) =
-        setup_auction_order(
+    let (auction_listing_order, auction_listing_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
 

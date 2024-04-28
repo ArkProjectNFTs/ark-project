@@ -139,7 +139,7 @@ fn test_recreate_listing_same_offerer_fulfilled() {
 #[test]
 fn test_recreate_listing_new_owner() {
     let (order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
-    
+
     let mut state = orderbook::contract_state_for_testing();
     orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
