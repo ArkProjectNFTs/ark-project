@@ -62,6 +62,6 @@ cairo-vm = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "262b7eb4
 # ***********
 
 [dev-dependencies]
-mockall = "0.11.4"
+mockall = "0.12.1"
 url = "2.3.1"
 starknet = "0.7.0"

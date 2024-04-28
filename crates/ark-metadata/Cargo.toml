@@ -22,4 +22,4 @@ chrono = "0.4"
 
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }
-mockall = "0.11.4"
+mockall = "0.12.1"
