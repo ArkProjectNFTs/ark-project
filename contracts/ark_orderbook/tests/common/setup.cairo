@@ -3,14 +3,15 @@ use core::option::OptionTrait;
 use core::traits::Into;
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use ark_common::crypto::signer::{Signer, SignInfo};
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 
-use snforge_std::signature::{
-    StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer as SNSigner, Verifier
+use snforge_std::signature::KeyPairTrait;
+use snforge_std::signature::stark_curve::{
+    StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl
 };
 
-use snforge_std::{start_prank, stop_prank, test_address};
+use snforge_std::{start_prank, stop_prank, test_address, CheatTarget};
 use starknet::ContractAddress;
 
 use super::super::common::signer::sign_mock;
@@ -376,9 +377,9 @@ fn whitelist_creator_broker(
     contract_address: ContractAddress, broker_id: ContractAddress, dispatcher: OrderbookDispatcher
 ) {
     start_prank(
-        contract_address,
+        CheatTarget::One(contract_address),
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078.try_into().unwrap()
     );
     dispatcher.whitelist_broker(broker_id);
-    stop_prank(contract_address);
+    stop_prank(CheatTarget::One(contract_address));
 }

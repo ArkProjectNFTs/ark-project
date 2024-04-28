@@ -2,8 +2,7 @@ use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::Into;
 use core::traits::TryInto;
-use ark_orderbook::order::order_v1::OrderV1;
-use ark_orderbook::order::order_v1::OrderTraitOrderV1;
+use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 use ark_orderbook::orderbook::{
     orderbook, orderbook_errors, OrderbookDispatcher, OrderbookDispatcherTrait
 };

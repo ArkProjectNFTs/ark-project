@@ -1,6 +1,7 @@
 //! Order generic variables.
 use starknet::ContractAddress;
 use poseidon::poseidon_hash_span;
+use ark_common::protocol::order_v1::OrderV1;
 
 /// Order types.
 #[derive(Serde, Drop, PartialEq, Copy)]
@@ -251,6 +252,16 @@ struct ExecutionInfo {
 // create_broker_fee: u256,
 // fulfill_broker_address: ContractAddress,
 // fulfill_broker_fee: u256
+}
+
+#[derive(Serde, Copy, Drop)]
+struct CreateOrderInfo {
+    order: OrderV1
+}
+
+#[derive(Serde, Copy, Drop)]
+struct FulfillOrderInfo {
+    fulfillInfo: FulfillInfo
 }
 
 /// The info sent from Starknet to the Arkchain to

@@ -7,7 +7,7 @@
 
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use starknet::ContractAddress;
 
 /// Orderbook trait to define operations on orderbooks.
@@ -61,7 +61,7 @@ trait Orderbook<T> {
     ///
     /// # Arguments
     /// * `order_hash` - The order hash of order.
-    fn get_order_status(self: @T, order_hash: felt252) -> felt252;
+    fn get_order_status(self: @T, order_hash: felt252) -> OrderStatus;
 
     /// Retrieves the auction end date.
     ///
@@ -148,12 +148,12 @@ mod orderbook {
     use core::traits::Into;
     use super::{orderbook_errors, Orderbook};
     use starknet::ContractAddress;
-    use ark_orderbook::order::order_v1::OrderV1;
-    use ark_orderbook::order::database::{
+    use ark_common::protocol::order_v1::OrderV1;
+    use ark_common::protocol::order_database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
 
-    use ark_orderbook::broker::database::{broker_whitelist_write};
+    use ark_common::protocol::broker::{broker_whitelist_write};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
@@ -298,7 +298,7 @@ mod orderbook {
     // *************************************************************************
     // EXTERNAL FUNCTIONS
     // *************************************************************************
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ImplOrderbook of Orderbook<ContractState> {
         fn upgrade(ref self: ContractState, class_hash: starknet::ClassHash) {
             assert(
@@ -328,7 +328,7 @@ mod orderbook {
 
         /// Retrieves the status of an order using its hash.
         /// # View
-        fn get_order_status(self: @ContractState, order_hash: felt252) -> felt252 {
+        fn get_order_status(self: @ContractState, order_hash: felt252) -> OrderStatus {
             let status = order_status_read(order_hash);
             if status.is_none() {
                 panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
@@ -444,7 +444,7 @@ mod orderbook {
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
             assert(order.offerer == cancel_info.canceller, 'not the same offerrer');
-            let status = match order_status_read(order_hash) {
+            match order_status_read(order_hash) {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
@@ -453,7 +453,7 @@ mod orderbook {
                 Option::Some(order_type) => {
                     if order_type == OrderType::Auction {
                         let auction_token_hash = order.compute_token_hash();
-                        let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                        let (_, auction_end_date, _) = self
                             .auctions
                             .read(auction_token_hash);
                         assert(
@@ -553,7 +553,7 @@ mod orderbook {
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             }
 
-            let related_order_status = match order_status_read(related_order_hash) {
+            match order_status_read(related_order_hash) {
                 Option::Some(s) => {
                     assert(s == OrderStatus::Open, orderbook_errors::ORDER_NOT_OPEN);
                     s
@@ -609,7 +609,7 @@ mod orderbook {
         ///
         fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
             if order.token_id.is_some() {
-                let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                let (auction_order_hash, _, _) = self
                     .auctions
                     .read(order.compute_token_hash());
 
@@ -734,7 +734,7 @@ mod orderbook {
         ) -> Option<(felt252, bool, OrderV1)> {
             let previous_listing_orderhash = self.token_listings.read(token_hash);
             let (
-                previous_auction_orderhash, previous_auction_end_date, previous_auction_offers_count
+                previous_auction_orderhash, _, _
             ) =
                 self
                 .auctions
@@ -785,8 +785,6 @@ mod orderbook {
                     .unwrap();
                 let previous_order_status = order_status_read(previous_orderhash)
                     .expect('Invalid Order status');
-                let previous_order_type = order_type_read(previous_orderhash)
-                    .expect('Invalid Order type');
                 assert(
                     previous_order_status != OrderStatus::Fulfilled,
                     orderbook_errors::ORDER_FULFILLED

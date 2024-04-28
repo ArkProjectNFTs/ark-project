@@ -1,6 +1,5 @@
 use traits::Into;
 use box::BoxTrait;
-use snforge_std::PrintTrait;
 use super::constants;
 
 const ORDER_TYPE_HASH: felt252 = 0x3749634CC837ADA5AF76B97FC3197F05DFC376CF4B73199E76107754E39CA1D;

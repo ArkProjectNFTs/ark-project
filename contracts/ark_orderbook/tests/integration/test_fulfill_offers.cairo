@@ -1,17 +1,19 @@
+use core::result::ResultTrait;
 use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
 use ark_orderbook::orderbook::Orderbook;
 use ark_orderbook::orderbook::orderbook;
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use ark_common::crypto::{signer::{Signer, SignInfo, SignerTrait}, hash::serialized_hash};
+use snforge_std::cheatcodes::CheatTarget;
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use snforge_std::{
-    PrintTrait, start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-    EventAssertions, Event, SpyOn, test_address,
-    signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
+    start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
+    Event, SpyOn, test_address,
+    signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl}
 };
 
 use super::super::common::signer::sign_mock;
@@ -57,14 +59,13 @@ use super::super::common::setup::{
 #[test]
 #[should_panic(expected: ('OB: order expired',))]
 fn test_fulfill_expired_offer() {
-    let block_timestamp = 1699556828;
-    let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
+    let (order_listing, mut order_offer, _, _) = setup_orders();
     let chain_id = 0x534e5f4d41494e;
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     order_offer.start_date = order_listing.start_date;
@@ -75,7 +76,7 @@ fn test_fulfill_expired_offer() {
     whitelist_creator_broker(contract_address, order_offer.broker_id, dispatcher);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
-    start_warp(contract_address, order_listing.start_date + 2000);
+    start_warp(CheatTarget::One(contract_address), order_listing.start_date + 2000);
 
     let fulfill_info = FulfillInfo {
         order_hash: order_offer.compute_order_hash(),
@@ -95,12 +96,12 @@ fn test_fulfill_expired_offer() {
 #[test]
 #[should_panic(expected: ('OB: order not found',))]
 fn test_fulfill_non_existing_offer() {
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let order_hash: felt252 = 0x0123456.into();
@@ -125,15 +126,15 @@ fn test_fulfill_non_existing_offer() {
 
 #[test]
 fn test_fulfill_classic_offer() {
-    let block_timestamp = 1699556828;
-    let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
+    
+    let (order_listing, mut order_offer, _, _) = setup_orders();
 
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let listing_order_hash = order_listing.compute_order_hash();
@@ -148,7 +149,7 @@ fn test_fulfill_classic_offer() {
     let offer_signer = sign_mock(offer_order_hash, order_offer.offerer);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
-    start_warp(contract_address, order_offer.start_date);
+    start_warp(CheatTarget::One(contract_address), order_offer.start_date);
 
     let fulfill_info = FulfillInfo {
         order_hash: order_offer.compute_order_hash(),
@@ -167,12 +168,12 @@ fn test_fulfill_classic_offer() {
 
 #[test]
 fn test_fulfill_collection_offer() {
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();   
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     let data = array![];
     let data_span = data.span();
@@ -206,7 +207,7 @@ fn test_fulfill_collection_offer() {
     whitelist_creator_broker(contract_address, order_offer.broker_id, dispatcher);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
-    start_warp(contract_address, order_offer.start_date);
+    start_warp(CheatTarget::One(contract_address), order_offer.start_date);
 
     let fulfill_info = FulfillInfo {
         order_hash: order_offer.compute_order_hash(),
@@ -230,12 +231,12 @@ fn test_fulfill_collection_offer() {
 #[test]
 #[should_panic(expected: ('OB: order expired',))]
 fn test_fulfill_expired_collection_offer() {
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let data = array![];
@@ -270,7 +271,7 @@ fn test_fulfill_expired_collection_offer() {
     whitelist_creator_broker(contract_address, order_offer.broker_id, dispatcher);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
-    start_warp(contract_address, order_offer.end_date);
+    start_warp(CheatTarget::One(contract_address), order_offer.end_date);
 
     let fulfill_info = FulfillInfo {
         order_hash: order_offer.compute_order_hash(),
@@ -294,14 +295,13 @@ fn test_fulfill_expired_collection_offer() {
 #[test]
 #[should_panic(expected: ('OB: order not fulfillable',))]
 fn test_double_fulfill_offer() {
-    let block_timestamp = 1699556828;
-    let (order_listing, mut order_offer, order_auction, order_collection_offer) = setup_orders();
+    let (order_listing, mut order_offer, _, _) = setup_orders();
     let chain_id = 0x534e5f4d41494e;
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let listing_order_hash = order_listing.compute_order_hash();
@@ -317,7 +317,7 @@ fn test_double_fulfill_offer() {
     let offer_signer = sign_mock(offer_order_hash, order_offer.offerer);
     dispatcher.create_order(order: order_offer, signer: offer_signer);
 
-    start_warp(contract_address, order_offer.start_date);
+    start_warp(CheatTarget::One(contract_address), order_offer.start_date);
 
     let fulfill_info = FulfillInfo {
         order_hash: order_offer.compute_order_hash(),

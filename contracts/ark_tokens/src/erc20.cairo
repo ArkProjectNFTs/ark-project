@@ -7,7 +7,7 @@ trait IFreeMint<T> {
 
 #[starknet::contract]
 mod FreeMintERC20 {
-    use openzeppelin::token::erc20::ERC20Component;
+    use openzeppelin::token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
     use starknet::ContractAddress;
     use super::IFreeMint;
 
@@ -35,11 +35,11 @@ mod FreeMintERC20 {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, initial_supply: u256, name: felt252, symbol: felt252) {
+    fn constructor(ref self: ContractState, initial_supply: u256, name: core::byte_array::ByteArray, symbol: core::byte_array::ByteArray) {
         self.erc20.initializer(name, symbol);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ImplFreeMint of IFreeMint<ContractState> {
         fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
             self.erc20._mint(recipient, amount);

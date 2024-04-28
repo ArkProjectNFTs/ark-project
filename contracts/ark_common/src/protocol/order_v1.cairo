@@ -3,7 +3,7 @@ use core::traits::Into;
 use core::traits::TryInto;
 use core::option::OptionTrait;
 
-use ark_orderbook::broker::database::{broker_whitelist_read};
+use ark_common::protocol::broker::{broker_whitelist_read};
 
 //! Order v1 supported by the Orderbook.
 //!

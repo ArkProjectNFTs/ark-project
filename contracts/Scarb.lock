@@ -30,17 +30,18 @@ name = "ark_tokens"
 version = "0.1.0"
 dependencies = [
  "openzeppelin",
+ "snforge_std",
 ]
 
 [[package]]
 name = "openzeppelin"
-version = "0.8.0"
-source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.8.0#c23e8e96de60e6e3159b1ff8591a1187269c0eb7"
+version = "0.12.0"
+source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.12.0#0697004db74502ce49900edef37331dd03531356"
 
 [[package]]
 name = "snforge_std"
-version = "0.1.0"
-source = "git+https://github.com/foundry-rs/starknet-foundry.git?tag=v0.9.1#da085bd11e1b151d0592f43917136560d9b70d37"
+version = "0.22.0"
+source = "git+https://github.com/foundry-rs/starknet-foundry.git?tag=v0.22.0#9b215944c6c5871c738381b4ded61bbf06e7ba35"
 
 [[package]]
 name = "solis"

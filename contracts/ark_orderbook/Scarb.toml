@@ -4,8 +4,8 @@ version = "0.1.0"
 
 [dependencies]
 ark_common = { path = "../ark_common" }
-starknet = "2.3.1"
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.9.1" }
+starknet = "2.6.3"
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.22.0" }
 
 [[target.starknet-contract]]
 sierra = true

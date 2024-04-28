@@ -4,7 +4,8 @@ use core::option::OptionTrait;
 use ark_orderbook::orderbook::Orderbook;
 use ark_common::crypto::{signer::{Signer, SignInfo}, hash::serialized_hash};
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
-use ark_orderbook::order::order_v1::OrderV1;
+use snforge_std::cheatcodes::CheatTarget;
+use ark_common::protocol::order_v1::OrderV1;
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use super::super::common::setup::{
@@ -13,7 +14,7 @@ use super::super::common::setup::{
 };
 use snforge_std::{
     start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
-    Event, SpyOn, test_address, signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
+    Event, SpyOn, test_address, signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl}
 };
 
 #[test]
@@ -21,15 +22,15 @@ use snforge_std::{
 fn test_create_existing_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
-    let (order_listing, signer, _order_hash, token_hash) = setup_listing(
+    let (order_listing, signer, _order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
@@ -41,15 +42,15 @@ fn test_create_existing_order() {
 fn test_create_order_not_whitelisted() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
-    let (order_listing, signer, _order_hash, token_hash) = setup_listing(
+    let (order_listing, signer, _order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     dispatcher.create_order(order: order_listing, signer: signer);
 }
@@ -61,12 +62,12 @@ fn test_create_listing_order() {
     let (order_listing, signer, _order_hash, token_hash) = setup_listing(
         start_date, end_date, Option::Some(10)
     );
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
@@ -113,17 +114,17 @@ fn test_auction_order_with_extended_time_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
 
-    let (auction_listing_order, auction_listing_signer, order_hash, token_hash) =
+    let (auction_listing_order, auction_listing_signer, order_hash, _) =
         setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
 
-    let contract = declare('orderbook');
+    let contract = declare("orderbook").unwrap();
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
+    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
@@ -131,8 +132,8 @@ fn test_auction_order_with_extended_time_order() {
     let order_type = dispatcher.get_order_type(order_hash);
     assert(order_type == OrderType::Auction.into(), 'order is not auction');
 
-    start_warp(contract_address, end_date - 1);
-    let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_offer(
+    start_warp(CheatTarget::One(contract_address), end_date - 1);
+    let (auction_offer, signer, auction_order_hash, _) = setup_offer(
         end_date - 1, end_date + 1200, Option::None, Option::None
     );
     dispatcher.create_order(order: auction_offer, signer: signer);

@@ -1,3 +1,4 @@
+use core::result::ResultTrait;
 //! Orders database.
 //!
 //! The order database uses the `storage_read` and `storage_write`
@@ -42,8 +43,7 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt252
     // Then, we must read the length to deserialize the data.
     let length: felt252 = starknet::storage_read_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 2)
-    )
-        .unwrap_syscall();
+    ).unwrap_syscall();
 
     if length == 0 {
         return Option::None;
@@ -58,8 +58,7 @@ fn order_read<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(order_hash: felt252
         }
         let v = starknet::storage_read_syscall(
             ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, offset)
-        )
-            .unwrap_syscall();
+        ).unwrap_syscall();
 
         value.append(v);
 
@@ -135,8 +134,7 @@ fn order_type_read(order_hash: felt252) -> Option<OrderType> {
     // First offset is the status.
     let order_type: felt252 = starknet::storage_read_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1)
-    )
-        .unwrap_syscall();
+    ).unwrap_syscall();
 
     order_type.try_into()
 }
@@ -156,8 +154,7 @@ fn order_status_read(order_hash: felt252) -> Option<OrderStatus> {
     // First offset is the status.
     let status: felt252 = starknet::storage_read_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 0)
-    )
-        .unwrap_syscall();
+    ).unwrap_syscall();
 
     status.try_into()
 }
