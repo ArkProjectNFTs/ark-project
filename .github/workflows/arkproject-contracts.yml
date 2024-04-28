@@ -23,7 +23,6 @@ jobs:
         uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: 2.6.4
-
       - name: Check Scarb Formatting
         run: cd contracts && scarb fmt --check
   test:
@@ -32,7 +31,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
+      - name: Install universal sierra compiler
+        run: curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
