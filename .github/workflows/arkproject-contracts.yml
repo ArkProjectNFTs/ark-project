@@ -21,7 +21,7 @@ jobs:
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: 2.3.1
+          scarb-version: 2.6.3
 
       - name: Check Scarb Formatting
         run: cd contracts && scarb fmt --check
@@ -35,12 +35,12 @@ jobs:
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: 2.3.1
+          scarb-version: 2.6.3
 
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v2
         with:
-          starknet-foundry-version: 0.10.1
+          starknet-foundry-version: 0.22.0
 
       - name: Test ark_common contracts
         run: cd contracts/ark_common && snforge test
