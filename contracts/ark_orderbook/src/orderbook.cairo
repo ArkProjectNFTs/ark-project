@@ -412,7 +412,7 @@ mod orderbook {
                         order_status_read(order_hash).is_none(),
                         orderbook_errors::ORDER_ALREADY_EXISTS
                     );
-                    self._create_listing_order(order, order_type, order_hash);
+                    let _ = self._create_listing_order(order, order_type, order_hash);
                 },
                 OrderType::Auction => {
                     assert(
@@ -652,7 +652,7 @@ mod orderbook {
                     fulfill_broker_address: fulfill_info.fulfill_broker_address
                 };
                 execute_info.serialize(ref buf);
-                starknet::send_message_to_l1_syscall('EXE', buf.span());
+                starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap();
             }
         }
 
@@ -703,7 +703,7 @@ mod orderbook {
                     fulfill_broker_address: fulfill_info.fulfill_broker_address
                 };
                 execute_info.serialize(ref buf);
-                starknet::send_message_to_l1_syscall('EXE', buf.span());
+                starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap();
             }
         }
 

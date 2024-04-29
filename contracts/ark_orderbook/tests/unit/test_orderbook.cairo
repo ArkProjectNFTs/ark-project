@@ -26,7 +26,7 @@ fn test_create_listing() {
     let mut state = orderbook::contract_state_for_testing();
     let mut spy = spy_events(SpyOn::One(contract_address));
 
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 
@@ -76,7 +76,7 @@ fn test_create_listing() {
 fn test_recreate_listing_same_owner() {
     let (order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
     let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     // check is first order is fulfilled
@@ -84,7 +84,7 @@ fn test_recreate_listing_same_owner() {
     assert(order_status == OrderStatus::Open, 'OB: order already exists');
     // create a second order over the first one same ressource hash different price
     let (order_listing_2, order_hash_2, _) = setup_listing_order(500000000000000000);
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 }
@@ -94,7 +94,7 @@ fn test_recreate_listing_same_owner() {
 fn test_recreate_listing_different_offerer_fulfilled() {
     let (order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
     let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     // fullfill the order 1
@@ -109,7 +109,7 @@ fn test_recreate_listing_different_offerer_fulfilled() {
         .offerer = 0x2484a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
         .try_into()
         .unwrap();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 }
@@ -120,7 +120,7 @@ fn test_recreate_listing_same_offerer_fulfilled() {
     let (order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
 
     let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     // fullfill the order 1
@@ -131,7 +131,7 @@ fn test_recreate_listing_same_offerer_fulfilled() {
     // create a second order over the first one same ressource hash different price, different owner but the previous order is only fulfilled, to cover the case of user who just bought a token to list it instantly but the order is not yet executed
     // we cannot place & cancel a previous order if it's fulfilled
     let (mut order_listing_2, order_hash_2, _) = setup_listing_order(500000000000000000);
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 }
@@ -141,7 +141,7 @@ fn test_recreate_listing_new_owner() {
     let (order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
 
     let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 
@@ -151,7 +151,7 @@ fn test_recreate_listing_new_owner() {
         .offerer = 0x2584a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a823
         .try_into()
         .unwrap();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 
@@ -177,13 +177,13 @@ fn test_recreate_listing_same_owner_old_order_expired() {
     let (mut order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
     let mut state = orderbook::contract_state_for_testing();
     order_listing_1.end_date = starknet::get_block_timestamp();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
     // create a second order over the first one same ressource hash different price, different owner it should work and cancel the previous one
     let (order_listing_2, order_hash_2, _) = setup_listing_order(500000000000000000);
 
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_2, OrderType::Listing, order_hash_2
     );
 
@@ -283,7 +283,7 @@ fn test_create_collection_offer() {
 fn test_create_listing_order_and_fulfill_the_order() {
     let (mut order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
     let mut state = orderbook::contract_state_for_testing();
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 
@@ -319,7 +319,7 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
     order_listing_1
         .end_date =
             starknet::get_block_timestamp(); // we use the current block timestamp to make the order expired because if we substract it will be negative
-    orderbook::InternalFunctions::_create_listing_order(
+    let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 

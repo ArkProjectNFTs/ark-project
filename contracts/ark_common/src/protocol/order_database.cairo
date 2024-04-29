@@ -96,12 +96,14 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
         ADDRESS_DOMAIN,
         starknet::storage_address_from_base_and_offset(base, 0),
         OrderStatus::Open.into()
-    );
+    )
+        .unwrap_syscall();
 
     // At offset 1, we always have the order type.
     starknet::storage_write_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 1), order_type.into()
-    );
+    )
+        .unwrap_syscall();
 
     // At offset 1, we always have the length.
     let mut buf = array![];
@@ -109,7 +111,8 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
 
     starknet::storage_write_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 2), buf.len().into()
-    );
+    )
+        .unwrap_syscall();
 
     let mut offset = 3;
 
@@ -118,7 +121,8 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
             Option::Some(v) => {
                 starknet::storage_write_syscall(
                     ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, offset), v
-                );
+                )
+                    .unwrap_syscall();
                 offset += 1
             },
             Option::None(_) => { break (); },
@@ -187,7 +191,8 @@ fn order_status_write(order_hash: felt252, status: OrderStatus) -> bool {
     // At offset 0, we have the status.
     starknet::storage_write_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base_and_offset(base, 0), status.into()
-    );
+    )
+        .unwrap_syscall();
 
     true
 }

@@ -63,7 +63,7 @@ fn broker_whitelist_write(broker_id: ContractAddress, status: felt252) -> bool {
 
     starknet::storage_write_syscall(
         ADDRESS_DOMAIN, starknet::storage_address_from_base(base), status
-    );
+    ).unwrap_syscall();
 
     true
 }
