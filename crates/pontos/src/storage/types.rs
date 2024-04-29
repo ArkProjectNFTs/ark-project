@@ -217,6 +217,7 @@ pub enum BlockIndexingStatus {
     Terminated,
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for BlockIndexingStatus {
     fn to_string(&self) -> String {
         match self {
@@ -286,6 +287,7 @@ pub enum ContractType {
     ERC1155,
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for ContractType {
     fn to_string(&self) -> String {
         match self {

@@ -159,58 +159,6 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         }
     }
 
-    pub async fn index_contract_events(
-        &self,
-        from_block: Option<BlockId>,
-        to_block: Option<BlockId>,
-        contract_address: FieldElement,
-    ) -> IndexerResult<()> {
-        let mut continuation_token: Option<String> = None;
-
-        loop {
-            let result = self
-                .client
-                .fetch_events(
-                    from_block,
-                    to_block,
-                    self.event_manager.keys_selector(),
-                    Some(contract_address),
-                    continuation_token,
-                )
-                .await?;
-
-            let mut current_block_number: u64 = 0;
-            let mut current_block_timestamp: u64 = 0;
-
-            for (block_number, events) in result.events {
-                if current_block_number != block_number {
-                    current_block_number = block_number;
-
-                    match self.client.block_time(BlockId::Number(block_number)).await {
-                        Ok(ts) => {
-                            current_block_timestamp = ts;
-                            self.process_events(events, current_block_timestamp).await?;
-                        }
-                        Err(e) => {
-                            error!("Error while fetching block timestamp: {:?}", e);
-                        }
-                    };
-                } else {
-                    self.process_events(events, current_block_timestamp).await?;
-                }
-            }
-
-            if result.continuation_token.is_none() {
-                break;
-            } else {
-                continuation_token = result.continuation_token;
-                continue;
-            }
-        }
-
-        Ok(())
-    }
-
     /// If "Latest" is used for the `to_block`,
     /// this function will only index the latest block
     /// that is not pending.
@@ -353,6 +301,29 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         }
 
         self.event_handler.on_indexation_range_completed().await;
+
+        Ok(())
+    }
+
+    pub async fn index_pending_block(&self, timestamp: u64) -> IndexerResult<()> {
+        let blocks_events = match self
+            .client
+            .fetch_all_block_events_for_pending_block(timestamp, self.event_manager.keys_selector())
+            .await
+        {
+            Ok(events) => events,
+            Err(e) => {
+                error!("Error while fetching events: {:?}", e);
+                return Err(e.into());
+            }
+        };
+
+        let total_events_count: usize = blocks_events.values().map(|events| events.len()).sum();
+        trace!("Number of events: {:?}", total_events_count);
+
+        for (_, events) in blocks_events {
+            self.process_events(events, timestamp).await?;
+        }
 
         Ok(())
     }

@@ -404,7 +404,7 @@ mod tests {
         let timestamp = 1234567890;
 
         let result = manager
-            .format_and_register_event(&sample_event, contract_type, timestamp)
+            .extract_data_event(&sample_event, contract_type, timestamp)
             .await;
 
         assert!(result.is_ok());
@@ -451,7 +451,7 @@ mod tests {
 
         // Call the `format_event` function
         let result = manager
-            .format_and_register_event(&sample_event, contract_type, timestamp)
+            .extract_data_event(&sample_event, contract_type, timestamp)
             .await;
 
         // Assertions

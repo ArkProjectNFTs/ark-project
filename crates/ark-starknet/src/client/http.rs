@@ -24,7 +24,6 @@ pub struct StarknetClientHttp {
 
 #[async_trait]
 impl StarknetClient for StarknetClientHttp {
-    ///
     fn new(rpc_url: &str) -> Result<StarknetClientHttp, StarknetClientError> {
         let rpc_url = Url::parse(rpc_url).map_err(|_| {
             StarknetClientError::Other("Can't parse RPC url to create the provider".to_string())
@@ -113,7 +112,6 @@ impl StarknetClient for StarknetClientHttp {
         Ok(emitted_events)
     }
 
-    ///
     async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64, StarknetClientError> {
         match id {
             BlockId::Tag(BlockTag::Latest) => Ok(self
@@ -128,7 +126,6 @@ impl StarknetClient for StarknetClientHttp {
         }
     }
 
-    ///
     fn parse_block_range(
         &self,
         from: &str,
@@ -140,7 +137,6 @@ impl StarknetClient for StarknetClientHttp {
         Ok((from_block, to_block))
     }
 
-    ///
     fn parse_block_id(&self, id: &str) -> Result<BlockId, StarknetClientError> {
         let regex_block_number = Regex::new("^[0-9]{1,}$").unwrap();
 
@@ -163,7 +159,6 @@ impl StarknetClient for StarknetClientHttp {
         }
     }
 
-    ///
     async fn block_time(&self, block: BlockId) -> Result<u64, StarknetClientError> {
         let block = self
             .provider
@@ -200,7 +195,6 @@ impl StarknetClient for StarknetClientHttp {
         Ok(timestamp)
     }
 
-    ///
     async fn block_number(&self) -> Result<u64, StarknetClientError> {
         Ok(self
             .provider
@@ -249,7 +243,6 @@ impl StarknetClient for StarknetClientHttp {
         })
     }
 
-    ///
     async fn fetch_all_block_events(
         &self,
         block_id: BlockId,
@@ -293,7 +286,48 @@ impl StarknetClient for StarknetClientHttp {
         Ok(events)
     }
 
-    ///
+    async fn fetch_all_block_events_for_pending_block(
+        &self,
+        timestamp: u64,
+        keys: Option<Vec<Vec<FieldElement>>>,
+    ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError> {
+        let mut events: HashMap<u64, Vec<EmittedEvent>> = HashMap::new();
+        let block_id = BlockId::Tag(BlockTag::Pending);
+
+        let filter = EventFilter {
+            from_block: Some(block_id),
+            to_block: Some(block_id),
+            address: None,
+            keys,
+        };
+
+        let chunk_size = 1000;
+        let mut continuation_token: Option<String> = None;
+
+        loop {
+            let event_page = self
+                .provider
+                .get_events(filter.clone(), continuation_token, chunk_size)
+                .await
+                .map_err(StarknetClientError::Provider)?;
+
+            event_page.events.iter().for_each(|e| {
+                events
+                    .entry(timestamp)
+                    .and_modify(|v| v.push(e.clone()))
+                    .or_insert_with(|| vec![e.clone()]);
+            });
+
+            continuation_token = event_page.continuation_token;
+
+            if continuation_token.is_none() {
+                break;
+            }
+        }
+
+        Ok(events)
+    }
+
     async fn call_contract(
         &self,
         contract_address: FieldElement,

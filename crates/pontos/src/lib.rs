@@ -79,7 +79,6 @@ pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {
 }
 
 impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, E> {
-    ///
     pub fn new(
         client: Arc<C>,
         storage: Arc<S>,

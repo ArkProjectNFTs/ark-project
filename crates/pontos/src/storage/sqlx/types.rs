@@ -4,7 +4,6 @@
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct TokenData {
-    pub contract_id: i32,
     pub contract_address: String,
     pub token_id: String,
     pub token_id_hex: String,
@@ -31,6 +30,7 @@ pub struct EventData {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct BlockData {
+    #[sqlx(rename = "block_timestamp")]
     pub timestamp: i64,
     #[sqlx(rename = "block_number")]
     pub number: i64,
@@ -41,8 +41,7 @@ pub struct BlockData {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct ContractData {
-    pub contract_id: i32,
-    pub updated_timestamp: i64,
+    pub block_timestamp: i64,
     pub contract_address: String,
     pub contract_type: String,
 }
