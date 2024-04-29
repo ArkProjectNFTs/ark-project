@@ -295,6 +295,18 @@ mod orderbook {
         self.emit(RollbackStatus { order_hash, reason: reason.into() });
     }
 
+    #[l1_handler]
+    fn create_order_from_l2(ref self: ContractState, _from_address: felt252, order: OrderV1) {
+        self._create_order(order);
+    }
+
+    #[l1_handler]
+    fn fulfill_order_from_l2(
+        ref self: ContractState, _from_address: felt252, fulfillInfo: FulfillInfo
+    ) {
+        self._fulfill_order(fulfillInfo);
+    }
+
     // *************************************************************************
     // EXTERNAL FUNCTIONS
     // *************************************************************************
@@ -517,6 +529,62 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
+        /// Submits and places an order to the orderbook if the order is valid.
+        fn _create_order(ref self: ContractState, order: OrderV1) {
+            let block_ts = starknet::get_block_timestamp();
+            let validation = order.validate_common_data(block_ts);
+            if validation.is_err() {
+                panic_with_felt252(validation.unwrap_err().into());
+            }
+            let order_type = order
+                .validate_order_type()
+                .expect(orderbook_errors::ORDER_INVALID_DATA);
+            let order_hash = order.compute_order_hash();
+            match order_type {
+                OrderType::Listing => {
+                    assert(
+                        order_status_read(order_hash).is_none(),
+                        orderbook_errors::ORDER_ALREADY_EXISTS
+                    );
+                    let _ = self._create_listing_order(order, order_type, order_hash);
+                },
+                OrderType::Auction => {
+                    assert(
+                        order_status_read(order_hash).is_none(),
+                        orderbook_errors::ORDER_ALREADY_EXISTS
+                    );
+                    self._create_auction(order, order_type, order_hash);
+                },
+                OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
+                OrderType::CollectionOffer => {
+                    self._create_collection_offer(order, order_type, order_hash);
+                },
+            };
+        }
+
+        fn _fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo) {
+            let order_hash = fulfill_info.order_hash;
+            let order: OrderV1 = match order_read(order_hash) {
+                Option::Some(o) => o,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            let status = match order_status_read(order_hash) {
+                Option::Some(s) => s,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            assert(status == OrderStatus::Open, orderbook_errors::ORDER_NOT_FULFILLABLE);
+            let order_type = match order_type_read(order_hash) {
+                Option::Some(s) => s,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            match order_type {
+                OrderType::Listing => { self._fulfill_listing_order(fulfill_info, order); },
+                OrderType::Auction => { self._fulfill_auction_order(fulfill_info, order) },
+                OrderType::Offer => { self._fulfill_offer(fulfill_info, order); },
+                OrderType::CollectionOffer => { self._fulfill_offer(fulfill_info, order); }
+            }
+        }
+
         /// Fulfill auction order
         ///
         /// # Arguments
