@@ -34,36 +34,33 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
     return null;
 
   return (
-    <div className="w-full flex flex-col space-y-4 rounded border p-4">
-      <h1>Buy token</h1>
-      <Button
-        onClick={() =>
-          fulfillListing({
-            starknetAccount: account,
-            brokerId: env.NEXT_PUBLIC_BROKER_ID,
-            tokenAddress: token.contract_address,
-            tokenId: token.token_id,
-            orderHash: tokenMarketData.order_hash,
-            // TODO: add address from the api when it's available
-            // currencyAddress: tokenMarketData.currency_address,
-            startAmount: tokenMarketData.start_amount
-          })
-        }
-      >
-        <div className="flex w-full justify-between">
-          <div className="uppercase font-bold">
-            {status === "idle" && "BUY NOW"}
-            {status === "loading" && "loading"}
-            {status === "success" && "Bought"}
-            {status === "error" && "Error"}
-          </div>
-          <div className="flex items-center space-x-1">
-            {Web3.utils.fromWei(tokenMarketData.start_amount, "ether")}{" "}
-            <SiEthereum />
-          </div>
+    <Button
+      onClick={() =>
+        fulfillListing({
+          starknetAccount: account,
+          brokerId: env.NEXT_PUBLIC_BROKER_ID,
+          tokenAddress: token.contract_address,
+          tokenId: token.token_id,
+          orderHash: tokenMarketData.order_hash,
+          // TODO: add address from the api when it's available
+          // currencyAddress: tokenMarketData.currency_address,
+          startAmount: tokenMarketData.start_amount
+        })
+      }
+    >
+      <div className="flex w-full justify-between">
+        <div className="uppercase font-bold">
+          {status === "idle" && "BUY NOW"}
+          {status === "loading" && "loading"}
+          {status === "success" && "Bought"}
+          {status === "error" && "Error"}
         </div>
-      </Button>
-    </div>
+        <div className="flex items-center space-x-1">
+          <div>{Web3.utils.fromWei(tokenMarketData.start_amount, "ether")}</div>
+          <SiEthereum />
+        </div>
+      </div>
+    </Button>
   );
 };
 

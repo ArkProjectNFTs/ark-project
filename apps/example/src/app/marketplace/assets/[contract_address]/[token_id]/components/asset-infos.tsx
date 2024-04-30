@@ -4,6 +4,7 @@ import React from "react";
 
 import { TokenMarketData } from "@/types";
 import { useAccount } from "@starknet-react/core";
+import { SiEthereum } from "react-icons/si";
 import { Web3 } from "web3";
 
 import { Token } from "@/types/schema";
@@ -21,6 +22,7 @@ const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
     address && areAddressesEqual(token.owner, address)
       ? "You"
       : truncateString(token.owner, 8);
+
   return (
     <div className="border rounded-md p-3">
       <table className="table-auto w-full">
@@ -37,12 +39,14 @@ const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
         <tbody>
           <tr className="text-sm">
             <TableCell className="font-medium">
-              {tokenMarketData && tokenMarketData.start_amount
-                ? `${Web3.utils.fromWei(
-                    tokenMarketData.start_amount,
-                    "ether"
-                  )}  ETH`
-                : "-"}
+              {tokenMarketData && tokenMarketData.start_amount ? (
+                <div className="flex space-x-2 items-center">
+                  {Web3.utils.fromWei(tokenMarketData.start_amount, "ether")}
+                  <SiEthereum />
+                </div>
+              ) : (
+                "-"
+              )}
             </TableCell>
             <TableCell>
               {" "}

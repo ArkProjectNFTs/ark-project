@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 
+import { env } from "@/env";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
@@ -49,7 +50,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      brokerId: "123",
+      brokerId: env.NEXT_PUBLIC_BROKER_ID,
       tokenAddress: currentToken?.contract_address,
       tokenId: currentToken?.token_id,
       startAmount: "0.1"
