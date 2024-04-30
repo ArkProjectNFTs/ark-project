@@ -1,5 +1,5 @@
-import { config } from "../examples/config";
-import { createAccount } from "../src/actions/account/account";
+import { config } from "../examples/config/index.js";
+import { createAccount } from "../src/actions/account/account.js";
 
 describe("ArkProject Account Creation", () => {
   it("should successfully create an account", async () => {

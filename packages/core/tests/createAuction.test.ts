@@ -1,15 +1,15 @@
 import { stark } from "starknet";
 
-import { config } from "../examples/config";
-import { STARKNET_NFT_ADDRESS } from "../examples/constants";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
-import { mintERC721 } from "../examples/utils/mintERC721";
-import { whitelistBroker } from "../examples/utils/whitelistBroker";
-import { fetchOrCreateAccount } from "../src/actions/account/account";
-import { createAuction } from "../src/actions/order";
-import { getOrderType } from "../src/actions/read";
-import { AuctionV1 } from "../src/types";
-import { getTypeFromCairoCustomEnum } from "./utils";
+import { config } from "../examples/config/index.js";
+import { STARKNET_NFT_ADDRESS } from "../examples/constants/index.js";
+import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
+import { mintERC721 } from "../examples/utils/mintERC721.js";
+import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
+import { fetchOrCreateAccount } from "../src/actions/account/account.js";
+import { createAuction } from "../src/actions/order/index.js";
+import { getOrderType } from "../src/actions/read/index.js";
+import { AuctionV1 } from "../src/types/index.js";
+import { getTypeFromCairoCustomEnum } from "./utils/index.js";
 
 test("default", async () => {
   // Create test accounts
@@ -18,6 +18,7 @@ test("default", async () => {
     process.env.SOLIS_ADMIN_ADDRESS_DEV,
     process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
   );
+
   const sellerAccount = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_ACCOUNT1_ADDRESS,
@@ -33,7 +34,7 @@ test("default", async () => {
 
   await mintERC721(config.starknetProvider, sellerAccount);
 
-  // Create auction
+  // // Create auction
   const orderHash = await createAuction(config, {
     starknetAccount: sellerAccount,
     arkAccount: adminAccount,

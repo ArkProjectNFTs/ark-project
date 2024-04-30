@@ -43,14 +43,29 @@ export const createAccount = async (provider: ProviderInterface) => {
     0
   );
   const account = new Account(provider, address, privateKey, "1");
-  const { transaction_hash, contract_address } = await account.deployAccount({
-    classHash: accountClassHash,
-    constructorCalldata: CallData.compile({ publicKey }),
-    addressSalt: publicKey
-  });
+
+  let response;
+
+  try {
+    response = await account.deployAccount({
+      classHash: accountClassHash,
+      constructorCalldata: CallData.compile({ publicKey }),
+      addressSalt: publicKey
+    });
+  } catch (e) {
+    console.log(e);
+  }
+
+  if (!response) {
+    throw new Error(`Account deploy failed for ${address}`);
+  }
+
+  const { transaction_hash, contract_address } = response;
+
   await provider.waitForTransaction(transaction_hash, {
     retryInterval: 1000
   });
+
   return {
     address: contract_address,
     privateKey,
