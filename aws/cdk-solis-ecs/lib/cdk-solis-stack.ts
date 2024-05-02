@@ -6,11 +6,16 @@ import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 
 export class CdkSolisStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const forceNewDeployment = new StringParameter(this, "ForceNewDeployment", {
+      stringValue: Date.now().toString() // Use the current timestamp
+    });
 
     // VPC Lookup
     const vpc = ec2.Vpc.fromLookup(this, "ArkVPC", {
@@ -25,7 +30,10 @@ export class CdkSolisStack extends cdk.Stack {
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
       this,
-      "ArkSolisTaskDef"
+      "ArkSolisTaskDef",
+      {
+        family: "ArkSolisTaskDefFam" + forceNewDeployment.stringValue
+      }
     );
 
     // ECR Repository
@@ -64,7 +72,8 @@ export class CdkSolisStack extends cdk.Stack {
           process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY ||
           "default_private_key",
         RPC_USER: process.env.RPC_USER || "default_rpc_user",
-        RPC_PASSWORD: process.env.RPC_PASSWORD || "default_rpc_password"
+        RPC_PASSWORD: process.env.RPC_PASSWORD || "default_rpc_password",
+        DEPLOYMENT_VERSION: Date.now().toString()
       },
       memoryLimitMiB: 512,
       logging
