@@ -63,8 +63,6 @@ const createOrder = async (
   };
   const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
   const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-  console.log("Signer: ", signer);
-  console.log("Order: ", order);
   const create_order_calldata = CallData.compile({
     order: order,
     signer: signer

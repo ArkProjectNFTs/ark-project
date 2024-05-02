@@ -1,19 +1,19 @@
 import { shortString, stark } from "starknet";
 
-import { config } from "../examples/config";
+import { config } from "../examples/config/index.js";
 import {
   STARKNET_ETH_ADDRESS,
   STARKNET_EXECUTOR_ADDRESS,
   STARKNET_NFT_ADDRESS
-} from "../examples/constants";
-import { changeTokenOwner } from "../examples/utils/changeTokenOwner";
-import { getBalance } from "../examples/utils/getBalance";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
-import { mintERC20 } from "../examples/utils/mintERC20";
-import { mintERC721 } from "../examples/utils/mintERC721";
-import { setArkFees } from "../examples/utils/setArkFees";
-import { setBrokerFees } from "../examples/utils/setBrokerFees";
-import { whitelistBroker } from "../examples/utils/whitelistBroker";
+} from "../examples/constants/index.js";
+import { changeTokenOwner } from "../examples/utils/changeTokenOwner.js";
+import { getBalance } from "../examples/utils/getBalance.js";
+import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
+import { mintERC20 } from "../examples/utils/mintERC20.js";
+import { mintERC721 } from "../examples/utils/mintERC721.js";
+import { setArkFees } from "../examples/utils/setArkFees.js";
+import { setBrokerFees } from "../examples/utils/setBrokerFees.js";
+import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
 import {
   approveERC20,
   approveERC721,
@@ -25,7 +25,7 @@ import {
   getOrderStatus,
   ListingV1,
   OfferV1
-} from "../src";
+} from "../src/index.js";
 
 describe("ArkProject Listing and Offer Fulfillment", () => {
   it("should create an offer and fulfill the offer", async function () {

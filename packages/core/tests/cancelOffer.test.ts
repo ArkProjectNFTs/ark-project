@@ -1,13 +1,12 @@
 import { shortString, stark } from "starknet";
 
-import { OfferV1 } from "../dist";
-import { config } from "../examples/config";
+import { config } from "../examples/config/index.js";
 import {
   STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS
-} from "../examples/constants";
-import { mintERC20 } from "../examples/utils/mintERC20";
-import { whitelistBroker } from "../examples/utils/whitelistBroker";
+} from "../examples/constants/index.js";
+import { mintERC20 } from "../examples/utils/mintERC20.js";
+import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
 import {
   approveERC20,
   cancelOrder,
@@ -15,9 +14,13 @@ import {
   createOffer,
   fetchOrCreateAccount,
   getOrderStatus,
-  getOrderType
-} from "../src";
-import { generateRandomTokenId, getTypeFromCairoCustomEnum } from "./utils";
+  getOrderType,
+  OfferV1
+} from "../src/index.js";
+import {
+  generateRandomTokenId,
+  getTypeFromCairoCustomEnum
+} from "./utils/index.js";
 
 describe("ArkProject cancel offer", () => {
   it("should cancel an offer and verify its status and type", async () => {

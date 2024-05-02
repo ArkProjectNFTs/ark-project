@@ -1,14 +1,16 @@
 import { shortString, stark } from "starknet";
 
-import { config } from "../examples/config";
+import { config } from "../examples/config/index.js";
 import {
   STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS
-} from "../examples/constants";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
-import { mintERC20 } from "../examples/utils/mintERC20";
-import { mintERC721 } from "../examples/utils/mintERC721";
-import { whitelistBroker } from "../examples/utils/whitelistBroker";
+} from "../examples/constants/index.js";
+import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
+import { mintERC20 } from "../examples/utils/mintERC20.js";
+import { mintERC721 } from "../examples/utils/mintERC721.js";
+import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
+import { fetchOrCreateAccount } from "../src/actions/account/account.js";
+import { getOrderStatus } from "../src/actions/read/index.js";
 import {
   approveERC20,
   approveERC721,
@@ -16,9 +18,7 @@ import {
   createListing,
   fulfillListing,
   ListingV1
-} from "../src";
-import { fetchOrCreateAccount } from "../src/actions/account/account";
-import { getOrderStatus } from "../src/actions/read";
+} from "../src/index.js";
 
 describe("ArkProject Listing", () => {
   it("should create and fulfill a listing", async () => {

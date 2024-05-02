@@ -1,17 +1,17 @@
 import { shortString } from "starknet";
 
-import { config } from "../examples/config";
-import { STARKNET_NFT_ADDRESS } from "../examples/constants";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId";
-import { mintERC721 } from "../examples/utils/mintERC721";
-import { whitelistBroker } from "../examples/utils/whitelistBroker";
+import { config } from "../examples/config/index.js";
+import { STARKNET_NFT_ADDRESS } from "../examples/constants/index.js";
+import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
+import { mintERC721 } from "../examples/utils/mintERC721.js";
+import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
 import {
   createAccount,
   fetchOrCreateAccount
-} from "../src/actions/account/account";
-import { createListing } from "../src/actions/order";
-import { getOrderStatus } from "../src/actions/read";
-import { ListingV1 } from "../src/types";
+} from "../src/actions/account/account.js";
+import { createListing } from "../src/actions/order/index.js";
+import { getOrderStatus } from "../src/actions/read/index.js";
+import { ListingV1 } from "../src/types/index.js";
 
 test("ArkProject create a listing", async () => {
   const { account: arkAccount } = await createAccount(config.arkProvider);

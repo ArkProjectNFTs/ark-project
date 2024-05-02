@@ -1,12 +1,13 @@
 import { Contract } from "starknet";
 
-import { Config } from "../../src/createConfig";
+import { Config } from "../../src/createConfig.js";
 
 export const getCurrentTokenId = async (
   config: Config,
   nftContractAddress: string
 ) => {
   const { abi } = await config.starknetProvider.getClassAt(nftContractAddress);
+
   if (abi === undefined) {
     throw new Error("no abi.");
   }
