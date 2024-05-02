@@ -88,6 +88,8 @@ jobs:
           STARKNET_APPCHAIN_MESSAGING_ADDRESS: ${{ env.STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET }}
           STARKNET_SOLIS_ACCOUNT_ADDRESS: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET }}
           STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
+          RPC_USER: ${{ secrets.RPC_USER }}
+          RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
         run: |
           cd aws/cdk-solis-ecs
           pnpm cdk context --clear
