@@ -1,5 +1,12 @@
 # @ark-project/core
 
+## 1.1.2
+
+### Patch Changes
+
+- 8440c35: Update orderbook contract
+- 7cdc78d: fix sdk core test imports
+
 ## 1.1.1
 
 ### Patch Changes
