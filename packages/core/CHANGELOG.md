@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 1.1.3
+
+### Patch Changes
+
+- d617ace: Update orderbook contract
+
 ## 1.1.2
 
 ### Patch Changes
