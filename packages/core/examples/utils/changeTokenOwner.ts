@@ -1,6 +1,6 @@
 import { AccountInterface, BigNumberish, cairo, CallData } from "starknet";
 
-import { Config } from "../../src/createConfig";
+import { Config } from "../../src/createConfig.js";
 
 export const changeTokenOwner = async (
   config: Config,

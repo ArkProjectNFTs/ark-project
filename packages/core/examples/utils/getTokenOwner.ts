@@ -1,6 +1,6 @@
 import { Contract } from "starknet";
 
-import { Config } from "../../src/createConfig";
+import { Config } from "../../src/createConfig.js";
 
 export const getTokenOwner = async (
   config: Config,

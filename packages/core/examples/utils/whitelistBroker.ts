@@ -1,6 +1,6 @@
 import { Account, BigNumberish, CallData } from "starknet";
 
-import { Config } from "../../src/createConfig";
+import { Config } from "../../src/createConfig.js";
 
 export const whitelistBroker = async (
   config: Config,

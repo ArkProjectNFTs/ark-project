@@ -5,6 +5,7 @@
   "scripts": {
     "build": "npm run generate-contracts && pnpm run clean && pnpm run build:esm+types",
     "build:esm+types": "tsc --project tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
+    "build:examples": "tsc --project tsconfig.json --outDir ./dist --declaration --declarationMap --declarationDir ./dist/types",
     "clean": "rm -rf dist tsconfig.tsbuildinfo actions chains codegen internal query",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

@@ -1,6 +1,6 @@
 import { AccountInterface, Contract } from "starknet";
 
-import { Config } from "../../src/createConfig";
+import { Config } from "../../src/createConfig.js";
 
 export const getBalance = async (
   config: Config,

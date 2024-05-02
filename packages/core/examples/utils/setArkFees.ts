@@ -1,7 +1,7 @@
 import { cairo } from "starknet";
 import * as sn from "starknet";
 
-import { Config } from "../../src/createConfig";
+import { Config } from "../../src/createConfig.js";
 
 export const setArkFees = async (
   config: Config,

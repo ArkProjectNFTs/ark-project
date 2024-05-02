@@ -7,7 +7,7 @@ import {
   ProviderInterface
 } from "starknet";
 
-import { STARKNET_ETH_ADDRESS } from "../constants";
+import { STARKNET_ETH_ADDRESS } from "../constants/index.js";
 
 export const mintERC20 = async (
   provider: ProviderInterface,
