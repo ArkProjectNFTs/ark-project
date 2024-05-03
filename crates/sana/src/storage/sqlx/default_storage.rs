@@ -97,7 +97,7 @@ impl MarketplaceSqlxStorage {
         &self,
         contract_address: &str,
     ) -> Result<Option<ContractData>, StorageError> {
-        let q = "SELECT contract_id, updated_timestamp, contract_address, contract_type FROM contract WHERE contract_address = $1";
+        let q = "SELECT contract_address, updated_timestamp, contract_address, contract_type FROM contract WHERE contract_address = $1";
 
         match sqlx::query(q)
             .bind(contract_address.to_string())
@@ -172,7 +172,7 @@ impl Storage for MarketplaceSqlxStorage {
             .is_some()
         {
             let q =
-                "UPDATE token SET updated_timestamp = $1 WHERE contract_id = $2 and token_id = $3";
+                "UPDATE token SET updated_timestamp = $1 WHERE contract_address = $2 and token_id = $3";
             sqlx::query(q)
                 .bind(block_timestamp as i64)
                 .bind(token.contract_address.clone())
@@ -186,7 +186,7 @@ impl Storage for MarketplaceSqlxStorage {
             )));
         }
 
-        let q = "INSERT INTO token (contract_id, token_id, token_id_hex, current_owner, updated_timestamp) VALUES ($1, $2, $3, $4, $5)";
+        let q = "INSERT INTO token (contract_address, token_id, token_id_hex, current_owner, updated_timestamp) VALUES ($1, $2, $3, $4, $5)";
         let _r = sqlx::query(q)
             .bind(token.contract_address.clone())
             .bind(token.token_id.clone())
