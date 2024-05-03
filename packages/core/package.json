@@ -15,13 +15,13 @@
     "test": "jest tests -i"
   },
   "type": "module",
-  "main": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
-  "typings": "./dist/types/index.d.ts",
+  "main": "./dist/esm/src/index.js",
+  "types": "./dist/types/src/index.d.ts",
+  "typings": "./dist/types/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/esm/index.js"
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/esm/src/index.js"
     }
   },
   "dependencies": {

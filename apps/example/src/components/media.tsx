@@ -23,6 +23,7 @@ const Media = ({ url, name }: MediaProps) => {
       Your browser does not support the video tag.
     </video>
   ) : (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={url ? url : "https://via.placeholder.com/350"}
       alt={name ? name : "Image"}
