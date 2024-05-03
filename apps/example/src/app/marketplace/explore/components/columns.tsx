@@ -81,7 +81,7 @@ export const columns: ColumnDef<Token>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Sale" />
     ),
-    cell: ({ row }) => {
+    cell: () => {
       // to do get last sell price when available in the API
       return (
         <div className="w-[100px] items-center flex">
@@ -101,6 +101,7 @@ export const columns: ColumnDef<Token>[] = [
       <DataTableColumnHeader column={column} title="Owner" />
     ),
     cell: ({ row }) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const { address } = useAccount();
       const tokenOwner = row.getValue("owner") as string;
       const owner =

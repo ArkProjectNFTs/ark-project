@@ -11,6 +11,7 @@ import "dotenv/config";
 
 import { stark } from "starknet";
 
+import { createBroker } from "../src/actions/broker/createBroker.js";
 import {
   approveERC20,
   createAccount,
@@ -18,12 +19,14 @@ import {
   fetchOrCreateAccount,
   getOrderStatus,
   OfferV1
-} from "../src";
-import { createBroker } from "../src/actions/broker/createBroker";
-import { config } from "./config";
-import { STARKNET_ETH_ADDRESS, STARKNET_NFT_ADDRESS } from "./constants";
-import { mintERC20 } from "./utils/mintERC20";
-import { whitelistBroker } from "./utils/whitelistBroker";
+} from "../src/index.js";
+import { config } from "./config/index.js";
+import {
+  STARKNET_ETH_ADDRESS,
+  STARKNET_NFT_ADDRESS
+} from "./constants/index.js";
+import { mintERC20 } from "./utils/mintERC20.js";
+import { whitelistBroker } from "./utils/whitelistBroker.js";
 
 /**
  * Creates a offer on the blockchain using provided order details.

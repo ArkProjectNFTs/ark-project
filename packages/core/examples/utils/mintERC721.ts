@@ -2,7 +2,7 @@ import { Account, Call, CallData, ProviderInterface } from "starknet";
 
 import "dotenv/config";
 
-import { STARKNET_NFT_ADDRESS } from "../constants";
+import { STARKNET_NFT_ADDRESS } from "../constants/index.js";
 
 export async function mintERC721(
   provider: ProviderInterface,

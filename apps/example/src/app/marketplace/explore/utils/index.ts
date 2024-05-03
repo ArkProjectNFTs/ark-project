@@ -13,8 +13,7 @@ export function mergeTokenData(
   tokensWithMarketData.forEach((marketToken) => {
     const existingToken = tokenMap.get(marketToken.token_id);
     if (existingToken) {
-      const { token_id, start_date, end_date, ...marketDataWithoutTokenId } =
-        marketToken;
+      const { start_date, end_date, ...marketDataWithoutTokenId } = marketToken;
 
       tokenMap.set(marketToken.token_id, {
         ...existingToken,

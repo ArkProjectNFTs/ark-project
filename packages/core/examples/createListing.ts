@@ -11,6 +11,7 @@ import "dotenv/config";
 
 import { stark } from "starknet";
 
+import { createBroker } from "../src/actions/broker/createBroker.js";
 import {
   approveERC721,
   createAccount,
@@ -18,14 +19,13 @@ import {
   fetchOrCreateAccount,
   getOrderStatus,
   ListingV1
-} from "../src";
-import { createBroker } from "../src/actions/broker/createBroker";
-import { config } from "./config";
-import { STARKNET_NFT_ADDRESS } from "./constants";
-import { getCurrentTokenId } from "./utils/getCurrentTokenId";
-import { getTokenOwner } from "./utils/getTokenOwner";
-import { mintERC721 } from "./utils/mintERC721";
-import { whitelistBroker } from "./utils/whitelistBroker";
+} from "../src/index.js";
+import { config } from "./config/index.js";
+import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
+import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
+import { getTokenOwner } from "./utils/getTokenOwner.js";
+import { mintERC721 } from "./utils/mintERC721.js";
+import { whitelistBroker } from "./utils/whitelistBroker.js";
 
 /**
  * Creates a listing on the blockchain using provided order details.

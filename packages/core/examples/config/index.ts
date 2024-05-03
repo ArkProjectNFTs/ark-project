@@ -1,6 +1,6 @@
 import { ProviderInterface, RpcProvider } from "starknet";
 
-import { createConfig, Network } from "../../src";
+import { createConfig, Network } from "../../src/index.js";
 
 // Initialize the RPC provider with your StarkNet node URL
 const starknetProvider = new RpcProvider({

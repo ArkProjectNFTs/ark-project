@@ -1,11 +1,12 @@
 {
   "extends": "@ark-project/typescript-config/base.json",
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "examples/**/*.ts"
   ],
   "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test-d.ts"
+    "**/*.test.ts",
+    "**/*.test-d.ts"
   ],
   "compilerOptions": {
     "sourceMap": true

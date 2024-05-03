@@ -1,8 +1,9 @@
 "use client";
 
 import { ReactNode } from "react";
+import * as React from "react";
 
-import { Chain, goerli, mainnet, sepolia } from "@starknet-react/chains";
+import { mainnet } from "@starknet-react/chains";
 import {
   argent,
   braavos,
@@ -12,7 +13,7 @@ import {
   voyager
 } from "@starknet-react/core";
 
-function rpc(chain: Chain) {
+function rpc() {
   return {
     nodeUrl: `https://starknet-mainnet.public.blastapi.io/rpc/v0.5`
   };
