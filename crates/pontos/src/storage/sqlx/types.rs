@@ -41,7 +41,7 @@ pub struct BlockData {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct ContractData {
-    pub block_timestamp: i64,
     pub contract_address: String,
+    pub block_timestamp: i64,
     pub contract_type: String,
 }
