@@ -24,7 +24,7 @@ const ELEMENT_MARKETPLACE_EVENT_HEX: &str =
 const VENTORY_MARKETPLACE_EVENT_HEX: &str =
     "0x1b43f40d55364e989b3a8674460f61ba8f327542298ee6240a54ee2bf7b55bb"; // EventListingBought
 
-/// Generic errors for Pontos.
+/// Generic errors for Sana.
 #[derive(Debug)]
 pub enum IndexerError {
     StorageError(StorageError),
@@ -62,15 +62,15 @@ impl fmt::Display for IndexerError {
 
 impl std::error::Error for IndexerError {}
 
-pub struct PontosConfig {
+pub struct SanaConfig {
     pub indexer_version: String,
     pub indexer_identifier: String,
 }
 
-pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {
+pub struct Sana<S: Storage, C: StarknetClient, E: EventHandler> {
     client: Arc<C>,
     event_handler: Arc<E>,
-    config: PontosConfig,
+    config: SanaConfig,
     block_manager: Arc<BlockManager<S>>,
     event_manager: Arc<EventManager<S>>,
     token_manager: Arc<TokenManager<S, C>>,
@@ -78,14 +78,10 @@ pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {
     pending_cache: Arc<AsyncRwLock<PendingBlockData>>,
 }
 
-impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, E> {
-    pub fn new(
-        client: Arc<C>,
-        storage: Arc<S>,
-        event_handler: Arc<E>,
-        config: PontosConfig,
-    ) -> Self {
-        Pontos {
+impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E> {
+    ///
+    pub fn new(client: Arc<C>, storage: Arc<S>, event_handler: Arc<E>, config: SanaConfig) -> Self {
+        Sana {
             config,
             client: Arc::clone(&client),
             event_handler: Arc::clone(&event_handler),
@@ -163,63 +159,11 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         }
     }
 
-    pub async fn index_contract_events(
-        &self,
-        from_block: Option<BlockId>,
-        to_block: Option<BlockId>,
-        contract_address: FieldElement,
-    ) -> IndexerResult<()> {
-        let mut continuation_token: Option<String> = None;
-
-        loop {
-            let result = self
-                .client
-                .fetch_events(
-                    from_block,
-                    to_block,
-                    self.event_manager.keys_selector(),
-                    Some(contract_address),
-                    continuation_token,
-                )
-                .await?;
-
-            let mut current_block_number: u64 = 0;
-            let mut current_block_timestamp: u64 = 0;
-
-            for (block_number, events) in result.events {
-                if current_block_number != block_number {
-                    current_block_number = block_number;
-
-                    match self.client.block_time(BlockId::Number(block_number)).await {
-                        Ok(ts) => {
-                            current_block_timestamp = ts;
-                            self.process_events(events, current_block_timestamp).await?;
-                        }
-                        Err(e) => {
-                            error!("Error while fetching block timestamp: {:?}", e);
-                        }
-                    };
-                } else {
-                    self.process_events(events, current_block_timestamp).await?;
-                }
-            }
-
-            if result.continuation_token.is_none() {
-                break;
-            } else {
-                continuation_token = result.continuation_token;
-                continue;
-            }
-        }
-
-        Ok(())
-    }
-
     /// If "Latest" is used for the `to_block`,
     /// this function will only index the latest block
     /// that is not pending.
     /// If you use this on latest, be sure to don't have any
-    /// other pontos instance running `index_pending` as you may
+    /// other sana instance running `index_pending` as you may
     /// deal with overlaps or at least check db registers first.
     pub async fn index_block_range(
         &self,
@@ -357,6 +301,29 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         }
 
         self.event_handler.on_indexation_range_completed().await;
+
+        Ok(())
+    }
+
+    pub async fn index_pending_block(&self, timestamp: u64) -> IndexerResult<()> {
+        let blocks_events = match self
+            .client
+            .fetch_all_block_events_for_pending_block(timestamp, self.event_manager.keys_selector())
+            .await
+        {
+            Ok(events) => events,
+            Err(e) => {
+                error!("Error while fetching events: {:?}", e);
+                return Err(e.into());
+            }
+        };
+
+        let total_events_count: usize = blocks_events.values().map(|events| events.len()).sum();
+        trace!("Number of events: {:?}", total_events_count);
+
+        for (_, events) in blocks_events {
+            self.process_events(events, timestamp).await?;
+        }
 
         Ok(())
     }
@@ -515,7 +482,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
         let (token_id, token_event) = self
             .event_manager
-            .format_and_register_event(&event, contract_type, block_timestamp)
+            .extract_data_event(&event, contract_type, block_timestamp)
             .await
             .map_err(|err| {
                 error!("Error while registering event {:?}\n{:?}", err, event);
@@ -526,7 +493,15 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             .format_and_register_token(&token_id, &token_event, block_timestamp, event.block_number)
             .await
             .map_err(|err| {
-                error!("Can't format token {:?}\ntevent: {:?}", err, token_event);
+                error!("Can't format token {:?}\n event: {:?}", err, token_event);
+                err
+            })?;
+
+        self.event_manager
+            .format_and_register_event(token_event, block_timestamp)
+            .await
+            .map_err(|err| {
+                error!("Error while registering event {:?}\n{:?}", err, event);
                 err
             })?;
 

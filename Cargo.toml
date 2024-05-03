@@ -21,6 +21,7 @@ members = [
   "crates/pontos",
   "crates/solis",
   "crates/diri",
+  "crates/sana",
 ]
 
 
@@ -28,6 +29,7 @@ members = [
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
 pontos = { path = "./crates/pontos" }
+sana = { path = "./crates/sana" }
 diri = { path = "./crates/diri" }
 async-trait = "0.1.73"
 starknet = "0.10.0"
@@ -46,6 +48,7 @@ tokio.workspace = true
 ark-starknet.workspace = true
 ark-metadata.workspace = true
 pontos = { path = "./crates/pontos", features = ["sqlxdb"] }
+sana = { path = "./crates/sana", features = ["sqlxdb"] }
 diri.workspace = true
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing = "0.1"

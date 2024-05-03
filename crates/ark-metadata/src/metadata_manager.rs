@@ -138,7 +138,10 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     token_metadata.normalized.animation_url = Some(image_uri.to_string());
                     token_metadata.normalized.animation_key = metadata_image.media_key;
                 } else {
-                    token_metadata.normalized.image_key = metadata_image.media_key.clone();
+                    token_metadata
+                        .normalized
+                        .image_key
+                        .clone_from(&metadata_image.media_key);
                     token_metadata.normalized.image_mime_type =
                         Some(metadata_image.file_type.clone());
 

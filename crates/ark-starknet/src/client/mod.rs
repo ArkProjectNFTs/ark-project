@@ -33,41 +33,33 @@ pub enum StarknetClientError {
 #[cfg_attr(any(test, feature = "mock"), automock)]
 #[async_trait]
 pub trait StarknetClient {
-    ///
     fn new(rpc_url: &str) -> Result<Self, StarknetClientError>
     where
         Self: Sized;
 
-    ///
     async fn events_from_tx_receipt(
         &self,
         transaction_hash: FieldElement,
         keys: Option<Vec<Vec<FieldElement>>>,
     ) -> Result<Vec<EmittedEvent>, StarknetClientError>;
 
-    ///
     async fn block_txs_hashes(
         &self,
         block: BlockId,
     ) -> Result<(u64, Vec<FieldElement>), StarknetClientError>;
 
-    ///
     async fn block_id_to_u64(&self, id: &BlockId) -> Result<u64, StarknetClientError>;
 
-    ///
     fn parse_block_range(
         &self,
         from: &str,
         to: &str,
     ) -> Result<(BlockId, BlockId), StarknetClientError>;
 
-    ///
     fn parse_block_id(&self, id: &str) -> Result<BlockId, StarknetClientError>;
 
-    ///
     async fn block_time(&self, block: BlockId) -> Result<u64, StarknetClientError>;
 
-    ///
     async fn block_number(&self) -> Result<u64, StarknetClientError>;
 
     /// On Starknet, a chunk size limits the maximum number of events
@@ -91,6 +83,12 @@ pub trait StarknetClient {
     async fn fetch_all_block_events(
         &self,
         block_id: BlockId,
+        keys: Option<Vec<Vec<FieldElement>>>,
+    ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError>;
+
+    async fn fetch_all_block_events_for_pending_block(
+        &self,
+        timestamp: u64,
         keys: Option<Vec<Vec<FieldElement>>>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, StarknetClientError>;
 
