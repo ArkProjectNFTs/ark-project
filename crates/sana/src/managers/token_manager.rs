@@ -55,7 +55,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         self.storage.register_token(&token, block_timestamp).await?;
 
         if event.event_type == EventType::Mint {
-            let info = TokenMintInfo {
+            let _info = TokenMintInfo {
                 address: event.to_address.clone(),
                 timestamp: event.timestamp,
                 transaction_hash: event.transaction_hash.clone(),
