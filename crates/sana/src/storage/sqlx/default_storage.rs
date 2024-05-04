@@ -50,24 +50,11 @@ impl MarketplaceSqlxStorage {
         contract_address: &str,
         token_id_hex: &str,
     ) -> Result<Option<TokenData>, StorageError> {
-        // get contract_id
-        let contract_data = self.get_contract_by_address(&contract_address).await?;
-
-        let contract_id = match contract_data {
-            Some(data) => data.contract_id,
-            None => {
-                return Err(StorageError::NotFound(format!(
-                    "No contract found for address: {}",
-                    contract_address
-                )))
-            }
-        };
-
         let q =
-            "SELECT contract_id, token_id FROM token WHERE contract_id = $1 AND token_id_hex = $2";
+            "SELECT contract_address, token_id FROM token WHERE contract_address = $1 AND token_id_hex = $2";
 
         match sqlx::query(q)
-            .bind(contract_id)
+            .bind(contract_address)
             .bind(token_id_hex)
             .fetch_all(&self.pool)
             .await
@@ -110,7 +97,7 @@ impl MarketplaceSqlxStorage {
         &self,
         contract_address: &str,
     ) -> Result<Option<ContractData>, StorageError> {
-        let q = "SELECT contract_id, updated_timestamp, contract_address, contract_type FROM contract WHERE contract_address = $1";
+        let q = "SELECT contract_address, updated_timestamp, contract_address, contract_type FROM contract WHERE contract_address = $1";
 
         match sqlx::query(q)
             .bind(contract_address.to_string())
@@ -179,20 +166,16 @@ impl Storage for MarketplaceSqlxStorage {
     ) -> Result<(), StorageError> {
         trace!("Registering token {:?}", token);
 
-        let contract_data = self
-            .get_contract_by_address(&token.contract_address)
-            .await?;
-
         if (self
             .get_token_by_id(&token.contract_address, &token.token_id_hex)
             .await?)
             .is_some()
         {
             let q =
-                "UPDATE token SET updated_timestamp = $1 WHERE contract_id = $2 and token_id = $3";
+                "UPDATE token SET updated_timestamp = $1 WHERE contract_address = $2 and token_id = $3";
             sqlx::query(q)
                 .bind(block_timestamp as i64)
-                .bind(contract_data.unwrap().contract_id as i32)
+                .bind(token.contract_address.clone())
                 .bind(token.token_id.clone())
                 .execute(&self.pool)
                 .await?;
@@ -203,22 +186,15 @@ impl Storage for MarketplaceSqlxStorage {
             )));
         }
 
-        if let Some(contract_data) = contract_data {
-            let q = "INSERT INTO token (contract_id, token_id, token_id_hex, current_owner, updated_timestamp) VALUES ($1, $2, $3, $4, $5)";
-            let _r = sqlx::query(q)
-                .bind(contract_data.contract_id as i32)
-                .bind(token.token_id.clone())
-                .bind(token.token_id_hex.clone())
-                .bind(token.owner.clone())
-                .bind(block_timestamp as i64)
-                .execute(&self.pool)
-                .await?;
-        } else {
-            return Err(StorageError::NotFound(format!(
-                "No contract found for address: {}",
-                token.contract_address
-            )));
-        }
+        let q = "INSERT INTO token (contract_address, token_id, token_id_hex, current_owner, updated_timestamp) VALUES ($1, $2, $3, $4, $5)";
+        let _r = sqlx::query(q)
+            .bind(token.contract_address.clone())
+            .bind(token.token_id.clone())
+            .bind(token.token_id_hex.clone())
+            .bind(token.owner.clone())
+            .bind(block_timestamp as i64)
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
     }
@@ -244,30 +220,19 @@ impl Storage for MarketplaceSqlxStorage {
             )));
         }
 
-        let contract_data = self
-            .get_contract_by_address(&event.nft_contract_address)
-            .await?;
-
-        let contract_id = match contract_data {
-            Some(data) => data.contract_id,
-            None => {
-                return Err(StorageError::NotFound(format!(
-                    "No contract found for address: {}",
-                    event.nft_contract_address
-                )))
-            }
-        };
-
-        let q = "INSERT INTO token_events (order_hash, contract_id, token_id, event_type, timestamp, token_id_hex, transaction_hash, to_address, from_address, ark_event_id)
+        let q = "INSERT INTO token_events (order_hash, contract_address, token_id, event_type, timestamp, token_id_hex, transaction_hash, to_address, from_address, ark_event_id)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
 
-        trace!("Registering transfer event type {:?}", contract_id);
+        trace!(
+            "Registering transfer event type {:?}",
+            &event.nft_contract_address
+        );
 
         let event_type = self.to_title_case(&event.event_type.to_string().to_lowercase());
 
         let _r = sqlx::query(q)
             .bind("")
-            .bind(contract_id as i32)
+            .bind(event.nft_contract_address.clone())
             .bind(event.token_id.clone())
             .bind(event_type)
             .bind(event.timestamp as i64)
@@ -280,11 +245,11 @@ impl Storage for MarketplaceSqlxStorage {
             .await?;
 
         // Update the owner of the token
-        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_id = $3 AND token_id_hex = $4";
+        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND token_id_hex = $4";
         let _r = sqlx::query(update_q)
             .bind(event.to_address.clone())
             .bind(event.timestamp as i64)
-            .bind(contract_id as i32)
+            .bind(event.nft_contract_address.clone())
             .bind(event.token_id_hex.clone())
             .execute(&self.pool)
             .await?;
@@ -313,30 +278,19 @@ impl Storage for MarketplaceSqlxStorage {
             )));
         }
 
-        let contract_data = self
-            .get_contract_by_address(&event.contract_address)
-            .await?;
-
-        let contract_id = match contract_data {
-            Some(data) => data.contract_id,
-            None => {
-                return Err(StorageError::NotFound(format!(
-                    "No contract found for address: {}",
-                    event.contract_address
-                )))
-            }
-        };
-
-        let q = "INSERT INTO token_events (order_hash, contract_id, token_id, event_type, timestamp, token_id_hex, transaction_hash, to_address, from_address, ark_event_id)
+        let q = "INSERT INTO token_events (order_hash, contract_address, token_id, event_type, timestamp, token_id_hex, transaction_hash, to_address, from_address, ark_event_id)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
 
-        trace!("Registering transfer event type {:?}", contract_id);
+        trace!(
+            "Registering transfer event type {:?}",
+            &event.contract_address
+        );
 
         let event_type = self.to_title_case(&event.event_type.to_string().to_lowercase());
 
         let _r = sqlx::query(q)
             .bind("")
-            .bind(contract_id as i32)
+            .bind(event.contract_address.clone())
             .bind(event.token_id.clone())
             .bind(event_type)
             .bind(event.timestamp as i64)
@@ -349,11 +303,11 @@ impl Storage for MarketplaceSqlxStorage {
             .await?;
 
         // Update the owner of the token
-        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_id = $3 AND token_id_hex = $4";
+        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND token_id_hex = $4";
         let _r = sqlx::query(update_q)
             .bind(event.to_address.clone())
             .bind(event.timestamp as i64)
-            .bind(contract_id as i32)
+            .bind(event.contract_address.clone())
             .bind(event.token_id_hex.clone())
             .execute(&self.pool)
             .await?;

@@ -4,7 +4,7 @@
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct TokenData {
-    pub contract_id: i32,
+    pub contract_address: String,
     pub token_id: String,
 }
 
@@ -34,8 +34,7 @@ pub struct BlockData {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct ContractData {
-    pub contract_id: i32,
-    pub updated_timestamp: i64,
     pub contract_address: String,
+    pub updated_timestamp: i64,
     pub contract_type: String,
 }
