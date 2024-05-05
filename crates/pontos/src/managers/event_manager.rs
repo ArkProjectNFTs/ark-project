@@ -1,6 +1,8 @@
 use crate::storage::types::{EventType, TokenSaleEvent, TokenTransferEvent};
 use crate::storage::Storage;
-use crate::{ContractType, VENTORY_MARKETPLACE_EVENT_HEX};
+use crate::{
+    ContractType, VENTORY_MARKETPLACE_EVENT_HEX, VENTORY_MARKETPLACE_OFFER_ACCEPTED_EVENT_HEX,
+};
 use anyhow::{anyhow, Result};
 use ark_starknet::{format::to_hex_str, CairoU256};
 use starknet::core::types::{EmittedEvent, FieldElement};
@@ -35,10 +37,15 @@ impl<S: Storage> EventManager<S> {
         let ventory_nft_marketplace = FieldElement::from_hex_be(VENTORY_MARKETPLACE_EVENT_HEX)
             .expect("Failed to parse ventory nft marketplace hex");
 
+        let ventory_accepted_offer_event =
+            FieldElement::from_hex_be(VENTORY_MARKETPLACE_OFFER_ACCEPTED_EVENT_HEX)
+                .expect("Failed to parse ventory accepted offer selector");
+
         Some(vec![vec![
             TRANSFER_SELECTOR,
             element_nft_marketplace,
             ventory_nft_marketplace,
+            ventory_accepted_offer_event,
         ]])
     }
 
@@ -53,7 +60,7 @@ impl<S: Storage> EventManager<S> {
         Ok(())
     }
 
-    pub async fn format_ventory_sale_event(
+    pub async fn format_ventory_sale_or_accepted_offer_event(
         &self,
         event: &EmittedEvent,
         block_timestamp: u64,
@@ -475,6 +482,7 @@ mod tests {
             selector!("Transfer"),
             FieldElement::from_hex_be(ELEMENT_NFT_MARKETPLACE_HEX).unwrap(),
             FieldElement::from_hex_be(VENTORY_MARKETPLACE_EVENT_HEX).unwrap(),
+            FieldElement::from_hex_be(VENTORY_MARKETPLACE_OFFER_ACCEPTED_EVENT_HEX).unwrap(),
         ]];
 
         // Assert the output

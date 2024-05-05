@@ -24,6 +24,9 @@ const ELEMENT_MARKETPLACE_EVENT_HEX: &str =
 const VENTORY_MARKETPLACE_EVENT_HEX: &str =
     "0x1b43f40d55364e989b3a8674460f61ba8f327542298ee6240a54ee2bf7b55bb"; // EventListingBought
 
+const VENTORY_MARKETPLACE_OFFER_ACCEPTED_EVENT_HEX: &str =
+    "0xe214ba50bf9d17a50de9ab9f433295bd671144999d5258dbc261cbf1e1c2cc"; // EventOfferAccepted
+
 /// Generic errors for Pontos.
 #[derive(Debug)]
 pub enum IndexerError {
@@ -408,12 +411,16 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         Ok(())
     }
 
-    async fn process_ventory_sale(&self, event: EmittedEvent, block_timestamp: u64) -> Result<()> {
-        info!("=> Processing Ventory sale event...");
+    async fn process_ventory_sale_or_accepted_offer_event(
+        &self,
+        event: EmittedEvent,
+        block_timestamp: u64,
+    ) -> Result<()> {
+        info!("Processing Ventory Sale or Accepted Offer event...");
 
         let mut token_sale_event = self
             .event_manager
-            .format_ventory_sale_event(&event, block_timestamp)
+            .format_ventory_sale_or_accepted_offer_event(&event, block_timestamp)
             .await?;
 
         let contract_addr = FieldElement::from_hex_be(
@@ -464,6 +471,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
     ) -> Result<()> {
         let element_sale_event_name = FieldElement::from_hex_be(ELEMENT_MARKETPLACE_EVENT_HEX)?;
         let ventory_sale_event_name = FieldElement::from_hex_be(VENTORY_MARKETPLACE_EVENT_HEX)?;
+        let ventory_offer_accepted_event_name =
+            FieldElement::from_hex_be(VENTORY_MARKETPLACE_OFFER_ACCEPTED_EVENT_HEX)?;
 
         if let Some(event_name) = event.keys.first() {
             info!("Processing marketplace event: {:?}", event_name);
@@ -472,8 +481,11 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 name if name == &element_sale_event_name => {
                     self.process_element_sale(event, block_timestamp).await?
                 }
-                name if name == &ventory_sale_event_name => {
-                    self.process_ventory_sale(event, block_timestamp).await?
+                name if name == &ventory_sale_event_name
+                    || name == &ventory_offer_accepted_event_name =>
+                {
+                    self.process_ventory_sale_or_accepted_offer_event(event, block_timestamp)
+                        .await?
                 }
                 _ => (),
             }
