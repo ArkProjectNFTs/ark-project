@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 1.1.4
+
+### Patch Changes
+
+- 9a718b3: Update examples to support esm imports
+
 ## 1.1.3
 
 ### Patch Changes
