@@ -6918,7 +6918,7 @@ dependencies = [
  "dotenv",
  "futures",
  "log",
- "mockall 0.12.1",
+ "mockall",
  "num-bigint",
  "serde",
  "serde_json",
