@@ -1,15 +1,5 @@
 {
   "extends": "@ark-project/typescript-config/base.json",
-  "compilerOptions": {
-    "target": "esnext",
-    "plugins": [
-      {}
-    ]
-  },
-  "include": [
-    "**/*.ts",
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["**/*.ts", ".eslintrc.cjs"],
+  "exclude": ["node_modules"]
 }

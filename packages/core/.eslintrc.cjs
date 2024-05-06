@@ -5,9 +5,9 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   ignorePatterns: ["generateContracts.cjs"],
   env: {
-    mocha: true
+    jest: true
   },
-  plugins: ["mocha"],
+  plugins: ["jest"],
   parserOptions: {
     project: true
   }
