@@ -7,7 +7,7 @@ trait IFreeMint<T> {
 
 #[starknet::contract]
 mod FreeMintERC20 {
-    use openzeppelin::token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+    use openzeppelin::token::erc20::ERC20Component;
     use starknet::ContractAddress;
     use super::IFreeMint;
 
