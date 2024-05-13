@@ -61,11 +61,11 @@ use super::super::common::setup::{
 fn test_fulfill_expired_offer() {
     let (order_listing, mut order_offer, _, _) = setup_orders();
     let chain_id = 0x534e5f4d41494e;
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     order_offer.start_date = order_listing.start_date;
@@ -96,12 +96,12 @@ fn test_fulfill_expired_offer() {
 #[test]
 #[should_panic(expected: ('OB: order not found',))]
 fn test_fulfill_non_existing_offer() {
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let order_hash: felt252 = 0x0123456.into();
@@ -128,12 +128,12 @@ fn test_fulfill_non_existing_offer() {
 fn test_fulfill_classic_offer() {
     let (order_listing, mut order_offer, _, _) = setup_orders();
 
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let listing_order_hash = order_listing.compute_order_hash();
@@ -167,12 +167,12 @@ fn test_fulfill_classic_offer() {
 
 #[test]
 fn test_fulfill_collection_offer() {
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     let data = array![];
     let data_span = data.span();
@@ -230,12 +230,12 @@ fn test_fulfill_collection_offer() {
 #[test]
 #[should_panic(expected: ('OB: order expired',))]
 fn test_fulfill_expired_collection_offer() {
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let data = array![];
@@ -296,11 +296,11 @@ fn test_fulfill_expired_collection_offer() {
 fn test_double_fulfill_offer() {
     let (order_listing, mut order_offer, _, _) = setup_orders();
     let chain_id = 0x534e5f4d41494e;
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     let listing_order_hash = order_listing.compute_order_hash();

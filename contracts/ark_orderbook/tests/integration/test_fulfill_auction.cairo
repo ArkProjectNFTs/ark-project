@@ -32,12 +32,12 @@ fn test_fulfill_auction() {
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, auction_listing_order.broker_id, dispatcher);
@@ -73,12 +73,12 @@ fn test_fulfill_auction() {
 #[test]
 fn test_fulfill_auction_with_classic_offer() {
     // contract declaration
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
@@ -123,12 +123,12 @@ fn test_fulfill_auction_with_classic_offer() {
 #[test]
 fn test_fulfill_auction_with_future_offer() {
     // contract declaration
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
@@ -171,12 +171,12 @@ fn test_fulfill_auction_with_future_offer() {
 #[test]
 fn test_fulfill_auction_with_expired_offer() {
     // contract declaration
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
@@ -219,12 +219,12 @@ fn test_fulfill_auction_with_expired_offer() {
 #[test]
 fn test_fulfill_expired_auction() {
     // contract declaration
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
@@ -266,12 +266,12 @@ fn test_fulfill_expired_auction() {
 #[test]
 fn test_fulfill_auction_with_offer_for_different_token() {
     // contract declaration
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
@@ -313,12 +313,12 @@ fn test_fulfill_auction_with_offer_for_different_token() {
 #[test]
 fn test_fulfill_auction_with_non_existing_related_order_hash() {
     // contract declaration
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an auction
@@ -352,12 +352,12 @@ fn test_fulfill_auction_with_non_existing_related_order_hash() {
 #[test]
 fn test_fulfill_auction_with_listing_order() {
     // contract declaration
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an auction

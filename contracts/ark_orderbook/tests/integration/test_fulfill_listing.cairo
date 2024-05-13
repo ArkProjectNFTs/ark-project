@@ -25,12 +25,12 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (_, _, _order_hash, _) = setup_listing(start_date, end_date, Option::Some(123));
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
 
     let dispatcher = OrderbookDispatcher { contract_address };
     let fulfiller = 0x00E4769a4d2F7F69C70951A333eBA5c32707Cef3CdfB6B27cA63567f51cdd078
@@ -64,12 +64,12 @@ fn test_create_listing_order_and_fulfill() {
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
@@ -107,12 +107,12 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
@@ -143,12 +143,12 @@ fn test_fulfill_already_fulfilled_order() {
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
 
@@ -181,12 +181,12 @@ fn test_fulfill_expired_order() {
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
     );
-    let contract = declare("orderbook").unwrap();
+    let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
         0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
     ];
-    let (contract_address, _) = contract.deploy(@contract_data).unwrap();
+    let contract_address = contract.deploy(@contract_data).unwrap();
     let dispatcher = OrderbookDispatcher { contract_address };
     whitelist_creator_broker(contract_address, order_listing.broker_id, dispatcher);
     dispatcher.create_order(order: order_listing, signer: signer);
