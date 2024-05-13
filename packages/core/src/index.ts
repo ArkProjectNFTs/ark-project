@@ -10,7 +10,6 @@ export {
   approveERC721,
   increaseERC20
 } from "./actions/contract/index.js";
-export { waitForTransactionBlock } from "./actions/contract/index.js";
 
 export {
   createAuction,

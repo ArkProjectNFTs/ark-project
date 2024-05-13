@@ -1,4 +1,4 @@
-import { BigNumberish, CallData, Contract } from "starknet";
+import { BigNumberish, CairoCustomEnum, CallData, Contract } from "starknet";
 
 import { Config } from "../../createConfig.js";
 
@@ -28,9 +28,10 @@ const getOrderStatus = async (
     order_hash: orderHash
   });
 
-  const orderStatus =
+  const orderStatus: CairoCustomEnum =
     await orderbookContract.get_order_status(order_hash_calldata);
-  return { orderStatus };
+
+  return { orderStatus: orderStatus.activeVariant().toString() };
 };
 
 export { getOrderStatus };

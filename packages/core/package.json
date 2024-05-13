@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@scure/starknet": "^0.3.0",
-    "starknet": "5.27.0"
+    "starknet": "6.6.6"
   },
   "devDependencies": {
     "dotenv": "^16.4.5",

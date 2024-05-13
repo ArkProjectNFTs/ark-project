@@ -6,7 +6,7 @@
 
 import "dotenv/config";
 
-import { shortString, stark } from "starknet";
+import { stark } from "starknet";
 
 import { createBroker } from "../src/actions/broker/createBroker.js";
 import {
@@ -167,5 +167,5 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     orderHash
   });
 
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+  console.log("orderStatus", orderStatusAfter);
 })();

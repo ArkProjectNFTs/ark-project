@@ -1,5 +1,3 @@
-import { shortString } from "starknet";
-
 import "dotenv/config";
 
 import { stark } from "starknet";
@@ -107,8 +105,5 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     orderHash
   });
 
-  console.log(
-    "Auction order status: ",
-    shortString.decodeShortString(orderStatus)
-  );
+  console.log("Auction order status: ", orderStatus);
 })();

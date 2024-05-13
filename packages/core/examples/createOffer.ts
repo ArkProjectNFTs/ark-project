@@ -5,8 +5,6 @@
  * checking the order status
  */
 
-import { shortString } from "starknet";
-
 import "dotenv/config";
 
 import { stark } from "starknet";
@@ -100,5 +98,5 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     orderHash
   });
 
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+  console.log("orderStatus", orderStatusAfter);
 })();

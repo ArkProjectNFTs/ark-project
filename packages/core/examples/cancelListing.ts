@@ -4,7 +4,7 @@
  * submitting a listing order and cancelling it.
  */
 
-import { shortString, stark } from "starknet";
+import { stark } from "starknet";
 
 import {
   createAccount,
@@ -63,7 +63,7 @@ import { mintERC721 } from "./utils/mintERC721.js";
     orderHash
   });
 
-  console.log("orderStatus", shortString.decodeShortString(orderStatusBefore));
+  console.log("orderStatus", orderStatusBefore);
 
   // Define the cancel details
   const cancelInfo = {
@@ -87,5 +87,6 @@ import { mintERC721 } from "./utils/mintERC721.js";
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash
   });
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+
+  console.log("orderStatus", orderStatusAfter);
 })();

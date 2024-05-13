@@ -4,7 +4,7 @@
  * submitting a listing order and cancelling it.
  */
 
-import { shortString, stark } from "starknet";
+import { stark } from "starknet";
 
 import "dotenv/config";
 
@@ -161,5 +161,5 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     orderHash
   });
 
-  console.log("orderStatus", shortString.decodeShortString(orderStatusAfter));
+  console.log("orderStatus", orderStatusAfter);
 })();
