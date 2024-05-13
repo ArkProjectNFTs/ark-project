@@ -67,30 +67,6 @@
     "accounts:deploy": {
       "cache": false,
       "persistent": true
-    },
-    "deploy:v5:solis": {
-      "cache": false,
-      "persistent": true
-    },
-    "deploy:v5:starknet:tokens": {
-      "cache": false,
-      "persistent": true
-    },
-    "deploy:v5:starknet": {
-      "cache": false,
-      "persistent": true
-    },
-    "deploy:v5:starknet:all": {
-      "cache": false,
-      "persistent": true
-    },
-    "accounts:v5:new": {
-      "cache": false,
-      "persistent": true
-    },
-    "accounts:v5:deploy": {
-      "cache": false,
-      "persistent": true
     }
   },
   "globalEnv": [

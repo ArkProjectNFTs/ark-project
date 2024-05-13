@@ -17,7 +17,7 @@ export async function deployOrderBook(
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
 
   console.log(chain_id);
-
+  console.log(adminAddress);
   const deployR = await account.declareAndDeploy({
     contract: artifacts.sierra,
     casm: artifacts.casm,

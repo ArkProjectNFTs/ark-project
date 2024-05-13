@@ -304,39 +304,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       starknet:
-        specifier: 6.5.0
-        version: 6.5.0
-    devDependencies:
-      '@ark-project/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@ark-project/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@types/node':
-        specifier: ^20.10.7
-        version: 20.10.7
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
-
-  packages/deployer-solis:
-    dependencies:
-      commander:
-        specifier: ^11.1.0
-        version: 11.1.0
-      dotenv:
-        specifier: ^16.3.1
-        version: 16.4.5
-      loading-cli:
-        specifier: ^1.1.2
-        version: 1.1.2
-      node-fetch:
-        specifier: ^3.3.2
-        version: 3.3.2
-      starknet:
-        specifier: 5.24.0
-        version: 5.24.0
+        specifier: 6.6.6
+        version: 6.6.6
     devDependencies:
       '@ark-project/eslint-config':
         specifier: workspace:*
@@ -8757,20 +8726,6 @@ packages:
       escape-string-regexp: 2.0.0
     dev: true
 
-  /starknet@5.24.0:
-    resolution: {integrity: sha512-7pqz4hwpI/uSrlKAxPK5Y86d30Dt8Ei/oqfEagzbZieFvFk5lYxlGdtkwsKTdhah40/Zzpq7AJdbrhAyrdN1yQ==}
-    dependencies:
-      '@noble/curves': 1.2.0
-      '@scure/base': 1.1.5
-      '@scure/starknet': 0.3.0
-      isomorphic-fetch: 3.0.0
-      lossless-json: 2.0.11
-      pako: 2.1.0
-      url-join: 4.0.1
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /starknet@5.27.0:
     resolution: {integrity: sha512-pEMzKeaHTej8W0SZjZXCi81fHNIY15wlewYxf8Y6GT1YLClN+TlBeJ0mq+vD4UerTKTAgK794kCfCCeuAizfbQ==}
     dependencies:
@@ -8787,8 +8742,8 @@ packages:
       - encoding
     dev: false
 
-  /starknet@6.5.0:
-    resolution: {integrity: sha512-3W7cpMPE6u1TAjZoT1gfqAtTpSTkAFXwwVbt9IG3oyk8gxBwzpadcMXZ5JRBOv9p06qfnivRkWl2Q1B4tIrSAg==}
+  /starknet@6.6.6:
+    resolution: {integrity: sha512-hriWRdfyvetf7mGqaKS7U7KSuGJ8tANFiY9gLxB7EJSRYvAXUcn2Xg/39QUenH5D4WzX4T4GVrpMw2GLZ+NZKw==}
     dependencies:
       '@noble/curves': 1.3.0
       '@scure/base': 1.1.5
