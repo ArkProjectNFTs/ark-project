@@ -170,6 +170,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         from_block: BlockId,
         to_block: BlockId,
         do_force: bool,
+        chain_id: &str,
     ) -> IndexerResult<()> {
         let mut current_u64 = self.client.block_id_to_u64(&from_block).await?;
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
@@ -270,7 +271,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             );
 
             for (_, events) in blocks_events {
-                self.process_events(events, block_ts).await?;
+                self.process_events(events, block_ts, chain_id).await?;
             }
 
             self.block_manager
@@ -305,7 +306,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         Ok(())
     }
 
-    pub async fn index_pending_block(&self, timestamp: u64) -> IndexerResult<()> {
+    pub async fn index_pending_block(&self, timestamp: u64, chain_id: &str) -> IndexerResult<()> {
         let blocks_events = match self
             .client
             .fetch_all_block_events_for_pending_block(timestamp, self.event_manager.keys_selector())
@@ -322,13 +323,18 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         trace!("Number of events: {:?}", total_events_count);
 
         for (_, events) in blocks_events {
-            self.process_events(events, timestamp).await?;
+            self.process_events(events, timestamp, chain_id).await?;
         }
 
         Ok(())
     }
 
-    async fn process_element_sale(&self, event: EmittedEvent, block_timestamp: u64) -> Result<()> {
+    async fn process_element_sale(
+        &self,
+        event: EmittedEvent,
+        block_timestamp: u64,
+        chain_id: &str,
+    ) -> Result<()> {
         let mut token_sale_event = self
             .event_manager
             .format_element_sale_event(&event, block_timestamp)
@@ -346,7 +352,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             .contract_manager
             .write()
             .await
-            .identify_contract(contract_addr, block_timestamp)
+            .identify_contract(contract_addr, block_timestamp, chain_id)
             .await
         {
             Ok(info) => info,
@@ -375,7 +381,12 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         Ok(())
     }
 
-    async fn process_ventory_sale(&self, event: EmittedEvent, block_timestamp: u64) -> Result<()> {
+    async fn process_ventory_sale(
+        &self,
+        event: EmittedEvent,
+        block_timestamp: u64,
+        chain_id: &str,
+    ) -> Result<()> {
         info!("=> Processing Ventory sale event...");
 
         let mut token_sale_event = self
@@ -395,7 +406,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             .contract_manager
             .write()
             .await
-            .identify_contract(contract_addr, block_timestamp)
+            .identify_contract(contract_addr, block_timestamp, chain_id)
             .await
         {
             Ok(info) => info,
@@ -428,6 +439,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         &self,
         event: EmittedEvent,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> Result<()> {
         let element_sale_event_name = FieldElement::from_hex_be(ELEMENT_MARKETPLACE_EVENT_HEX)?;
         let ventory_sale_event_name = FieldElement::from_hex_be(VENTORY_MARKETPLACE_EVENT_HEX)?;
@@ -437,10 +449,12 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
 
             match event_name {
                 name if name == &element_sale_event_name => {
-                    self.process_element_sale(event, block_timestamp).await?
+                    self.process_element_sale(event, block_timestamp, chain_id)
+                        .await?
                 }
                 name if name == &ventory_sale_event_name => {
-                    self.process_ventory_sale(event, block_timestamp).await?
+                    self.process_ventory_sale(event, block_timestamp, chain_id)
+                        .await?
                 }
                 _ => (),
             }
@@ -454,13 +468,14 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         event: EmittedEvent,
         block_timestamp: u64,
         contract_address: FieldElement,
+        chain_id: &str,
     ) -> Result<()> {
         let contract_address_hex = to_hex_str(&contract_address);
         let contract_type = self
             .contract_manager
             .write()
             .await
-            .identify_contract(contract_address, block_timestamp)
+            .identify_contract(contract_address, block_timestamp, chain_id)
             .await
             .map_err(|e| {
                 error!(
@@ -498,7 +513,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             })?;
 
         self.event_manager
-            .format_and_register_event(token_event, block_timestamp)
+            .format_and_register_event(token_event)
             .await
             .map_err(|err| {
                 error!("Error while registering event {:?}\n{:?}", err, event);
@@ -513,6 +528,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         &self,
         events: Vec<EmittedEvent>,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> IndexerResult<()> {
         let marketplace_contracts = [
             FieldElement::from_hex_be(
@@ -530,11 +546,14 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             let is_marketplace_event = marketplace_contracts.contains(&contract_address);
 
             if is_marketplace_event {
-                if let Err(e) = self.process_marketplace_event(e, block_timestamp).await {
+                if let Err(e) = self
+                    .process_marketplace_event(e, block_timestamp, chain_id)
+                    .await
+                {
                     error!("Error while processing marketplace event: {:?}", e);
                 }
             } else if let Err(e) = self
-                .process_nft_transfers(e, block_timestamp, contract_address)
+                .process_nft_transfers(e, block_timestamp, contract_address, chain_id)
                 .await
             {
                 error!("Error while processing NFT transfers: {:?}", e);

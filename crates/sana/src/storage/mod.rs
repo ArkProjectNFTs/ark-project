@@ -35,11 +35,8 @@ pub trait Storage {
         block_timestamp: u64,
     ) -> Result<(), StorageError>;
 
-    async fn register_transfer_event(
-        &self,
-        event: &TokenTransferEvent,
-        block_timestamp: u64,
-    ) -> Result<(), StorageError>;
+    async fn register_transfer_event(&self, event: &TokenTransferEvent)
+        -> Result<(), StorageError>;
 
     async fn get_contract_type(&self, contract_address: &str)
         -> Result<ContractType, StorageError>;

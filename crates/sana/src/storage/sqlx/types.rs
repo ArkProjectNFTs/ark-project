@@ -10,6 +10,7 @@ pub struct TokenData {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct EventData {
+    pub token_event_id: String,
     pub block_timestamp: i64,
     pub contract_address: String,
     pub from_address: String,
@@ -17,9 +18,7 @@ pub struct EventData {
     pub transaction_hash: String,
     pub token_id: String,
     pub token_id_hex: String,
-    pub contract_type: String,
     pub event_type: String,
-    pub event_id: String,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
