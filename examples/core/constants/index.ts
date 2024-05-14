@@ -14,7 +14,7 @@ type ContractConfig = {
 };
 
 // Read contract.json
-const contractJsonPath = path.join(__dirname, "..", "../../../contracts.json");
+const contractJsonPath = path.join(__dirname, "..", "../../contracts.json");
 const contractJson = fs.readFileSync(contractJsonPath, "utf8");
 const contracts: ContractConfig = JSON.parse(contractJson);
 

@@ -9,15 +9,16 @@ import "dotenv/config";
 
 import { stark } from "starknet";
 
-import { createBroker } from "../src/actions/broker/createBroker.js";
 import {
   approveERC20,
   createAccount,
+  createBroker,
   createOffer,
   fetchOrCreateAccount,
   getOrderStatus,
   OfferV1
-} from "../src/index.js";
+} from "@ark-project/core";
+
 import { config } from "./config/index.js";
 import {
   STARKNET_ETH_ADDRESS,

@@ -1,4 +1,5 @@
-import { createBroker } from "../src/actions/broker/createBroker.js";
+import { createBroker } from "@ark-project/core";
+
 import { config } from "./config/index.js";
 
 const brokerID = process.env.BROKER_ID as string;

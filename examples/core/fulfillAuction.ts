@@ -2,15 +2,19 @@ import "dotenv/config";
 
 import { stark } from "starknet";
 
-import { createBroker } from "../src/actions/broker/createBroker.js";
 import {
   approveERC721,
   AuctionV1,
-  cancelOrder,
   createAuction,
+  createBroker,
+  createOffer,
   fetchOrCreateAccount,
-  getOrderStatus
-} from "../src/index.js";
+  fulfillAuction,
+  FulfillAuctionInfo,
+  getOrderStatus,
+  OfferV1
+} from "@ark-project/core";
+
 import { config } from "./config/index.js";
 import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
@@ -21,13 +25,20 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Create test accounts
   const adminAccount = await fetchOrCreateAccount(
     config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+    process.env.SOLIS_ADMIN_ADDRESS,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY
   );
+
   const sellerAccount = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_ACCOUNT1_ADDRESS,
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  );
+
+  const buyerAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT2_ADDRESS,
+    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
   );
 
   // Create and whitelist broker
@@ -60,22 +71,38 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     order
   });
 
-  // Cancel auction
-  const cancelInfo = {
-    orderHash: orderHash,
-    tokenAddress: order.tokenAddress,
-    tokenId: order.tokenId
+  // Create offer
+  const offer: OfferV1 = {
+    brokerId,
+    tokenAddress: STARKNET_NFT_ADDRESS,
+    tokenId,
+    startAmount: 1
   };
 
-  cancelOrder(config, {
+  const offerOrderHash = await createOffer(config, {
+    starknetAccount: buyerAccount,
+    arkAccount: adminAccount,
+    offer
+  });
+
+  // Fulfill auction
+  const fulfillAuctionInfo: FulfillAuctionInfo = {
+    orderHash,
+    relatedOrderHash: offerOrderHash,
+    tokenAddress: order.tokenAddress,
+    tokenId,
+    brokerId
+  };
+
+  await fulfillAuction(config, {
     starknetAccount: sellerAccount,
     arkAccount: adminAccount,
-    cancelInfo
+    fulfillAuctionInfo
   });
 
   await new Promise((resolve) => setTimeout(resolve, 10_000));
 
-  const { orderStatus } = await getOrderStatus(config, {
+  const { orderStatus: orderStatus } = await getOrderStatus(config, {
     orderHash
   });
 

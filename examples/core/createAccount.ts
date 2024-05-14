@@ -1,6 +1,6 @@
 import { RpcProvider } from "starknet";
 
-import { createAccount } from "../src/actions/account/account.js";
+import { createAccount } from "@ark-project/core";
 
 // Initialize the RPC provider with the katana node URL for starknet
 const arkProvider = new RpcProvider({

@@ -1,6 +1,6 @@
 import { ProviderInterface, RpcProvider } from "starknet";
 
-import { createConfig, Network } from "../../src/index.js";
+import { createConfig, Network } from "@ark-project/core";
 
 // Initialize the RPC provider with your StarkNet node URL
 const starknetProvider = new RpcProvider({

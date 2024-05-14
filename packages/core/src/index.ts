@@ -21,6 +21,8 @@ export {
   fulfillOffer
 } from "./actions/order/index.js";
 
+export { createBroker } from "./actions/broker/createBroker.js";
+
 export {
   getOrderHash,
   getOrder,
@@ -34,6 +36,7 @@ export type {
   ListingV1,
   OfferV1,
   CancelInfo,
-  RouteType
+  RouteType,
+  FulfillAuctionInfo
 } from "./types/index.js";
 export type { Config, Network, ConfigParameters } from "./createConfig.js";

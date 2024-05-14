@@ -4,21 +4,22 @@
  * submitting a listing order and cancelling it.
  */
 
-import "dotenv/config";
-
 import { stark } from "starknet";
 
-import { createBroker } from "../src/actions/broker/createBroker.js";
+import "dotenv/config";
+
 import {
   approveERC20,
   approveERC721,
   createAccount,
-  createListing,
+  createBroker,
+  createOffer,
   fetchOrCreateAccount,
-  fulfillListing,
+  fulfillOffer,
   getOrderStatus,
-  ListingV1
-} from "../src/index.js";
+  OfferV1
+} from "@ark-project/core";
+
 import { config } from "./config/index.js";
 import {
   STARKNET_ETH_ADDRESS,
@@ -33,6 +34,8 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
  * Creates a listing on the blockchain using provided order details.
  */
 (async () => {
+  console.log(`=> Getting config...`);
+  const { arkProvider, starknetProvider } = config;
   const brokerId = stark.randomAddress();
   await createBroker(config, { brokerID: brokerId });
 
@@ -42,32 +45,25 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
   );
 
-  console.log(`=> Whitelisting broker ${brokerId}`);
   await whitelistBroker(config, solisAdminAccount, brokerId);
 
-  console.log(`=> Getting config...`);
-  const { arkProvider, starknetProvider } = config;
-  console.log(`=> Creating ark account`);
+  console.log(`=> Creating account`);
   // Create a new account for the listing using the provider
   const { account: arkAccount } = await createAccount(arkProvider);
 
   console.log(
-    `=> Fetching or creating offerer starknet account, for test purpose only`
+    `=> Fetching or creating fulfiller starknet account, for test purpose only`
   );
-  const starknetOffererAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
-
-  console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
-  const transaction_hash = await mintERC721(
+  const starknetFulfillerAccount = await fetchOrCreateAccount(
     starknetProvider,
-    starknetOffererAccount
+    process.env.STARKNET_ACCOUNT2_ADDRESS,
+    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
   );
 
-  console.log(transaction_hash);
-
+  console.log(
+    `=> Minting token at contract address: ${STARKNET_NFT_ADDRESS} with fulfiller account: ${starknetFulfillerAccount.address}`
+  );
+  await mintERC721(starknetProvider, starknetFulfillerAccount);
   if (config.starknetNetwork !== "dev") {
     console.log(
       "=> Waiting for 5 minutes for transaction complete on goerli..."
@@ -78,79 +74,78 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   console.log("=> Token minted with tokenId: ", tokenId);
 
-  console.log(`=> Approving for all`);
-  await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
-    starknetAccount: starknetOffererAccount,
-    tokenId
-  });
-
-  console.log(`=> Creating order`);
+  console.log(`=> Creating offer for tokenId: ${tokenId}`);
   // Define the order details
-  const order: ListingV1 = {
+  const offer: OfferV1 = {
     brokerId, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: 100000000000000000 // The starting amount for the order
   };
 
-  console.log("=> Creating listing...");
-  // Create the listing on the arkchain using the order details
-  const orderHash = await createListing(config, {
-    starknetAccount: starknetOffererAccount,
-    arkAccount,
-    order
-  });
-
-  if (config.starknetNetwork !== "dev") {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  }
   console.log(
-    `=> Fetching or creating fulfiller starknet account, for test purpose only`
+    `=> Fetching or creating offerer starknet account, for test purpose only`
   );
-  const starknetFulfillerAccount = await fetchOrCreateAccount(
-    starknetProvider,
-    process.env.STARKNET_ACCOUNT2_ADDRESS,
-    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
+  const starknetOffererAccount = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
   if (process.env.STARKNET_NETWORK_ID === "dev") {
     console.log("=> Minting ERC20...");
     await mintERC20(
       starknetProvider,
-      starknetFulfillerAccount,
-      order.startAmount
+      starknetOffererAccount,
+      offer.startAmount
     );
   }
 
   console.log(
-    `=> Approving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
+    `=> Approuving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetOffererAccount.address} to ArkProject executor`
   );
-
   await approveERC20(config, {
-    starknetAccount: starknetFulfillerAccount,
+    starknetAccount: starknetOffererAccount,
     contractAddress: STARKNET_ETH_ADDRESS,
-    amount: order.startAmount
+    amount: offer.startAmount
+  });
+
+  console.log("=> Creating offer...");
+  // Create the listing on the arkchain using the order details
+  const orderHash = await createOffer(config, {
+    starknetAccount: starknetOffererAccount,
+    arkAccount,
+    offer
+  });
+
+  console.log(`=> Approving collection ${offer.tokenId}`);
+  await approveERC721(config, {
+    contractAddress: STARKNET_NFT_ADDRESS,
+    starknetAccount: starknetFulfillerAccount,
+    tokenId
   });
 
   if (config.starknetNetwork !== "dev") {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log(
+      "=> Waiting for 5 minutes for transaction complete on goerli..."
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   }
-  console.log("tokenId", tokenId);
+
   // Define the fulfill details
-  const fulfillListingInfo = {
+  const fulfillOfferInfo = {
     orderHash: orderHash,
-    tokenAddress: order.tokenAddress,
-    tokenId,
+    tokenAddress: offer.tokenAddress,
+    tokenId: offer.tokenId,
     brokerId
   };
 
-  console.log(`=> Fulfilling listing by ${starknetFulfillerAccount.address}`);
+  console.log(`=> Fulfilling offer by ${starknetFulfillerAccount.address}`);
   // fulfill the order
-  await fulfillListing(config, {
+  await fulfillOffer(config, {
     starknetAccount: starknetFulfillerAccount,
     arkAccount,
-    fulfillListingInfo
+    fulfillOfferInfo
   });
 
   if (config.starknetNetwork !== "dev") {
@@ -159,7 +154,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     );
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   } else {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 10000));
   }
 
   console.log("=> Fetching order status...");

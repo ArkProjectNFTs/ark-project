@@ -1,0 +1,20 @@
+{
+  "name": "@ark-project/core-examples",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "run:example": "bun run"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@ark-project/core": "workspace:*",
+    "dotenv": "^16.4.5",
+    "starknet": "6.6.6",
+    "ts-node": "^10.9.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

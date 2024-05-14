@@ -38,5 +38,10 @@
     "dotenv-cli": "^7.3.0",
     "glob": "^10.3.10",
     "prettier-plugin-sort-imports": "^1.8.1"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   }
 }

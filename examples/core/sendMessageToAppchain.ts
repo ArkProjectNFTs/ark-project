@@ -2,7 +2,8 @@ import { Account, Call, CallData, ProviderInterface } from "starknet";
 
 import "dotenv/config";
 
-import { fetchOrCreateAccount } from "../src/index.js";
+import { fetchOrCreateAccount } from "@ark-project/core";
+
 import { config } from "./config/index.js";
 
 export async function executeMessageFromAppchain(
