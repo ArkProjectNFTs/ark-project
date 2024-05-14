@@ -42,13 +42,10 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   console.log(`=> Whitelisting broker ${brokerId}`);
   await whitelistBroker(config, solisAdminAccount, brokerId);
 
-  console.log(`=> Creating account`);
-  // Create a new account for the listing using the provider
-  const { account: arkAccount } = await createAccount(config.arkProvider);
-
   console.log(
     `=> Fetching or creating offerer starknet account, for test purpose only`
   );
+
   const starknetOffererAccount = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_ACCOUNT1_ADDRESS,
@@ -61,13 +58,6 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   const owner = await getTokenOwner(config, STARKNET_NFT_ADDRESS, tokenId);
   const ownerHex = "0x" + owner.toString(16).padStart(64, "0");
   console.log("Owner of tokenId", tokenId, "is", ownerHex);
-
-  console.log(`=> Approving for all`);
-  await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
-    starknetAccount: starknetOffererAccount,
-    tokenId
-  });
 
   console.log(`=> Creating order`);
   // Define the order details
@@ -82,10 +72,13 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Create the listing on the arkchain using the order details
   const orderHash = await createListing(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
-    order
+    order,
+    approveInfo: {
+      tokenAddress: order.tokenAddress,
+      tokenId: order.tokenId
+    }
   });
-
+  console.log("orderHash", orderHash);
   console.log("=> Fetching order status...");
   const { orderStatus } = await getOrderStatus(config, {
     orderHash

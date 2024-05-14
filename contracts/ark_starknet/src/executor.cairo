@@ -18,7 +18,7 @@ mod executor {
     use starknet::{ContractAddress, ClassHash};
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
-        FulfillOrderInfo
+        FulfillOrderInfo, CancelOrderInfo, CancelInfo,
     };
     use ark_common::protocol::order_v1::OrderV1;
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
@@ -155,6 +155,26 @@ mod executor {
             );
 
             self.admin_address.write(admin_address);
+        }
+
+        fn cancel_order(ref self: ContractState, cancelInfo: CancelInfo) {
+            let messaging = IAppchainMessagingDispatcher {
+                contract_address: self.messaging_address.read()
+            };
+
+            let vinfo = CancelOrderInfo {
+                cancelInfo: cancelInfo.clone()
+            };
+
+            let mut vinfo_buf = array![];
+            Serde::serialize(@vinfo, ref vinfo_buf);
+
+            messaging
+                .send_message_to_appchain(
+                    self.arkchain_orderbook_address.read(),
+                    selector!("cancel_order_from_l2"),
+                    vinfo_buf.span(),
+                );
         }
 
         fn create_order(ref self: ContractState, order: OrderV1) {

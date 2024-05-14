@@ -260,6 +260,11 @@ struct CreateOrderInfo {
 }
 
 #[derive(Serde, Copy, Drop)]
+struct CancelOrderInfo {
+    cancelInfo: CancelInfo
+}
+
+#[derive(Serde, Copy, Drop)]
 struct FulfillOrderInfo {
     fulfillInfo: FulfillInfo
 }

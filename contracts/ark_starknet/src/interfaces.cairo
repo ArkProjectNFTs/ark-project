@@ -2,11 +2,12 @@
 use starknet::{ClassHash, ContractAddress};
 use ark_common::protocol::order_types::ExecutionInfo;
 use ark_common::protocol::order_types::OrderV1;
-use ark_common::protocol::order_types::{FulfillInfo};
+use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
 
 #[starknet::interface]
 trait IExecutor<T> {
     fn fulfill_order(ref self: T, fulfillInfo: FulfillInfo);
+    fn cancel_order(ref self: T, cancelInfo: CancelInfo);
     fn create_order(ref self: T, order: OrderV1);
     fn execute_order(ref self: T, execution_info: ExecutionInfo);
     fn update_admin_address(ref self: T, admin_address: ContractAddress);

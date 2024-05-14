@@ -1,25 +1,29 @@
 import {
-  Account,
   AccountInterface,
   cairo,
   CairoOption,
   CairoOptionVariant,
+  CallData,
   Uint256
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { ListingV1, OrderV1, RouteType } from "../../types/index.js";
-import { createOrder } from "./_create.js";
+import {
+  ApproveErc721Info,
+  ListingV1,
+  OrderV1,
+  RouteType
+} from "../../types/index.js";
+import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
 interface CreateListingParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   order: ListingV1;
-  owner?: string;
+  approveInfo: ApproveErc721Info;
 }
 
 /**
- * Creates a listing on the Arkchain.
+ * Creates a listing on the ArkProject.
  *
  * This function takes a configuration object and listing parameters, builds a complete OrderV1 object
  * with default values for unspecified fields, compiles the order data, signs it, and then executes
@@ -36,8 +40,7 @@ const createListing = async (
   config: Config,
   parameters: CreateListingParameters
 ) => {
-  const { starknetAccount, arkAccount, order: baseOrder, owner } = parameters;
-
+  const { starknetAccount, order: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
@@ -64,12 +67,29 @@ const createListing = async (
     additionalData: []
   };
 
-  const orderHash = await createOrder(config, {
-    starknetAccount,
-    arkAccount,
-    order,
-    owner
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: approveInfo.tokenAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        to: config.starknetContracts.executor,
+        token_id: cairo.uint256(approveInfo.tokenId)
+      })
+    },
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "create_order",
+      calldata: CallData.compile({
+        order: order
+      })
+    }
+  ]);
+
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
   });
+
+  const orderHash = getOrderHashFromOrderV1(order);
 
   return orderHash;
 };

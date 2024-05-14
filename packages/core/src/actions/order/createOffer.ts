@@ -1,51 +1,53 @@
 import {
-  Account,
   AccountInterface,
   cairo,
   CairoOption,
   CairoOptionVariant,
+  CallData,
   Uint256
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { OfferV1, OrderV1, RouteType } from "../../types/index.js";
-import { createOrder } from "./_create.js";
+import {
+  ApproveErc20Info,
+  OfferV1,
+  OrderV1,
+  RouteType
+} from "../../types/index.js";
+import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
-interface CreateOfferParameters {
+interface CreateListingParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   offer: OfferV1;
-  owner?: string;
+  approveInfo: ApproveErc20Info;
 }
 
 /**
- * Creates an offer on the Arkchain.
+ * Creates a listing on the ArkProject.
  *
- * Similar to createListing, this function prepares and executes a transaction to create an offer.
- * It handles the compilation and signing of the order data and executes the transaction on the Arkchain.
+ * This function takes a configuration object and listing parameters, builds a complete OrderV1 object
+ * with default values for unspecified fields, compiles the order data, signs it, and then executes
+ * the transaction to create a listing on the Arkchain using the specified Starknet and Arkchain accounts.
  *
- * @param {Config} config - The core SDK configuration, containing network and contract details.
- * @param {CreateOfferParameters} parameters - The parameters for the offer, including accounts,
- * base order information, and an optional owner address.
+ * @param {Config} config - The core SDK config, including network and contract information.
+ * @param {CreateListingParameters} parameters - The parameters for the listing, including Starknet account,
+ * Arkchain account, base order details, and an optional owner address.
  *
- * @returns {Promise<string>} A promise that resolves with the hash of the created offer.
+ * @returns {Promise<string>} A promise that resolves with the hash of the created order.
  *
  */
 const createOffer = async (
   config: Config,
-  parameters: CreateOfferParameters
+  parameters: CreateListingParameters
 ) => {
-  const { starknetAccount, arkAccount, offer: baseOrder, owner } = parameters;
+  const { starknetAccount, offer: baseOrder, approveInfo } = parameters;
 
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
-  // TODO: this is a hot fix, optional date should be
-  // a cairo option and set at contract level to prevent
-  // date in the past
-  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 30);
+  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
   const chainId = await config.starknetProvider.getChainId();
-  // Construct the OrderV1 object from the base order and additional default values
+
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
     currencyAddress: config.starknetContracts.eth,
@@ -64,15 +66,33 @@ const createOffer = async (
     startDate: startDate,
     endDate: endDate,
     brokerId: baseOrder.brokerId,
-    additionalData: [45]
+    additionalData: []
   };
 
-  const orderHash = await createOrder(config, {
-    starknetAccount,
-    arkAccount,
-    order,
-    owner
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: approveInfo.currencyAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        spender: config.starknetContracts.executor,
+        amount: cairo.uint256(approveInfo.amount)
+      })
+    },
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "create_order",
+      calldata: CallData.compile({
+        order: order
+      })
+    }
+  ]);
+
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
   });
+
+  const orderHash = getOrderHashFromOrderV1(order);
+
   return orderHash;
 };
 

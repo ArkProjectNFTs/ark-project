@@ -301,6 +301,13 @@ mod orderbook {
     }
 
     #[l1_handler]
+    fn cancel_order_from_l2(
+        ref self: ContractState, _from_address: felt252, cancelInfo: CancelInfo
+    ) {
+        self._cancel_order(cancelInfo);
+    }
+
+    #[l1_handler]
     fn fulfill_order_from_l2(
         ref self: ContractState, _from_address: felt252, fulfillInfo: FulfillInfo
     ) {
@@ -529,6 +536,42 @@ mod orderbook {
     // *************************************************************************
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
+        // TODO: kwiss this code repeat itself with the public function, we should refactor it.
+        fn _cancel_order(ref self: ContractState, cancel_info: CancelInfo) {
+            let order_hash = cancel_info.order_hash;
+            let order_option = order_read::<OrderV1>(order_hash);
+            assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
+            let order = order_option.unwrap();
+            assert(order.offerer == cancel_info.canceller, 'not the same offerrer');
+            match order_status_read(order_hash) {
+                Option::Some(s) => s,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+            let block_ts = starknet::get_block_timestamp();
+            match order_type_read(order_hash) {
+                Option::Some(order_type) => {
+                    if order_type == OrderType::Auction {
+                        let auction_token_hash = order.compute_token_hash();
+                        let (_, auction_end_date, _) = self.auctions.read(auction_token_hash);
+                        assert(
+                            block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
+                        );
+                        self.auctions.write(auction_token_hash, (0, 0, 0));
+                    } else {
+                        assert(block_ts < order.end_date, orderbook_errors::ORDER_IS_EXPIRED);
+                        if order_type == OrderType::Listing {
+                            self.token_listings.write(order.compute_token_hash(), 0);
+                        }
+                    }
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+
+            // Cancel order
+            order_status_write(order_hash, OrderStatus::CancelledUser);
+            self.emit(OrderCancelled { order_hash, reason: OrderStatus::CancelledUser.into() });
+        }
+
         /// Submits and places an order to the orderbook if the order is valid.
         fn _create_order(ref self: ContractState, order: OrderV1) {
             let block_ts = starknet::get_block_timestamp();
