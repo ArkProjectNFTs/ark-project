@@ -32,11 +32,17 @@ impl std::error::Error for StorageError {}
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EventType {
+    Listing,
+    CollectionOffer,
+    Offer,
+    Auction,
+    Fulfill,
+    Cancelled,
+    Executed,
+    Sale,
     Mint,
     Burn,
     Transfer,
-    Uninitialized,
-    Sale,
 }
 
 impl fmt::Display for EventType {
@@ -45,8 +51,14 @@ impl fmt::Display for EventType {
             EventType::Mint => write!(f, "MINT"),
             EventType::Burn => write!(f, "BURN"),
             EventType::Transfer => write!(f, "TRANSFER"),
-            EventType::Uninitialized => write!(f, "UNINITIALIZED"),
             EventType::Sale => write!(f, "SALE"),
+            EventType::Auction => write!(f, "AUCTION"),
+            EventType::Listing => write!(f, "LISTING"),
+            EventType::CollectionOffer => write!(f, "COLLECTION_OFFER"),
+            EventType::Offer => write!(f, "OFFER"),
+            EventType::Fulfill => write!(f, "FULFILL"),
+            EventType::Cancelled => write!(f, "CANCELLED"),
+            EventType::Executed => write!(f, "EXECUTED"),
         }
     }
 }
@@ -59,8 +71,14 @@ impl FromStr for EventType {
             "MINT" => Ok(EventType::Mint),
             "BURN" => Ok(EventType::Burn),
             "TRANSFER" => Ok(EventType::Transfer),
-            "UNINITIALIZED" => Ok(EventType::Uninitialized),
             "SALE" => Ok(EventType::Sale),
+            "AUCTION" => Ok(EventType::Auction),
+            "LISTING" => Ok(EventType::Listing),
+            "COLLECTION_OFFER" => Ok(EventType::CollectionOffer),
+            "OFFER" => Ok(EventType::Offer),
+            "FULFILL" => Ok(EventType::Fulfill),
+            "CANCELLED" => Ok(EventType::Cancelled),
+            "EXECUTED" => Ok(EventType::Executed),
             _ => Err(()),
         }
     }
@@ -74,7 +92,7 @@ impl Serialize for TokenEvent {
         let fields_to_serialize = match self {
             TokenEvent::Transfer(event) => {
                 let mut map = HashMap::new();
-                map.insert("timestamp", event.timestamp.to_string());
+                map.insert("token_event_id", event.token_event_id.clone());
                 map.insert("from_address", event.from_address.clone());
                 map.insert("to_address", event.to_address.clone());
                 map.insert("contract_address", event.contract_address.clone());
@@ -83,7 +101,7 @@ impl Serialize for TokenEvent {
                 map.insert("token_id_hex", event.token_id_hex.clone());
                 map.insert("contract_type", event.contract_type.clone());
                 map.insert("event_type", "transfer".to_string());
-                map.insert("event_id", event.event_id.clone());
+                map.insert("block_timestamp", event.block_timestamp.to_string());
                 map.insert(
                     "block_number",
                     event
@@ -95,10 +113,10 @@ impl Serialize for TokenEvent {
             }
             TokenEvent::Sale(event) => {
                 let mut map = HashMap::new();
-                map.insert("event_id", event.token_id_hex.clone());
+                map.insert("token_event_id", event.token_id_hex.clone());
                 map.insert("event_type", "sale".to_string());
                 map.insert("from_address", event.from_address.clone());
-                map.insert("timestamp", event.timestamp.to_string());
+                map.insert("block_timestamp", event.block_timestamp.to_string());
                 map.insert("to_address", event.to_address.clone());
                 map.insert("nft_contract_address", event.nft_contract_address.clone());
                 map.insert(
@@ -139,7 +157,8 @@ pub enum TokenEvent {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TokenTransferEvent {
-    pub timestamp: u64,
+    pub token_event_id: String,
+    pub block_timestamp: u64,
     pub from_address: String,
     pub to_address: String,
     pub contract_address: String,
@@ -147,15 +166,14 @@ pub struct TokenTransferEvent {
     pub transaction_hash: String,
     pub token_id: String,
     pub token_id_hex: String,
-    pub event_type: EventType,
-    pub event_id: String,
+    pub event_type: Option<EventType>,
     pub block_number: Option<u64>,
     pub updated_at: Option<u64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TokenSaleEvent {
-    pub timestamp: u64,
+    pub token_event_id: String,
     pub from_address: String,
     pub to_address: String,
     pub nft_contract_address: String,
@@ -166,7 +184,7 @@ pub struct TokenSaleEvent {
     pub token_id: String,
     pub token_id_hex: String,
     pub event_type: EventType,
-    pub event_id: String,
+    pub block_timestamp: u64,
     pub block_number: Option<u64>,
     pub updated_at: Option<u64>,
     pub quantity: u64,
@@ -177,7 +195,8 @@ pub struct TokenSaleEvent {
 impl Default for TokenTransferEvent {
     fn default() -> Self {
         TokenTransferEvent {
-            timestamp: 0,
+            token_event_id: "0".to_string(),
+            block_timestamp: 0,
             from_address: String::new(),
             to_address: String::new(),
             contract_address: String::new(),
@@ -185,8 +204,7 @@ impl Default for TokenTransferEvent {
             transaction_hash: String::new(),
             token_id: String::new(),
             token_id_hex: String::new(),
-            event_type: EventType::Uninitialized,
-            event_id: "0".to_string(),
+            event_type: None,
             block_number: None,
             updated_at: None,
         }
@@ -204,7 +222,7 @@ pub struct TokenInfo {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct TokenMintInfo {
     pub address: String,
-    pub timestamp: u64,
+    pub block_timestamp: u64,
     pub transaction_hash: String,
     pub block_number: Option<u64>,
 }
@@ -274,7 +292,7 @@ pub struct BlockIndexing {
 pub struct BlockInfo {
     pub indexer_version: String,
     pub indexer_identifier: String,
-    pub status: BlockIndexingStatus,
+    pub block_status: BlockIndexingStatus,
     pub block_number: u64,
 }
 
@@ -310,6 +328,7 @@ impl FromStr for ContractType {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct ContractInfo {
+    pub chain_id: String,
     pub contract_address: String,
     pub contract_type: String,
     pub name: Option<String>,
@@ -325,7 +344,7 @@ mod tests {
     #[test]
     fn test_token_event_transfer_serialization() {
         let event = TokenEvent::Transfer(TokenTransferEvent {
-            timestamp: 1625097600,
+            block_timestamp: 1625097600,
             from_address: "0xfrom".to_string(),
             to_address: "0xto".to_string(),
             contract_address: "0xcontract".to_string(),
@@ -333,8 +352,8 @@ mod tests {
             transaction_hash: "0xhash".to_string(),
             token_id: "123".to_string(),
             token_id_hex: "0x123".to_string(),
-            event_type: EventType::Transfer,
-            event_id: "evt123".to_string(),
+            event_type: Some(EventType::Transfer),
+            token_event_id: "evt123".to_string(),
             block_number: Some(123),
             updated_at: Some(1625101200),
         });
@@ -342,9 +361,10 @@ mod tests {
         let serialized = serde_json::to_string(&event).expect("Failed to serialize TokenEvent");
 
         let expected_json = json!({
+            "token_event_id": "evt123",
             "block_number": "123",
             "event_type": "transfer",
-            "timestamp": "1625097600",
+            "block_timestamp": "1625097600",
             "from_address": "0xfrom",
             "to_address": "0xto",
             "contract_address": "0xcontract",
@@ -352,7 +372,6 @@ mod tests {
             "token_id": "123",
             "token_id_hex": "0x123",
             "contract_type": "ERC721",
-            "event_id": "evt123"
         });
 
         let expected = expected_json.to_string();

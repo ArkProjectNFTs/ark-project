@@ -79,7 +79,7 @@ impl<S: Storage> BlockManager<S> {
         block_timestamp: u64,
         indexer_version: &str,
         indexer_identifier: &str,
-        status: BlockIndexingStatus,
+        block_status: BlockIndexingStatus,
     ) -> Result<(), StorageError> {
         self.storage
             .set_block_info(
@@ -88,7 +88,7 @@ impl<S: Storage> BlockManager<S> {
                 BlockInfo {
                     indexer_version: indexer_version.to_string(),
                     indexer_identifier: indexer_identifier.to_string(),
-                    status,
+                    block_status,
                     block_number,
                 },
             )
@@ -195,7 +195,7 @@ mod tests {
             .returning(|block_number| {
                 Box::pin(futures::future::ready(if block_number == 1 {
                     Ok(BlockInfo {
-                        status: BlockIndexingStatus::Processing,
+                        block_status: BlockIndexingStatus::Processing,
                         indexer_version: String::from("v0.0.1"),
                         indexer_identifier: String::from("TASK#123"),
                         block_number: 123,

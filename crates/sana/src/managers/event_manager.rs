@@ -97,7 +97,7 @@ impl<S: Storage> EventManager<S> {
         let event_id = Self::get_event_id(&token_id, seller, buyer, block_timestamp, event);
 
         Ok(TokenSaleEvent {
-            event_id: to_hex_str(&event_id),
+            token_event_id: to_hex_str(&event_id),
             event_type: EventType::Sale,
             block_number: event.block_number,
             from_address: to_hex_str(seller),
@@ -107,7 +107,7 @@ impl<S: Storage> EventManager<S> {
             transaction_hash: to_hex_str(&event.transaction_hash),
             token_id_hex: token_id.to_hex(),
             token_id: token_id.to_decimal(false),
-            timestamp: block_timestamp,
+            block_timestamp: block_timestamp,
             updated_at: Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
             quantity: 1,
             currency_address: None,
@@ -206,9 +206,10 @@ impl<S: Storage> EventManager<S> {
         );
 
         Ok(TokenSaleEvent {
-            event_id: to_hex_str(&event_id),
+            token_event_id: to_hex_str(&event_id),
             event_type: EventType::Sale,
             block_number: event.block_number,
+            block_timestamp: block_timestamp,
             from_address: to_hex_str(taker_address),
             to_address: to_hex_str(maker_address),
             nft_contract_address: to_hex_str(nft_contract_address),
@@ -216,7 +217,6 @@ impl<S: Storage> EventManager<S> {
             transaction_hash: to_hex_str(&event.transaction_hash),
             token_id_hex: token_id.to_hex(),
             token_id: token_id.to_decimal(false),
-            timestamp: block_timestamp,
             updated_at: Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
             quantity: (*quantity)
                 .try_into()
@@ -260,15 +260,15 @@ impl<S: Storage> EventManager<S> {
         let (from, to, token_id) = event_info;
         let event_id = Self::get_event_id(&token_id, &from, &to, block_timestamp, event);
 
+        token_event.token_event_id = to_hex_str(&event_id);
         token_event.from_address = to_hex_str(&from);
         token_event.to_address = to_hex_str(&to);
         token_event.contract_address = to_hex_str(&event.from_address);
         token_event.transaction_hash = to_hex_str(&event.transaction_hash);
         token_event.token_id_hex = token_id.to_hex();
         token_event.token_id = token_id.to_decimal(false);
-        token_event.timestamp = block_timestamp;
-        token_event.event_type = Self::get_event_type(from, to);
-        token_event.event_id = to_hex_str(&event_id);
+        token_event.block_timestamp = block_timestamp;
+        token_event.event_type = Some(Self::get_event_type(from, to));
         token_event.block_number = event.block_number;
         token_event.contract_type = contract_type.to_string();
         token_event.updated_at = Some(
@@ -283,16 +283,9 @@ impl<S: Storage> EventManager<S> {
 
     /// Formats & register a token event based on the event content.
     /// Returns the token_id if the event were identified.
-    pub async fn format_and_register_event(
-        &self,
-        token_event: TokenTransferEvent,
-        block_timestamp: u64,
-    ) -> Result<()> {
+    pub async fn format_and_register_event(&self, token_event: TokenTransferEvent) -> Result<()> {
         trace!("Registering event: {:?}", token_event);
-
-        self.storage
-            .register_transfer_event(&token_event, block_timestamp)
-            .await?;
+        self.storage.register_transfer_event(&token_event).await?;
 
         Ok(())
     }
@@ -395,7 +388,7 @@ mod tests {
 
         storage
             .expect_register_transfer_event()
-            .returning(|_, _| Box::pin(futures::future::ready(Ok(()))));
+            .returning(|_| Box::pin(futures::future::ready(Ok(()))));
 
         let manager = EventManager::new(Arc::new(storage));
 
@@ -424,7 +417,7 @@ mod tests {
 
         storage
             .expect_register_transfer_event()
-            .returning(|_, _| Box::pin(futures::future::ready(Ok(()))));
+            .returning(|_| Box::pin(futures::future::ready(Ok(()))));
 
         let manager = EventManager::new(Arc::new(storage));
 
