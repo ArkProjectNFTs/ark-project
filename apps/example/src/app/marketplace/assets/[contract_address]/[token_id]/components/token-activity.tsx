@@ -4,7 +4,7 @@ import { env } from "@/env";
 import { useQuery } from "react-query";
 import { Web3 } from "web3";
 
-import { timeSince, truncateString } from "@/lib/utils";
+import { timeSince } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -88,18 +88,34 @@ const Activity: React.FC<ActivityProps> = ({ params }) => {
                   <TableRow key={activity.event_timestamp}>
                     <TableCell>{activity.order_status}</TableCell>
                     <TableCell>{activity.event_type}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-nowrap">
                       {activity.amount
                         ? `${Web3.utils.fromWei(activity.amount, "ether")} ETH`
                         : "-"}
                     </TableCell>
-                    <TableCell>
-                      {truncateString(activity.previous_owner, 8) || "-"}
+                    <TableCell className="text-nowrap">
+                      {activity.previous_owner ? (
+                        <>
+                          {activity.previous_owner.slice(0, 6)}...
+                          {activity.previous_owner.slice(-4)}
+                        </>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
-                    <TableCell>
-                      {truncateString(activity.new_owner, 8) || "-"}
+                    <TableCell className="text-nowrap">
+                      {activity.new_owner ? (
+                        <>
+                          {activity.new_owner.slice(0, 6)}...
+                          {activity.new_owner.slice(-4)}
+                        </>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
-                    <TableCell>{timeSince(activity.event_timestamp)}</TableCell>
+                    <TableCell className="text-nowrap">
+                      {timeSince(activity.event_timestamp)}
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
