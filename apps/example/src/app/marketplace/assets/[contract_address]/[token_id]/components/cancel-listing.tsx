@@ -2,50 +2,52 @@
 
 import React from "react";
 
+import { TokenMarketData } from "@/types";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
 
 import { useCancel } from "@ark-project/react";
 
+import { Token } from "@/types/schema";
 import { areAddressesEqual } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
-interface CreateOfferProps {
-  token: any;
-  tokenMarketData: any;
+interface CancelListingProps {
+  token: Token;
+  tokenMarketData: TokenMarketData;
 }
 
-const CancelListing: React.FC<CreateOfferProps> = ({
+const CancelListing: React.FC<CancelListingProps> = ({
   token,
   tokenMarketData
 }) => {
-  const { cancel, status } = useCancel();
   const { account, address } = useAccount();
-  const isOwner = address && areAddressesEqual(token.owner, address);
-  if (
-    account === undefined ||
-    !isOwner ||
-    !tokenMarketData ||
-    !tokenMarketData.is_listed
-  )
+  const { cancel, status } = useCancel();
+  const isOwner = areAddressesEqual(token.owner, address);
+
+  if (!account || !isOwner || !tokenMarketData?.is_listed) {
     return;
+  }
+
+  const handleClick = async () => {
+    await cancel({
+      starknetAccount: account,
+      orderHash: tokenMarketData.order_hash,
+      tokenAddress: token.contract_address,
+      tokenId: token.token_id
+    });
+  };
+
+  const isDisabled = ["loading", "cancelling"].includes(status);
+
   return (
-    <div className="w-full flex flex-col space-y-4 rounded border p-4">
-      <h1>Cancel listing</h1>
-      <Button
-        onClick={() => {
-          cancel({
-            starknetAccount: account,
-            orderHash: tokenMarketData.order_hash,
-            tokenAddress: token.contract_address,
-            tokenId: token.token_id
-          });
-        }}
-      >
-        Cancel listing
-      </Button>
-      {status === "loading" && "Cancelling..."}
-      {status === "success" && "Cancelled"}
-    </div>
+    <Button onClick={handleClick} disabled={isDisabled}>
+      {status === "loading" ? (
+        <ReloadIcon className="animate-spin" />
+      ) : (
+        "Cancel listing"
+      )}
+    </Button>
   );
 };
 

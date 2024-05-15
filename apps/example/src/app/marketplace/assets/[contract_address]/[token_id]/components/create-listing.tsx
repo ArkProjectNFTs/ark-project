@@ -73,12 +73,8 @@ const formSchema = z
 
 const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
   const { account } = useAccount();
-  const { response, createListing, status } = useCreateListing();
-  const {
-    response: responseAuction,
-    create: createAuction,
-    status: statusAuction
-  } = useCreateAuction();
+  const { createListing, status } = useCreateListing();
+  const { create: createAuction, status: statusAuction } = useCreateAuction();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -109,6 +105,12 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
       startAmount: parseEther(values.startAmount)
     };
 
+    const startAmount = Web3.utils.toWei(values.startAmount, "ether");
+    const now = moment();
+    const startDate = moment(now).add(1, "minute").unix();
+    console.log("startDate", startDate);
+    const endDate = moment(now).add(values.duration, "hours").unix();
+
     try {
       if (values.type === AUCTION) {
         await createAuction({
@@ -116,30 +118,21 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
           brokerId: env.NEXT_PUBLIC_BROKER_ID,
           tokenAddress: token.contract_address,
           tokenId,
-          startDate,
-          endDate,
+          // startDate,
+          // endDate,
           startAmount,
           endAmount: values.endAmount
             ? Web3.utils.toWei(values.endAmount, "ether")
             : 0
         });
       } else {
-        console.log("create listing", {
-          starknetAccount: account,
-          brokerId: env.NEXT_PUBLIC_BROKER_ID,
-          tokenAddress: token.contract_address,
-          tokenId,
-          startDate,
-          endDate,
-          startAmount
-        });
         await createListing({
           starknetAccount: account,
           brokerId: env.NEXT_PUBLIC_BROKER_ID,
           tokenAddress: token.contract_address,
           tokenId,
-          startDate,
-          endDate,
+          // startDate,
+          // endDate,
           startAmount
         });
       }
@@ -256,7 +249,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-[20%]" disabled={isLoading}>
+          <Button type="submit" className="" disabled={isLoading}>
             {isLoading ? "Loading..." : "Complete Listing"}
           </Button>
         </form>

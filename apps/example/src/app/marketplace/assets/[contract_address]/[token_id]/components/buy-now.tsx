@@ -13,28 +13,47 @@ import { useFulfillListing } from "@ark-project/react";
 import { Token } from "@/types/schema";
 import { areAddressesEqual } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { Separator } from "@/components/ui/separator";
 
 interface BuyOrderProps {
   token: Token;
   tokenMarketData: TokenMarketData;
 }
 
-const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
+const LABELS_BY_STATUS = {
+  idle: "Buy now",
+  loading: "Loading...",
+  error: "Error",
+  success: "DWA",
+  approved: "Approved"
+};
+
+const LABELS_BY_STEP_STATUS = {
+  idle: "Creating transaction...",
+  approving: "Approving...",
+  approved: "Approved",
+  selling: "Sell in progress...",
+  sold: "Sold",
+  error: "Error"
+};
+
+const BuyNow: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
   const { fulfillListing, status } = useFulfillListing();
   const { address, account } = useAccount();
   const isOwner = address && areAddressesEqual(token.owner, address);
 
   if (
-    account === undefined ||
+    !account ||
     isOwner ||
-    !tokenMarketData ||
-    !tokenMarketData.is_listed ||
-    tokenMarketData.status === "FULFILLED"
-  )
+    !tokenMarketData?.is_listed ||
+    tokenMarketData?.status === "FULFILLED"
+  ) {
     return null;
+  }
 
   return (
     <Button
+      className="w-full"
       onClick={() =>
         fulfillListing({
           starknetAccount: account,
@@ -55,6 +74,7 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
           {status === "success" && "Bought"}
           {status === "error" && "Error"}
         </div>
+        <Separator orientation="vertical" className="mx-2" />
         <div className="flex items-center space-x-1">
           <div>{Web3.utils.fromWei(tokenMarketData.start_amount, "ether")}</div>
           <SiEthereum />
@@ -64,4 +84,4 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
   );
 };
 
-export default BuyOrder;
+export default BuyNow;

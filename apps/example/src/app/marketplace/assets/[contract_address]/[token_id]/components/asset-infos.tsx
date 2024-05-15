@@ -8,7 +8,7 @@ import { SiEthereum } from "react-icons/si";
 import { Web3 } from "web3";
 
 import { Token } from "@/types/schema";
-import { areAddressesEqual, truncateString } from "@/lib/utils";
+import { areAddressesEqual, shortAddress } from "@/lib/utils";
 import { TableCell, TableHead } from "@/components/ui/table";
 
 interface AssetInfosProps {
@@ -18,10 +18,9 @@ interface AssetInfosProps {
 
 const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
   const { address } = useAccount();
-  const owner =
-    address && areAddressesEqual(token.owner, address)
-      ? "You"
-      : truncateString(token.owner, 8);
+  const owner = areAddressesEqual(token.owner, address)
+    ? "You"
+    : shortAddress(token.owner);
 
   return (
     <div className="border rounded-md p-3">

@@ -10,16 +10,14 @@ import { SiOpensea } from "react-icons/si";
 import { useQuery } from "react-query";
 
 import { areAddressesEqual } from "@/lib/utils";
-import Media from "@/components/media";
 
 import { getTokenData, getTokenMarketData } from "../data";
 import AssetsInfos from "./asset-infos";
-import CancelListing from "./cancel-listing";
+import BestOffer from "./best-offer";
 import CreateListing from "./create-listing";
-import CreateOffer from "./create-offer";
-import FulfillListing from "./fulfill-listing";
-import FulFillOffer from "./fulfill-offer";
+import Listing from "./listing";
 import Activity from "./token-activity";
+import TokenMedia from "./token-media";
 import TokenOffers from "./token-offers";
 
 interface AssetProps {
@@ -62,7 +60,7 @@ const Asset: React.FC<AssetProps> = ({ params }) => {
   }
 
   const token = tokenData.result;
-  const isOwner = address && areAddressesEqual(token.owner, address);
+  const isOwner = areAddressesEqual(token.owner, address);
 
   return (
     <div className="grid grid-rows-3 grid-cols-3 gap-6 min-h-[700px]">
@@ -96,44 +94,34 @@ const Asset: React.FC<AssetProps> = ({ params }) => {
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-md relative">
-          {token.metadata &&
-          token.metadata.normalized &&
-          token.metadata.normalized.image ? (
-            <Media
-              url={token.metadata.normalized.image}
-              name={token.token_id || "Token Image"}
-            />
-          ) : (
-            <Media url="/missing.jpg" name={token.token_id || "Token Image"} />
-          )}
+        <div className="overflow-hidden rounded-md">
+          <TokenMedia token={token} />
         </div>
-        <FulfillListing token={token} tokenMarketData={tokenMarketData} />
-        <FulFillOffer tokenMarketData={tokenMarketData} token={token} />
-        <CancelListing
-          token={token}
-          tokenMarketData={tokenMarketData || undefined}
-        />
       </div>
       <div className="row-span-3 col-span-2 space-y-4">
-        <AssetsInfos
-          token={token}
-          tokenMarketData={tokenMarketData || undefined}
-        />
-        {isOwner ? (
+        <AssetsInfos token={token} tokenMarketData={tokenMarketData} />
+        {tokenMarketData?.is_listed ? (
+          <Listing
+            token={token}
+            tokenMarketData={tokenMarketData}
+            isOwner={isOwner}
+          />
+        ) : (
           <>
-            {tokenMarketData?.is_listed || (
-              <CreateListing
-                token={token}
-                tokenMarketData={tokenMarketData || undefined}
-              />
+            <BestOffer
+              token={token}
+              tokenMarketData={tokenMarketData}
+              isOwner={isOwner}
+            />
+            {isOwner && (
+              <>
+                <CreateListing
+                  token={token}
+                  tokenMarketData={tokenMarketData}
+                />
+              </>
             )}
           </>
-        ) : (
-          <CreateOffer
-            token={token}
-            tokenMarketData={tokenMarketData || undefined}
-          />
         )}
         <TokenOffers token={token} />
         <Activity params={params} />

@@ -15,6 +15,7 @@ import {
   PageHeaderHeading
 } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/Button";
+import { Toaster } from "@/components/ui/toaster";
 
 import { MainNav } from "./components/main-nav";
 import { UserNav } from "./components/user-nav";
@@ -73,6 +74,7 @@ export default function ExamplesLayout({ children }: ExamplesLayoutProps) {
           </div>
         </section>
       </div>
+      <Toaster />
     </QueryClientProvider>
   );
 }
