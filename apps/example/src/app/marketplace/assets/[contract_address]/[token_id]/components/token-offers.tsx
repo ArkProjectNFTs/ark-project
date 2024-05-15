@@ -1,18 +1,14 @@
 import React from "react";
 
-import { env } from "@/env";
 import { useAccount } from "@starknet-react/core";
 import { useQuery } from "react-query";
 import { Web3 } from "web3";
 
-import { useFulfillOffer } from "@ark-project/react";
-
 import {
   areAddressesEqual,
   getRoundedRemainingTime,
-  truncateString
+  shortAddress
 } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
 import {
   Table,
   TableBody,
@@ -23,6 +19,8 @@ import {
 } from "@/components/ui/table";
 
 import { getTokenOffers } from "../data";
+import AcceptOffer from "./accept-offer";
+import CancelOffer from "./cancel-offer";
 
 interface TokenOffersProps {
   token: any;
@@ -44,11 +42,12 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
       refetchInterval: 10000
     }
   );
-
   const { address, account } = useAccount();
   const isOwner = address && areAddressesEqual(token.owner, address);
-  const { fulfillOffer } = useFulfillOffer();
-  if (account === undefined) return null;
+
+  if (!account) {
+    return null;
+  }
 
   return (
     <div className="space-y-2">
@@ -80,7 +79,7 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
                     <TableHead>Quantity</TableHead>
                     <TableHead>Expiration</TableHead>
                     <TableHead>From</TableHead>
-                    {isOwner && <TableHead />}
+                    <TableHead />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -101,26 +100,20 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
                         in {getRoundedRemainingTime(offer.end_date)}
                       </TableCell>
                       <TableCell>
-                        {truncateString(offer.offer_maker, 8)}
+                        {areAddressesEqual(address, offer.offer_maker)
+                          ? "You"
+                          : shortAddress(offer.offer_maker)}
                       </TableCell>
-                      {isOwner && (
-                        <TableCell>
-                          <Button
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => {
-                              fulfillOffer({
-                                starknetAccount: account,
-                                brokerId: env.NEXT_PUBLIC_BROKER_ID,
-                                tokenAddress: token.contract_address,
-                                tokenId: token.token_id,
-                                orderHash: offer.order_hash
-                              });
-                            }}
-                          >
-                            Accept Offer
-                          </Button>
-                        </TableCell>
-                      )}
+                      <TableCell className="flex justify-end">
+                        <>
+                          {isOwner && (
+                            <AcceptOffer token={token} offer={offer} />
+                          )}
+                          {areAddressesEqual(offer.offer_maker, address) && (
+                            <CancelOffer token={token} offer={offer} />
+                          )}
+                        </>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
