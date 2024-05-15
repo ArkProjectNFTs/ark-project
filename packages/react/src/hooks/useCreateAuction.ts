@@ -7,8 +7,8 @@ import { AccountInterface } from "starknet";
 import { AuctionV1, Config, createAuction } from "@ark-project/core";
 
 import { Status } from "../types";
-import useApproveERC721 from "./useApproveERC721";
-import useBurnerWallet from "./useBurnerWallet";
+import { useApproveERC721 } from "./useApproveERC721";
+import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
@@ -72,3 +72,5 @@ export default function useCreateAuction() {
 
   return { create, status, response };
 }
+
+export { useCreateAuction };

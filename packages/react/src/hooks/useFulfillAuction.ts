@@ -6,8 +6,8 @@ import { fulfillAuction } from "@ark-project/core";
 import { FulfillAuctionInfo } from "@ark-project/core/src/types";
 
 import { Status, StepStatus } from "../types";
-import useApproveERC20, { ApproveERC20Parameters } from "./useApproveERC20";
-import useBurnerWallet from "./useBurnerWallet";
+import { ApproveERC20Parameters, useApproveERC20 } from "./useApproveERC20";
+import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 import { useOwner } from "./useOwner";
 
