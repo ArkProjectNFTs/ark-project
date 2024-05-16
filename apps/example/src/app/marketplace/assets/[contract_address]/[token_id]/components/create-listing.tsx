@@ -106,10 +106,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
     };
 
     const startAmount = Web3.utils.toWei(values.startAmount, "ether");
-    const now = moment();
-    const startDate = moment(now).add(1, "minute").unix();
-    console.log("startDate", startDate);
-    const endDate = moment(now).add(values.duration, "hours").unix();
+    const endDate = moment().add(values.duration, "hours").unix();
 
     try {
       if (values.type === AUCTION) {
@@ -118,8 +115,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
           brokerId: env.NEXT_PUBLIC_BROKER_ID,
           tokenAddress: token.contract_address,
           tokenId,
-          // startDate,
-          // endDate,
+          endDate,
           startAmount,
           endAmount: values.endAmount
             ? Web3.utils.toWei(values.endAmount, "ether")
@@ -131,8 +127,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
           brokerId: env.NEXT_PUBLIC_BROKER_ID,
           tokenAddress: token.contract_address,
           tokenId,
-          // startDate,
-          // endDate,
+          endDate,
           startAmount
         });
       }
@@ -143,6 +138,8 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
 
   const isLoading = status === "loading" || statusAuction === "loading";
   const isAuction = form.getValues("type") === AUCTION;
+  const duration = form.watch("duration");
+  const expiredAt = moment().add(duration, "hours").format("LLLL");
 
   return (
     <div className="w-full border rounded p-4">
@@ -227,7 +224,10 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
             name="duration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Duration</FormLabel>
+                <div className="flex justify-between">
+                  <FormLabel>Duration</FormLabel>
+                  <div className="text-sm">Expires {expiredAt}</div>
+                </div>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value.toString()}
