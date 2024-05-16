@@ -162,9 +162,7 @@ mod executor {
                 contract_address: self.messaging_address.read()
             };
 
-            let vinfo = CancelOrderInfo {
-                cancelInfo: cancelInfo.clone()
-            };
+            let vinfo = CancelOrderInfo { cancelInfo: cancelInfo.clone() };
 
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
