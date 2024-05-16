@@ -4,6 +4,7 @@ import { env } from "@/env";
 import { useAccount } from "@starknet-react/core";
 import Link from "next/link";
 
+import { Token } from "@/types/schema";
 import Media from "@/components/media";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -41,7 +42,7 @@ const Portfolio: React.FC = () => {
   return (
     <ScrollArea className="h-[700px] pr-4 -mr-4">
       <div className="grid grid-cols-6 gap-4 h-[700px]">
-        {tokens.map((token: any, index) => (
+        {tokens.map((token: Token, index) => (
           <Link
             href={`/marketplace/assets/${token.contract_address}/${token.token_id}`}
             key={index}

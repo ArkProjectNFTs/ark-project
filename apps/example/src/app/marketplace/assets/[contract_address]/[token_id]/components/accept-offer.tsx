@@ -8,11 +8,12 @@ import { useAccount } from "@starknet-react/core";
 
 import { useFulfillOffer } from "@ark-project/react";
 
+import { Token } from "@/types/schema";
 import { areAddressesEqual } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
 interface BuyOrderProps {
-  token: any;
+  token: Token;
   offer: any;
 }
 

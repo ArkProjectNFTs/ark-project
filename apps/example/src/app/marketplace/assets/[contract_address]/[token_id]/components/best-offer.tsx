@@ -1,10 +1,13 @@
+import { TokenMarketData } from "@/types";
 import Web3 from "web3";
+
+import { Token } from "@/types/schema";
 
 import CreateOffer from "./create-offer";
 
 type BestOfferProps = {
-  token: any;
-  tokenMarketData: any;
+  token: Token;
+  tokenMarketData: TokenMarketData;
   isOwner: boolean;
 };
 

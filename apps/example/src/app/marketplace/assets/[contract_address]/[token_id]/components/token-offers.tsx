@@ -4,6 +4,7 @@ import { useAccount } from "@starknet-react/core";
 import { useQuery } from "react-query";
 import { Web3 } from "web3";
 
+import { Token } from "@/types/schema";
 import {
   areAddressesEqual,
   getRoundedRemainingTime,
@@ -23,7 +24,7 @@ import AcceptOffer from "./accept-offer";
 import CancelOffer from "./cancel-offer";
 
 interface TokenOffersProps {
-  token: any;
+  token: Token;
 }
 
 const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {

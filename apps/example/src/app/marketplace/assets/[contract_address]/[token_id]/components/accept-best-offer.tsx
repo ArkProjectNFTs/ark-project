@@ -10,12 +10,13 @@ import Web3 from "web3";
 
 import { useFulfillOffer } from "@ark-project/react";
 
+import { Token } from "@/types/schema";
 import { areAddressesEqual } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/separator";
 
 interface BuyOrderProps {
-  token: any;
+  token: Token;
   tokenMarketData: TokenMarketData;
 }
 

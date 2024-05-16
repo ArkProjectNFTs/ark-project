@@ -1,6 +1,7 @@
+import { Token } from "@/types/schema";
 import Media from "@/components/media";
 
-export function TokenMedia({ token }: { token: any }) {
+export function TokenMedia({ token }: { token: Token }) {
   return (
     <Media
       url={

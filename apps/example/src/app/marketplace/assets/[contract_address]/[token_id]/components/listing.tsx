@@ -9,6 +9,8 @@ import Web3 from "web3";
 
 import { useOrderType } from "@ark-project/react";
 
+import { Token } from "@/types/schema";
+
 import AcceptOffer from "./accept-best-offer";
 import FulfillListing from "./buy-now";
 import CancelListing from "./cancel-listing";
@@ -16,7 +18,7 @@ import CreateBid from "./create-bid";
 import CreateOffer from "./create-offer";
 
 interface ListingProps {
-  token: any;
+  token: Token;
   tokenMarketData: TokenMarketData;
   isOwner: boolean;
 }

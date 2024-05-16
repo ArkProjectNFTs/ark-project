@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { env } from "@/env";
+import { TokenMarketData } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
@@ -12,6 +13,7 @@ import * as z from "zod";
 
 import { useConfig, useCreateOffer } from "@ark-project/react";
 
+import { Token } from "@/types/schema";
 import { areAddressesEqual } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import {
@@ -33,8 +35,8 @@ import { Input } from "@/components/ui/input";
 import TokenMedia from "./token-media";
 
 interface CreateOfferProps {
-  token: any;
-  tokenMarketData: any;
+  token: Token;
+  tokenMarketData: TokenMarketData;
 }
 
 export default function CreateOffer({
