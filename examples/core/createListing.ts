@@ -10,8 +10,6 @@ import "dotenv/config";
 import { stark } from "starknet";
 
 import {
-  approveERC721,
-  createAccount,
   createBroker,
   createListing,
   fetchOrCreateAccount,

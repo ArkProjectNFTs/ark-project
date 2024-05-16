@@ -90,8 +90,11 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Create the offer on the arkchain using the order details
   const orderHash = await createOffer(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
-    offer
+    offer,
+    approveInfo: {
+      currencyAddress: STARKNET_ETH_ADDRESS,
+      amount: offer.startAmount
+    }
   });
 
   console.log("=> Fetching order status...");

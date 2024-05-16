@@ -3,7 +3,6 @@ import "dotenv/config";
 import { stark } from "starknet";
 
 import {
-  approveERC721,
   AuctionV1,
   createAuction,
   createBroker,
@@ -16,7 +15,10 @@ import {
 } from "@ark-project/core";
 
 import { config } from "./config/index.js";
-import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
+import {
+  STARKNET_ETH_ADDRESS,
+  STARKNET_NFT_ADDRESS
+} from "./constants/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
 import { mintERC721 } from "./utils/mintERC721.js";
 import { whitelistBroker } from "./utils/whitelistBroker.js";
@@ -47,14 +49,8 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   await whitelistBroker(config, adminAccount, brokerId);
 
   // Mint and approve seller NFT
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-
   await mintERC721(config.starknetProvider, sellerAccount);
-  await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
-    starknetAccount: sellerAccount,
-    tokenId
-  });
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   // Create auction
   const order: AuctionV1 = {
@@ -65,11 +61,17 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     endAmount: 10
   };
 
+  console.log("Creating auction...");
   const orderHash = await createAuction(config, {
     starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
-    order
+    order,
+    approveInfo: {
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId
+    }
   });
+
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   // Create offer
   const offer: OfferV1 = {
@@ -79,11 +81,17 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     startAmount: 1
   };
 
+  console.log("Creating offer...");
   const offerOrderHash = await createOffer(config, {
     starknetAccount: buyerAccount,
-    arkAccount: adminAccount,
-    offer
+    offer,
+    approveInfo: {
+      currencyAddress: STARKNET_ETH_ADDRESS,
+      amount: offer.startAmount
+    }
   });
+
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   // Fulfill auction
   const fulfillAuctionInfo: FulfillAuctionInfo = {
@@ -94,13 +102,13 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     brokerId
   };
 
+  console.log("Fulfilling auction...");
   await fulfillAuction(config, {
     starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
     fulfillAuctionInfo
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 10_000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const { orderStatus: orderStatus } = await getOrderStatus(config, {
     orderHash

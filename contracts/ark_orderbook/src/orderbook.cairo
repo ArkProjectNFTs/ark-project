@@ -708,6 +708,32 @@ mod orderbook {
                         related_order_hash: Option::Some(related_order_hash)
                     }
                 );
+
+            let execute_order_selector = selector!("execute_order");
+            let starknet_executor_address: ContractAddress = self.starknet_executor_address.read();
+
+            let mut buf: Array<felt252> = array![
+                starknet_executor_address.into(), execute_order_selector
+            ];
+            // execute order
+            if order.token_id.is_some() {
+                let execute_info = ExecutionInfo {
+                    order_hash: order.compute_order_hash(),
+                    nft_address: order.token_address,
+                    nft_from: order.offerer,
+                    nft_to: fulfill_info.fulfiller,
+                    nft_token_id: order.token_id.unwrap(),
+                    payment_from: fulfill_info.fulfiller,
+                    payment_to: order.offerer,
+                    payment_amount: order.start_amount,
+                    payment_currency_address: order.currency_address,
+                    payment_currency_chain_id: order.currency_chain_id,
+                    listing_broker_address: order.broker_id,
+                    fulfill_broker_address: fulfill_info.fulfill_broker_address
+                };
+                execute_info.serialize(ref buf);
+                starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap();
+            }
         }
 
         /// Fulfill offer order

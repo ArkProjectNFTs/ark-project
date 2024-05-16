@@ -57,8 +57,11 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
 
   const orderHash = await createAuction(config, {
     starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
-    order
+    order,
+    approveInfo: {
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId
+    }
   });
 
   // Cancel auction
@@ -70,11 +73,10 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
 
   cancelOrder(config, {
     starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
     cancelInfo
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 10_000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const { orderStatus } = await getOrderStatus(config, {
     orderHash

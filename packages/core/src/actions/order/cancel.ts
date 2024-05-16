@@ -1,18 +1,13 @@
-import * as starknet from "@scure/starknet";
 import {
-  Account,
   AccountInterface,
   cairo,
-  CairoCustomEnum,
   CairoOption,
   CairoOptionVariant,
   CallData,
-  shortString,
   Uint256
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { getSignInfos } from "../../signer/index.js";
 import { CancelInfo, FullCancelInfo } from "../../types/index.js";
 
 /**
@@ -36,16 +31,14 @@ import { CancelInfo, FullCancelInfo } from "../../types/index.js";
  */
 interface cancelOrderParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   cancelInfo: CancelInfo;
-  owner?: string;
 }
 
 const cancelOrder = async (
   config: Config,
   parameters: cancelOrderParameters
 ) => {
-  const { starknetAccount, arkAccount, cancelInfo, owner } = parameters;
+  const { starknetAccount, cancelInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fullCancelInfo: FullCancelInfo = {
     orderHash: cancelInfo.orderHash,
@@ -57,50 +50,18 @@ const cancelOrder = async (
       cairo.uint256(cancelInfo.tokenId)
     )
   };
-  const compiledOrder = CallData.compile({
-    fullCancelInfo
-  });
-  const compiledCancelInfo = compiledOrder.map(BigInt);
-  const TypedOrderData = {
-    message: {
-      hash: starknet.poseidonHashMany(compiledCancelInfo).toString()
-    },
-    domain: {
-      name: "Ark",
-      chainId: shortString.decodeShortString(
-        fullCancelInfo.tokenChainId.toString()
-      ),
-      version: "1.1"
-    },
-    types: {
-      StarkNetDomain: [
-        { name: "name", type: "felt252" },
-        { name: "chainId", type: "felt252" },
-        { name: "version", type: "felt252" }
-      ],
-      Order: [{ name: "hash", type: "felt252" }]
-    },
-    primaryType: "Order"
-  };
-
-  const signInfo = await getSignInfos(TypedOrderData, starknetAccount, owner);
-  const signer = new CairoCustomEnum({ WEIERSTRESS_STARKNET: signInfo });
-
-  // Compile calldata for the cancel_order function
-  const cancel_order_calldata = CallData.compile({
-    order: fullCancelInfo,
-    signer: signer
-  });
 
   // Execute the transaction
-  const result = await arkAccount.execute({
-    contractAddress: config.arkchainContracts.orderbook,
+  const result = await starknetAccount.execute({
+    contractAddress: config.starknetContracts.executor,
     entrypoint: "cancel_order",
-    calldata: cancel_order_calldata
+    calldata: CallData.compile({
+      order: fullCancelInfo
+    })
   });
 
   // Wait for the transaction to be processed
-  await config.arkProvider.waitForTransaction(result.transaction_hash, {
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });
 };

@@ -114,8 +114,11 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Create the listing on the arkchain using the order details
   const orderHash = await createOffer(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
-    offer
+    offer,
+    approveInfo: {
+      currencyAddress: STARKNET_ETH_ADDRESS,
+      amount: offer.startAmount
+    }
   });
 
   console.log(`=> Approving collection ${offer.tokenId}`);
@@ -144,18 +147,14 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // fulfill the order
   await fulfillOffer(config, {
     starknetAccount: starknetFulfillerAccount,
-    arkAccount,
-    fulfillOfferInfo
+    fulfillOfferInfo,
+    approveInfo: {
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId: tokenId
+    }
   });
 
-  if (config.starknetNetwork !== "dev") {
-    console.log(
-      "=> Waiting for 5 minutes for transaction complete on goerli..."
-    );
-    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
-  } else {
-    await new Promise((resolve) => setTimeout(resolve, 10000));
-  }
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   console.log("=> Fetching order status...");
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {

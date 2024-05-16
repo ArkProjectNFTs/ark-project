@@ -48,8 +48,6 @@ const fulfillListing = async (
     fulfill_broker_address: fulfillListingInfo.brokerId
   };
 
-  console.log(fulfillInfo);
-
   const result = await starknetAccount.execute([
     {
       contractAddress: approveInfo.currencyAddress as string,

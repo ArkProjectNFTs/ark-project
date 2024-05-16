@@ -47,13 +47,16 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Create auction
   const orderHash = await createAuction(config, {
     starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
     order: {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
       startAmount: 1,
       endAmount: 10
+    },
+    approveInfo: {
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId
     }
   });
 

@@ -21,27 +21,30 @@ import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
  */
 interface FulfillAuctionParameters {
   starknetAccount: AccountInterface;
-  fulfillListingInfo: FulfillAuctionInfo;
+  fulfillAuctionInfo: FulfillAuctionInfo;
 }
 
 const fulfillAuction = async (
   config: Config,
   parameters: FulfillAuctionParameters
 ) => {
-  const { starknetAccount, fulfillListingInfo } = parameters;
+  const { starknetAccount, fulfillAuctionInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
-    fulfill_broker_address: fulfillListingInfo.brokerId,
-    order_hash: fulfillListingInfo.orderHash,
-    related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),
+    order_hash: fulfillAuctionInfo.orderHash,
+    related_order_hash: new CairoOption<BigNumberish>(
+      CairoOptionVariant.Some,
+      fulfillAuctionInfo.relatedOrderHash
+    ),
     fulfiller: starknetAccount.address,
     token_chain_id: chainId,
-    token_address: fulfillListingInfo.tokenAddress,
+    token_address: fulfillAuctionInfo.tokenAddress,
     token_id: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(fulfillListingInfo.tokenId)
-    )
+      cairo.uint256(fulfillAuctionInfo.tokenId)
+    ),
+    fulfill_broker_address: fulfillAuctionInfo.brokerId
   };
 
   const result = await starknetAccount.execute([

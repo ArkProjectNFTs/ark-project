@@ -53,8 +53,11 @@ import { mintERC721 } from "./utils/mintERC721.js";
   // Create the listing on the arkchain using the order details
   const orderHash = await createListing(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
-    order
+    order,
+    approveInfo: {
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId
+    }
   });
 
   // wait 5 seconds for the transaction to be processed
@@ -78,7 +81,6 @@ import { mintERC721 } from "./utils/mintERC721.js";
   // Cancel the order
   cancelOrder(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
     cancelInfo
   });
 

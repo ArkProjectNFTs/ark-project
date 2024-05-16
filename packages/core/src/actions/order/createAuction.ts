@@ -76,7 +76,7 @@ const createAuction = async (
     ),
     quantity: cairo.uint256(1),
     startAmount: cairo.uint256(baseOrder.startAmount),
-    endAmount: cairo.uint256(0),
+    endAmount: cairo.uint256(baseOrder.endAmount || 0),
     startDate: startDate,
     endDate: endDate,
     brokerId: baseOrder.brokerId,

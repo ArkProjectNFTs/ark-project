@@ -13,7 +13,6 @@ import {
 import { Status } from "../types";
 import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
-import { useOwner } from "./useOwner";
 
 type CancelParameters = {
   starknetAccount: AccountInterface;
@@ -21,7 +20,6 @@ type CancelParameters = {
 
 function useCancel() {
   const [status, setStatus] = useState<Status>("idle");
-  const owner = useOwner();
   const config = useConfig();
   const arkAccount = useBurnerWallet();
   async function cancel(parameters: CancelParameters) {
@@ -30,13 +28,11 @@ function useCancel() {
       setStatus("loading");
       await cancelOrderCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
-        arkAccount: arkAccount,
         cancelInfo: {
           orderHash: parameters.orderHash,
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId
-        },
-        owner
+        }
       });
       setStatus("success");
     } catch (error) {
