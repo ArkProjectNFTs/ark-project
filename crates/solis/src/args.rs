@@ -9,24 +9,32 @@
 //!   and leak detection functionality. See [jemalloc's opt.prof](https://jemalloc.net/jemalloc.3.html#opt.prof)
 //!   documentation for usage details. This is **not recommended on Windows**. See [here](https://rust-lang.github.io/rfcs/1974-global-allocators.html#jemalloc)
 //!   for more info.
+
+use std::net::SocketAddr;
 use std::path::PathBuf;
 
+use alloy_primitives::U256;
 use clap::{Args, Parser, Subcommand};
 use clap_complete::Shell;
+use common::parse::parse_socket_address;
 use katana_core::backend::config::{Environment, StarknetConfig};
 use katana_core::constants::{
-    DEFAULT_GAS_PRICE, DEFAULT_INVOKE_MAX_STEPS, DEFAULT_VALIDATE_MAX_STEPS,
+    DEFAULT_ETH_L1_GAS_PRICE, DEFAULT_INVOKE_MAX_STEPS, DEFAULT_SEQUENCER_ADDRESS,
+    DEFAULT_STRK_L1_GAS_PRICE, DEFAULT_VALIDATE_MAX_STEPS,
 };
 use katana_core::sequencer::SequencerConfig;
+use katana_primitives::block::GasPrices;
 use katana_primitives::chain::ChainId;
+use katana_primitives::genesis::allocation::DevAllocationsGenerator;
+use katana_primitives::genesis::constant::DEFAULT_PREFUNDED_ACCOUNT_BALANCE;
+use katana_primitives::genesis::Genesis;
 use katana_rpc::config::ServerConfig;
 use katana_rpc_api::ApiKind;
-use std::env;
 use tracing::Subscriber;
 use tracing_subscriber::{fmt, EnvFilter};
 use url::Url;
 
-use crate::CHAIN_ID_SOLIS;
+use crate::utils::{parse_genesis, parse_seed};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -49,11 +57,9 @@ pub struct KatanaArgs {
     #[arg(long)]
     #[arg(value_name = "PATH")]
     #[arg(help = "Directory path of the database to initialize from.")]
-    #[arg(
-        long_help = "Directory path of the database to initialize from. The path must either \
+    #[arg(long_help = "Directory path of the database to initialize from. The path must either \
                        be an empty directory or a directory which already contains a previously \
-                       initialized Katana database."
-    )]
+                       initialized Katana database.")]
     pub db_dir: Option<PathBuf>,
 
     #[arg(long)]
@@ -68,22 +74,27 @@ pub struct KatanaArgs {
     #[arg(help = "Output logs in JSON format.")]
     pub json_log: bool,
 
+    /// Enable Prometheus metrics.
+    ///
+    /// The metrics will be served at the given interface and port.
+    #[arg(long, value_name = "SOCKET", value_parser = parse_socket_address, help_heading = "Metrics")]
+    pub metrics: Option<SocketAddr>,
+
     #[arg(long)]
     #[arg(requires = "rpc_url")]
     #[arg(value_name = "BLOCK_NUMBER")]
     #[arg(help = "Fork the network at a specific block.")]
     pub fork_block_number: Option<u64>,
 
+    #[cfg(feature = "messaging")]
     #[arg(long)]
     #[arg(value_name = "PATH")]
     #[arg(value_parser = katana_core::service::messaging::MessagingConfig::parse)]
     #[arg(help = "Configure the messaging with an other chain.")]
-    #[arg(
-        long_help = "Configure the messaging to allow Katana listening/sending messages on a \
+    #[arg(long_help = "Configure the messaging to allow Katana listening/sending messages on a \
                        settlement chain that can be Ethereum or an other Starknet sequencer. \
-                       The configuration file details and examples can be found here: https://book.dojoengine.org/toolchain/katana/reference.html#messaging"
-    )]
-    pub messaging: katana_core::service::messaging::MessagingConfig,
+                       The configuration file details and examples can be found here: https://book.dojoengine.org/toolchain/katana/reference#messaging")]
+    pub messaging: Option<katana_core::service::messaging::MessagingConfig>,
 
     #[command(flatten)]
     #[command(next_help_heading = "Server options")]
@@ -118,6 +129,11 @@ pub struct ServerOptions {
     #[arg(default_value = "100")]
     #[arg(help = "Maximum number of concurrent connections allowed.")]
     pub max_connections: u32,
+
+    #[arg(long)]
+    #[arg(value_delimiter = ',')]
+    #[arg(help = "Enables the CORS layer and sets the allowed origins, separated by commas.")]
+    pub allowed_origins: Option<Vec<String>>,
 }
 
 #[derive(Debug, Args, Clone)]
@@ -131,7 +147,11 @@ pub struct StarknetOptions {
     #[arg(value_name = "NUM")]
     #[arg(default_value = "10")]
     #[arg(help = "Number of pre-funded accounts to generate.")]
-    pub total_accounts: u8,
+    pub total_accounts: u16,
+
+    #[arg(long)]
+    #[arg(help = "Disable charging fee when executing transactions.")]
+    pub disable_fee: bool,
 
     #[arg(long)]
     #[arg(help = "Disable validation when executing transactions.")]
@@ -140,28 +160,52 @@ pub struct StarknetOptions {
     #[command(flatten)]
     #[command(next_help_heading = "Environment options")]
     pub environment: EnvironmentOptions,
+
+    #[arg(long)]
+    #[arg(value_parser = parse_genesis)]
+    #[arg(conflicts_with_all(["rpc_url", "seed", "total_accounts"]))]
+    pub genesis: Option<Genesis>,
 }
 
 #[derive(Debug, Args, Clone)]
 pub struct EnvironmentOptions {
     #[arg(long)]
-    #[arg(help = "The gas price.")]
-    pub gas_price: Option<u64>,
+    #[arg(help = "The chain ID.")]
+    #[arg(long_help = "The chain ID. If a raw hex string (`0x` prefix) is provided, then it'd \
+                       used as the actual chain ID. Otherwise, it's represented as the raw \
+                       ASCII values. It must be a valid Cairo short string.")]
+    #[arg(default_value = "SOLIS")]
+    #[arg(value_parser = ChainId::parse)]
+    pub chain_id: ChainId,
 
     #[arg(long)]
     #[arg(help = "The maximum number of steps available for the account validation logic.")]
-    pub validate_max_steps: Option<u32>,
+    #[arg(default_value_t = DEFAULT_VALIDATE_MAX_STEPS)]
+    pub validate_max_steps: u32,
 
     #[arg(long)]
     #[arg(help = "The maximum number of steps available for the account execution logic.")]
-    pub invoke_max_steps: Option<u32>,
+    #[arg(default_value_t = DEFAULT_INVOKE_MAX_STEPS)]
+    pub invoke_max_steps: u32,
+
+    #[arg(long = "eth-gas-price")]
+    #[arg(conflicts_with = "genesis")]
+    #[arg(help = "The L1 ETH gas price. (denominated in wei)")]
+    #[arg(default_value_t = DEFAULT_ETH_L1_GAS_PRICE)]
+    pub l1_eth_gas_price: u128,
+
+    #[arg(long = "strk-gas-price")]
+    #[arg(conflicts_with = "genesis")]
+    #[arg(help = "The L1 STRK gas price. (denominated in fri)")]
+    #[arg(default_value_t = DEFAULT_STRK_L1_GAS_PRICE)]
+    pub l1_strk_gas_price: u128,
 }
 
 impl KatanaArgs {
     pub fn init_logging(&self) -> Result<(), Box<dyn std::error::Error>> {
         const DEFAULT_LOG_FILTER: &str = "info,executor=trace,forked_backend=trace,server=debug,\
                                           katana_core=trace,blockifier=off,jsonrpsee_server=off,\
-                                          hyper=off,messaging=debug";
+                                          hyper=off,messaging=debug,node=error";
 
         let builder = fmt::Subscriber::builder().with_env_filter(
             EnvFilter::try_from_default_env().or(EnvFilter::try_new(DEFAULT_LOG_FILTER))?,
@@ -180,72 +224,120 @@ impl KatanaArgs {
         SequencerConfig {
             block_time: self.block_time,
             no_mining: self.no_mining,
-            messaging: Some(self.messaging.clone()),
+            #[cfg(feature = "messaging")]
+            messaging: self.messaging.clone(),
         }
     }
 
     pub fn server_config(&self) -> ServerConfig {
-        let mut apis = vec![ApiKind::Starknet];
+        let mut apis = vec![ApiKind::Starknet, ApiKind::Katana, ApiKind::Torii, ApiKind::Saya, ApiKind::Solis];
         // only enable `katana` API in dev mode
         if self.dev {
-            apis.push(ApiKind::Katana);
+            apis.push(ApiKind::Dev);
         }
-
-        let rpc_user = env::var("RPC_USER").unwrap_or_else(|_| "userDefault".to_string());
-        let rpc_password =
-            env::var("RPC_PASSWORD").unwrap_or_else(|_| "passwordDefault".to_string());
 
         ServerConfig {
             apis,
             port: self.server.port,
             host: self.server.host.clone().unwrap_or("0.0.0.0".into()),
             max_connections: self.server.max_connections,
-            rpc_user,
-            rpc_password,
+            allowed_origins: self.server.allowed_origins.clone(),
+            rpc_user: "user".into(),
+            rpc_password: "password".into(),
         }
     }
 
     pub fn starknet_config(&self) -> StarknetConfig {
+        let genesis = match self.starknet.genesis.clone() {
+            Some(genesis) => genesis,
+            None => {
+                let gas_prices = GasPrices {
+                    eth: self.starknet.environment.l1_eth_gas_price,
+                    strk: self.starknet.environment.l1_strk_gas_price,
+                };
+
+                let accounts = DevAllocationsGenerator::new(self.starknet.total_accounts)
+                    .with_seed(parse_seed(&self.starknet.seed))
+                    .with_balance(U256::from(DEFAULT_PREFUNDED_ACCOUNT_BALANCE))
+                    .generate();
+
+                let mut genesis = Genesis {
+                    gas_prices,
+                    sequencer_address: *DEFAULT_SEQUENCER_ADDRESS,
+                    ..Default::default()
+                };
+
+                genesis.extend_allocations(accounts.into_iter().map(|(k, v)| (k, v.into())));
+                genesis
+            }
+        };
+
         StarknetConfig {
-            total_accounts: self.starknet.total_accounts,
-            seed: parse_seed(&self.starknet.seed),
-            disable_fee: true,
+            disable_fee: self.starknet.disable_fee,
             disable_validate: self.starknet.disable_validate,
-            fork_rpc_url: None,
-            fork_block_number: None,
+            fork_rpc_url: self.rpc_url.clone(),
+            fork_block_number: self.fork_block_number,
             env: Environment {
-                chain_id: ChainId::Id(CHAIN_ID_SOLIS),
-                gas_price: self
-                    .starknet
-                    .environment
-                    .gas_price
-                    .unwrap_or(DEFAULT_GAS_PRICE),
-                invoke_max_steps: self
-                    .starknet
-                    .environment
-                    .invoke_max_steps
-                    .unwrap_or(DEFAULT_INVOKE_MAX_STEPS),
-                validate_max_steps: self
-                    .starknet
-                    .environment
-                    .validate_max_steps
-                    .unwrap_or(DEFAULT_VALIDATE_MAX_STEPS),
+                chain_id: self.starknet.environment.chain_id,
+                invoke_max_steps: self.starknet.environment.invoke_max_steps,
+                validate_max_steps: self.starknet.environment.validate_max_steps,
             },
             db_dir: self.db_dir.clone(),
+            genesis,
         }
     }
 }
 
-fn parse_seed(seed: &str) -> [u8; 32] {
-    let seed = seed.as_bytes();
+#[cfg(test)]
+mod test {
+    use super::*;
 
-    if seed.len() >= 32 {
-        unsafe { *(seed[..32].as_ptr() as *const [u8; 32]) }
-    } else {
-        let mut actual_seed = [0u8; 32];
-        seed.iter()
-            .enumerate()
-            .for_each(|(i, b)| actual_seed[i] = *b);
-        actual_seed
+    #[test]
+    fn test_starknet_config_default() {
+        let args = KatanaArgs::parse_from(["katana"]);
+        let config = args.starknet_config();
+
+        assert!(!config.disable_fee);
+        assert!(!config.disable_validate);
+        assert_eq!(config.fork_rpc_url, None);
+        assert_eq!(config.fork_block_number, None);
+        assert_eq!(config.env.chain_id, ChainId::parse("KATANA").unwrap());
+        assert_eq!(config.env.invoke_max_steps, DEFAULT_INVOKE_MAX_STEPS);
+        assert_eq!(config.env.validate_max_steps, DEFAULT_VALIDATE_MAX_STEPS);
+        assert_eq!(config.db_dir, None);
+        assert_eq!(config.genesis.gas_prices.eth, DEFAULT_ETH_L1_GAS_PRICE);
+        assert_eq!(config.genesis.gas_prices.strk, DEFAULT_STRK_L1_GAS_PRICE);
+        assert_eq!(config.genesis.sequencer_address, *DEFAULT_SEQUENCER_ADDRESS);
+    }
+
+    #[test]
+    fn test_starknet_config_custom() {
+        let args = KatanaArgs::parse_from([
+            "katana",
+            "--disable-fee",
+            "--disable-validate",
+            "--chain-id",
+            "SN_GOERLI",
+            "--invoke-max-steps",
+            "200",
+            "--validate-max-steps",
+            "100",
+            "--db-dir",
+            "/path/to/db",
+            "--eth-gas-price",
+            "10",
+            "--strk-gas-price",
+            "20",
+        ]);
+        let config = args.starknet_config();
+
+        assert!(config.disable_fee);
+        assert!(config.disable_validate);
+        assert_eq!(config.env.chain_id, ChainId::GOERLI);
+        assert_eq!(config.env.invoke_max_steps, 200);
+        assert_eq!(config.env.validate_max_steps, 100);
+        assert_eq!(config.db_dir, Some(PathBuf::from("/path/to/db")));
+        assert_eq!(config.genesis.gas_prices.eth, 10);
+        assert_eq!(config.genesis.gas_prices.strk, 20);
     }
 }

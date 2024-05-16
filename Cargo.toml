@@ -6,7 +6,6 @@ resolver = "2"
 authors = ["Screenshot Labs", "Starknet community"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-#documentation = "https://docs.rs/..."
 repository = "https://github.com/TheArkProjekt/arkproject-rs"
 homepage = "https://arkproject.dev"
 description = """
@@ -24,7 +23,6 @@ members = [
   "crates/sana",
 ]
 
-
 [workspace.dependencies]
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
@@ -38,7 +36,7 @@ tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
 thiserror = "1.0.40"
 
-# Thoses dependencies are used by the examples + the lib.rs.
+# Dependencies used by the examples + the lib.rs.
 [dependencies]
 futures = "0.3.28"
 async-trait.workspace = true
@@ -54,15 +52,25 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing = "0.1"
 tracing-log = "0.1"
 sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
+alloy-primitives = { version = "0.7.1", default-features = false }
+alloy-sol-types = { version = "0.7.1", default-features = false }
 
 # ** SOLIS **
 [patch."https://github.com/starkware-libs/blockifier"]
 blockifier = { git = "https://github.com/dojoengine/blockifier", rev = "e6e9c90" }
 
 [patch.crates-io]
-cairo-felt = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "262b7eb4b11ab165a2a936a5f914e78aa732d4a2" }
-cairo-vm = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "262b7eb4b11ab165a2a936a5f914e78aa732d4a2" }
-# ***********
+cairo-felt = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "1031381" }
+cairo-vm = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "1031381" }
+
+alloy-contract = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
+alloy-json-rpc = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
+alloy-network = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
+alloy-provider = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
+alloy-rpc-types = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
+alloy-signer = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
+alloy-signer-wallet = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
+alloy-transport = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
 
 [dev-dependencies]
 mockall = "0.12.1"
