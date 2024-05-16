@@ -14,7 +14,7 @@ import { useOwner } from "./useOwner";
 export type fulfillAuctionParameters = ApproveERC20Parameters &
   FulfillAuctionInfo;
 
-export default function useFulfillListing() {
+function useFulfillAuction() {
   const [status, setStatus] = useState<Status>("idle");
   const [stepStatus, setStepStatus] = useState<StepStatus>("idle");
   const { approveERC20, getAllowance } = useApproveERC20();
@@ -74,3 +74,5 @@ export default function useFulfillListing() {
 
   return { fulfill, status, stepStatus };
 }
+
+export { useFulfillAuction };
