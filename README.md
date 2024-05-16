@@ -70,19 +70,63 @@ by Diri.
 - Generic storage for indexer data with SQL-lite
 - NFT Metadata manager interface
 
-## Quick start
+## Quick start for local development
 
-Examples are available in the `example` folder.
-They can be run with the following command:
+install the latest dojo version on your machine (currently 0.0.7-alpha.1)
 
+https://book.dojoengine.org/getting-started
+
+launch a katana (0.6.0)
+
+```bash
+katana
 ```
-RUST_LOG="ark=trace,storage=trace" cargo run --example diri
+
+install packages
+
+```bash
+pnpm install
 ```
 
-To work on a specific package:
+WARNING: be sure to remove old contract addresses in contracts.json
 
+deploy starknet contracts
+
+```bash
+pnpm deploy:starknet
 ```
-cargo build -p <package>
+
+it should modify the messaging.local.json file to add the contract addresses that will use to on solis
+
+deploy starknet test tokens contracts for erc20 and erc721
+
+```bash
+pnpm deploy:starknet:tokens
+```
+
+Launch Solis sequencer
+
+```bash
+cargo run -p solis -- --chain-id 0x736f6c6973 --messaging crates/solis/messaging.local.json --disable-fee -p 7777
+```
+
+deploy Solis ArkProject contracts
+
+```bash
+pnpm deploy:solos
+```
+
+Build the SDKs
+
+```bash
+pnpm run build
+```
+
+Try some examples
+
+```bash
+cd examples/core
+npx bun fulfillListing.ts
 ```
 
 ## License

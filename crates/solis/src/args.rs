@@ -57,9 +57,11 @@ pub struct KatanaArgs {
     #[arg(long)]
     #[arg(value_name = "PATH")]
     #[arg(help = "Directory path of the database to initialize from.")]
-    #[arg(long_help = "Directory path of the database to initialize from. The path must either \
+    #[arg(
+        long_help = "Directory path of the database to initialize from. The path must either \
                        be an empty directory or a directory which already contains a previously \
-                       initialized Katana database.")]
+                       initialized Katana database."
+    )]
     pub db_dir: Option<PathBuf>,
 
     #[arg(long)]
@@ -91,9 +93,11 @@ pub struct KatanaArgs {
     #[arg(value_name = "PATH")]
     #[arg(value_parser = katana_core::service::messaging::MessagingConfig::parse)]
     #[arg(help = "Configure the messaging with an other chain.")]
-    #[arg(long_help = "Configure the messaging to allow Katana listening/sending messages on a \
+    #[arg(
+        long_help = "Configure the messaging to allow Katana listening/sending messages on a \
                        settlement chain that can be Ethereum or an other Starknet sequencer. \
-                       The configuration file details and examples can be found here: https://book.dojoengine.org/toolchain/katana/reference#messaging")]
+                       The configuration file details and examples can be found here: https://book.dojoengine.org/toolchain/katana/reference#messaging"
+    )]
     pub messaging: Option<katana_core::service::messaging::MessagingConfig>,
 
     #[command(flatten)]
@@ -171,9 +175,11 @@ pub struct StarknetOptions {
 pub struct EnvironmentOptions {
     #[arg(long)]
     #[arg(help = "The chain ID.")]
-    #[arg(long_help = "The chain ID. If a raw hex string (`0x` prefix) is provided, then it'd \
+    #[arg(
+        long_help = "The chain ID. If a raw hex string (`0x` prefix) is provided, then it'd \
                        used as the actual chain ID. Otherwise, it's represented as the raw \
-                       ASCII values. It must be a valid Cairo short string.")]
+                       ASCII values. It must be a valid Cairo short string."
+    )]
     #[arg(default_value = "SOLIS")]
     #[arg(value_parser = ChainId::parse)]
     pub chain_id: ChainId,
@@ -230,7 +236,13 @@ impl KatanaArgs {
     }
 
     pub fn server_config(&self) -> ServerConfig {
-        let mut apis = vec![ApiKind::Starknet, ApiKind::Katana, ApiKind::Torii, ApiKind::Saya, ApiKind::Solis];
+        let mut apis = vec![
+            ApiKind::Starknet,
+            ApiKind::Katana,
+            ApiKind::Torii,
+            ApiKind::Saya,
+            ApiKind::Solis,
+        ];
         // only enable `katana` API in dev mode
         if self.dev {
             apis.push(ApiKind::Dev);

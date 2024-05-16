@@ -102,8 +102,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc::new(AsyncRwLock::new(DefaultKatanaHooker::new()));
 
     let sequencer = Arc::new(
-        KatanaSequencer::new(executor_factory, sequencer_config, starknet_config, Some(hooker))
-            .await?,
+        KatanaSequencer::new(
+            executor_factory,
+            sequencer_config,
+            starknet_config,
+            Some(hooker),
+        )
+        .await?,
     );
     let NodeHandle { addr, handle, .. } = spawn(Arc::clone(&sequencer), server_config).await?;
 

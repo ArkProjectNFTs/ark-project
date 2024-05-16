@@ -10,7 +10,9 @@ pub fn parse_seed(seed: &str) -> [u8; 32] {
         unsafe { *(seed[..32].as_ptr() as *const [u8; 32]) }
     } else {
         let mut actual_seed = [0u8; 32];
-        seed.iter().enumerate().for_each(|(i, b)| actual_seed[i] = *b);
+        seed.iter()
+            .enumerate()
+            .for_each(|(i, b)| actual_seed[i] = *b);
         actual_seed
     }
 }
