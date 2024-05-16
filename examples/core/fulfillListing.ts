@@ -47,10 +47,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   await whitelistBroker(config, solisAdminAccount, brokerId);
 
   console.log(`=> Getting config...`);
-  const { arkProvider, starknetProvider } = config;
-  console.log(`=> Creating ark account`);
-  // Create a new account for the listing using the provider
-  const { account: arkAccount } = await createAccount(arkProvider);
+  const { starknetProvider } = config;
 
   console.log(
     `=> Fetching or creating offerer starknet account, for test purpose only`
@@ -99,8 +96,11 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Create the listing on the arkchain using the order details
   const orderHash = await createListing(config, {
     starknetAccount: starknetOffererAccount,
-    arkAccount,
-    order
+    order,
+    approveInfo: {
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId
+    }
   });
 
   if (config.starknetNetwork !== "dev") {
@@ -138,6 +138,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
   console.log("tokenId", tokenId);
+  console.log("orderHash", orderHash);
   // Define the fulfill details
   const fulfillListingInfo = {
     orderHash: orderHash,
@@ -150,8 +151,11 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // fulfill the order
   await fulfillListing(config, {
     starknetAccount: starknetFulfillerAccount,
-    arkAccount,
-    fulfillListingInfo
+    fulfillListingInfo,
+    approveInfo: {
+      currencyAddress: STARKNET_ETH_ADDRESS,
+      amount: order.startAmount
+    }
   });
 
   if (config.starknetNetwork !== "dev") {
