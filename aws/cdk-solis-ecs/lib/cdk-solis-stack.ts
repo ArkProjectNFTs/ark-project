@@ -28,8 +28,8 @@ export class CdkSolisStack extends cdk.Stack {
     // Create EFS file system
     const fileSystem = new efs.FileSystem(this, "EfsFileSystem", {
       vpc,
-      lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS, // Optional, lifecycle policy to move files to the IA storage class
-      performanceMode: efs.PerformanceMode.GENERAL_PURPOSE, // Default
+      lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
+      performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
       outOfInfrequentAccessPolicy:
         efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS
     });
@@ -39,12 +39,20 @@ export class CdkSolisStack extends cdk.Stack {
       vpc,
       allowAllOutbound: true
     });
-
     efsSecurityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcp(2049),
-      "Allow NFS traffic"
+      "Allow NFS traffic from VPC"
     );
+
+    // Add Mount Targets for EFS in each AZ
+    vpc.privateSubnets.forEach((subnet, index) => {
+      new efs.CfnMountTarget(this, `EfsMountTarget${index}`, {
+        fileSystemId: fileSystem.fileSystemId,
+        subnetId: subnet.subnetId,
+        securityGroups: [efsSecurityGroup.securityGroupId]
+      });
+    });
 
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
@@ -114,7 +122,7 @@ export class CdkSolisStack extends cdk.Stack {
 
     container.addMountPoints({
       sourceVolume: volumeName,
-      containerPath: "/mnt/efs", // Path inside the container
+      containerPath: "/mnt/efs",
       readOnly: false
     });
 
@@ -169,7 +177,8 @@ export class CdkSolisStack extends cdk.Stack {
     const ecsService = new ecs.FargateService(this, "ark-solis-service", {
       cluster,
       taskDefinition,
-      healthCheckGracePeriod: cdk.Duration.seconds(60)
+      healthCheckGracePeriod: cdk.Duration.seconds(60),
+      assignPublicIp: true
     });
 
     // Attach ECS Service to HTTPS Listener
@@ -203,7 +212,7 @@ export class CdkSolisStack extends cdk.Stack {
       this,
       "ForceDeploymentFunction",
       {
-        runtime: lambda.Runtime.NODEJS_LATEST,
+        runtime: lambda.Runtime.NODEJS_14_X,
         handler: "index.handler",
         code: lambda.Code.fromInline(`
         const AWS = require('aws-sdk');
