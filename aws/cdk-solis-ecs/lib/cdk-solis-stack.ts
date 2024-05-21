@@ -4,6 +4,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as efs from "aws-cdk-lib/aws-efs";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
@@ -25,13 +26,13 @@ export class CdkSolisStack extends cdk.Stack {
       vpc: vpc
     });
 
-    // Create EFS file system
-    const fileSystem = new efs.FileSystem(this, "EfsFileSystem", {
-      vpc,
+    // Create an EFS file system
+    const fileSystem = new efs.FileSystem(this, "ArkSolisFileSystem", {
+      vpc: vpc,
+      encrypted: true,
       lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
       performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
-      outOfInfrequentAccessPolicy:
-        efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS
+      throughputMode: efs.ThroughputMode.BURSTING
     });
 
     // Security Group for EFS
@@ -39,25 +40,21 @@ export class CdkSolisStack extends cdk.Stack {
       vpc,
       allowAllOutbound: true
     });
-    efsSecurityGroup.addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
-      ec2.Port.tcp(2049),
-      "Allow NFS traffic from VPC"
-    );
 
-    // Add Mount Targets for EFS in each AZ
-    vpc.privateSubnets.forEach((subnet, index) => {
-      new efs.CfnMountTarget(this, `EfsMountTarget${index}`, {
-        fileSystemId: fileSystem.fileSystemId,
-        subnetId: subnet.subnetId,
-        securityGroups: [efsSecurityGroup.securityGroupId]
-      });
-    });
+    efsSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(2049),
+      "Allow NFS traffic"
+    );
 
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
       this,
-      "ArkSolisTaskDef"
+      "ArkSolisTaskDef",
+      {
+        memoryLimitMiB: 512,
+        cpu: 256
+      }
     );
 
     // ECR Repository
@@ -110,7 +107,6 @@ export class CdkSolisStack extends cdk.Stack {
 
     // Mount the EFS file system
     const volumeName = "EfsVolume";
-
     taskDefinition.addVolume({
       name: volumeName,
       efsVolumeConfiguration: {
@@ -188,6 +184,10 @@ export class CdkSolisStack extends cdk.Stack {
       protocol: elbv2.ApplicationProtocol.HTTP,
       healthCheck
     });
+
+    // Allow the ECS task to access the EFS file system
+    fileSystem.grantRootAccess(taskDefinition.taskRole);
+    fileSystem.connections.allowDefaultPortFrom(efsSecurityGroup);
 
     // Route 53 Alias Record for the ALB
     new route53.ARecord(this, "AliasRecord", {
