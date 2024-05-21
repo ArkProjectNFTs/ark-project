@@ -242,5 +242,10 @@ export class CdkSolisStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
-new CdkSolisStack(app, "CdkSolisStack");
+new CdkSolisStack(app, "CdkSolisStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION
+  }
+});
 app.synth();
