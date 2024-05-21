@@ -3,19 +3,17 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import * as custom_resources from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
 
 export class CdkSolisStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
-    const forceNewDeployment = new StringParameter(this, "ForceNewDeployment", {
-      stringValue: Date.now().toString() // Use the current timestamp
-    });
 
     // VPC Lookup
     const vpc = ec2.Vpc.fromLookup(this, "ArkVPC", {
@@ -30,10 +28,7 @@ export class CdkSolisStack extends cdk.Stack {
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
       this,
-      "ArkSolisTaskDef",
-      {
-        family: "ArkSolisTaskDefFam" + forceNewDeployment.stringValue
-      }
+      "ArkSolisTaskDef"
     );
 
     // ECR Repository
@@ -61,7 +56,7 @@ export class CdkSolisStack extends cdk.Stack {
         "solis-latest"
       ),
       environment: {
-        STARKNET_NODE_URL: process.env.STARKNET_NODE_URL || "default_rpc_url", // Fallback to a default if not set
+        STARKNET_NODE_URL: process.env.STARKNET_NODE_URL || "default_rpc_url",
         STARKNET_APPCHAIN_MESSAGING_ADDRESS:
           process.env.STARKNET_APPCHAIN_MESSAGING_ADDRESS ||
           "default_contract_address",
@@ -163,5 +158,50 @@ export class CdkSolisStack extends cdk.Stack {
     new cdk.CfnOutput(this, "SubdomainUrl", {
       value: `https://staging.solis.arkproject.dev`
     });
+
+    // Lambda function to force ECS deployment
+    const forceDeploymentFunction = new lambda.Function(
+      this,
+      "ForceDeploymentFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_14_X,
+        handler: "index.handler",
+        code: lambda.Code.fromInline(`
+        const AWS = require('aws-sdk');
+        const ecs = new AWS.ECS();
+
+        exports.handler = async (event) => {
+          const cluster = event.ResourceProperties.Cluster;
+          const service = event.ResourceProperties.Service;
+
+          await ecs.updateService({
+            cluster,
+            service,
+            forceNewDeployment: true
+          }).promise();
+
+          return { PhysicalResourceId: service };
+        };
+      `),
+        timeout: cdk.Duration.minutes(1)
+      }
+    );
+
+    // Custom resource to trigger the Lambda function
+    const provider = new custom_resources.Provider(this, "Provider", {
+      onEventHandler: forceDeploymentFunction
+    });
+
+    new cdk.CustomResource(this, "ForceDeployment", {
+      serviceToken: provider.serviceToken,
+      properties: {
+        Cluster: cluster.clusterName,
+        Service: ecsService.serviceName
+      }
+    });
   }
 }
+
+const app = new cdk.App();
+new CdkSolisStack(app, "CdkSolisStack");
+app.synth();
