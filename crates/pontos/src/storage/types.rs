@@ -342,6 +342,7 @@ mod tests {
             event_id: "evt123".to_string(),
             block_number: Some(123),
             updated_at: Some(1625101200),
+            chain_id: "SN_MAIN".to_string(),
         });
 
         let serialized = serde_json::to_string(&event).expect("Failed to serialize TokenEvent");

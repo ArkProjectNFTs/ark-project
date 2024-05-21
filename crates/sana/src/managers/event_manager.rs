@@ -114,6 +114,7 @@ impl<S: Storage> EventManager<S> {
             marketplace_contract_address: to_hex_str(&event.from_address),
             marketplace_name: "Ventory".to_string(),
             price: price.to_big_decimal(0).to_string(),
+            chain_id: "SN_MAIN".to_string(),
         })
     }
 
@@ -121,6 +122,7 @@ impl<S: Storage> EventManager<S> {
         &self,
         event: &EmittedEvent,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> Result<TokenSaleEvent> {
         if event.keys.len() < 4 {
             return Err(anyhow!("Can't find event data into this event"));
@@ -225,6 +227,7 @@ impl<S: Storage> EventManager<S> {
             marketplace_contract_address: to_hex_str(&event.from_address),
             marketplace_name: "Element".to_string(),
             price: price.to_big_decimal(0).to_string(),
+            chain_id: chain_id.to_string(),
         })
     }
 
