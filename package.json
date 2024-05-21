@@ -18,12 +18,6 @@
     "deploy:starknet:tokens": "dotenv -- turbo run deploy:starknet:tokens",
     "deploy:starknet": "dotenv -- turbo run deploy:starknet",
     "deploy:starknet:all": "dotenv -- turbo run deploy:starknet:all",
-    "accounts:v5:new": "dotenv -- turbo run accounts:v5:new",
-    "accounts:v5:deploy": "dotenv -- turbo run accounts:v5:deploy",
-    "deploy:v5:solis": "dotenv -- turbo run deploy:v5:solis",
-    "deploy:v5:starknet:tokens": "dotenv -- turbo run deploy:v5:starknet:tokens",
-    "deploy:v5:starknet": "dotenv -- turbo run deploy:v5:starknet",
-    "deploy:v5:starknet:all": "dotenv -- turbo run deploy:v5:starknet:all",
     "version:update": "bun .scripts/updateVersion.ts"
   },
   "devDependencies": {
@@ -44,5 +38,10 @@
     "dotenv-cli": "^7.3.0",
     "glob": "^10.3.10",
     "prettier-plugin-sort-imports": "^1.8.1"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   }
 }

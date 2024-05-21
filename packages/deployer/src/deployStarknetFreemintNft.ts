@@ -33,7 +33,9 @@ export async function deployStarknetContracts(
   const contractCallData = new CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
     name: "ARKTEST",
-    symbol: "ARKTEST"
+    symbol: "ARKTEST",
+    base_uri:
+      "https://ipfs.io/ipfs/QmVXJ2eEx3xrD2mSdPqLBEEYM5obj6DRYkn5yant6rXPmw/"
   });
 
   const deployR = await starknetAdminAccount.declareAndDeploy({

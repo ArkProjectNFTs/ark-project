@@ -16,12 +16,15 @@ mod executor {
     use core::traits::TryInto;
     use core::box::BoxTrait;
     use starknet::{ContractAddress, ClassHash};
-    use ark_common::protocol::order_types::{RouteType, ExecutionInfo, ExecutionValidationInfo};
+    use ark_common::protocol::order_types::{
+        RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
+        FulfillOrderInfo, CancelOrderInfo, CancelInfo,
+    };
+    use ark_common::protocol::order_v1::OrderV1;
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
     };
-
     use openzeppelin::token::{
         erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
         erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
@@ -68,7 +71,7 @@ mod executor {
         self.chain_id.write(chain_id);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
         fn set_broker_fees(ref self: ContractState, broker_address: ContractAddress, fee: u256) {
             self.broker_fees.write(broker_address, fee);
@@ -152,6 +155,60 @@ mod executor {
             );
 
             self.admin_address.write(admin_address);
+        }
+
+        fn cancel_order(ref self: ContractState, cancelInfo: CancelInfo) {
+            let messaging = IAppchainMessagingDispatcher {
+                contract_address: self.messaging_address.read()
+            };
+
+            let vinfo = CancelOrderInfo { cancelInfo: cancelInfo.clone() };
+
+            let mut vinfo_buf = array![];
+            Serde::serialize(@vinfo, ref vinfo_buf);
+
+            messaging
+                .send_message_to_appchain(
+                    self.arkchain_orderbook_address.read(),
+                    selector!("cancel_order_from_l2"),
+                    vinfo_buf.span(),
+                );
+        }
+
+        fn create_order(ref self: ContractState, order: OrderV1) {
+            let messaging = IAppchainMessagingDispatcher {
+                contract_address: self.messaging_address.read()
+            };
+
+            let vinfo = CreateOrderInfo { order: order.clone() };
+
+            let mut vinfo_buf = array![];
+            Serde::serialize(@vinfo, ref vinfo_buf);
+
+            messaging
+                .send_message_to_appchain(
+                    self.arkchain_orderbook_address.read(),
+                    selector!("create_order_from_l2"),
+                    vinfo_buf.span(),
+                );
+        }
+
+        fn fulfill_order(ref self: ContractState, fulfillInfo: FulfillInfo) {
+            let messaging = IAppchainMessagingDispatcher {
+                contract_address: self.messaging_address.read()
+            };
+
+            let vinfo = FulfillOrderInfo { fulfillInfo: fulfillInfo.clone() };
+
+            let mut vinfo_buf = array![];
+            Serde::serialize(@vinfo, ref vinfo_buf);
+
+            messaging
+                .send_message_to_appchain(
+                    self.arkchain_orderbook_address.read(),
+                    selector!("fulfill_order_from_l2"),
+                    vinfo_buf.span(),
+                );
         }
 
         fn execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
@@ -239,7 +296,7 @@ mod executor {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExecutorUpgradeImpl of IUpgradable<ContractState> {
         fn upgrade(ref self: ContractState, class_hash: ClassHash) {
             assert(

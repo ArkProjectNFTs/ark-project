@@ -52,7 +52,6 @@ export default function useCreateOffer() {
       });
       const orderHash = await createOfferCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
-        arkAccount,
         offer: {
           startAmount: parameters.startAmount,
           tokenAddress: parameters.tokenAddress,
@@ -65,7 +64,12 @@ export default function useCreateOffer() {
           startDate: parameters.startDate,
           endDate: parameters.endDate
         } as OfferV1,
-        owner
+        approveInfo: {
+          currencyAddress:
+            parameters.currencyAddress ||
+            (config?.starknetContracts.eth as BigNumberish),
+          amount: parameters.startAmount
+        }
       });
       setResponse(orderHash);
       setStatus("success");

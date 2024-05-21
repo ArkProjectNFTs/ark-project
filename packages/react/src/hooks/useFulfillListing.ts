@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { BigNumberish } from "starknet";
+
 import {
   Config,
   fulfillListing as fulfillListingCore
@@ -12,7 +14,6 @@ import { Status, StepStatus } from "../types";
 import { ApproveERC20Parameters, useApproveERC20 } from "./useApproveERC20";
 import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
-import { useOwner } from "./useOwner";
 
 export type fulfillListingParameters = ApproveERC20Parameters &
   FulfillListingInfo;
@@ -21,7 +22,6 @@ function useFulfillListing() {
   const [status, setStatus] = useState<Status>("idle");
   const [stepStatus, setStepStatus] = useState<StepStatus>("idle");
   const { approveERC20 } = useApproveERC20();
-  const owner = useOwner();
   const arkAccount = useBurnerWallet();
   const config = useConfig();
 
@@ -39,14 +39,17 @@ function useFulfillListing() {
       setStepStatus("selling");
       await fulfillListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
-        arkAccount,
         fulfillListingInfo: {
           orderHash: parameters.orderHash,
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId,
           brokerId: parameters.brokerId
         } as FulfillListingInfo,
-        owner
+        approveInfo: {
+          currencyAddress: (parameters.currencyAddress ||
+            config?.starknetContracts.eth) as BigNumberish,
+          amount: parameters.startAmount
+        }
       });
       setStatus("success");
       setStepStatus("sold");

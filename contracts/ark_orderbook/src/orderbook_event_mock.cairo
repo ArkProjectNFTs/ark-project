@@ -15,7 +15,7 @@ mod orderbook_event_mock {
     use core::starknet::event::EventEmitter;
     use core::traits::Into;
     use starknet::ContractAddress;
-    use ark_orderbook::order::order_v1::OrderV1;
+    use ark_common::protocol::order_v1::OrderV1;
 
     #[storage]
     struct Storage {}
@@ -83,7 +83,7 @@ mod orderbook_event_mock {
     }
 
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn emit_order_fulfilled(ref self: ContractState) {
         self
             .emit(
@@ -95,7 +95,7 @@ mod orderbook_event_mock {
             );
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn emit_order_placed(ref self: ContractState) {
         self
             .emit(
@@ -125,7 +125,7 @@ mod orderbook_event_mock {
             );
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn emit_order_listing(ref self: ContractState) {
         self
             .emit(
@@ -155,7 +155,7 @@ mod orderbook_event_mock {
             );
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn emit_order_offer_placed(ref self: ContractState) {
         self
             .emit(
@@ -185,12 +185,12 @@ mod orderbook_event_mock {
             );
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn emit_order_offer_executed(ref self: ContractState) {
         self.emit(OrderExecuted { order_hash: 0x12346, });
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn emit_order_cancelled(ref self: ContractState) {
         self.emit(OrderCancelled { order_hash: 0x1234, reason: 'fail', });
     }

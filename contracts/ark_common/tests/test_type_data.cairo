@@ -1,20 +1,19 @@
 use core::traits::TryInto;
 use traits::Into;
 use box::BoxTrait;
-use snforge_std::PrintTrait;
 
 use ark_common::crypto::typed_data::{OrderSign, TypedDataTrait};
 
 use core::option::OptionTrait;
 use ark_common::crypto::signer::{Signer, SignInfo};
-use snforge_std::signature::{
-    StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer as SNSigner, Verifier
+use snforge_std::signature::KeyPairTrait;
+use snforge_std::signature::stark_curve::{
+    StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl
 };
 
 fn sign_mock(message_hash: felt252) -> Signer {
-    let private_key: felt252 = 0x1234567890987654321;
-    let mut key_pair = StarkCurveKeyPairTrait::from_private_key(private_key);
-    let (r, s) = key_pair.sign(message_hash).unwrap();
+    let key_pair = KeyPairTrait::<felt252, felt252>::generate();
+    let (r, s): (felt252, felt252) = key_pair.sign(message_hash);
     Signer::WEIERSTRESS_STARKNET(
         SignInfo { user_pubkey: key_pair.public_key, user_sig_r: r, user_sig_s: s, }
     )
@@ -36,7 +35,6 @@ fn ORDER_HASH() -> felt252 {
 fn ark_test_type_data() {
     let order = ORDER();
     let order_hash = order.compute_hash_from(from: SIGNER(), chain_id: 0x534e5f4d41494e);
-    order_hash.print();
-    let signer = sign_mock(order_hash);
+    sign_mock(order_hash);
     assert(order_hash == ORDER_HASH(), 'Invalid order hash');
 }

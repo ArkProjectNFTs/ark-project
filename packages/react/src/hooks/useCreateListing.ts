@@ -14,7 +14,6 @@ import { Status } from "../types";
 import { useApproveERC721 } from "./useApproveERC721";
 import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
-import { useOwner } from "./useOwner";
 
 export type CreateListingParameters = {
   starknetAccount: AccountInterface;
@@ -25,7 +24,6 @@ function useCreateListing() {
   const [response, setResponse] = useState<bigint | undefined>();
   const { approveERC721 } = useApproveERC721();
   const config = useConfig();
-  const owner = useOwner();
   const arkAccount = useBurnerWallet();
 
   async function createListing(parameters: CreateListingParameters) {
@@ -39,7 +37,6 @@ function useCreateListing() {
       );
       const orderHash = await createListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
-        arkAccount,
         order: {
           startAmount: parameters.startAmount,
           tokenAddress: parameters.tokenAddress,
@@ -52,7 +49,10 @@ function useCreateListing() {
           startDate: parameters.startDate,
           endDate: parameters.endDate
         } as ListingV1,
-        owner
+        approveInfo: {
+          tokenAddress: parameters.tokenAddress,
+          tokenId: parameters.tokenId
+        }
       });
       setResponse(orderHash);
       setStatus("success");

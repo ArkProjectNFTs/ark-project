@@ -95,4 +95,14 @@ export type FulfillAuctionInfo = BaseFulfillInfo & {
   relatedOrderHash: BigNumberish;
 };
 
+export type ApproveErc20Info = {
+  currencyAddress: BigNumberish;
+  amount: BigNumberish;
+};
+
+export type ApproveErc721Info = {
+  tokenAddress: BigNumberish;
+  tokenId: BigNumberish;
+};
+
 export type FulfillOfferInfo = BaseFulfillInfo;

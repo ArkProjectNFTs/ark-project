@@ -25,8 +25,6 @@ export const createBroker = async (config: Config, params: Params) => {
 
   await config.arkProvider.waitForTransaction(result.transaction_hash);
 
-  console.log("Broker created");
-  console.log("Transaction hash: " + result.transaction_hash);
   return {
     brokerID: params.brokerID,
     transactionHash: result.transaction_hash

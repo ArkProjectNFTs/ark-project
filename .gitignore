@@ -54,3 +54,6 @@ dbdata/
 # misc
 .DS_Store
 *.pem
+
+# cairo
+.snfoundry_cache

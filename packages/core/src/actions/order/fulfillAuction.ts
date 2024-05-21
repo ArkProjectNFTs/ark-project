@@ -1,37 +1,34 @@
 import {
-  Account,
   AccountInterface,
   BigNumberish,
   cairo,
   CairoOption,
   CairoOptionVariant,
+  CallData,
   Uint256
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
 import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
-import { _fulfillOrder } from "./_fulfill.js";
 
 /**
  * Fulfill an auction on the Arkchain.
  *
  * @param {Config} config - The core SDK configuration.
- * @param {FulfillListingParameters} parameters - Parameters for fulfilling the auction.
+ * @param {FulfillAuctionParameters} parameters - Parameters for fulfilling the listing.
  *
  * @returns {Promise<void>} A promise that resolves when the transaction is completed.
  */
 interface FulfillAuctionParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   fulfillAuctionInfo: FulfillAuctionInfo;
-  owner?: string;
 }
 
 const fulfillAuction = async (
   config: Config,
   parameters: FulfillAuctionParameters
 ) => {
-  const { starknetAccount, arkAccount, fulfillAuctionInfo, owner } = parameters;
+  const { starknetAccount, fulfillAuctionInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
@@ -47,14 +44,22 @@ const fulfillAuction = async (
       CairoOptionVariant.Some,
       cairo.uint256(fulfillAuctionInfo.tokenId)
     ),
-    fulfill_broker_address: starknetAccount.address
+    fulfill_broker_address: fulfillAuctionInfo.brokerId
   };
 
-  _fulfillOrder(config, {
-    starknetAccount,
-    arkAccount,
-    fulfillInfo,
-    owner
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "fulfill_order",
+      calldata: CallData.compile({
+        fulfill_info: fulfillInfo
+      })
+    }
+  ]);
+
+  // Wait for the transaction to be processed
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
   });
 };
 

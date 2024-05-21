@@ -1,16 +1,18 @@
+use core::result::ResultTrait;
 use core::traits::TryInto;
 use core::traits::Into;
 use core::option::OptionTrait;
 use ark_common::crypto::{signer::{Signer, SignInfo}, hash::serialized_hash};
 use ark_common::protocol::order_types::{OrderStatus, OrderTrait, OrderType, CancelInfo, RouteType};
+use snforge_std::cheatcodes::CheatTarget;
 use ark_orderbook::orderbook::Orderbook;
-use ark_orderbook::order::order_v1::OrderV1;
+use ark_common::protocol::order_v1::OrderV1;
 use ark_orderbook::orderbook::{OrderbookDispatcher, OrderbookDispatcherTrait};
 use starknet::deploy_syscall;
 use snforge_std::{
-    PrintTrait, start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-    EventAssertions, Event, SpyOn, test_address,
-    signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait, Verifier}
+    start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
+    Event, SpyOn, test_address,
+    signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl}
 };
 
 use super::super::common::setup::{
@@ -23,7 +25,7 @@ fn test_cancel_auction() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
 
-    let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
+    let (auction_listing_order, signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
 
@@ -56,7 +58,7 @@ fn test_cancel_auction() {
 fn test_cancel_non_existing_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
-    let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
+    let (auction_listing_order, _, _, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
     let order_hash = auction_listing_order.compute_order_hash();
@@ -90,7 +92,7 @@ fn test_invalid_cancel_auction_order() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
 
-    let (auction_listing_order, signer, order_hash, token_hash) = setup_auction_order(
+    let (auction_listing_order, signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
 
@@ -116,8 +118,7 @@ fn test_invalid_cancel_auction_order() {
         token_id: auction_listing_order.token_id
     };
 
-    start_warp(contract_address, end_date + 10);
-    let order_hash = auction_listing_order.compute_order_hash();
+    start_warp(CheatTarget::One(contract_address), end_date + 10);
 
     let cancel_info_hash = serialized_hash(cancel_info);
     let canceller_signer = sign_mock(cancel_info_hash, auction_listing_order.offerer);
@@ -129,8 +130,7 @@ fn test_cancel_auction_during_the_extended_time() {
     let start_date = 1699556828;
     let end_date = start_date + (10 * 24 * 60 * 60);
 
-    let (auction_listing_order, auction_listing_signer, order_hash, token_hash) =
-        setup_auction_order(
+    let (auction_listing_order, auction_listing_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
     );
 
@@ -145,15 +145,15 @@ fn test_cancel_auction_during_the_extended_time() {
     dispatcher.create_order(order: auction_listing_order, signer: auction_listing_signer);
     let order_type = dispatcher.get_order_type(order_hash);
     assert(order_type == OrderType::Auction.into(), 'order is not auction');
-    start_warp(contract_address, end_date - 1);
-    let (auction_offer, signer, auction_order_hash, auction_token_hash) = setup_offer(
+    start_warp(CheatTarget::One(contract_address), end_date - 1);
+    let (auction_offer, signer, auction_order_hash, _) = setup_offer(
         end_date - 1, end_date + 1200, Option::None, Option::None
     );
     dispatcher.create_order(order: auction_offer, signer: signer);
     let order_expiration_date = dispatcher.get_auction_expiration(auction_order_hash);
     let expected_end_date = end_date + 600;
     assert(order_expiration_date == expected_end_date, 'order end date is not correct');
-    start_warp(contract_address, end_date + 5);
+    start_warp(CheatTarget::One(contract_address), end_date + 5);
     let cancel_info = CancelInfo {
         order_hash: order_hash,
         canceller: auction_listing_order.offerer,

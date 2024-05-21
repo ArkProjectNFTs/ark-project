@@ -1,32 +1,36 @@
 import {
-  Account,
   AccountInterface,
   cairo,
   CairoOption,
   CairoOptionVariant,
+  CallData,
   Uint256
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { AuctionV1, OrderV1, RouteType } from "../../types/index.js";
-import { createOrder } from "./_create.js";
+import {
+  ApproveErc721Info,
+  AuctionV1,
+  OrderV1,
+  RouteType
+} from "../../types/index.js";
+import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
 interface CreateAuctionParameters {
   starknetAccount: AccountInterface;
-  arkAccount: Account;
   order: AuctionV1;
-  owner?: string;
+  approveInfo: ApproveErc721Info;
 }
 
 /**
- * Creates an auction on the Arkchain.
+ * Creates an Auction on the ArkProject.
  *
- * This function takes a configuration object and auction parameters, builds a complete OrderV1 object
+ * This function takes a configuration object and listing parameters, builds a complete OrderV1 object
  * with default values for unspecified fields, compiles the order data, signs it, and then executes
- * the transaction to create an auction on the Arkchain using the specified Starknet and Arkchain accounts.
+ * the transaction to create a listing on the Arkchain using the specified Starknet and Arkchain accounts.
  *
  * @param {Config} config - The core SDK config, including network and contract information.
- * @param {CreateAuctionParameters} parameters - The parameters for the auction, including Starknet account,
+ * @param {CreateAuctionParameters} parameters - The parameters for the listing, including Starknet account,
  * Arkchain account, base order details, and an optional owner address.
  *
  * @returns {Promise<string>} A promise that resolves with the hash of the created order.
@@ -36,12 +40,12 @@ const createAuction = async (
   config: Config,
   parameters: CreateAuctionParameters
 ) => {
-  const { starknetAccount, arkAccount, order: baseOrder, owner } = parameters;
-  const chainId = await config.starknetProvider.getChainId();
-  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
+  const { starknetAccount, order: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
+  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
+  const chainId = await config.starknetProvider.getChainId();
 
   if (startDate < Math.floor(Date.now() / 1000)) {
     throw new Error("Invalid start date");
@@ -58,7 +62,6 @@ const createAuction = async (
   if (baseOrder.endAmount < baseOrder.startAmount) {
     throw new Error("Invalid end amount");
   }
-
   const order: OrderV1 = {
     route: RouteType.Erc721ToErc20,
     currencyAddress: config.starknetContracts.eth,
@@ -80,12 +83,29 @@ const createAuction = async (
     additionalData: []
   };
 
-  const orderHash = await createOrder(config, {
-    starknetAccount,
-    arkAccount,
-    order,
-    owner
+  const result = await starknetAccount.execute([
+    {
+      contractAddress: approveInfo.tokenAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        to: config.starknetContracts.executor,
+        token_id: cairo.uint256(approveInfo.tokenId)
+      })
+    },
+    {
+      contractAddress: config.starknetContracts.executor,
+      entrypoint: "create_order",
+      calldata: CallData.compile({
+        order: order
+      })
+    }
+  ]);
+
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+    retryInterval: 1000
   });
+
+  const orderHash = getOrderHashFromOrderV1(order);
 
   return orderHash;
 };

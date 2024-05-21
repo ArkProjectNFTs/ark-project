@@ -10,7 +10,6 @@ export {
   approveERC721,
   increaseERC20
 } from "./actions/contract/index.js";
-export { waitForTransactionBlock } from "./actions/contract/index.js";
 
 export {
   createAuction,
@@ -21,6 +20,8 @@ export {
   fulfillListing,
   fulfillOffer
 } from "./actions/order/index.js";
+
+export { createBroker } from "./actions/broker/createBroker.js";
 
 export {
   getOrderHash,
@@ -35,6 +36,7 @@ export type {
   ListingV1,
   OfferV1,
   CancelInfo,
-  RouteType
+  RouteType,
+  FulfillAuctionInfo
 } from "./types/index.js";
 export type { Config, Network, ConfigParameters } from "./createConfig.js";
