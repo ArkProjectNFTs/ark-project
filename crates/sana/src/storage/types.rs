@@ -162,6 +162,7 @@ pub struct TokenTransferEvent {
     pub from_address: String,
     pub to_address: String,
     pub contract_address: String,
+    pub chain_id: String,
     pub contract_type: String,
     pub transaction_hash: String,
     pub token_id: String,
@@ -207,6 +208,7 @@ impl Default for TokenTransferEvent {
             event_type: None,
             block_number: None,
             updated_at: None,
+            chain_id: "SN_MAIN".to_string(),
         }
     }
 }
@@ -215,6 +217,7 @@ impl Default for TokenTransferEvent {
 pub struct TokenInfo {
     pub contract_address: String,
     pub token_id: String,
+    pub chain_id: String,
     pub token_id_hex: String,
     pub owner: String,
 }
