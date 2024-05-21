@@ -29,9 +29,9 @@
     "prettier": "^3.1.0",
     "turbo": "latest"
   },
-  "packageManager": "pnpm@9.0.6",
+  "packageManager": "pnpm@9.1.2",
   "engines": {
-    "node": ">=18"
+    "node": ">=21"
   },
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
