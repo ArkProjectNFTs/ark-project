@@ -175,11 +175,12 @@ impl Storage for DefaultSqlxStorage {
             )));
         }
 
-        let q = "INSERT INTO token (contract_address, token_id, token_id_hex, owner, block_timestamp) VALUES (?, ?, ?, ?, ?)";
+        let q = "INSERT INTO token (contract_address, token_id, chain_id, token_id_hex, owner, block_timestamp) VALUES (?, ?, ?, ?, ?)";
 
         let _r = sqlx::query(q)
             .bind(token.contract_address.clone())
             .bind(token.token_id.clone())
+            .bind(token.chain_id.clone())
             .bind(token.token_id_hex.clone())
             .bind(token.owner.clone())
             .bind(block_timestamp.to_string())
