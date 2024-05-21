@@ -1212,9 +1212,33 @@ name = "cainome"
 version = "0.1.5"
 source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.7#2d4b52b2e79796f76fba9e3a1b1027e8e63292b8"
 dependencies = [
- "cainome-cairo-serde",
- "cainome-parser",
- "cainome-rs",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
+ "cainome-rs 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
+]
+
+[[package]]
+name = "cainome"
+version = "0.2.3"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.6#07ba9c91baa2f6aa2bc850b6699ffc2266be9a13"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "cainome-rs 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "cainome-rs-macro",
+ "camino",
+ "clap",
+ "clap_complete",
+ "convert_case 0.6.0",
+ "serde",
+ "serde_json",
+ "starknet 0.9.0",
+ "thiserror",
+ "tracing",
+ "tracing-subscriber",
+ "url",
 ]
 
 [[package]]
@@ -1223,6 +1247,15 @@ version = "0.1.0"
 source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.7#2d4b52b2e79796f76fba9e3a1b1027e8e63292b8"
 dependencies = [
  "starknet 0.8.0",
+ "thiserror",
+]
+
+[[package]]
+name = "cainome-cairo-serde"
+version = "0.1.0"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.6#07ba9c91baa2f6aa2bc850b6699ffc2266be9a13"
+dependencies = [
+ "starknet 0.9.0",
  "thiserror",
 ]
 
@@ -1239,17 +1272,63 @@ dependencies = [
 ]
 
 [[package]]
+name = "cainome-parser"
+version = "0.1.0"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.6#07ba9c91baa2f6aa2bc850b6699ffc2266be9a13"
+dependencies = [
+ "convert_case 0.6.0",
+ "quote",
+ "serde_json",
+ "starknet 0.9.0",
+ "syn 2.0.64",
+ "thiserror",
+]
+
+[[package]]
 name = "cainome-rs"
 version = "0.1.0"
 source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.7#2d4b52b2e79796f76fba9e3a1b1027e8e63292b8"
 dependencies = [
  "anyhow",
- "cainome-cairo-serde",
- "cainome-parser",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
  "proc-macro2",
  "quote",
  "serde_json",
  "starknet 0.8.0",
+ "syn 2.0.64",
+ "thiserror",
+]
+
+[[package]]
+name = "cainome-rs"
+version = "0.1.0"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.6#07ba9c91baa2f6aa2bc850b6699ffc2266be9a13"
+dependencies = [
+ "anyhow",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "proc-macro2",
+ "quote",
+ "serde_json",
+ "starknet 0.9.0",
+ "syn 2.0.64",
+ "thiserror",
+]
+
+[[package]]
+name = "cainome-rs-macro"
+version = "0.1.0"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.2.6#07ba9c91baa2f6aa2bc850b6699ffc2266be9a13"
+dependencies = [
+ "anyhow",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "cainome-rs 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.2.6)",
+ "proc-macro2",
+ "quote",
+ "serde_json",
+ "starknet 0.9.0",
  "syn 2.0.64",
  "thiserror",
 ]
@@ -1749,6 +1828,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "camino"
+version = "1.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0ec6b951b160caa93cc0c7b209e5a3bff7aae9062213451ac99493cd844c239"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1883,7 +1971,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "anyhow",
  "reqwest 0.11.22",
@@ -2252,7 +2340,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "cainome",
+ "cainome 0.1.5",
  "clap",
  "dotenv",
  "env_logger",
@@ -2315,7 +2403,7 @@ dependencies = [
 [[package]]
 name = "dojo-metrics"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "anyhow",
  "hyper 0.14.27",
@@ -3515,7 +3603,7 @@ dependencies = [
 [[package]]
 name = "katana-core"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "alloy-contract",
  "alloy-network",
@@ -3561,7 +3649,7 @@ dependencies = [
 [[package]]
 name = "katana-db"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "anyhow",
  "cairo-vm",
@@ -3581,7 +3669,7 @@ dependencies = [
 [[package]]
 name = "katana-executor"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "alloy-primitives",
  "blockifier",
@@ -3601,7 +3689,7 @@ dependencies = [
 [[package]]
 name = "katana-primitives"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "alloy-primitives",
  "anyhow",
@@ -3629,7 +3717,7 @@ dependencies = [
 [[package]]
 name = "katana-provider"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "anyhow",
  "auto_impl",
@@ -3646,7 +3734,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -3680,7 +3768,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-api"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "jsonrpsee",
  "katana-core",
@@ -3692,7 +3780,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-types"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "alloy-primitives",
  "anyhow",
@@ -3713,7 +3801,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-types-builder"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "anyhow",
  "katana-executor",
@@ -3726,7 +3814,7 @@ dependencies = [
 [[package]]
 name = "katana-tasks"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.1-solis#8ba6ead22be545e0c20ea20f9ea79acfaef306ae"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.3-solis#b219de6e1b08815a8997597d42e0e82baf318b47"
 dependencies = [
  "futures",
  "rayon",
@@ -5888,6 +5976,8 @@ dependencies = [
  "alloy-primitives",
  "anyhow",
  "assert_matches",
+ "async-trait",
+ "cainome 0.2.3",
  "cfg-if",
  "clap",
  "clap_complete",
@@ -5901,6 +5991,7 @@ dependencies = [
  "katana-rpc-api",
  "serde_json",
  "shellexpand",
+ "starknet 0.9.0",
  "starknet_api",
  "tokio",
  "tracing",

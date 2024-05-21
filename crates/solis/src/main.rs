@@ -9,6 +9,9 @@ use dojo_metrics::{metrics_process, prometheus_exporter};
 use katana_core::constants::MAX_RECURSION_DEPTH;
 use katana_core::env::get_default_vm_resource_fee_cost;
 use katana_core::hooker::{DefaultKatanaHooker, KatanaHooker};
+use crate::hooker::SolisHooker;
+use starknet::core::types::FieldElement;
+
 use katana_core::sequencer::KatanaSequencer;
 use katana_executor::SimulationFlag;
 use katana_primitives::class::ClassHash;
@@ -22,7 +25,17 @@ use tokio::sync::RwLock as AsyncRwLock;
 use tracing::info;
 
 mod args;
+mod contracts;
+mod hooker;
 mod utils;
+
+// Chain ID: 'SOLIS' cairo short string.
+pub const CHAIN_ID_SOLIS: FieldElement = FieldElement::from_mont([
+    18446732623703627169,
+    18446744073709551615,
+    18446744073709551615,
+    576266102202707888,
+]);
 
 use args::Commands::Completions;
 use args::KatanaArgs;
@@ -95,11 +108,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     }
 
-    // Create a default hooker instance
-    // Create a default hooker instance
-    // Create a default hooker instance
-    let hooker: Arc<AsyncRwLock<dyn KatanaHooker<BlockifierFactory> + Send + Sync>> =
-        Arc::new(AsyncRwLock::new(DefaultKatanaHooker::new()));
+    // ** SOLIS
+    let sn_utils_reader = contracts::starknet_utils::new_starknet_utils_reader(
+        FieldElement::ZERO,
+        &sequencer_config.messaging.clone().unwrap().rpc_url,
+    );
+
+    let executor_address = FieldElement::ZERO;
+    let orderbook_address = FieldElement::ZERO;
+
+    let hooker = Arc::new(AsyncRwLock::new(SolisHooker::new(
+        sn_utils_reader,
+        orderbook_address,
+        executor_address,
+    )));
+    // **
 
     let sequencer = Arc::new(
         KatanaSequencer::new(
@@ -157,7 +180,7 @@ fn print_intro(args: &KatanaArgs, genesis: &Genesis, address: SocketAddr) {
 ██╔══██║██╔══██╗██╔═██╗░██╔═══╝░██╔══██╗██║░░██║██╗░░██║██╔══╝░░██║░░██╗░░░██║░░░
 ██║░░██║██║░░██║██║░╚██╗██║░░░░░██║░░██║╚█████╔╝╚█████╔╝███████╗╚█████╔╝░░░██║░░░
 ╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░░░░╚═╝░░╚═╝░╚════╝░░╚════╝░╚══════╝░╚════╝░░░░╚═╝░░░
-                
+
 ░██████╗░█████╗░██╗░░░░░██╗░██████╗
 ██╔════╝██╔══██╗██║░░░░░██║██╔════╝
 ╚█████╗░██║░░██║██║░░░░░██║╚█████╗░
