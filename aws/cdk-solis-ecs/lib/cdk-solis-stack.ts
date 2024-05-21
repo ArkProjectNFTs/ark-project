@@ -41,10 +41,45 @@ export class CdkSolisStack extends cdk.Stack {
       allowAllOutbound: true
     });
 
+    // Create EFS Mount Targets
+    new efs.CfnMountTarget(this, "EfsMountTarget1a", {
+      fileSystemId: fileSystem.fileSystemId,
+      subnetId: vpc.selectSubnets({ availabilityZones: ["us-east-1a"] })
+        .subnetIds[0],
+      securityGroups: [efsSecurityGroup.securityGroupId]
+    });
+
+    new efs.CfnMountTarget(this, "EfsMountTarget1b", {
+      fileSystemId: fileSystem.fileSystemId,
+      subnetId: vpc.selectSubnets({ availabilityZones: ["us-east-1b"] })
+        .subnetIds[0],
+      securityGroups: [efsSecurityGroup.securityGroupId]
+    });
+
+    new efs.CfnMountTarget(this, "EfsMountTarget1c", {
+      fileSystemId: fileSystem.fileSystemId,
+      subnetId: vpc.selectSubnets({ availabilityZones: ["us-east-1c"] })
+        .subnetIds[0],
+      securityGroups: [efsSecurityGroup.securityGroupId]
+    });
+
     efsSecurityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcp(2049),
-      "Allow NFS traffic"
+      "Allow NFS traffic from VPC"
+    );
+
+    // Security Group for ECS Tasks
+    const ecsTaskSecurityGroup = new ec2.SecurityGroup(this, "EcsTaskSG", {
+      vpc,
+      allowAllOutbound: true
+    });
+
+    // Allow ECS tasks to access EFS
+    fileSystem.connections.allowFrom(
+      ecsTaskSecurityGroup,
+      ec2.Port.tcp(2049),
+      "Allow ECS tasks to access EFS"
     );
 
     // Task Definition
@@ -52,8 +87,8 @@ export class CdkSolisStack extends cdk.Stack {
       this,
       "ArkSolisTaskDef",
       {
-        memoryLimitMiB: 512,
-        cpu: 256
+        memoryLimitMiB: 4096, // Increased memory limit
+        cpu: 2048 // Increased CPU limit
       }
     );
 
@@ -96,7 +131,7 @@ export class CdkSolisStack extends cdk.Stack {
         RPC_PASSWORD: process.env.RPC_PASSWORD || "default_rpc_password",
         DEPLOYMENT_VERSION: Date.now().toString()
       },
-      memoryLimitMiB: 512,
+      memoryLimitMiB: 4096, // Match the increased task definition memory limit
       logging
     });
 
@@ -173,6 +208,7 @@ export class CdkSolisStack extends cdk.Stack {
     const ecsService = new ecs.FargateService(this, "ark-solis-service", {
       cluster,
       taskDefinition,
+      securityGroups: [ecsTaskSecurityGroup],
       healthCheckGracePeriod: cdk.Duration.seconds(60),
       assignPublicIp: true
     });
