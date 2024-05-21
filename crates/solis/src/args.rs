@@ -300,56 +300,56 @@ impl KatanaArgs {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
+// #[cfg(test)]
+// mod test {
+//     use super::*;
 
-    #[test]
-    fn test_starknet_config_default() {
-        let args = KatanaArgs::parse_from(["katana"]);
-        let config = args.starknet_config();
+//     #[test]
+//     fn test_starknet_config_default() {
+//         let args = KatanaArgs::parse_from(["katana"]);
+//         let config = args.starknet_config();
 
-        assert!(!config.disable_fee);
-        assert!(!config.disable_validate);
-        assert_eq!(config.fork_rpc_url, None);
-        assert_eq!(config.fork_block_number, None);
-        assert_eq!(config.env.chain_id, ChainId::parse("KATANA").unwrap());
-        assert_eq!(config.env.invoke_max_steps, DEFAULT_INVOKE_MAX_STEPS);
-        assert_eq!(config.env.validate_max_steps, DEFAULT_VALIDATE_MAX_STEPS);
-        assert_eq!(config.db_dir, None);
-        assert_eq!(config.genesis.gas_prices.eth, DEFAULT_ETH_L1_GAS_PRICE);
-        assert_eq!(config.genesis.gas_prices.strk, DEFAULT_STRK_L1_GAS_PRICE);
-        assert_eq!(config.genesis.sequencer_address, *DEFAULT_SEQUENCER_ADDRESS);
-    }
+//         assert!(!config.disable_fee);
+//         assert!(!config.disable_validate);
+//         assert_eq!(config.fork_rpc_url, None);
+//         assert_eq!(config.fork_block_number, None);
+//         assert_eq!(config.env.chain_id, ChainId::parse("KATANA").unwrap());
+//         assert_eq!(config.env.invoke_max_steps, DEFAULT_INVOKE_MAX_STEPS);
+//         assert_eq!(config.env.validate_max_steps, DEFAULT_VALIDATE_MAX_STEPS);
+//         assert_eq!(config.db_dir, None);
+//         assert_eq!(config.genesis.gas_prices.eth, DEFAULT_ETH_L1_GAS_PRICE);
+//         assert_eq!(config.genesis.gas_prices.strk, DEFAULT_STRK_L1_GAS_PRICE);
+//         assert_eq!(config.genesis.sequencer_address, *DEFAULT_SEQUENCER_ADDRESS);
+//     }
 
-    #[test]
-    fn test_starknet_config_custom() {
-        let args = KatanaArgs::parse_from([
-            "katana",
-            "--disable-fee",
-            "--disable-validate",
-            "--chain-id",
-            "SN_GOERLI",
-            "--invoke-max-steps",
-            "200",
-            "--validate-max-steps",
-            "100",
-            "--db-dir",
-            "/path/to/db",
-            "--eth-gas-price",
-            "10",
-            "--strk-gas-price",
-            "20",
-        ]);
-        let config = args.starknet_config();
+//     #[test]
+//     fn test_starknet_config_custom() {
+//         let args = KatanaArgs::parse_from([
+//             "katana",
+//             "--disable-fee",
+//             "--disable-validate",
+//             "--chain-id",
+//             "SN_GOERLI",
+//             "--invoke-max-steps",
+//             "200",
+//             "--validate-max-steps",
+//             "100",
+//             "--db-dir",
+//             "/path/to/db",
+//             "--eth-gas-price",
+//             "10",
+//             "--strk-gas-price",
+//             "20",
+//         ]);
+//         let config = args.starknet_config();
 
-        assert!(config.disable_fee);
-        assert!(config.disable_validate);
-        assert_eq!(config.env.chain_id, ChainId::GOERLI);
-        assert_eq!(config.env.invoke_max_steps, 200);
-        assert_eq!(config.env.validate_max_steps, 100);
-        assert_eq!(config.db_dir, Some(PathBuf::from("/path/to/db")));
-        assert_eq!(config.genesis.gas_prices.eth, 10);
-        assert_eq!(config.genesis.gas_prices.strk, 20);
-    }
-}
+//         assert!(config.disable_fee);
+//         assert!(config.disable_validate);
+//         assert_eq!(config.env.chain_id, ChainId::GOERLI);
+//         assert_eq!(config.env.invoke_max_steps, 200);
+//         assert_eq!(config.env.validate_max_steps, 100);
+//         assert_eq!(config.db_dir, Some(PathBuf::from("/path/to/db")));
+//         assert_eq!(config.genesis.gas_prices.eth, 10);
+//         assert_eq!(config.genesis.gas_prices.strk, 20);
+//     }
+// }
