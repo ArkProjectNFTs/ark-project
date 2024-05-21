@@ -108,6 +108,7 @@ impl Serialize for TokenEvent {
                         .block_number
                         .map_or("".to_string(), |block_number| block_number.to_string()),
                 );
+                map.insert("chain_id", event.chain_id.clone());
 
                 map
             }
@@ -128,6 +129,7 @@ impl Serialize for TokenEvent {
                 map.insert("token_id", event.token_id.clone());
                 map.insert("token_id_hex", event.token_id_hex.clone());
                 map.insert("quantity", event.quantity.to_string());
+                map.insert("chain_id", event.chain_id.clone());
 
                 if let Some(currency_address) = event.currency_address.clone() {
                     map.insert("currency_address", currency_address);
@@ -182,6 +184,7 @@ pub struct TokenSaleEvent {
     pub marketplace_contract_address: String,
     pub marketplace_name: String,
     pub transaction_hash: String,
+    pub chain_id: String,
     pub token_id: String,
     pub token_id_hex: String,
     pub event_type: EventType,
@@ -359,6 +362,7 @@ mod tests {
             token_event_id: "evt123".to_string(),
             block_number: Some(123),
             updated_at: Some(1625101200),
+            chain_id: "SN_MAIN".to_string(),
         });
 
         let serialized = serde_json::to_string(&event).expect("Failed to serialize TokenEvent");
@@ -375,6 +379,7 @@ mod tests {
             "token_id": "123",
             "token_id_hex": "0x123",
             "contract_type": "ERC721",
+            "chain_id": "SN_MAIN"
         });
 
         let expected = expected_json.to_string();
