@@ -2,12 +2,12 @@ import * as cdk from "aws-cdk-lib";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
+import * as efs from "aws-cdk-lib/aws-efs";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import * as custom_resources from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
 
@@ -24,6 +24,27 @@ export class CdkSolisStack extends cdk.Stack {
     const cluster = new ecs.Cluster(this, "ark-solis-production", {
       vpc: vpc
     });
+
+    // Create EFS file system
+    const fileSystem = new efs.FileSystem(this, "EfsFileSystem", {
+      vpc,
+      lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS, // Optional, lifecycle policy to move files to the IA storage class
+      performanceMode: efs.PerformanceMode.GENERAL_PURPOSE, // Default
+      outOfInfrequentAccessPolicy:
+        efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS
+    });
+
+    // Security Group for EFS
+    const efsSecurityGroup = new ec2.SecurityGroup(this, "EfsSecurityGroup", {
+      vpc,
+      allowAllOutbound: true
+    });
+
+    efsSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(2049),
+      "Allow NFS traffic"
+    );
 
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
@@ -77,6 +98,24 @@ export class CdkSolisStack extends cdk.Stack {
     // Container Port Mapping
     container.addPortMappings({
       containerPort: 7777
+    });
+
+    // Mount the EFS file system
+    const volumeName = "EfsVolume";
+
+    taskDefinition.addVolume({
+      name: volumeName,
+      efsVolumeConfiguration: {
+        fileSystemId: fileSystem.fileSystemId,
+        rootDirectory: "/",
+        transitEncryption: "ENABLED"
+      }
+    });
+
+    container.addMountPoints({
+      sourceVolume: volumeName,
+      containerPath: "/mnt/efs", // Path inside the container
+      readOnly: false
     });
 
     // Health Check

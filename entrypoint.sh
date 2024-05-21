@@ -14,5 +14,8 @@ cat >crates/solis/messaging.json <<EOF
 }
 EOF
 
+# Ensure the database directory exists
+mkdir -p /mnt/efs/db
+
 # Then start your application
-exec ./target/release/solis --messaging crates/solis/messaging.json --dev
+exec ./target/release/solis --messaging crates/solis/messaging.json --dev --db-dir /mnt/efs/db --chain-id 0x736f6c6973 --disable-fee -p 7777
