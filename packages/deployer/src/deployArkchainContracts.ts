@@ -5,7 +5,11 @@ import loading from "loading-cli";
 
 import { ARTIFACTS_PATH } from "./constants";
 import { updateOrderbookAddress } from "./contracts/executor";
-import { deployOrderBook, updateExecutorAddress } from "./contracts/orderbook";
+import {
+  deployOrderBook,
+  updateExecutorAddress,
+  upgradeOrderbook
+} from "./contracts/orderbook";
 import { getSolisProvider, getStarknetProvider } from "./providers";
 import { setSolisAddresses } from "./solis";
 import { ProviderNetwork } from "./types";
@@ -40,53 +44,59 @@ async function deployArkchainContracts(
 
   if (arkchainAdminAccount) {
     const chain_id = await starknetProvider.getChainId();
-    const orderbookContract = await deployOrderBook(
-      ARTIFACTS_PATH,
-      arkchainAdminAccount,
-      solisProvider,
-      arkchainAdminAccount.address,
-      chain_id
-    );
-    const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
-    const contracts = JSON.parse(fileContent);
-    const { executor: executorAddress } = contracts[starknetNetwork];
-
-    arkchainSpinner.text = "💠 Updating executor address...";
     const existingContracts = await getExistingContracts();
-    existingContracts[solisNetwork].orderbook = orderbookContract.address;
-    await fs.writeFile(
-      getContractsFilePath(),
-      JSON.stringify(existingContracts)
-    );
-
-    await updateExecutorAddress(
-      solisProvider,
-      arkchainAdminAccount,
-      orderbookContract.address,
-      executorAddress
-    );
-
-    arkchainSpinner.text = "💠 Updating Executor Contract on Starknet...";
-
-    if (starknetAdminAccount) {
-      await updateOrderbookAddress(
-        starknetProvider,
-        starknetAdminAccount,
-        executorAddress,
-        orderbookContract.address
+    if (existingContracts[solisNetwork].orderbook) {
+      await upgradeOrderbook(
+        ARTIFACTS_PATH,
+        arkchainAdminAccount,
+        solisProvider,
+        existingContracts[solisNetwork].orderbook
       );
+    } else {
+      const orderbookContract = await deployOrderBook(
+        ARTIFACTS_PATH,
+        arkchainAdminAccount,
+        solisProvider,
+        arkchainAdminAccount.address,
+        chain_id
+      );
+      existingContracts[solisNetwork].orderbook = orderbookContract.address;
+      arkchainSpinner.text = "💠 Updating executor address...";
+
+      await fs.writeFile(
+        getContractsFilePath(),
+        JSON.stringify(existingContracts)
+      );
+
+      await updateExecutorAddress(
+        solisProvider,
+        arkchainAdminAccount,
+        orderbookContract.address,
+        existingContracts[starknetNetwork].executor
+      );
+
+      arkchainSpinner.text = "💠 Updating Executor Contract on Starknet...";
+
+      if (starknetAdminAccount) {
+        await updateOrderbookAddress(
+          starknetProvider,
+          starknetAdminAccount,
+          existingContracts[starknetNetwork].executor,
+          orderbookContract.address
+        );
+      }
+
+      arkchainSpinner.text = "💠 Updating Contracts on solis rpc...";
+      await setSolisAddresses(
+        orderbookContract.address,
+        existingContracts[starknetNetwork].executor,
+        solisNodeUrl
+      );
+
+      arkchainSpinner.stop();
+      console.log("💠 Arkchain Contracts");
+      console.log(`- Orderbook contract: ${orderbookContract.address}\n`);
     }
-
-    arkchainSpinner.text = "💠 Updating Contracts on solis rpc...";
-    await setSolisAddresses(
-      orderbookContract.address,
-      executorAddress,
-      solisNodeUrl
-    );
-
-    arkchainSpinner.stop();
-    console.log("💠 Arkchain Contracts");
-    console.log(`- Orderbook contract: ${orderbookContract.address}\n`);
   }
 }
 

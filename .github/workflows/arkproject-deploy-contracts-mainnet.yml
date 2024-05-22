@@ -103,3 +103,12 @@ jobs:
           RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
         run: |
           pnpm run deploy:solis -- --solis mainnet --starknet mainnet
+      - name: Commit and Push Generated contract file
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "account@screenshot.co"
+          git config --global user.name "Solis Bot"
+          git add contracts.json
+          git commit -m "feat: update contracts.json for mainnet deployment"
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
