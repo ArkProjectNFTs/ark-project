@@ -12,6 +12,7 @@
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::env;
 
 use alloy_primitives::U256;
 use clap::{Args, Parser, Subcommand};
@@ -248,14 +249,17 @@ impl KatanaArgs {
             apis.push(ApiKind::Dev);
         }
 
+        let rpc_user = env::var("RPC_USER").unwrap_or_else(|_| "userDefault".to_string());
+        let rpc_password =
+            env::var("RPC_PASSWORD").unwrap_or_else(|_| "passwordDefault".to_string());
         ServerConfig {
             apis,
             port: self.server.port,
             host: self.server.host.clone().unwrap_or("0.0.0.0".into()),
             max_connections: self.server.max_connections,
             allowed_origins: self.server.allowed_origins.clone(),
-            rpc_user: "user".into(),
-            rpc_password: "password".into(),
+            rpc_user,
+            rpc_password,
         }
     }
 
