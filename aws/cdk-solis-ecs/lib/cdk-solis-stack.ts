@@ -60,16 +60,22 @@ export class CdkSolisStack extends cdk.Stack {
       "Allow ECS tasks to access EFS"
     );
 
-    // Ensure that mount targets exist
+    // Ensure that mount targets depend on security group creation
     const subnets = vpc.selectSubnets({
       subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
     }).subnets;
+
+    const subnetIds = new Set<string>();
+
     subnets.forEach((subnet, index) => {
-      new efs.CfnMountTarget(this, `EfsMountTarget${index}`, {
-        fileSystemId: fileSystem.fileSystemId,
-        subnetId: subnet.subnetId,
-        securityGroups: [efsSecurityGroup.securityGroupId]
-      });
+      if (!subnetIds.has(subnet.subnetId)) {
+        subnetIds.add(subnet.subnetId);
+        new efs.CfnMountTarget(this, `EfsMountTarget${index}`, {
+          fileSystemId: fileSystem.fileSystemId,
+          subnetId: subnet.subnetId,
+          securityGroups: [efsSecurityGroup.securityGroupId]
+        }).node.addDependency(efsSecurityGroup);
+      }
     });
 
     // Task Definition
