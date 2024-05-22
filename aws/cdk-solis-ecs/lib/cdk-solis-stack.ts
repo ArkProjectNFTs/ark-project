@@ -14,17 +14,22 @@ interface EcsEfsStackProps extends cdk.StackProps {
 }
 
 export class CdkSolisStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: EcsEfsStackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Import the VPC from the VPC Stack
+    const vpc = ec2.Vpc.fromLookup(this, "ArkVPC", {
+      vpcId: "vpc-0d11f7ec183208e08"
+    });
 
     // ECS Cluster
     const cluster = new ecs.Cluster(this, "ark-solis-production", {
-      vpc: props.vpc
+      vpc: vpc
     });
 
     // Create an EFS file system
     const fileSystem = new efs.FileSystem(this, "ArkSolisFileSystem", {
-      vpc: props.vpc,
+      vpc: vpc,
       encrypted: true,
       lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
       performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
@@ -34,19 +39,19 @@ export class CdkSolisStack extends cdk.Stack {
 
     // Security Group for EFS
     const efsSecurityGroup = new ec2.SecurityGroup(this, "EfsSecurityGroup", {
-      vpc: props.vpc,
+      vpc: vpc,
       allowAllOutbound: true
     });
 
     efsSecurityGroup.addIngressRule(
-      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcp(2049),
       "Allow NFS traffic from VPC"
     );
 
     // Security Group for ECS Tasks
     const ecsTaskSecurityGroup = new ec2.SecurityGroup(this, "EcsTaskSG", {
-      vpc: props.vpc,
+      vpc: vpc,
       allowAllOutbound: true
     });
 
@@ -79,7 +84,7 @@ export class CdkSolisStack extends cdk.Stack {
     );
 
     // ECR Repository
-    const ecrRepository = ecs.ContainerImage.fromRegistry("my-image");
+    const ecrRepository = ecs.ContainerImage.fromRegistry("solis-latest");
 
     // Log Group
     const logGroup = new logs.LogGroup(this, "LogGroup", {
@@ -98,6 +103,19 @@ export class CdkSolisStack extends cdk.Stack {
       memoryLimitMiB: 4096,
       logging,
       environment: {
+        STARKNET_NODE_URL: process.env.STARKNET_NODE_URL || "default_rpc_url",
+        STARKNET_APPCHAIN_MESSAGING_ADDRESS:
+          process.env.STARKNET_APPCHAIN_MESSAGING_ADDRESS ||
+          "default_contract_address",
+        STARKNET_SOLIS_ACCOUNT_ADDRESS:
+          process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS ||
+          "default_sender_address",
+        STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY:
+          process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY ||
+          "default_private_key",
+        RPC_USER: process.env.RPC_USER || "default_rpc_user",
+        RPC_PASSWORD: process.env.RPC_PASSWORD || "default_rpc_password",
+        DEPLOYMENT_VERSION: Date.now().toString(),
         FILE_PATH: "/data"
       }
     });
@@ -124,14 +142,18 @@ export class CdkSolisStack extends cdk.Stack {
 
     // Application Load Balancer
     const lb = new elbv2.ApplicationLoadBalancer(this, "LB", {
-      vpc: props.vpc,
+      vpc: vpc,
       internetFacing: true,
       securityGroup: ecsTaskSecurityGroup
     });
 
     const listener = lb.addListener("Listener", {
-      port: 80,
-      open: true
+      port: 443,
+      certificates: [
+        elbv2.ListenerCertificate.fromArn(
+          "arn:aws:acm:region:account:certificate/certificate-id"
+        )
+      ]
     });
 
     // ECS Service
@@ -139,7 +161,9 @@ export class CdkSolisStack extends cdk.Stack {
       cluster,
       taskDefinition,
       securityGroups: [ecsTaskSecurityGroup],
-      desiredCount: 1
+      healthCheckGracePeriod: cdk.Duration.seconds(60),
+      assignPublicIp: true,
+      desiredCount: 2
     });
 
     listener.addTargets("ECS", {
