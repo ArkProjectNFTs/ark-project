@@ -41,28 +41,6 @@ export class CdkSolisStack extends cdk.Stack {
       allowAllOutbound: true
     });
 
-    // Create EFS Mount Targets
-    new efs.CfnMountTarget(this, "EfsMountTarget1a", {
-      fileSystemId: fileSystem.fileSystemId,
-      subnetId: vpc.selectSubnets({ availabilityZones: ["us-east-1a"] })
-        .subnetIds[0],
-      securityGroups: [efsSecurityGroup.securityGroupId]
-    });
-
-    new efs.CfnMountTarget(this, "EfsMountTarget1b", {
-      fileSystemId: fileSystem.fileSystemId,
-      subnetId: vpc.selectSubnets({ availabilityZones: ["us-east-1b"] })
-        .subnetIds[0],
-      securityGroups: [efsSecurityGroup.securityGroupId]
-    });
-
-    new efs.CfnMountTarget(this, "EfsMountTarget1c", {
-      fileSystemId: fileSystem.fileSystemId,
-      subnetId: vpc.selectSubnets({ availabilityZones: ["us-east-1c"] })
-        .subnetIds[0],
-      securityGroups: [efsSecurityGroup.securityGroupId]
-    });
-
     efsSecurityGroup.addIngressRule(
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcp(2049),
@@ -81,6 +59,17 @@ export class CdkSolisStack extends cdk.Stack {
       ec2.Port.tcp(2049),
       "Allow ECS tasks to access EFS"
     );
+
+    // Create EFS Mount Targets
+    vpc
+      .selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS })
+      .subnets.forEach((subnet, index) => {
+        new efs.CfnMountTarget(this, `EfsMountTarget${index}`, {
+          fileSystemId: fileSystem.fileSystemId,
+          subnetId: subnet.subnetId,
+          securityGroups: [efsSecurityGroup.securityGroupId]
+        });
+      });
 
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
