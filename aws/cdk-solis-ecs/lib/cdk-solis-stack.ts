@@ -43,9 +43,9 @@ export class CdkSolisStack extends cdk.Stack {
     });
 
     efsSecurityGroup.addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
+      ec2.Peer.anyIpv4(),
       ec2.Port.tcp(2049),
-      "Allow NFS traffic from VPC"
+      "Allow NFS traffic from anywhere"
     );
 
     // Security Group for ECS Tasks
@@ -55,19 +55,37 @@ export class CdkSolisStack extends cdk.Stack {
     });
 
     // Allow ECS tasks to access EFS
-    fileSystem.connections.allowFrom(
+    efsSecurityGroup.addIngressRule(
       ecsTaskSecurityGroup,
       ec2.Port.tcp(2049),
       "Allow ECS tasks to access EFS"
     );
+
+    // Allow ECS tasks to communicate with EFS
+    ecsTaskSecurityGroup.addEgressRule(
+      efsSecurityGroup,
+      ec2.Port.tcp(2049),
+      "Allow ECS tasks to communicate with EFS"
+    );
+
+    // IAM role for ECS task execution
+    const taskExecutionRole = new iam.Role(this, "TaskExecutionRole", {
+      assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AmazonECSTaskExecutionRolePolicy"
+        )
+      ]
+    });
 
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
       this,
       "ArkSolisTaskDef",
       {
-        memoryLimitMiB: 4096, // Increased memory limit
-        cpu: 2048 // Increased CPU limit
+        memoryLimitMiB: 4096,
+        cpu: 2048,
+        executionRole: taskExecutionRole
       }
     );
 
@@ -110,7 +128,7 @@ export class CdkSolisStack extends cdk.Stack {
         RPC_PASSWORD: process.env.RPC_PASSWORD || "default_rpc_password",
         DEPLOYMENT_VERSION: Date.now().toString()
       },
-      memoryLimitMiB: 4096, // Match the increased task definition memory limit
+      memoryLimitMiB: 4096,
       logging
     });
 
