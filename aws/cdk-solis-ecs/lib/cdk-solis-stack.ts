@@ -192,11 +192,6 @@ export class CdkSolisStack extends cdk.Stack {
       assignPublicIp: true
     });
 
-    ecsService.targetGroup.setAttribute(
-      "deregistration_delay.timeout_seconds",
-      "30"
-    );
-
     // Attach ECS Service to HTTPS Listener
     httpsListener.addTargets("ECS", {
       port: 7777,
