@@ -102,4 +102,4 @@ jobs:
           RPC_USER: ${{ secrets.RPC_USER }}
           RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
         run: |
-          pnpm run deploy:v5:solis -- --solis mainnet --starknet mainnet
+          pnpm run deploy:solis -- --solis mainnet --starknet mainnet
