@@ -7,7 +7,6 @@ on:
 
 jobs:
   deploy-solis:
-    needs: deploy-starknet
     name: Deploy Solis latest image to Amazon ECS
     runs-on: ubuntu-latest
     steps:
