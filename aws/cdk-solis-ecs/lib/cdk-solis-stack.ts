@@ -12,15 +12,15 @@ import {
 import * as logs from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
 
-interface EcsStackProps extends StackProps {
+interface ArkSolisEcsStackProps extends StackProps {
   vpcId: string;
   efsFileSystemId: string;
   efsAccessPointId: string;
   efsSecurityGroupId: string;
 }
 
-export class EcsStack extends Stack {
-  constructor(scope: Construct, id: string, props: EcsStackProps) {
+export class ArkSolisEcsStack extends Stack {
+  constructor(scope: Construct, id: string, props: ArkSolisEcsStackProps) {
     super(scope, id, props);
 
     const vpc = Vpc.fromLookup(this, "Vpc", {

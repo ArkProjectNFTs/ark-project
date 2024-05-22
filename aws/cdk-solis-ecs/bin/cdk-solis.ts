@@ -1,19 +1,19 @@
 import * as cdk from "aws-cdk-lib";
 
-import { EcsStack } from "../lib/cdk-solis-stack";
-import { EfsStack } from "../lib/cdk-stack-efs";
+import { ArkSolisEcsStack } from "../lib/cdk-solis-stack";
+import { ArkSolisEfsStack } from "../lib/cdk-stack-efs";
 
 const app = new cdk.App();
 
-const efsStack = new EfsStack(app, "EfsStack", {
+new ArkSolisEfsStack(app, "ark-solis-efs-stack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION
   }
 });
 
-new EcsStack(app, "EcsStack", {
-  vpcId: "vpc-0d11f7ec183208e08", // Replace with your VPC ID or import from EfsStack if needed
+new ArkSolisEcsStack(app, "ark-solis-ecs-stack", {
+  vpcId: "vpc-0d11f7ec183208e08",
   efsFileSystemId: cdk.Fn.importValue("RecordingEFSFileStorageId"),
   efsAccessPointId: cdk.Fn.importValue("RecordingEFSFileStorageAccessPointId"),
   efsSecurityGroupId: cdk.Fn.importValue(

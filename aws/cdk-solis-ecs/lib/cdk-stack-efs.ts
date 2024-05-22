@@ -7,7 +7,7 @@ import {
 } from "aws-cdk-lib/aws-efs";
 import { Construct } from "constructs";
 
-export class EfsStack extends Stack {
+export class ArkSolisEfsStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
