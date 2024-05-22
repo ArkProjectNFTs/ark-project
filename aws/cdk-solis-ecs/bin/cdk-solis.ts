@@ -5,7 +5,7 @@ import { EfsStack } from "../lib/cdk-stack-efs";
 
 const app = new cdk.App();
 
-new EfsStack(app, "EfsStack", {
+const efsStack = new EfsStack(app, "EfsStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION
@@ -13,7 +13,7 @@ new EfsStack(app, "EfsStack", {
 });
 
 new EcsStack(app, "EcsStack", {
-  vpcId: "vpc-0d11f7ec183208e08",
+  vpcId: "vpc-0d11f7ec183208e08", // Replace with your VPC ID or import from EfsStack if needed
   efsFileSystemId: cdk.Fn.importValue("RecordingEFSFileStorageId"),
   efsAccessPointId: cdk.Fn.importValue("RecordingEFSFileStorageAccessPointId"),
   efsSecurityGroupId: cdk.Fn.importValue(
