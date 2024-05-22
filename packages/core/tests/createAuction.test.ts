@@ -1,49 +1,54 @@
 import { stark } from "starknet";
 
-import { config } from "../examples/config/index.js";
-import { STARKNET_NFT_ADDRESS } from "../examples/constants/index.js";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
-import { mintERC721 } from "../examples/utils/mintERC721.js";
-import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
 import { fetchOrCreateAccount } from "../src/actions/account/account.js";
-import { createAuction } from "../src/actions/order/index.js";
-import { getOrderType } from "../src/actions/read/index.js";
-import { AuctionV1 } from "../src/types/index.js";
-import { getTypeFromCairoCustomEnum } from "./utils/index.js";
+import {
+  AuctionV1,
+  createAuction,
+  createBroker,
+  getOrderType
+} from "../src/index.js";
+import {
+  config,
+  getCurrentTokenId,
+  getTypeFromCairoCustomEnum,
+  mintERC721,
+  STARKNET_NFT_ADDRESS,
+  whitelistBroker
+} from "./utils/index.js";
 
 test("default", async () => {
-  // Create test accounts
   const adminAccount = await fetchOrCreateAccount(
     config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+    process.env.SOLIS_ADMIN_ADDRESS,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY
   );
-
   const sellerAccount = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_ACCOUNT1_ADDRESS,
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
-  // Create and whitelist fake broker
   const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
   await whitelistBroker(config, adminAccount, brokerId);
 
-  // Mint and approve seller NFT
+  await mintERC721(config.starknetProvider, sellerAccount);
   const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
-  await mintERC721(config.starknetProvider, sellerAccount);
+  const order: AuctionV1 = {
+    brokerId,
+    tokenAddress: STARKNET_NFT_ADDRESS,
+    tokenId,
+    startAmount: 1,
+    endAmount: 10
+  };
 
-  // // Create auction
   const orderHash = await createAuction(config, {
     starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
-    order: {
-      brokerId,
+    order,
+    approveInfo: {
       tokenAddress: STARKNET_NFT_ADDRESS,
-      tokenId,
-      startAmount: 1,
-      endAmount: 10
+      tokenId
     }
   });
 
@@ -51,27 +56,24 @@ test("default", async () => {
   const orderType = getTypeFromCairoCustomEnum(orderTypeCairo.orderType);
 
   expect(orderType).toEqual("AUCTION");
-}, 30000);
+}, 50_000);
 
 test("error: invalid start date", async () => {
   const adminAccount = await fetchOrCreateAccount(
     config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+    process.env.SOLIS_ADMIN_ADDRESS,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY
   );
   const sellerAccount = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_ACCOUNT1_ADDRESS,
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
-
   const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
   await whitelistBroker(config, adminAccount, brokerId);
-
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-
   await mintERC721(config.starknetProvider, sellerAccount);
-
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   const invalidStartDate = Math.floor(Date.now() / 1000 - 30);
 
   const order: AuctionV1 = {
@@ -86,17 +88,20 @@ test("error: invalid start date", async () => {
   await expect(
     createAuction(config, {
       starknetAccount: sellerAccount,
-      arkAccount: adminAccount,
-      order
+      order,
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      }
     })
   ).rejects.toThrow();
-}, 20000);
+}, 50_000);
 
 test("error: invalid end date", async () => {
   const adminAccount = await fetchOrCreateAccount(
     config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+    process.env.SOLIS_ADMIN_ADDRESS,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY
   );
   const sellerAccount = await fetchOrCreateAccount(
     config.starknetProvider,
@@ -105,11 +110,11 @@ test("error: invalid end date", async () => {
   );
 
   const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
   await whitelistBroker(config, adminAccount, brokerId);
 
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-
   await mintERC721(config.starknetProvider, sellerAccount);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   const invalidEndDate = Math.floor(Date.now() / 1000);
 
@@ -125,17 +130,20 @@ test("error: invalid end date", async () => {
   await expect(
     createAuction(config, {
       starknetAccount: sellerAccount,
-      arkAccount: adminAccount,
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      },
       order
     })
   ).rejects.toThrow();
-}, 20000);
+}, 50_000);
 
 test("error: invalid end amount", async () => {
   const adminAccount = await fetchOrCreateAccount(
     config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+    process.env.SOLIS_ADMIN_ADDRESS,
+    process.env.SOLIS_ADMIN_PRIVATE_KEY
   );
   const sellerAccount = await fetchOrCreateAccount(
     config.starknetProvider,
@@ -144,11 +152,11 @@ test("error: invalid end amount", async () => {
   );
 
   const brokerId = stark.randomAddress();
+  await createBroker(config, { brokerID: brokerId });
   await whitelistBroker(config, adminAccount, brokerId);
 
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-
   await mintERC721(config.starknetProvider, sellerAccount);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   const order: AuctionV1 = {
     brokerId,
@@ -161,29 +169,24 @@ test("error: invalid end amount", async () => {
   await expect(
     createAuction(config, {
       starknetAccount: sellerAccount,
-      arkAccount: adminAccount,
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      },
       order
     })
   ).rejects.toThrow();
-}, 20000);
+}, 50_000);
 
 test("error: broker not whitelisted", async () => {
-  const adminAccount = await fetchOrCreateAccount(
-    config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
-  );
   const sellerAccount = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_ACCOUNT1_ADDRESS,
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
-  const brokerId = stark.randomAddress();
-  await whitelistBroker(config, adminAccount, brokerId);
-
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
   await mintERC721(config.starknetProvider, sellerAccount);
+  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
 
   const order: AuctionV1 = {
     brokerId: 12345,
@@ -196,8 +199,11 @@ test("error: broker not whitelisted", async () => {
   await expect(
     createAuction(config, {
       starknetAccount: sellerAccount,
-      arkAccount: adminAccount,
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      },
       order
     })
   ).rejects.toThrow();
-}, 20000);
+}, 50_000);
