@@ -22,7 +22,7 @@ use std::sync::Arc;
 use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
 use crate::CHAIN_ID_SOLIS;
-use tracing::{info};
+use tracing::info;
 
 #[allow(dead_code)]
 pub enum CancelStatus {
@@ -70,7 +70,9 @@ pub struct SolisHooker<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF
     sequencer: Option<Arc<KatanaSequencer<EF>>>,
 }
 
-impl<P: Provider + Sync + Send + 'static + std::fmt::Debug,  EF: ExecutorFactory> SolisHooker<P, EF> {
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
+    SolisHooker<P, EF>
+{
     /// Verify the ownership of a token
     async fn verify_ownership(&self, ownership_verifier: &OwnershipVerifier) -> bool {
         let sn_utils_reader_nft_address = StarknetUtilsReader::new(
@@ -116,7 +118,10 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug,  EF: ExecutorFactory
             .call()
             .await;
 
-        info!("HOOKER: Verify Balance allowance {:?}, amount {:?}", allowance, balance_verifier.start_amount);
+        info!(
+            "HOOKER: Verify Balance allowance {:?}, amount {:?}",
+            allowance, balance_verifier.start_amount
+        );
 
         if let Ok(allowance) = allowance {
             if allowance < balance_verifier.start_amount {
@@ -201,7 +206,9 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug,  EF: ExecutorFactory
     }
 }
 
-impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory> SolisHooker<P, EF> {
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
+    SolisHooker<P, EF>
+{
     /// Initializes a new instance.
     pub fn new(
         sn_utils_reader: StarknetUtilsReader<P>,
@@ -288,7 +295,9 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
 /// Solis hooker relies on verifiers to inspect and verify
 /// the transaction and starknet state before acceptance.
 #[async_trait]
-impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory> KatanaHooker<EF> for SolisHooker<P, EF> {
+impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory> KatanaHooker<EF>
+    for SolisHooker<P, EF>
+{
     fn set_sequencer(&mut self, sequencer: Arc<KatanaSequencer<EF>>) {
         self.sequencer = Some(sequencer);
     }
@@ -326,13 +335,19 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
         &self,
         transaction: BroadcastedInvokeTransaction,
     ) -> bool {
-        info!("HOOKER: verify_invoke_tx_before_pool called with transaction: {:?}", transaction);
+        info!(
+            "HOOKER: verify_invoke_tx_before_pool called with transaction: {:?}",
+            transaction
+        );
 
         let calldata = match transaction {
             BroadcastedInvokeTransaction::V1(v1_transaction) => v1_transaction.calldata,
             BroadcastedInvokeTransaction::V3(v3_transaction) => v3_transaction.calldata,
         };
-        info!("HOOKER: cairo_deserialize called with transaction: {:?}", calldata);
+        info!(
+            "HOOKER: cairo_deserialize called with transaction: {:?}",
+            calldata
+        );
 
         let calls = match Vec::<TxCall>::cairo_deserialize(&calldata, 0) {
             Ok(calls) => calls,
@@ -345,7 +360,8 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
         for call in calls {
             if call.selector != selector!("create_order")
                 && call.selector != selector!("create_order_from_l2")
-                && call.selector != selector!("fulfill_order_from_l2")  {
+                && call.selector != selector!("fulfill_order_from_l2")
+            {
                 continue;
             }
 

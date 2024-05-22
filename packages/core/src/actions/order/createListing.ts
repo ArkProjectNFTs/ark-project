@@ -67,7 +67,6 @@ const createListing = async (
     additionalData: []
   };
 
-  console.log("debug call with ", starknetAccount.address)
   const result = await starknetAccount.execute([
     {
       contractAddress: approveInfo.tokenAddress as string,
