@@ -1,18 +1,28 @@
-#!/usr/bin/env node
-
-import "source-map-support/register";
-
 import * as cdk from "aws-cdk-lib";
-import * as dotenv from "dotenv";
 
-import { CdkSolisStack } from "../lib/cdk-solis-stack";
-
-dotenv.config();
+import { EcsStack } from "../lib/cdk-solis-stack";
+import { EfsStack } from "../lib/cdk-stack-efs";
 
 const app = new cdk.App();
-new CdkSolisStack(app, "ark-solis-production", {
+
+new EfsStack(app, "EfsStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION
   }
 });
+
+new EcsStack(app, "EcsStack", {
+  vpcId: "vpc-0d11f7ec183208e08",
+  efsFileSystemId: cdk.Fn.importValue("RecordingEFSFileStorageId"),
+  efsAccessPointId: cdk.Fn.importValue("RecordingEFSFileStorageAccessPointId"),
+  efsSecurityGroupId: cdk.Fn.importValue(
+    "RecordingEFSFileStorageSecurityGroupId"
+  ),
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION
+  }
+});
+
+app.synth();
