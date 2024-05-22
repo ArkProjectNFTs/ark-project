@@ -61,27 +61,6 @@ export class CdkSolisStack extends cdk.Stack {
       "Allow ECS tasks to access EFS"
     );
 
-    // Ensure that mount targets depend on security group creation
-    const subnets = vpc.selectSubnets({
-      subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
-    }).subnets;
-
-    const subnetIds = new Set<string>();
-
-    subnets.forEach((subnet, index) => {
-      if (!subnetIds.has(subnet.subnetId)) {
-        subnetIds.add(subnet.subnetId);
-        new efs.CfnMountTarget(this, `EfsMountTarget${index}`, {
-          fileSystemId: fileSystem.fileSystemId,
-          subnetId: subnet.subnetId,
-          securityGroups: [efsSecurityGroup.securityGroupId]
-        }).node.addDependency(efsSecurityGroup);
-        console.log(`Creating mount target for subnet ${subnet.subnetId}`);
-      } else {
-        console.warn(`Duplicate subnet ID detected: ${subnet.subnetId}`);
-      }
-    });
-
     // Task Definition
     const taskDefinition = new ecs.FargateTaskDefinition(
       this,
@@ -212,6 +191,11 @@ export class CdkSolisStack extends cdk.Stack {
       healthCheckGracePeriod: cdk.Duration.seconds(60),
       assignPublicIp: true
     });
+
+    ecsService.targetGroup.setAttribute(
+      "deregistration_delay.timeout_seconds",
+      "30"
+    );
 
     // Attach ECS Service to HTTPS Listener
     httpsListener.addTargets("ECS", {
