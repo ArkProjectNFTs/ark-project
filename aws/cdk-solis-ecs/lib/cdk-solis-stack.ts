@@ -1,5 +1,7 @@
 import { Stack, StackProps } from "aws-cdk-lib";
+import * as cdk from "aws-cdk-lib";
 import { Port, SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
+import * as ecs from "aws-cdk-lib/aws-ecs";
 import { AwsLogDriver, Cluster, ContainerImage } from "aws-cdk-lib/aws-ecs";
 import { ApplicationLoadBalancedFargateService } from "aws-cdk-lib/aws-ecs-patterns";
 import {
@@ -72,6 +74,12 @@ export class ArkSolisEcsStack extends Stack {
       ]
     });
 
+    const ecrRepository = cdk.aws_ecr.Repository.fromRepositoryName(
+      this,
+      "ArkProjectRepository",
+      "ark-project-repo"
+    );
+
     const loadBalancedFargateService =
       new ApplicationLoadBalancedFargateService(this, "EcsFargateService", {
         cluster,
@@ -83,7 +91,10 @@ export class ArkSolisEcsStack extends Stack {
           subnetType: SubnetType.PRIVATE_WITH_EGRESS
         },
         taskImageOptions: {
-          image: ContainerImage.fromRegistry("solis-latest"),
+          image: cdk.aws_ecs.ContainerImage.fromEcrRepository(
+            ecrRepository,
+            "solis-latest"
+          ),
           environment: {
             STARKNET_NODE_URL:
               process.env.STARKNET_NODE_URL || "default_rpc_url",
