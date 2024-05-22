@@ -18,6 +18,17 @@ use starknet::core::types::FieldElement;
 use starknet::macros::selector;
 use starknet::providers::Provider;
 use std::sync::Arc;
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::io::Read;
+use serde_json::Value;
+use std::path::Path;
+use serde_json::json;
+
+
+const FILE_PATH_ADDRESSES: &str = "addresses.json";
+
 
 use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
@@ -209,12 +220,62 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
 impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
     SolisHooker<P, EF>
 {
+    fn get_addresses_from_file() -> Result<(FieldElement, FieldElement), Box<dyn std::error::Error>> {
+        let mut file = match File::open(FILE_PATH_ADDRESSES) {
+            Ok(file) => file,
+            Err(_) => return Err("File not found".into()),
+        };
+
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        let v: Value = match serde_json::from_str(&contents) {
+            Ok(value) => value,
+            Err(_) => return Err("Error parsing JSON".into()),
+        };
+
+        let orderbook_address = match v["orderbook_address"].as_str() {
+            Some(address) => address,
+            None => return Err("orderbook_address key not found in JSON".into()),
+        };
+
+        let sn_executor_address = match v["sn_executor_address"].as_str() {
+            Some(address) => address,
+            None => return Err("sn_executor_address key not found in JSON".into()),
+        };
+
+        let orderbook_address = match FieldElement::from_hex_be(&orderbook_address[2..]) {
+            Ok(val) => FieldElement::from_dec_str(&val.to_string()),
+            Err(_) => return Err("Failed to parse orderbook_address".into()),
+        };
+
+        let sn_executor_address = match FieldElement::from_hex_be(&sn_executor_address[2..]) {
+            Ok(val) => FieldElement::from_dec_str(&val.to_string()),
+            Err(_) => return Err("Failed to parse sn_executor_address".into()),
+        };
+
+        println!("Addresses loaded from file: {:?}, {:?}", orderbook_address, sn_executor_address);
+        Ok((orderbook_address?, sn_executor_address?))
+    }
+
     /// Initializes a new instance.
     pub fn new(
         sn_utils_reader: StarknetUtilsReader<P>,
         orderbook_address: FieldElement,
         sn_executor_address: FieldElement,
     ) -> Self {
+        let (orderbook_address, sn_executor_address) = if orderbook_address == FieldElement::ZERO && sn_executor_address == FieldElement::ZERO {
+            match Self::get_addresses_from_file() {
+                Ok((orderbook, executor)) => (orderbook, executor),
+                Err(e) => {
+                    eprintln!("Error reading addresses from file: {}", e);
+                    (orderbook_address, sn_executor_address)
+                }
+            }
+        } else {
+            (orderbook_address, sn_executor_address)
+        };
+
         Self {
             orderbook_address,
             sn_utils_reader,
@@ -306,6 +367,28 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
         info!("HOOKER: Addresses set for hooker: {:?}", addresses);
         self.orderbook_address = addresses.orderbook_arkchain;
         self.sn_executor_address = addresses.executor_starknet;
+
+        let path = Path::new(FILE_PATH_ADDRESSES);
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(&path);
+
+        match file {
+            Ok(mut file) => {
+                let data = json!({
+                    "orderbook_address": format!("{:#x}", self.orderbook_address),
+                    "sn_executor_address": format!("{:#x}", self.sn_executor_address)
+                });
+
+                if let Err(e) = writeln!(file, "{}", data.to_string()) {
+                    eprintln!("Error writing file : {}", e);
+                }
+            }
+            Err(e) => {
+                eprintln!("Error opening file : {}", e);
+            }
+        }
     }
 
     /// Verifies if the message is directed to the orderbook and comes from
