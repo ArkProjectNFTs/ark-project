@@ -1,51 +1,11 @@
 name: ArkProject Deploy Contracts & Solis Mainnet
 
-# on: workflow_dispatch
 on:
   push:
     branches:
       - feat/solis-file-system
 
 jobs:
-  # deploy-starknet:
-  #   runs-on: ubuntu-latest
-  #   name: Build & Deploy starknet contracts
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
-
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v2
-  #       with:
-  #         node-version: "21"
-
-  #     - name: Setup Scarb
-  #       uses: software-mansion/setup-scarb@v1
-  #       with:
-  #         scarb-version: 2.5.4
-
-  #     - name: Build contracts
-  #       run: |
-  #         cd contracts
-  #         scarb build --workspace
-
-  #     - name: Install pnpm & dependencies
-  #       run: |
-  #         npm install -g pnpm
-  #         pnpm install
-
-  #     - name: Deploy orderbook contracts
-  #       env:
-  #         STARKNET_NODE_URL_MAINNET: ${{ secrets.STARKNET_NODE_URL_MAINNET }}
-  #         SOLIS_NODE_URL_MAINNET: ${{ secrets.SOLIS_NODE_URL_MAINNET }}
-  #         STARKNET_ADMIN_ADDRESS_MAINNET: ${{ secrets.STARKNET_ADMIN_ADDRESS_MAINNET }}
-  #         STARKNET_ADMIN_PRIVATE_KEY_MAINNET: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_MAINNET }}
-  #         STARKNET_ADMIN_PUBLIC_KEY_MAINNET: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_MAINNET }}
-  #         STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET }}
-  #         STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
-  #         STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET }}
-  #       run: |
-  #         pnpm run deploy:starknet -- --starknet mainnet
   deploy-solis:
     needs: deploy-starknet
     name: Deploy Solis latest image to Amazon ECS
