@@ -32,7 +32,8 @@ export class CdkSolisStack extends cdk.Stack {
       encrypted: true,
       lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
       performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
-      throughputMode: efs.ThroughputMode.BURSTING
+      throughputMode: efs.ThroughputMode.BURSTING,
+      removalPolicy: cdk.RemovalPolicy.DESTROY // Ensure EFS is deleted on stack deletion
     });
 
     // Security Group for EFS
@@ -75,6 +76,9 @@ export class CdkSolisStack extends cdk.Stack {
           subnetId: subnet.subnetId,
           securityGroups: [efsSecurityGroup.securityGroupId]
         }).node.addDependency(efsSecurityGroup);
+        console.log(`Creating mount target for subnet ${subnet.subnetId}`);
+      } else {
+        console.warn(`Duplicate subnet ID detected: ${subnet.subnetId}`);
       }
     });
 
