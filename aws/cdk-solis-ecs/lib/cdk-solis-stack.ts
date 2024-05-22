@@ -36,6 +36,18 @@ export class CdkSolisStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY // Ensure EFS is deleted on stack deletion
     });
 
+    fileSystem.addToResourcePolicy(
+      new iam.PolicyStatement({
+        actions: ["elasticfilesystem:ClientMount"],
+        principals: [new iam.AnyPrincipal()],
+        conditions: {
+          Bool: {
+            "elasticfilesystem:AccessedViaMountTarget": "true"
+          }
+        }
+      })
+    );
+
     // Security Group for EFS
     const efsSecurityGroup = new ec2.SecurityGroup(this, "EfsSecurityGroup", {
       vpc,
