@@ -5,7 +5,7 @@ import { ArkSolisEfsStack } from "../lib/cdk-stack-efs";
 
 const app = new cdk.App();
 
-new ArkSolisEfsStack(app, "ark-solis-production-stack", {
+new ArkSolisEfsStack(app, "ark-solis-efs-stack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION
