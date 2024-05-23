@@ -194,7 +194,7 @@ impl Storage for MarketplaceSqlxStorage {
 
             Ok(())
         } else {
-            let q = "INSERT INTO token (contract_address, chain_id, token_id, token_id_hex, current_owner, block_timestamp) VALUES ($1, $2, $3, $4, $5)";
+            let q = "INSERT INTO token (contract_address, chain_id, token_id, token_id_hex, current_owner, block_timestamp) VALUES ($1, $2, $3, $4, $5, $6)";
 
             let _r = sqlx::query(q)
                 .bind(token.contract_address.clone())
@@ -228,8 +228,8 @@ impl Storage for MarketplaceSqlxStorage {
             return Ok(());
         }
 
-        let q = "INSERT INTO token_event (token_event_id, order_hash, contract_address, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
+        let q = "INSERT INTO token_event (token_event_id, order_hash, contract_address, chain_id, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
 
         let event_type = self.to_title_case(&event.event_type.to_string().to_lowercase());
 
@@ -237,6 +237,7 @@ impl Storage for MarketplaceSqlxStorage {
             .bind(event.token_event_id.clone())
             .bind("")
             .bind(event.nft_contract_address.clone())
+            .bind(event.chain_id.clone())
             .bind(event.token_id.clone())
             .bind(event_type)
             .bind(event.block_timestamp as i64)
@@ -277,8 +278,8 @@ impl Storage for MarketplaceSqlxStorage {
             return Ok(());
         }
 
-        let q = "INSERT INTO token_event (token_event_id, order_hash, contract_address, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
+        let q = "INSERT INTO token_event (token_event_id, order_hash, contract_address, chain_id, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
 
         let event_type = match &event.event_type {
             Some(e) => {
@@ -292,6 +293,7 @@ impl Storage for MarketplaceSqlxStorage {
             .bind(event.token_event_id.clone())
             .bind("")
             .bind(event.contract_address.clone())
+            .bind(event.chain_id.clone())
             .bind(event.token_id.clone())
             .bind(event_type)
             .bind(event.block_timestamp as i64)
