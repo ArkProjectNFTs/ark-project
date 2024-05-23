@@ -1,9 +1,10 @@
 name: ArkProject Deploy Contracts & Solis Mainnet
 
-on:
-  push:
-    branches:
-      - feat/solis-cd-efs
+on: workflow_dispatch
+# on:
+#   push:
+#     branches:
+#       - feat/solis-cd-efs
 
 jobs:
   deploy-solis:

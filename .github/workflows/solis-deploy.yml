@@ -3,7 +3,7 @@ name: Solis Build & Push
 on:
   push:
     branches:
-      - main
+      - feat/solis-cd-efs
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
