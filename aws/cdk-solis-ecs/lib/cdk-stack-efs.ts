@@ -1,23 +1,22 @@
 import * as cdk from "aws-cdk-lib";
-import { SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
-import {
-  CfnAccessPoint,
-  CfnFileSystem,
-  CfnMountTarget
-} from "aws-cdk-lib/aws-efs";
+import { Stack, StackProps } from "aws-cdk-lib";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as efs from "aws-cdk-lib/aws-efs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as custom_resources from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
 
-export class ArkSolisEfsStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+export class ArkSolisEfsStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const vpc = Vpc.fromLookup(this, "EfsVpc", {
+    const vpc = ec2.Vpc.fromLookup(this, "EfsVpc", {
       vpcId: "vpc-0d11f7ec183208e08" // Replace with your VPC ID
     });
 
     const fileSystemName = "RecordingEFSFileStorage";
 
-    const fileSystem = new CfnFileSystem(this, "RecordingEFSFileStorage", {
+    const fileSystem = new efs.CfnFileSystem(this, "RecordingEFSFileStorage", {
       performanceMode: "maxIO",
       encrypted: true,
       fileSystemTags: [
@@ -45,7 +44,7 @@ export class ArkSolisEfsStack extends cdk.Stack {
       exportName: "RecordingEFSFileStorageId"
     });
 
-    const securityGroup = new SecurityGroup(
+    const securityGroup = new ec2.SecurityGroup(
       this,
       "RecordingEFSFileStorageSecurityGroup",
       {
@@ -62,7 +61,7 @@ export class ArkSolisEfsStack extends cdk.Stack {
     });
 
     for (const privateSubnet of vpc.privateSubnets) {
-      new CfnMountTarget(
+      new efs.CfnMountTarget(
         this,
         `RecordingEFSFileStorageMountTarget-${privateSubnet.node.id}`,
         {
@@ -73,7 +72,7 @@ export class ArkSolisEfsStack extends cdk.Stack {
       );
     }
 
-    const accessPoint = new CfnAccessPoint(
+    const accessPoint = new efs.CfnAccessPoint(
       this,
       "RecordingEFSFileStorageAccessPoint",
       {
@@ -83,7 +82,7 @@ export class ArkSolisEfsStack extends cdk.Stack {
           gid: "1000"
         },
         rootDirectory: {
-          path: "/efs",
+          path: "/",
           creationInfo: {
             ownerGid: "1000",
             ownerUid: "1000",
