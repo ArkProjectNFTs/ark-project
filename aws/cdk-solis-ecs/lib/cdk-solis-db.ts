@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Stack, StackProps } from "aws-cdk-lib";
 import {
+  custom_resources as cr,
   aws_ec2 as ec2,
   aws_efs as efs,
   aws_lambda as lambda
@@ -55,7 +56,7 @@ export class ArkSolisLambdaStack extends Stack {
           const dbPath = path.join(efsPath, 'db');
 
           console.log('Creating directory at ' + dbPath + '...');
-          
+
           try {
             if (!fs.existsSync(efsPath)) {
               fs.mkdirSync(efsPath, { recursive: true });
@@ -66,7 +67,7 @@ export class ArkSolisLambdaStack extends Stack {
               fs.mkdirSync(dbPath);
               console.log('Created db directory');
             } else {
-              console.log('db directory already exists');
+              console.log('DB directory already exists');
             }
 
             return {
@@ -93,5 +94,22 @@ export class ArkSolisLambdaStack extends Stack {
         timeout: cdk.Duration.minutes(5) // Adjust the timeout as needed
       }
     );
+
+    // Custom resource to trigger the Lambda function
+    const provider = new cr.Provider(this, "CreateFolderProvider", {
+      onEventHandler: createFolderFunction
+    });
+
+    new cdk.CustomResource(this, "CreateEFSFolderResource", {
+      serviceToken: provider.serviceToken,
+      properties: {
+        FileSystemId: fileSystem.fileSystemId
+      }
+    });
+
+    // Output the Lambda function ARN to easily find it if needed
+    new cdk.CfnOutput(this, "CreateFolderFunctionArn", {
+      value: createFolderFunction.functionArn
+    });
   }
 }
