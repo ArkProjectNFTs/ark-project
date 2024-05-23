@@ -13,7 +13,7 @@ new ArkSolisEfsStack(app, "ark-solis-efs-stack", {
   }
 });
 
-new ArkSolisLambdaStack(app, "ark-solis-db-stack", {
+new ArkSolisLambdaStack(app, "ark-solis-lambda-stack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION
