@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 
-use log::trace;
 use sqlx::{any::AnyPoolOptions, AnyPool, Error as SqlxError, FromRow};
 use std::str::FromStr;
+use tracing::trace;
 
 use super::types::*;
 use crate::storage::types::*;
@@ -74,7 +74,7 @@ impl MarketplaceSqlxStorage {
         &self,
         token_event_id: &str,
     ) -> Result<Option<EventData>, StorageError> {
-        let q = "SELECT * FROM token_event WHERE token_event_id = $1";
+        let q = "SELECT token_event_id, contract_address, chain_id, broker_id, order_hash, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address, amount, canceled_reason FROM token_event WHERE token_event_id = $1";
 
         match sqlx::query(q)
             .bind(token_event_id)
@@ -123,7 +123,10 @@ impl MarketplaceSqlxStorage {
     }
 
     async fn get_block_by_timestamp(&self, ts: u64) -> Result<Option<BlockData>, StorageError> {
-        let q = "SELECT * FROM block WHERE block_timestamp = $1";
+        let q = "SELECT b.block_number, b.block_status, b.block_timestamp, b.indexer_identifier, i.indexer_version
+        FROM block as b
+        INNER JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
+        WHERE block_timestamp = $1";
 
         match sqlx::query(q).bind(ts as i64).fetch_all(&self.pool).await {
             Ok(rows) => {
@@ -265,9 +268,15 @@ impl Storage for MarketplaceSqlxStorage {
         &self,
         event: &TokenTransferEvent,
     ) -> Result<(), StorageError> {
-        trace!("Registering transfer event {:?}", event);
+        let existing_transfer_event =
+            (self.get_event_by_id(&event.token_event_id).await?).is_some();
 
-        if (self.get_event_by_id(&event.token_event_id).await?).is_some() {
+        if existing_transfer_event {
+            trace!(
+                "Updating existing transfer event {:?}",
+                event.token_event_id
+            );
+
             let q = "UPDATE token_event SET block_timestamp = $1 WHERE token_event_id = $2";
             sqlx::query(q)
                 .bind(event.block_timestamp as i64)
@@ -275,46 +284,48 @@ impl Storage for MarketplaceSqlxStorage {
                 .execute(&self.pool)
                 .await?;
 
-            return Ok(());
-        }
+            Ok(())
+        } else {
+            trace!("Inserting new transfer event {:?}", event.token_event_id);
 
-        let q = "INSERT INTO token_event (token_event_id, order_hash, contract_address, chain_id, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
+            let q = "INSERT INTO token_event (token_event_id, order_hash, contract_address, chain_id, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
 
-        let event_type = match &event.event_type {
-            Some(e) => {
-                let res = self.to_title_case(&e.to_string().to_lowercase());
-                Some(res)
-            }
-            _ => None,
-        };
+            let event_type = match &event.event_type {
+                Some(e) => {
+                    let res = self.to_title_case(&e.to_string().to_lowercase());
+                    Some(res)
+                }
+                _ => None,
+            };
 
-        let _r = sqlx::query(q)
-            .bind(event.token_event_id.clone())
-            .bind("")
-            .bind(event.contract_address.clone())
-            .bind(event.chain_id.clone())
-            .bind(event.token_id.clone())
-            .bind(event_type)
-            .bind(event.block_timestamp as i64)
-            .bind(event.token_id_hex.clone())
-            .bind(event.transaction_hash.clone())
-            .bind(event.to_address.clone())
-            .bind(event.from_address.clone())
-            .execute(&self.pool)
-            .await?;
+            let _r = sqlx::query(q)
+                .bind(event.token_event_id.clone())
+                .bind("")
+                .bind(event.contract_address.clone())
+                .bind(event.chain_id.clone())
+                .bind(event.token_id.clone())
+                .bind(event_type)
+                .bind(event.block_timestamp as i64)
+                .bind(event.token_id_hex.clone())
+                .bind(event.transaction_hash.clone())
+                .bind(event.to_address.clone())
+                .bind(event.from_address.clone())
+                .execute(&self.pool)
+                .await?;
 
-        // Update the owner of the token
-        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND token_id = $4";
-        let _r = sqlx::query(update_q)
-            .bind(event.to_address.clone())
-            .bind(event.block_timestamp as i64)
-            .bind(event.contract_address.clone())
-            .bind(event.token_id.clone())
-            .execute(&self.pool)
-            .await?;
+            // Update the owner of the token
+            let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND token_id = $4";
+            let _r = sqlx::query(update_q)
+                .bind(event.to_address.clone())
+                .bind(event.block_timestamp as i64)
+                .bind(event.contract_address.clone())
+                .bind(event.token_id.clone())
+                .execute(&self.pool)
+                .await?;
 
-        Ok(())
+            Ok(())
+        }
     }
 
     async fn get_contract_type(
