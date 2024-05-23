@@ -56,23 +56,19 @@ export class ArkSolisLambdaStack extends Stack {
         runtime: lambda.Runtime.NODEJS_18_X,
         handler: "index.handler",
         code: lambda.Code.fromInline(`
-        const { execSync } = require('child_process');
         const fs = require('fs');
+        const path = require('path');
     
         exports.handler = async (event) => {
           const mountPoint = '/mnt/efs';
-          const dbPath = mountPoint + '/db';
+          const dbPath = path.join(mountPoint, 'db');
           
-          console.log('Mounting EFS...');
+          console.log('Creating directory...');
           try {
             if (!fs.existsSync(mountPoint)) {
               fs.mkdirSync(mountPoint, { recursive: true });
               console.log('Created mount point directory');
             }
-    
-            // Using the EFS mount helper
-            execSync('mount -t efs -o tls ' + process.env.FILE_SYSTEM_ID + ':/ ' + mountPoint);
-            console.log('Mounted EFS');
     
             if (!fs.existsSync(dbPath)) {
               fs.mkdirSync(dbPath);
@@ -80,9 +76,6 @@ export class ArkSolisLambdaStack extends Stack {
             } else {
               console.log('db directory already exists');
             }
-            
-            execSync('umount ' + mountPoint);
-            console.log('Unmounted EFS');
     
             return {
               Status: 'SUCCESS',
