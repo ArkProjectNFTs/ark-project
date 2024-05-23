@@ -1,7 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 
-import { ArkSolisLambdaStack } from "../lib/cdk-solis-db";
-import { ArkSolisEcsStack } from "../lib/cdk-solis-stack";
+// import { ArkSolisLambdaStack } from "../lib/cdk-solis-db";
+// import { ArkSolisEcsStack } from "../lib/cdk-solis-stack";
 import { ArkSolisEfsStack } from "../lib/cdk-stack-efs";
 
 const app = new cdk.App();
