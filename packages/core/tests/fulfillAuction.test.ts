@@ -8,7 +8,6 @@ import { createBroker } from "../src/index.js";
 import { AuctionV1, FulfillAuctionInfo, OfferV1 } from "../src/types/index.js";
 import {
   config,
-  getCurrentTokenId,
   mintERC721,
   STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS,
@@ -37,8 +36,7 @@ describe("fulfillAuction", () => {
     await createBroker(config, { brokerID: brokerId });
     await whitelistBroker(config, adminAccount, brokerId);
 
-    await mintERC721(config.starknetProvider, sellerAccount);
-    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+    const tokenId = await mintERC721({ account: sellerAccount });
 
     const order: AuctionV1 = {
       brokerId,

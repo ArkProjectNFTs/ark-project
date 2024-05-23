@@ -3,10 +3,9 @@ import { stark } from "starknet";
 import { fetchOrCreateAccount } from "../src/actions/account/account.js";
 import { cancelOrder, createAuction } from "../src/actions/order/index.js";
 import { getOrderStatus } from "../src/actions/read/index.js";
-import { approveERC721, createBroker } from "../src/index.js";
+import { createBroker } from "../src/index.js";
 import {
   config,
-  getCurrentTokenId,
   mintERC721,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
@@ -30,13 +29,7 @@ describe("cancelAuction", () => {
     await createBroker(config, { brokerID: brokerId });
     await whitelistBroker(config, adminAccount, brokerId);
 
-    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-    await mintERC721(config.starknetProvider, sellerAccount);
-    await approveERC721(config, {
-      contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: sellerAccount,
-      tokenId
-    });
+    const tokenId = await mintERC721({ account: sellerAccount });
 
     const orderHash = await createAuction(config, {
       starknetAccount: sellerAccount,

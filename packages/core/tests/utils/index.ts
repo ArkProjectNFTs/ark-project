@@ -6,7 +6,6 @@ import {
   Call,
   CallData,
   Contract,
-  ProviderInterface,
   RpcProvider
 } from "starknet";
 
@@ -89,53 +88,60 @@ export const whitelistBroker = async (
   return result;
 };
 
-export const mintERC20 = async (
-  provider: ProviderInterface,
-  starknetAccount: Account,
-  amount: BigNumberish
-) => {
-  const { abi: erc20abi } = await provider.getClassAt(STARKNET_ETH_ADDRESS);
-  if (erc20abi === undefined) {
+export const mintERC20 = async ({
+  account,
+  amount
+}: {
+  account: Account;
+  amount: number;
+}) => {
+  const { abi } = await starknetProvider.getClassAt(STARKNET_ETH_ADDRESS);
+
+  if (!abi) {
     throw new Error("no abi.");
   }
 
   const mintERC20Call: Call = {
     contractAddress: STARKNET_ETH_ADDRESS,
     entrypoint: "mint",
-    calldata: CallData.compile([starknetAccount.address, cairo.uint256(amount)])
+    calldata: CallData.compile([account.address, cairo.uint256(amount)])
   };
 
-  const result = await starknetAccount.execute(mintERC20Call, [erc20abi]);
-  await provider.waitForTransaction(result.transaction_hash, {
+  const result = await account.execute(mintERC20Call, [abi]);
+
+  await starknetProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });
+
   return result.transaction_hash;
 };
 
-export async function mintERC721(
-  provider: ProviderInterface,
-  starknetAccount: Account
-) {
-  const { abi: erc721abi } = await provider.getClassAt(STARKNET_NFT_ADDRESS);
-  if (erc721abi === undefined) {
+export async function mintERC721({ account }: { account: Account }) {
+  const { abi } = await starknetProvider.getClassAt(STARKNET_NFT_ADDRESS);
+
+  if (!abi) {
     throw new Error("no abi.");
   }
+
+  const contract = new Contract(abi, STARKNET_NFT_ADDRESS, starknetProvider);
+  const tokenId: bigint = await contract.get_current_token_id();
 
   const mintCall: Call = {
     contractAddress: STARKNET_NFT_ADDRESS,
     entrypoint: "mint",
     calldata: CallData.compile({
-      recipient: starknetAccount.address,
+      recipient: account.address,
       token_uri: `https://api.everai.xyz/m/1`
     })
   };
 
-  const result = await starknetAccount.execute(mintCall, [erc721abi]);
+  const { transaction_hash } = await account.execute(mintCall, [abi]);
 
-  await provider.waitForTransaction(result.transaction_hash, {
+  await starknetProvider.waitForTransaction(transaction_hash, {
     retryInterval: 1000
   });
-  return result.transaction_hash;
+
+  return tokenId;
 }
 
 export const getCurrentTokenId = async (
@@ -157,4 +163,97 @@ export const getCurrentTokenId = async (
   const token_id = await nftContract.get_current_token_id();
   // we need to subtract 1 because the contract returns the next token id
   return token_id - BigInt(1);
+};
+
+export const getBalance = async ({ account }: { account: Account }) => {
+  const { abi } = await starknetProvider.getClassAt(STARKNET_ETH_ADDRESS);
+
+  if (!abi) {
+    throw new Error("no abi.");
+  }
+
+  const contract = new Contract(abi, STARKNET_ETH_ADDRESS, starknetProvider);
+
+  const balance: bigint = await contract.balanceOf(account.address);
+
+  return balance;
+};
+
+export const setBrokerFees = async (
+  config: Config,
+  deployerAccount: Account,
+  starknetAddress: string,
+  brokerAddress: string,
+  fees: number
+) => {
+  const { abi } = await config.starknetProvider.getClassAt(starknetAddress);
+
+  if (!abi) {
+    throw new Error("no abi.");
+  }
+
+  const executorContract = new Contract(
+    abi,
+    starknetAddress,
+    config.starknetProvider
+  );
+
+  executorContract.connect(deployerAccount);
+
+  const response = await executorContract.set_broker_fees(
+    brokerAddress,
+    cairo.uint256(fees)
+  );
+
+  await config.starknetProvider.waitForTransaction(response.transaction_hash);
+};
+
+export const setArkFees = async (
+  config: Config,
+  deployerAccount: Account,
+  starknetAddress: string,
+  fees: number
+) => {
+  const { abi } = await config.starknetProvider.getClassAt(starknetAddress);
+
+  if (!abi) {
+    throw new Error("no abi.");
+  }
+
+  const executorContract = new Contract(
+    abi,
+    starknetAddress,
+    config.starknetProvider
+  );
+
+  executorContract.connect(deployerAccount);
+
+  const response = await executorContract.set_ark_fees(cairo.uint256(fees));
+
+  await config.starknetProvider.waitForTransaction(response.transaction_hash);
+};
+
+export const setFees = async ({
+  config,
+  adminAccount,
+  executorAddress,
+  brokerId,
+  brokerFee,
+  arkFee
+}: {
+  config: Config;
+  adminAccount: Account;
+  executorAddress: string;
+  brokerId: string;
+  brokerFee: number;
+  arkFee: number;
+}) => {
+  await setBrokerFees(
+    config,
+    adminAccount,
+    STARKNET_EXECUTOR_ADDRESS,
+    brokerId,
+    brokerFee
+  );
+  await setArkFees(config, adminAccount, executorAddress, arkFee);
 };
