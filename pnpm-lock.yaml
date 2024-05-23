@@ -400,6 +400,9 @@ importers:
       '@types/react':
         specifier: ^18
         version: 18.2.43
+      nodemon:
+        specifier: ^3.0.2
+        version: 3.0.2
       typescript:
         specifier: ^5.3.3
         version: 5.3.3

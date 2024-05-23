@@ -11,7 +11,6 @@ import {
 } from "@ark-project/core";
 
 import { Status } from "../types";
-import { useApproveERC721 } from "./useApproveERC721";
 import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 
@@ -22,19 +21,12 @@ export type CreateListingParameters = {
 function useCreateListing() {
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>();
-  const { approveERC721 } = useApproveERC721();
   const config = useConfig();
   const arkAccount = useBurnerWallet();
 
   async function createListing(parameters: CreateListingParameters) {
     if (!arkAccount) throw new Error("No burner wallet.");
     try {
-      setStatus("loading");
-      await approveERC721(
-        parameters.starknetAccount,
-        parameters.tokenId,
-        parameters.tokenAddress
-      );
       const orderHash = await createListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
         order: {
