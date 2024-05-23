@@ -16,37 +16,28 @@ export class ArkSolisLambdaStack extends Stack {
       vpcId: "vpc-0d11f7ec183208e08" // Replace with your VPC ID
     });
 
-    // Import the existing EFS and Access Point
-    const fileSystemId = cdk.Fn.importValue("RecordingEFSFileStorageId");
-    const securityGroupId = cdk.Fn.importValue(
-      "RecordingEFSFileStorageSecurityGroupId"
-    );
-    const accessPointId = cdk.Fn.importValue(
-      "RecordingEFSFileStorageAccessPointId"
-    );
+    // Create the EFS file system
+    const fileSystem = new efs.FileSystem(this, "FileSystem", {
+      vpc: vpc,
+      performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
+      throughputMode: efs.ThroughputMode.ELASTIC
+    });
 
-    const securityGroup = ec2.SecurityGroup.fromSecurityGroupId(
-      this,
-      "EfsSecurityGroup",
-      securityGroupId
-    );
-    const fileSystem = efs.FileSystem.fromFileSystemAttributes(
-      this,
-      "EfsFileSystem",
-      {
-        fileSystemId,
-        securityGroup
+    // Create the access point
+    const accessPoint = fileSystem.addAccessPoint("EfsAccessPoint", {
+      createAcl: {
+        ownerGid: "1001",
+        ownerUid: "1001",
+        permissions: "750"
+      },
+      path: "/lambda",
+      posixUser: {
+        gid: "1001",
+        uid: "1001"
       }
-    );
+    });
 
-    const accessPoint = efs.AccessPoint.fromAccessPointAttributes(
-      this,
-      "EfsAccessPoint",
-      {
-        accessPointId,
-        fileSystem
-      }
-    );
+    const mountPath = "/mnt/efs";
 
     // Define the Lambda function
     const createFolderFunction = new lambda.Function(
@@ -58,57 +49,49 @@ export class ArkSolisLambdaStack extends Stack {
         code: lambda.Code.fromInline(`
         const fs = require('fs');
         const path = require('path');
-    
+
         exports.handler = async (event) => {
-          const mountPoint = '/mnt/efs';
-          const dbPath = path.join(mountPoint, 'db');
+          const efsPath = process.env.EFS_PATH || '/mnt/efs';
+          const dbPath = path.join(efsPath, 'db');
+
+          console.log('Creating directory at ' + dbPath + '...');
           
-          console.log('Creating directory...');
           try {
-            if (!fs.existsSync(mountPoint)) {
-              fs.mkdirSync(mountPoint, { recursive: true });
-              console.log('Created mount point directory');
+            if (!fs.existsSync(efsPath)) {
+              fs.mkdirSync(efsPath, { recursive: true });
+              console.log('Created EFS mount point directory');
             }
-    
+
             if (!fs.existsSync(dbPath)) {
               fs.mkdirSync(dbPath);
               console.log('Created db directory');
             } else {
               console.log('db directory already exists');
             }
-    
+
             return {
-              Status: 'SUCCESS',
-              PhysicalResourceId: 'CreateEFSFolder'
+              statusCode: 200,
+              body: JSON.stringify('Folder created successfully!')
             };
           } catch (error) {
             console.error('Error:', error.message);
             return {
-              Status: 'FAILED',
-              Reason: error.message
+              statusCode: 500,
+              body: JSON.stringify('Failed to create folder: ' + error.message)
             };
           }
         };
       `),
-        vpc,
-        securityGroups: [securityGroup],
-        environment: {
-          FILE_SYSTEM_ID: fileSystemId
-        },
+        vpc: vpc,
         filesystem: lambda.FileSystem.fromEfsAccessPoint(
           accessPoint,
-          "/mnt/efs"
+          mountPath
         ),
+        environment: {
+          EFS_PATH: mountPath
+        },
         timeout: cdk.Duration.minutes(5) // Adjust the timeout as needed
       }
     );
-
-    // Custom resource to trigger the Lambda function
-    new cdk.CustomResource(this, "CreateEFSFolder", {
-      serviceToken: createFolderFunction.functionArn,
-      properties: {
-        FileSystemId: fileSystem.fileSystemId
-      }
-    });
   }
 }
