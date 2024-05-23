@@ -58,26 +58,38 @@ export class ArkSolisLambdaStack extends Stack {
         code: lambda.Code.fromInline(`
         const { execSync } = require('child_process');
         const fs = require('fs');
-
+    
         exports.handler = async (event) => {
           const mountPoint = '/mnt/efs';
           const dbPath = mountPoint + '/db';
           
+          console.log('Mounting EFS...');
           try {
             if (!fs.existsSync(mountPoint)) {
               fs.mkdirSync(mountPoint, { recursive: true });
+              console.log('Created mount point directory');
             }
-            execSync('sudo mount -t efs ' + process.env.FILE_SYSTEM_ID + ':/ ' + mountPoint);
+    
+            // Using the EFS mount helper
+            execSync('mount -t efs -o tls ' + process.env.FILE_SYSTEM_ID + ':/ ' + mountPoint);
+            console.log('Mounted EFS');
+    
             if (!fs.existsSync(dbPath)) {
               fs.mkdirSync(dbPath);
+              console.log('Created db directory');
+            } else {
+              console.log('db directory already exists');
             }
-            execSync('sudo umount ' + mountPoint);
-
+            
+            execSync('umount ' + mountPoint);
+            console.log('Unmounted EFS');
+    
             return {
               Status: 'SUCCESS',
               PhysicalResourceId: 'CreateEFSFolder'
             };
           } catch (error) {
+            console.error('Error:', error.message);
             return {
               Status: 'FAILED',
               Reason: error.message
@@ -93,7 +105,8 @@ export class ArkSolisLambdaStack extends Stack {
         filesystem: lambda.FileSystem.fromEfsAccessPoint(
           accessPoint,
           "/mnt/efs"
-        )
+        ),
+        timeout: cdk.Duration.minutes(5) // Adjust the timeout as needed
       }
     );
 
