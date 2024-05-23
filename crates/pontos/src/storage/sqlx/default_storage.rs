@@ -284,6 +284,21 @@ impl Storage for DefaultSqlxStorage {
     ) -> Result<(), StorageError> {
         trace!("Setting block info {:?} for block #{}", info, block_number);
 
+        let exists = sqlx::query("SELECT 1 FROM indexer WHERE indexer_identifier = $1")
+            .bind(info.indexer_identifier.clone())
+            .fetch_optional(&self.pool)
+            .await?
+            .is_some();
+
+        if !exists {
+            let q = "INSERT INTO indexer (indexer_identifier, indexer_version) VALUES ($1, $2)";
+            sqlx::query(q)
+                .bind(info.indexer_identifier.clone())
+                .bind(info.indexer_version.clone())
+                .execute(&self.pool)
+                .await?;
+        }
+
         let _r = if (self.get_block_by_timestamp(block_timestamp).await?).is_some() {
             let q = "UPDATE block SET block_timestamp = ?, block_number = ?, status = ?, indexer_version = ?, indexer_identifier = ? WHERE block_timestamp = ?";
             sqlx::query(q)

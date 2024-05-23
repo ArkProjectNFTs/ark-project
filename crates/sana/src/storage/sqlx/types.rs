@@ -23,10 +23,9 @@ pub struct EventData {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct BlockData {
-    pub timestamp: i64,
-    #[sqlx(rename = "block_number")]
-    pub number: i64,
-    pub status: String,
+    pub block_timestamp: i64,
+    pub block_number: i64,
+    pub block_status: String,
     pub indexer_version: String,
     pub indexer_identifier: String,
 }

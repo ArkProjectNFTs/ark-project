@@ -383,8 +383,23 @@ impl Storage for MarketplaceSqlxStorage {
     ) -> Result<(), StorageError> {
         trace!("Setting block info {:?} for block #{}", info, block_number);
 
+        let exists = sqlx::query("SELECT 1 FROM indexer WHERE indexer_identifier = $1")
+            .bind(info.indexer_identifier.clone())
+            .fetch_optional(&self.pool)
+            .await?
+            .is_some();
+
+        if !exists {
+            let q = "INSERT INTO indexer (indexer_identifier, indexer_version) VALUES ($1, $2)";
+            sqlx::query(q)
+                .bind(info.indexer_identifier.clone())
+                .bind(info.indexer_version.clone())
+                .execute(&self.pool)
+                .await?;
+        }
+
         let _r = if (self.get_block_by_timestamp(block_timestamp).await?).is_some() {
-            let q = "UPDATE block SET block_timestamp = $1, block_number = $2, block_status = $3, indexer_identifier = $4 WHERE timestamp = $1";
+            let q = "UPDATE block SET block_timestamp = $1, block_number = $2, block_status = $3, indexer_identifier = $4 WHERE block_timestamp = $1";
             sqlx::query(q)
                 .bind(block_timestamp as i64)
                 .bind(block_number as i64)
@@ -410,7 +425,7 @@ impl Storage for MarketplaceSqlxStorage {
     async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError> {
         trace!("Getting block info for block #{}", block_number);
 
-        let q = "SELECT * FROM block WHERE block_number = $1";
+        let q = "SELECT b.block_timestamp, b.indexer_identifier, b.block_status, b.block_number, i.indexer_version FROM block as b INNER JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier WHERE b.block_number = $1";
 
         match sqlx::query(q)
             .bind(block_number as i64)
@@ -427,7 +442,7 @@ impl Storage for MarketplaceSqlxStorage {
                     Ok(BlockInfo {
                         indexer_identifier: d.indexer_identifier.clone(),
                         indexer_version: d.indexer_version.clone(),
-                        block_status: BlockIndexingStatus::from_str(&d.status).unwrap(),
+                        block_status: BlockIndexingStatus::from_str(&d.block_status).unwrap(),
                         block_number,
                     })
                 }
