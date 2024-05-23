@@ -194,10 +194,11 @@ impl Storage for MarketplaceSqlxStorage {
 
             Ok(())
         } else {
-            let q = "INSERT INTO token (contract_address, token_id, token_id_hex, current_owner, block_timestamp) VALUES ($1, $2, $3, $4, $5)";
+            let q = "INSERT INTO token (contract_address, chain_id, token_id, token_id_hex, current_owner, block_timestamp) VALUES ($1, $2, $3, $4, $5)";
 
             let _r = sqlx::query(q)
                 .bind(token.contract_address.clone())
+                .bind(token.chain_id.clone())
                 .bind(token.token_id.clone())
                 .bind(token.token_id_hex.clone())
                 .bind(token.owner.clone())
