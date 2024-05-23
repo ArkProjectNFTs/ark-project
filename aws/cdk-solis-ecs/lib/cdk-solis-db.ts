@@ -17,23 +17,35 @@ export class ArkSolisLambdaStack extends Stack {
     });
 
     // Import the existing EFS and Access Point
+    const fileSystemId = cdk.Fn.importValue("RecordingEFSFileStorageId");
+    const securityGroupId = cdk.Fn.importValue(
+      "RecordingEFSFileStorageSecurityGroupId"
+    );
+    const accessPointId = cdk.Fn.importValue(
+      "RecordingEFSFileStorageAccessPointId"
+    );
+
+    const securityGroup = ec2.SecurityGroup.fromSecurityGroupId(
+      this,
+      "EfsSecurityGroup",
+      securityGroupId
+    );
     const fileSystem = efs.FileSystem.fromFileSystemAttributes(
       this,
       "EfsFileSystem",
       {
-        fileSystemId: cdk.Fn.importValue("RecordingEFSFileStorageId"),
-        securityGroup: ec2.SecurityGroup.fromSecurityGroupId(
-          this,
-          "EfsSecurityGroup",
-          cdk.Fn.importValue("RecordingEFSFileStorageSecurityGroupId")
-        )
+        fileSystemId,
+        securityGroup
       }
     );
 
-    const accessPoint = efs.AccessPoint.fromAccessPointId(
+    const accessPoint = efs.AccessPoint.fromAccessPointAttributes(
       this,
       "EfsAccessPoint",
-      cdk.Fn.importValue("RecordingEFSFileStorageAccessPointId")
+      {
+        accessPointId,
+        fileSystem
+      }
     );
 
     // Define the Lambda function
@@ -74,15 +86,9 @@ export class ArkSolisLambdaStack extends Stack {
         };
       `),
         vpc,
-        securityGroups: [
-          ec2.SecurityGroup.fromSecurityGroupId(
-            this,
-            "LambdaSecurityGroup",
-            cdk.Fn.importValue("RecordingEFSFileStorageSecurityGroupId")
-          )
-        ],
+        securityGroups: [securityGroup],
         environment: {
-          FILE_SYSTEM_ID: cdk.Fn.importValue("RecordingEFSFileStorageId")
+          FILE_SYSTEM_ID: fileSystemId
         },
         filesystem: lambda.FileSystem.fromEfsAccessPoint(
           accessPoint,
