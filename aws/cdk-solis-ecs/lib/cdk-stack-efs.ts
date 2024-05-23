@@ -102,25 +102,39 @@ export class ArkSolisEfsStack extends Stack {
       this,
       "CreateFolderFunction",
       {
-        runtime: lambda.Runtime.PYTHON_3_8,
+        runtime: lambda.Runtime.NODEJS_18_X,
         handler: "index.handler",
         code: lambda.Code.fromInline(`
-        import os
-        import boto3
+        const { execSync } = require('child_process');
+        const fs = require('fs');
+        const path = require('path');
         
-        def handler(event, context):
-          efs_client = boto3.client('efs')
-          file_system_id = event['ResourceProperties']['FileSystemId']
-          mount_target_ip = event['ResourceProperties']['MountTargetIp']
+        exports.handler = async (event) => {
+          const fileSystemId = process.env.FILE_SYSTEM_ID;
+          const mountPoint = '/mnt/efs';
           
-          os.system(f'sudo mount -t efs {file_system_id}:/ /mnt/efs')
-          os.makedirs('/mnt/efs/db', exist_ok=True)
-          os.system('sudo umount /mnt/efs')
+          // Ensure the mount point directory exists
+          if (!fs.existsSync(mountPoint)) {
+            fs.mkdirSync(mountPoint, { recursive: true });
+          }
+          
+          // Mount the EFS file system
+          execSync('sudo mount -t efs ' + fileSystemId + ':/ ' + mountPoint);
+          
+          // Create the /db directory
+          const dbPath = path.join(mountPoint, 'db');
+          if (!fs.existsSync(dbPath)) {
+            fs.mkdirSync(dbPath);
+          }
+          
+          // Unmount the EFS file system
+          execSync('sudo umount ' + mountPoint);
           
           return {
-            'Status': 'SUCCESS',
-            'PhysicalResourceId': 'CreateEFSFolder'
-          }
+            Status: 'SUCCESS',
+            PhysicalResourceId: 'CreateEFSFolder'
+          };
+        };
       `),
         vpc,
         securityGroups: [securityGroup],
