@@ -1,4 +1,4 @@
-import { CfnOutput, Stack, StackProps } from "aws-cdk-lib";
+import * as cdk from "aws-cdk-lib";
 import { SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 import {
   CfnAccessPoint,
@@ -7,8 +7,8 @@ import {
 } from "aws-cdk-lib/aws-efs";
 import { Construct } from "constructs";
 
-export class ArkSolisEfsStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+export class ArkSolisEfsStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const vpc = Vpc.fromLookup(this, "EfsVpc", {
@@ -40,7 +40,7 @@ export class ArkSolisEfsStack extends Stack {
       }
     });
 
-    new CfnOutput(this, "RecordingEFSFileStorageId", {
+    new cdk.CfnOutput(this, "RecordingEFSFileStorageId", {
       value: fileSystem.ref,
       exportName: "RecordingEFSFileStorageId"
     });
@@ -56,7 +56,7 @@ export class ArkSolisEfsStack extends Stack {
       }
     );
 
-    new CfnOutput(this, "RecordingEFSFileStorageSecurityGroupId", {
+    new cdk.CfnOutput(this, "RecordingEFSFileStorageSecurityGroupId", {
       value: securityGroup.securityGroupId,
       exportName: "RecordingEFSFileStorageSecurityGroupId"
     });
@@ -93,7 +93,7 @@ export class ArkSolisEfsStack extends Stack {
       }
     );
 
-    new CfnOutput(this, "RecordingEFSFileStorageAccessPointId", {
+    new cdk.CfnOutput(this, "RecordingEFSFileStorageAccessPointId", {
       value: accessPoint.ref,
       exportName: "RecordingEFSFileStorageAccessPointId"
     });
