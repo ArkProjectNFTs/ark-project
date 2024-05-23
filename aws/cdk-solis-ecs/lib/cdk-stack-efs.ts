@@ -2,8 +2,6 @@ import * as cdk from "aws-cdk-lib";
 import { Stack, StackProps } from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as efs from "aws-cdk-lib/aws-efs";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as custom_resources from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
 
 export class ArkSolisEfsStack extends Stack {
