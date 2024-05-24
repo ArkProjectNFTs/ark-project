@@ -63,8 +63,8 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   const offer: OfferV1 = {
     brokerId, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId: 20, // The ID of the token
-    startAmount: 100000000000000000, // The starting amount for the order
+    tokenId: BigInt(20), // The ID of the token
+    startAmount: BigInt(100000000000000000), // The starting amount for the order
     currencyAddress: STARKNET_ETH_ADDRESS // The ERC20 address
   };
 
@@ -76,15 +76,6 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
       offer.startAmount
     );
   }
-
-  console.log(
-    `=> Approuving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetOffererAccount.address} to ArkProject executor`
-  );
-  await approveERC20(config, {
-    starknetAccount: starknetOffererAccount,
-    contractAddress: STARKNET_ETH_ADDRESS,
-    amount: offer.startAmount
-  });
 
   console.log("=> Creating Offer...");
   // Create the offer on the arkchain using the order details
