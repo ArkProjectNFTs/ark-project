@@ -42,8 +42,8 @@ describe("fulfillAuction", () => {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: 1,
-      endAmount: 10
+      startAmount: BigInt(1),
+      endAmount: BigInt(10)
     };
 
     const orderHash = await createAuction(config, {
@@ -61,7 +61,7 @@ describe("fulfillAuction", () => {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: 1
+      startAmount: BigInt(1)
     };
 
     const offerOrderHash = await createOffer(config, {

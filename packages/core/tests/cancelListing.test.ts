@@ -36,8 +36,8 @@ describe("cancelListing", () => {
       order: {
         brokerId,
         tokenAddress: STARKNET_NFT_ADDRESS,
-        tokenId: tokenId,
-        startAmount: 1
+        tokenId,
+        startAmount: BigInt(1)
       },
       approveInfo: {
         tokenAddress: STARKNET_NFT_ADDRESS,
@@ -48,7 +48,7 @@ describe("cancelListing", () => {
     cancelOrder(config, {
       starknetAccount: sellerAccount,
       cancelInfo: {
-        orderHash: orderHash,
+        orderHash,
         tokenAddress: STARKNET_NFT_ADDRESS,
         tokenId
       }

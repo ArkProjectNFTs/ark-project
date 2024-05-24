@@ -40,12 +40,12 @@ describe("cancelOffer", () => {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: 1
+      startAmount: BigInt(1)
     };
 
     const orderHash = await createOffer(config, {
       starknetAccount: sellerAccount,
-      offer: offer,
+      offer,
       approveInfo: {
         currencyAddress: STARKNET_ETH_ADDRESS,
         amount: offer.startAmount
@@ -54,15 +54,13 @@ describe("cancelOffer", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-    const cancelInfo = {
-      orderHash: orderHash,
-      tokenAddress: STARKNET_NFT_ADDRESS,
-      tokenId
-    };
-
     await cancelOrder(config, {
       starknetAccount: sellerAccount,
-      cancelInfo
+      cancelInfo: {
+        orderHash,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      }
     });
 
     await new Promise((resolve) => setTimeout(resolve, 5_000));
