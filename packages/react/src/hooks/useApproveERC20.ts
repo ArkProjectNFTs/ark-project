@@ -1,4 +1,4 @@
-import { AccountInterface, BigNumberish, Contract } from "starknet";
+import { AccountInterface, Contract } from "starknet";
 
 import { approveERC20 as approveERC20Core, Config } from "@ark-project/core";
 
@@ -6,8 +6,8 @@ import { useConfig } from "./useConfig";
 
 export type ApproveERC20Parameters = {
   starknetAccount: AccountInterface;
-  startAmount: BigNumberish;
-  currencyAddress?: BigNumberish;
+  startAmount: bigint;
+  currencyAddress?: string;
 };
 
 function useApproveERC20() {
@@ -15,7 +15,7 @@ function useApproveERC20() {
 
   async function getAllowance(
     starknetAccount: AccountInterface,
-    currency_address?: BigNumberish
+    currency_address?: string
   ) {
     if (!currency_address) {
       throw new Error("no currency address.");

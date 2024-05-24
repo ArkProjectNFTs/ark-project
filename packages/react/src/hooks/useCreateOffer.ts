@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { AccountInterface, BigNumberish } from "starknet";
+import { AccountInterface, constants } from "starknet";
 
 import {
   Config,
@@ -18,14 +18,14 @@ import { useOwner } from "./useOwner";
 
 export type CreateOfferParameters = {
   starknetAccount: AccountInterface;
-  startAmount: BigNumberish;
-  tokenAddress: BigNumberish;
-  tokenId: BigNumberish;
-  brokerId: BigNumberish;
-  currencyAddress?: BigNumberish;
-  currencyChainId?: BigNumberish;
-  startDate?: BigNumberish;
-  endDate?: BigNumberish;
+  startAmount: bigint;
+  tokenAddress: string;
+  tokenId: bigint;
+  brokerId: string;
+  currencyAddress?: string;
+  currencyChainId?: constants.StarknetChainId;
+  startDate?: number;
+  endDate?: number;
 };
 
 export default function useCreateOffer() {
@@ -67,7 +67,7 @@ export default function useCreateOffer() {
         approveInfo: {
           currencyAddress:
             parameters.currencyAddress ||
-            (config?.starknetContracts.eth as BigNumberish),
+            (config?.starknetContracts.eth as string),
           amount: parameters.startAmount
         }
       });

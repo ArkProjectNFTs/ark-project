@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { BigNumberish } from "starknet";
-
 import {
   Config,
   fulfillListing as fulfillListingCore
@@ -37,7 +35,7 @@ function useFulfillListing() {
         } as FulfillListingInfo,
         approveInfo: {
           currencyAddress: (parameters.currencyAddress ||
-            config?.starknetContracts.eth) as BigNumberish,
+            config?.starknetContracts.eth) as string,
           amount: parameters.startAmount
         }
       });
