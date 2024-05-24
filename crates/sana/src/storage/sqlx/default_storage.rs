@@ -48,14 +48,15 @@ impl MarketplaceSqlxStorage {
     async fn get_token_by_id(
         &self,
         contract_address: &str,
-        token_id_hex: &str,
+        token_id: &str,
     ) -> Result<Option<TokenData>, StorageError> {
         let q =
-            "SELECT contract_address, token_id FROM token WHERE contract_address = $1 AND token_id_hex = $2";
+            "SELECT contract_address, chain_id, token_id FROM token WHERE contract_address = $1 AND chain_id = $2 AND token_id = $3";
 
         match sqlx::query(q)
             .bind(contract_address)
-            .bind(token_id_hex)
+            .bind(chain_id)
+            .bind(token_id)
             .fetch_all(&self.pool)
             .await
         {
@@ -103,11 +104,13 @@ impl MarketplaceSqlxStorage {
     async fn get_contract_by_address(
         &self,
         contract_address: &str,
+        chain_id: &str,
     ) -> Result<Option<ContractData>, StorageError> {
-        let q = "SELECT contract_address, updated_timestamp, contract_address, contract_type FROM contract WHERE contract_address = $1";
+        let q = "SELECT contract_address, updated_timestamp, contract_address, contract_type FROM contract WHERE contract_address = $1 AND chain_id = $2";
 
         match sqlx::query(q)
             .bind(contract_address.to_string())
+            .bind(chain_id.to_string())
             .fetch_all(&self.pool)
             .await
         {
@@ -238,7 +241,7 @@ impl Storage for MarketplaceSqlxStorage {
 
         let _r = sqlx::query(q)
             .bind(event.token_event_id.clone())
-            .bind("")
+            .bind(event.order_hash.clone())
             .bind(event.nft_contract_address.clone())
             .bind(event.chain_id.clone())
             .bind(event.token_id.clone())
@@ -252,12 +255,13 @@ impl Storage for MarketplaceSqlxStorage {
             .await?;
 
         // Update the owner of the token
-        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND token_id_hex = $4";
+        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND chain_id = $4 AND token_id = $5";
         let _r = sqlx::query(update_q)
             .bind(event.to_address.clone())
             .bind(event.block_timestamp as i64)
             .bind(event.nft_contract_address.clone())
-            .bind(event.token_id_hex.clone())
+            .bind(event.chain_id.clone())
+            .bind(event.token_id.clone())
             .execute(&self.pool)
             .await?;
 
@@ -301,7 +305,7 @@ impl Storage for MarketplaceSqlxStorage {
 
             let _r = sqlx::query(q)
                 .bind(event.token_event_id.clone())
-                .bind("")
+                .bind(event.order_hash.clone())
                 .bind(event.contract_address.clone())
                 .bind(event.chain_id.clone())
                 .bind(event.token_id.clone())
@@ -315,11 +319,12 @@ impl Storage for MarketplaceSqlxStorage {
                 .await?;
 
             // Update the owner of the token
-            let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND token_id = $4";
+            let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND chain_id = $4 AND token_id = $5";
             let _r = sqlx::query(update_q)
                 .bind(event.to_address.clone())
                 .bind(event.block_timestamp as i64)
                 .bind(event.contract_address.clone())
+                .bind(event.chain_id.clone())
                 .bind(event.token_id.clone())
                 .execute(&self.pool)
                 .await?;
@@ -355,10 +360,11 @@ impl Storage for MarketplaceSqlxStorage {
         );
 
         if (self.get_contract_by_address(&info.contract_address).await?).is_some() {
-            let q = "UPDATE contract SET updated_timestamp = $1 WHERE contract_address = $2";
+            let q = "UPDATE contract SET updated_timestamp = $1 WHERE contract_address = $2 AND chain_id = $3";
             sqlx::query(q)
                 .bind(block_timestamp as i64)
                 .bind(info.contract_address.clone())
+                .bind(info.chain_id.clone())
                 .execute(&self.pool)
                 .await?;
 
