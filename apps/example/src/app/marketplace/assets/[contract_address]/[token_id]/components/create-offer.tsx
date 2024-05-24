@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
-import { Web3 } from "web3";
+import { parseEther } from "viem";
 import * as z from "zod";
 
 import { useConfig, useCreateOffer } from "@ark-project/react";
@@ -38,7 +38,7 @@ export default function CreateOffer({ token }: CreateOfferProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startAmount: Web3.utils.fromWei(42000000000000000, "ether")
+      startAmount: "0.1"
     }
   });
 
@@ -47,18 +47,12 @@ export default function CreateOffer({ token }: CreateOfferProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (account === undefined) return;
 
-    const tokenIdNumber = parseInt(token.token_id, 10);
-    if (isNaN(tokenIdNumber)) {
-      console.error("Invalid token ID");
-      return;
-    }
-
     const processedValues = {
       brokerId: env.NEXT_PUBLIC_BROKER_ID,
       currencyAddress: config?.starknetContracts.eth,
       tokenAddress: token.contract_address,
-      tokenId: tokenIdNumber,
-      startAmount: Web3.utils.toWei(values.startAmount, "ether")
+      tokenId: BigInt(token.token_id),
+      startAmount: parseEther(values.startAmount)
     };
 
     await createOffer({
