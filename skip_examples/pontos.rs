@@ -120,13 +120,14 @@ impl Storage for DefaultStorage {
     async fn register_mint(
         &self,
         contract_address: &str,
-        token_id_hex: &str,
+        _token_id_hex: &str,
+        token_id: &str,
         info: &TokenMintInfo,
     ) -> Result<(), StorageError> {
         log::trace!(
             "Registering mint {} {} {:?}",
             contract_address,
-            token_id_hex,
+            token_id,
             info
         );
         Ok(())
@@ -153,6 +154,7 @@ impl Storage for DefaultStorage {
     async fn get_contract_type(
         &self,
         contract_address: &str,
+        chain_id: &str,
     ) -> Result<ContractType, StorageError> {
         log::trace!("Getting contract info for contract {}", contract_address);
         Ok(ContractType::Other)

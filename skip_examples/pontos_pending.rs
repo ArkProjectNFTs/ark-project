@@ -78,6 +78,7 @@ impl Storage for DefaultStorage {
         &self,
         contract_address: &str,
         token_id_hex: &str,
+        _token_id: &str,
         info: &TokenMintInfo,
     ) -> Result<(), StorageError> {
         log::trace!(
@@ -110,6 +111,7 @@ impl Storage for DefaultStorage {
     async fn get_contract_type(
         &self,
         contract_address: &str,
+        chain_id: &str,
     ) -> Result<ContractType, StorageError> {
         log::trace!("Getting contract info for contract {}", contract_address);
         Ok(ContractType::Other)
