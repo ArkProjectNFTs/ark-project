@@ -316,6 +316,7 @@ impl FromStr for ContractType {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct ContractInfo {
     pub contract_address: String,
+    pub chain_id: String,
     pub contract_type: String,
     pub name: Option<String>,
     pub symbol: Option<String>,

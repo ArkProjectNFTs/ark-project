@@ -20,6 +20,7 @@ pub trait Storage {
         &self,
         contract_address: &str,
         token_id_hex: &str,
+        token_id: &str,
         info: &TokenMintInfo,
     ) -> Result<(), StorageError>;
 
@@ -38,8 +39,11 @@ pub trait Storage {
     async fn register_transfer_event(&self, event: &TokenTransferEvent)
         -> Result<(), StorageError>;
 
-    async fn get_contract_type(&self, contract_address: &str)
-        -> Result<ContractType, StorageError>;
+    async fn get_contract_type(
+        &self,
+        contract_address: &str,
+        chain_id: &str,
+    ) -> Result<ContractType, StorageError>;
 
     async fn register_contract_info(
         &self,

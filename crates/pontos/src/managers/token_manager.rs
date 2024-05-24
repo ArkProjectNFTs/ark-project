@@ -64,7 +64,12 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             };
 
             self.storage
-                .register_mint(&token.contract_address, &token.token_id_hex, &info)
+                .register_mint(
+                    &token.contract_address,
+                    &token.token_id_hex,
+                    &token.token_id,
+                    &info,
+                )
                 .await?;
         }
 

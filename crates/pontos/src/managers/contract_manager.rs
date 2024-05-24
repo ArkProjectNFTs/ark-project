@@ -37,6 +37,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
     async fn get_cached_or_fetch_info(
         &mut self,
         address: FieldElement,
+        chain_id: &str,
     ) -> Result<ContractType, StorageError> {
         if let Some(contract_type) = self.cache.get(&address) {
             return Ok(contract_type.clone());
@@ -46,7 +47,7 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
 
         let contract_type = self
             .storage
-            .get_contract_type(&to_hex_str(&address))
+            .get_contract_type(&to_hex_str(&address), chain_id)
             .await?;
 
         self.cache.insert(address, contract_type.clone()); // Adding to the cache
@@ -69,11 +70,12 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
         &mut self,
         address: FieldElement,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> Result<ContractType> {
-        match self.get_cached_or_fetch_info(address).await {
+        match self.get_cached_or_fetch_info(address, chain_id).await {
             Ok(contract_type) => Ok(contract_type),
             Err(_) => {
-                if let Ok(contract_type) = self.get_cached_or_fetch_info(address).await {
+                if let Ok(contract_type) = self.get_cached_or_fetch_info(address, chain_id).await {
                     return Ok(contract_type);
                 }
 
@@ -116,11 +118,12 @@ impl<S: Storage, C: StarknetClient> ContractManager<S, C> {
                     name,
                     symbol,
                     image: None,
+                    chain_id: chain_id.to_string(),
                 };
 
                 if let Err(e) = self
                     .storage
-                    .register_contract_info(&info, block_timestamp)
+                    .register_contract_info(&info, block_timestamp, chain_id)
                     .await
                 {
                     error!(
