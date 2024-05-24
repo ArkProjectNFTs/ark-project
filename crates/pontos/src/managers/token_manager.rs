@@ -34,6 +34,7 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
         let mut token = TokenInfo {
             contract_address: event.contract_address.clone(),
             token_id: event.token_id.clone(),
+            chain_id: event.chain_id.clone(),
             token_id_hex: event.token_id_hex.clone(),
             ..Default::default()
         };
@@ -63,7 +64,12 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             };
 
             self.storage
-                .register_mint(&token.contract_address, &token.token_id_hex, &info)
+                .register_mint(
+                    &token.contract_address,
+                    &token.token_id_hex,
+                    &token.token_id,
+                    &info,
+                )
                 .await?;
         }
 

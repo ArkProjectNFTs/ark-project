@@ -20,6 +20,7 @@ pub trait Storage {
         &self,
         contract_address: &str,
         token_id_hex: &str,
+        token_id: &str,
         info: &TokenMintInfo,
     ) -> Result<(), StorageError>;
 
@@ -41,13 +42,17 @@ pub trait Storage {
         block_timestamp: u64,
     ) -> Result<(), StorageError>;
 
-    async fn get_contract_type(&self, contract_address: &str)
-        -> Result<ContractType, StorageError>;
+    async fn get_contract_type(
+        &self,
+        contract_address: &str,
+        chain_id: &str,
+    ) -> Result<ContractType, StorageError>;
 
     async fn register_contract_info(
         &self,
         info: &ContractInfo,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> Result<(), StorageError>;
 
     /// A block info is only set if the block has a number and a timestamp.

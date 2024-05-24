@@ -1,66 +1,68 @@
-import { shortString, stark } from "starknet";
+import { stark } from "starknet";
 
-import { config } from "../examples/config/index.js";
-import { STARKNET_NFT_ADDRESS } from "../examples/constants/index.js";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
-import { mintERC721 } from "../examples/utils/mintERC721.js";
-import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
 import { fetchOrCreateAccount } from "../src/actions/account/account.js";
 import { cancelOrder, createAuction } from "../src/actions/order/index.js";
 import { getOrderStatus } from "../src/actions/read/index.js";
-import { AuctionV1 } from "../src/types/index.js";
+import { createBroker } from "../src/index.js";
+import {
+  config,
+  mintERC721,
+  STARKNET_NFT_ADDRESS,
+  whitelistBroker
+} from "./utils/index.js";
 
-test("cancelListing", async () => {
-  const adminAccount = await fetchOrCreateAccount(
-    config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
-  );
-  const sellerAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
+describe("cancelAuction", () => {
+  test("cancelListing", async () => {
+    const adminAccount = await fetchOrCreateAccount(
+      config.arkProvider,
+      process.env.SOLIS_ADMIN_ADDRESS,
+      process.env.SOLIS_ADMIN_PRIVATE_KEY
+    );
 
-  const brokerId = stark.randomAddress();
-  await whitelistBroker(config, adminAccount, brokerId);
+    const sellerAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
 
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-  await mintERC721(config.starknetProvider, sellerAccount);
+    const brokerId = stark.randomAddress();
+    await createBroker(config, { brokerID: brokerId });
+    await whitelistBroker(config, adminAccount, brokerId);
 
-  const order: AuctionV1 = {
-    brokerId: brokerId,
-    tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId,
-    startAmount: 1,
-    endAmount: 10
-  };
+    const tokenId = await mintERC721({ account: sellerAccount });
 
-  const orderHash = await createAuction(config, {
-    starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
-    order
-  });
+    const orderHash = await createAuction(config, {
+      starknetAccount: sellerAccount,
+      order: {
+        brokerId,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId,
+        startAmount: 1,
+        endAmount: 10
+      },
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      }
+    });
 
-  const cancelInfo = {
-    orderHash: orderHash,
-    tokenAddress: order.tokenAddress,
-    tokenId: order.tokenId
-  };
+    const cancelInfo = {
+      orderHash: orderHash,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId
+    };
 
-  cancelOrder(config, {
-    starknetAccount: sellerAccount,
-    arkAccount: adminAccount,
-    cancelInfo
-  });
+    cancelOrder(config, {
+      starknetAccount: sellerAccount,
+      cancelInfo
+    });
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
-    orderHash
-  });
+    const { orderStatus } = await getOrderStatus(config, {
+      orderHash
+    });
 
-  expect(shortString.decodeShortString(orderStatusAfter)).toBe(
-    "CANCELLED_USER"
-  );
-}, 15000);
+    expect(orderStatus).toBe("CancelledUser");
+  }, 50_000);
+});

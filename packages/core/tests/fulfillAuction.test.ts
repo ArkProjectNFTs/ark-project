@@ -1,29 +1,25 @@
-import { shortString, stark } from "starknet";
+import { stark } from "starknet";
 
-import { config } from "../examples/config/index.js";
-import {
-  STARKNET_ETH_ADDRESS,
-  STARKNET_NFT_ADDRESS
-} from "../examples/constants/index.js";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
-import { mintERC20 } from "../examples/utils/mintERC20.js";
-import { mintERC721 } from "../examples/utils/mintERC721.js";
-import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
 import { fetchOrCreateAccount } from "../src/actions/account/account.js";
 import { fulfillAuction } from "../src/actions/order/fulfillAuction.js";
 import { createAuction, createOffer } from "../src/actions/order/index.js";
 import { getOrderStatus } from "../src/actions/read/index.js";
-import { approveERC20, approveERC721 } from "../src/index.js";
+import { createBroker } from "../src/index.js";
 import { AuctionV1, FulfillAuctionInfo, OfferV1 } from "../src/types/index.js";
+import {
+  config,
+  mintERC721,
+  STARKNET_ETH_ADDRESS,
+  STARKNET_NFT_ADDRESS,
+  whitelistBroker
+} from "./utils/index.js";
 
 describe("fulfillAuction", () => {
   it("default", async () => {
-    const { starknetProvider } = config;
-
     const adminAccount = await fetchOrCreateAccount(
       config.arkProvider,
-      process.env.SOLIS_ADMIN_ADDRESS_DEV,
-      process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
+      process.env.SOLIS_ADMIN_ADDRESS,
+      process.env.SOLIS_ADMIN_PRIVATE_KEY
     );
     const sellerAccount = await fetchOrCreateAccount(
       config.starknetProvider,
@@ -37,25 +33,10 @@ describe("fulfillAuction", () => {
     );
 
     const brokerId = stark.randomAddress();
+    await createBroker(config, { brokerID: brokerId });
     await whitelistBroker(config, adminAccount, brokerId);
 
-    const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-    await mintERC721(config.starknetProvider, sellerAccount);
-    await approveERC721(config, {
-      contractAddress: STARKNET_NFT_ADDRESS,
-      starknetAccount: sellerAccount,
-      tokenId
-    });
-
-    if (process.env.STARKNET_NETWORK_ID === "dev") {
-      await mintERC20(starknetProvider, buyerAccount, 10);
-    }
-
-    await approveERC20(config, {
-      starknetAccount: buyerAccount,
-      contractAddress: STARKNET_ETH_ADDRESS,
-      amount: 10
-    });
+    const tokenId = await mintERC721({ account: sellerAccount });
 
     const order: AuctionV1 = {
       brokerId,
@@ -65,29 +46,37 @@ describe("fulfillAuction", () => {
       endAmount: 10
     };
 
-    const auctionOrderHash = await createAuction(config, {
+    const orderHash = await createAuction(config, {
       starknetAccount: sellerAccount,
-      arkAccount: adminAccount,
-      order
+      order,
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 10_000));
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
 
     const offer: OfferV1 = {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: 5
+      startAmount: 1
     };
 
     const offerOrderHash = await createOffer(config, {
       starknetAccount: buyerAccount,
-      arkAccount: adminAccount,
-      offer
+      offer,
+      approveInfo: {
+        currencyAddress: STARKNET_ETH_ADDRESS,
+        amount: offer.startAmount
+      }
     });
 
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+
     const fulfillAuctionInfo: FulfillAuctionInfo = {
-      orderHash: auctionOrderHash,
+      orderHash,
       relatedOrderHash: offerOrderHash,
       tokenAddress: order.tokenAddress,
       tokenId,
@@ -96,24 +85,15 @@ describe("fulfillAuction", () => {
 
     await fulfillAuction(config, {
       starknetAccount: sellerAccount,
-      arkAccount: adminAccount,
       fulfillAuctionInfo
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-    const { orderStatus: orderStatusBetween } = await getOrderStatus(config, {
-      orderHash: auctionOrderHash
+    const { orderStatus } = await getOrderStatus(config, {
+      orderHash
     });
 
-    expect(shortString.decodeShortString(orderStatusBetween)).toBe("FULFILLED");
-
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    // const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
-    //   orderHash: auctionOrderHash
-    // });
-
-    // expect(shortString.decodeShortString(orderStatusAfter)).toBe("EXECUTED");
+    expect(orderStatus).toBe("Executed");
   }, 50_000);
 });

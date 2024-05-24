@@ -14,9 +14,19 @@ export const MAINNET_CONTRACTS = {
   "orderbook": "0x785873b81c8a3f076270868418c783e8faa5f2b86b87a1754947c650868feb8"
 };
 export const DEV_CONTRACTS = {
+<<<<<<< feature/dev-470-hooker
   "messaging": "0x6e40ed6d24f08a5ec9dc1017c5c6542a002c2d9c5dbed0e95ce930e9eb40d58",
   "executor": "0x5a9a84950d5413d00094e9e8eb674d8aae962fc9f607be6d2dd35e516d6b4e7",
   "nftContract": "0x87db65c66b914a83bbea24badb3662b79059258af127fcf77bf167c04bec6a",
   "eth": "0x200184bde479ccffa50a89485417c907bc1d3779f9b1863d2158733135facce",
   "orderbook": "0x65588d49953bbaf62d6b80b4c3fd4c9743ea987cf4a5a5b5e8070602086b03d"
+=======
+  messaging:
+    "0x2140c668323b57d1454707c62fde8869600051056749be2b5c7369a3b5a3cfe",
+  executor: "0x2786451495b7e741a2dec0b816ddcea8f722f4d68127057100ea7173ecebf2c",
+  nftContract:
+    "0x60b89c9faec7ae27a95b4970ee2d578c96bcb08b782cc294829f4676f6dd3f7",
+  eth: "0x200184bde479ccffa50a89485417c907bc1d3779f9b1863d2158733135facce",
+  orderbook: "0x7dd5a2336f6a614ba8c110518e46d1a62e42fb173dfe835c8839a41c2d9f7dd"
+>>>>>>> main
 };

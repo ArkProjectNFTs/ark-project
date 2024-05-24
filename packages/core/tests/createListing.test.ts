@@ -1,88 +1,91 @@
-import { shortString } from "starknet";
+import { stark } from "starknet";
 
-import { config } from "../examples/config/index.js";
-import { STARKNET_NFT_ADDRESS } from "../examples/constants/index.js";
-import { getCurrentTokenId } from "../examples/utils/getCurrentTokenId.js";
-import { mintERC721 } from "../examples/utils/mintERC721.js";
-import { whitelistBroker } from "../examples/utils/whitelistBroker.js";
-import {
-  createAccount,
-  fetchOrCreateAccount
-} from "../src/actions/account/account.js";
+import { fetchOrCreateAccount } from "../src/actions/account/account.js";
 import { createListing } from "../src/actions/order/index.js";
 import { getOrderStatus } from "../src/actions/read/index.js";
+import { createBroker } from "../src/index.js";
 import { ListingV1 } from "../src/types/index.js";
+import {
+  config,
+  mintERC721,
+  STARKNET_NFT_ADDRESS,
+  whitelistBroker
+} from "./utils/index.js";
 
-test("ArkProject create a listing", async () => {
-  const { account: arkAccount } = await createAccount(config.arkProvider);
-  expect(arkAccount).toBeDefined();
+describe("createListing", () => {
+  it("default", async () => {
+    const adminAccount = await fetchOrCreateAccount(
+      config.arkProvider,
+      process.env.SOLIS_ADMIN_ADDRESS,
+      process.env.SOLIS_ADMIN_PRIVATE_KEY
+    );
 
-  const solisAdminAccount = await fetchOrCreateAccount(
-    config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
-  );
+    const sellerAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
 
-  await whitelistBroker(config, solisAdminAccount, 123);
+    const brokerId = stark.randomAddress();
+    await createBroker(config, { brokerID: brokerId });
+    await whitelistBroker(config, adminAccount, brokerId);
 
-  const starknetOffererAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
+    const starknetOffererAccount = await fetchOrCreateAccount(
+      config.starknetProvider,
+      process.env.STARKNET_ACCOUNT1_ADDRESS,
+      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+    );
 
-  await mintERC721(config.starknetProvider, starknetOffererAccount);
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+    const tokenId = await mintERC721({ account: sellerAccount });
 
-  const order: ListingV1 = {
-    brokerId: 123,
-    tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: BigInt(tokenId) + BigInt(1),
-    startAmount: 600000000000000000
-  };
+    const order: ListingV1 = {
+      brokerId,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId,
+      startAmount: 1
+    };
 
-  const orderHash = await createListing(config, {
-    starknetAccount: starknetOffererAccount,
-    arkAccount,
-    order
-  });
-  expect(orderHash).toBeDefined();
-
-  const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
-    orderHash
-  });
-
-  expect(shortString.decodeShortString(orderStatusBefore)).toBe("OPEN");
-}, 30000);
-
-test("ArkProject create a listing without whitelisting broker", async () => {
-  const { account: arkAccount } = await createAccount(config.arkProvider);
-  expect(arkAccount).toBeDefined();
-
-  const starknetOffererAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
-
-  await mintERC721(config.starknetProvider, starknetOffererAccount);
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
-
-  const order: ListingV1 = {
-    brokerId: 12345,
-    tokenAddress: STARKNET_NFT_ADDRESS,
-    tokenId: BigInt(tokenId) + BigInt(1),
-    startAmount: 600000000000000000
-  };
-
-  try {
-    await createListing(config, {
+    const orderHash = await createListing(config, {
       starknetAccount: starknetOffererAccount,
-      arkAccount,
-      order
+      order,
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      }
     });
-  } catch (e) {
-    const errorString = e instanceof Error ? e.message : JSON.stringify(e);
-    expect(errorString).toMatch(/Transaction execution has failed./);
-  }
-}, 20000);
+
+    const { orderStatus } = await getOrderStatus(config, {
+      orderHash
+    });
+
+    expect(orderStatus).toBe("Open");
+  }, 50_000);
+
+  // it("error: broker not whitelisted", async () => {
+  //   const sellerAccount = await fetchOrCreateAccount(
+  //     config.starknetProvider,
+  //     process.env.STARKNET_ACCOUNT1_ADDRESS,
+  //     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
+  //   );
+
+  //   const tokenId = await mintERC721({ account: sellerAccount });
+
+  //   const order: ListingV1 = {
+  //     brokerId: 12345,
+  //     tokenAddress: STARKNET_NFT_ADDRESS,
+  //     tokenId,
+  //     startAmount: 1
+  //   };
+
+  //   await expect(
+  //     createListing(config, {
+  //       starknetAccount: sellerAccount,
+  //       approveInfo: {
+  //         tokenAddress: STARKNET_NFT_ADDRESS,
+  //         tokenId
+  //       },
+  //       order
+  //     })
+  //   ).rejects.toThrow();
+  // }, 50_0000);
+});

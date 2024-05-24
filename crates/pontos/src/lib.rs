@@ -171,6 +171,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         from_block: Option<BlockId>,
         to_block: Option<BlockId>,
         contract_address: FieldElement,
+        chain_id: &str,
     ) -> IndexerResult<()> {
         let mut continuation_token: Option<String> = None;
 
@@ -196,14 +197,16 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                     match self.client.block_time(BlockId::Number(block_number)).await {
                         Ok(ts) => {
                             current_block_timestamp = ts;
-                            self.process_events(events, current_block_timestamp).await?;
+                            self.process_events(events, current_block_timestamp, chain_id)
+                                .await?;
                         }
                         Err(e) => {
                             error!("Error while fetching block timestamp: {:?}", e);
                         }
                     };
                 } else {
-                    self.process_events(events, current_block_timestamp).await?;
+                    self.process_events(events, current_block_timestamp, chain_id)
+                        .await?;
                 }
             }
 
@@ -229,6 +232,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         from_block: BlockId,
         to_block: BlockId,
         do_force: bool,
+        chain_id: &str,
     ) -> IndexerResult<()> {
         let mut current_u64 = self.client.block_id_to_u64(&from_block).await?;
         let to_u64 = self.client.block_id_to_u64(&to_block).await?;
@@ -329,7 +333,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             );
 
             for (_, events) in blocks_events {
-                self.process_events(events, block_ts).await?;
+                self.process_events(events, block_ts, chain_id).await?;
             }
 
             self.block_manager
@@ -364,7 +368,12 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         Ok(())
     }
 
-    async fn process_element_sale(&self, event: EmittedEvent, block_timestamp: u64) -> Result<()> {
+    async fn process_element_sale(
+        &self,
+        event: EmittedEvent,
+        block_timestamp: u64,
+        chain_id: &str,
+    ) -> Result<()> {
         let mut token_sale_event = self
             .event_manager
             .format_element_sale_event(&event, block_timestamp)
@@ -382,7 +391,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             .contract_manager
             .write()
             .await
-            .identify_contract(contract_addr, block_timestamp)
+            .identify_contract(contract_addr, block_timestamp, chain_id)
             .await
         {
             Ok(info) => info,
@@ -415,6 +424,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         &self,
         event: EmittedEvent,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> Result<()> {
         info!("Processing Ventory Sale or Accepted Offer event...");
 
@@ -435,7 +445,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             .contract_manager
             .write()
             .await
-            .identify_contract(contract_addr, block_timestamp)
+            .identify_contract(contract_addr, block_timestamp, chain_id)
             .await
         {
             Ok(info) => info,
@@ -468,6 +478,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         &self,
         event: EmittedEvent,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> Result<()> {
         let element_sale_event_name = FieldElement::from_hex_be(ELEMENT_MARKETPLACE_EVENT_HEX)?;
         let ventory_sale_event_name = FieldElement::from_hex_be(VENTORY_MARKETPLACE_EVENT_HEX)?;
@@ -479,13 +490,18 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
             match event_name {
                 name if name == &element_sale_event_name => {
-                    self.process_element_sale(event, block_timestamp).await?
+                    self.process_element_sale(event, block_timestamp, chain_id)
+                        .await?
                 }
                 name if name == &ventory_sale_event_name
                     || name == &ventory_offer_accepted_event_name =>
                 {
-                    self.process_ventory_sale_or_accepted_offer_event(event, block_timestamp)
-                        .await?
+                    self.process_ventory_sale_or_accepted_offer_event(
+                        event,
+                        block_timestamp,
+                        chain_id,
+                    )
+                    .await?
                 }
                 _ => (),
             }
@@ -499,13 +515,14 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         event: EmittedEvent,
         block_timestamp: u64,
         contract_address: FieldElement,
+        chain_id: &str,
     ) -> Result<()> {
         let contract_address_hex = to_hex_str(&contract_address);
         let contract_type = self
             .contract_manager
             .write()
             .await
-            .identify_contract(contract_address, block_timestamp)
+            .identify_contract(contract_address, block_timestamp, chain_id)
             .await
             .map_err(|e| {
                 error!(
@@ -550,6 +567,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
         &self,
         events: Vec<EmittedEvent>,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> IndexerResult<()> {
         let marketplace_contracts = [
             FieldElement::from_hex_be(
@@ -567,11 +585,14 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
             let is_marketplace_event = marketplace_contracts.contains(&contract_address);
 
             if is_marketplace_event {
-                if let Err(e) = self.process_marketplace_event(e, block_timestamp).await {
+                if let Err(e) = self
+                    .process_marketplace_event(e, block_timestamp, chain_id)
+                    .await
+                {
                     error!("Error while processing marketplace event: {:?}", e);
                 }
             } else if let Err(e) = self
-                .process_nft_transfers(e, block_timestamp, contract_address)
+                .process_nft_transfers(e, block_timestamp, contract_address, chain_id)
                 .await
             {
                 error!("Error while processing NFT transfers: {:?}", e);
