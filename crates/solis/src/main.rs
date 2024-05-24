@@ -2,13 +2,14 @@ use std::io;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use crate::hooker::SolisHooker;
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
 use console::Style;
 use dojo_metrics::{metrics_process, prometheus_exporter};
 use katana_core::constants::MAX_RECURSION_DEPTH;
 use katana_core::env::get_default_vm_resource_fee_cost;
-use katana_core::hooker::{DefaultKatanaHooker, KatanaHooker};
+use katana_core::hooker::KatanaHooker;
 use katana_core::sequencer::KatanaSequencer;
 use katana_executor::SimulationFlag;
 use katana_primitives::class::ClassHash;
@@ -17,12 +18,23 @@ use katana_primitives::env::{CfgEnv, FeeTokenAddressses};
 use katana_primitives::genesis::allocation::GenesisAccountAlloc;
 use katana_primitives::genesis::Genesis;
 use katana_rpc::{spawn, NodeHandle};
+use starknet::core::types::FieldElement;
 use tokio::signal::ctrl_c;
 use tokio::sync::RwLock as AsyncRwLock;
 use tracing::info;
 
 mod args;
+mod contracts;
+mod hooker;
 mod utils;
+
+// Chain ID: 'SOLIS' cairo short string.
+pub const CHAIN_ID_SOLIS: FieldElement = FieldElement::from_mont([
+    18446732623703627169,
+    18446744073709551615,
+    18446744073709551615,
+    576266102202707888,
+]);
 
 use args::Commands::Completions;
 use args::KatanaArgs;
@@ -31,6 +43,7 @@ pub(crate) const LOG_TARGET: &str = "katana::cli";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
     let args = KatanaArgs::parse();
     args.init_logging()?;
 
@@ -95,22 +108,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     }
 
-    // Create a default hooker instance
-    // Create a default hooker instance
-    // Create a default hooker instance
-    let hooker: Arc<AsyncRwLock<dyn KatanaHooker<BlockifierFactory> + Send + Sync>> =
-        Arc::new(AsyncRwLock::new(DefaultKatanaHooker::new()));
+    // ** SOLIS
+    let sn_utils_reader = contracts::starknet_utils::new_starknet_utils_reader(
+        FieldElement::ZERO,
+        &sequencer_config.messaging.clone().unwrap().rpc_url,
+    );
+
+    let executor_address = FieldElement::ZERO;
+    let orderbook_address = FieldElement::ZERO;
+
+    let hooker = Arc::new(AsyncRwLock::new(SolisHooker::new(
+        sn_utils_reader,
+        orderbook_address,
+        executor_address,
+    )));
+    // **
 
     let sequencer = Arc::new(
         KatanaSequencer::new(
             executor_factory,
             sequencer_config,
             starknet_config,
-            Some(hooker),
+            Some(hooker.clone()),
         )
         .await?,
     );
     let NodeHandle { addr, handle, .. } = spawn(Arc::clone(&sequencer), server_config).await?;
+
+    // ** SOLIS
+    // Important to set the sequencer reference in the hooker, to allow the hooker
+    // to send `L1HandlerTransaction` to the orderbook.
+    hooker.write().await.set_sequencer(sequencer.clone());
+    // **
 
     if !args.silent {
         let genesis = &sequencer.backend().config.genesis;
@@ -157,7 +186,7 @@ fn print_intro(args: &KatanaArgs, genesis: &Genesis, address: SocketAddr) {
 ██╔══██║██╔══██╗██╔═██╗░██╔═══╝░██╔══██╗██║░░██║██╗░░██║██╔══╝░░██║░░██╗░░░██║░░░
 ██║░░██║██║░░██║██║░╚██╗██║░░░░░██║░░██║╚█████╔╝╚█████╔╝███████╗╚█████╔╝░░░██║░░░
 ╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░░░░╚═╝░░╚═╝░╚════╝░░╚════╝░╚══════╝░╚════╝░░░░╚═╝░░░
-                
+
 ░██████╗░█████╗░██╗░░░░░██╗░██████╗
 ██╔════╝██╔══██╗██║░░░░░██║██╔════╝
 ╚█████╗░██║░░██║██║░░░░░██║╚█████╗░

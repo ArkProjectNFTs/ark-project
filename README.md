@@ -113,7 +113,7 @@ cargo run -p solis -- --chain-id 0x736f6c6973 --messaging crates/solis/messaging
 deploy Solis ArkProject contracts
 
 ```bash
-pnpm deploy:solos
+pnpm deploy:solis
 ```
 
 Build the SDKs
