@@ -32,19 +32,19 @@ const fulfillAuction = async (
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
-    order_hash: fulfillAuctionInfo.orderHash,
-    related_order_hash: new CairoOption<BigNumberish>(
+    orderHash: fulfillAuctionInfo.orderHash,
+    relatedOrderHash: new CairoOption<BigNumberish>(
       CairoOptionVariant.Some,
       fulfillAuctionInfo.relatedOrderHash
     ),
     fulfiller: starknetAccount.address,
-    token_chain_id: chainId,
-    token_address: fulfillAuctionInfo.tokenAddress,
-    token_id: new CairoOption<Uint256>(
+    tokenChainId: chainId,
+    tokenAddress: fulfillAuctionInfo.tokenAddress,
+    tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
       cairo.uint256(fulfillAuctionInfo.tokenId)
     ),
-    fulfill_broker_address: fulfillAuctionInfo.brokerId
+    fulfillBrokerAddress: fulfillAuctionInfo.brokerId
   };
 
   const result = await starknetAccount.execute([
@@ -57,7 +57,6 @@ const fulfillAuction = async (
     }
   ]);
 
-  // Wait for the transaction to be processed
   await config.starknetProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });

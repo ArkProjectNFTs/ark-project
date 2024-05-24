@@ -1,108 +1,107 @@
-import type { BigNumberish, CairoOption, Uint256 } from "starknet";
-
-export type OrderV1 = {
-  route: RouteType;
-  offerer: BigNumberish;
-  brokerId: BigNumberish;
-  currencyAddress: BigNumberish;
-  currencyChainId: BigNumberish;
-  tokenChainId: BigNumberish;
-  tokenAddress: BigNumberish;
-  tokenId: CairoOption<Uint256>;
-  quantity: Uint256;
-  startAmount: Uint256;
-  endAmount: Uint256;
-  salt: BigNumberish;
-  startDate: number;
-  endDate: number;
-  additionalData: BigNumberish[];
-};
-
-export type ListingV1 = {
-  brokerId: BigNumberish;
-  tokenAddress: BigNumberish;
-  tokenId: BigNumberish;
-  currencyAddress?: BigNumberish;
-  currencyChainId?: BigNumberish;
-  startAmount: BigNumberish;
-  endAmount?: BigNumberish;
-  startDate?: number;
-  endDate?: number;
-};
-
-export type AuctionV1 = {
-  brokerId: BigNumberish;
-  tokenAddress: BigNumberish;
-  tokenId: BigNumberish;
-  currencyAddress?: BigNumberish;
-  currencyChainId?: BigNumberish;
-  startAmount: BigNumberish;
-  endAmount: BigNumberish;
-  startDate?: number;
-  endDate?: number;
-};
-
-export type OfferV1 = {
-  brokerId: BigNumberish;
-  tokenAddress: BigNumberish;
-  tokenId: BigNumberish;
-  currencyAddress?: BigNumberish;
-  currencyChainId?: BigNumberish;
-  startAmount: BigNumberish;
-  startDate?: number;
-  endDate?: number;
-};
+import type { BigNumberish, CairoOption, constants, Uint256 } from "starknet";
 
 export enum RouteType {
   Erc20ToErc721 = 0,
   Erc721ToErc20 = 1
 }
 
+export type OrderV1 = {
+  route: RouteType;
+  offerer: string;
+  brokerId: string;
+  currencyAddress: string;
+  currencyChainId: constants.StarknetChainId;
+  tokenChainId: constants.StarknetChainId;
+  tokenAddress: string;
+  tokenId: CairoOption<Uint256>;
+  quantity: Uint256;
+  startAmount: Uint256;
+  endAmount: Uint256;
+  salt: number;
+  startDate: number;
+  endDate: number;
+  additionalData: BigNumberish[];
+};
+
+export type OfferV1 = {
+  brokerId: string;
+  tokenAddress: string;
+  tokenId: bigint;
+  currencyAddress?: string;
+  currencyChainId?: constants.StarknetChainId;
+  startAmount: bigint;
+  startDate?: number;
+  endDate?: number;
+};
+
+export type ListingV1 = {
+  brokerId: string;
+  tokenAddress: string;
+  tokenId: bigint;
+  currencyAddress?: string;
+  currencyChainId?: constants.StarknetChainId;
+  startAmount: bigint;
+  startDate?: number;
+  endDate?: number;
+};
+
+export type AuctionV1 = {
+  brokerId: string;
+  tokenAddress: string;
+  tokenId: bigint;
+  currencyAddress?: string;
+  currencyChainId?: constants.StarknetChainId;
+  startAmount: bigint;
+  endAmount: bigint;
+  startDate?: number;
+  endDate?: number;
+};
+
 export type CancelInfo = {
-  orderHash: BigNumberish;
-  tokenAddress: BigNumberish;
-  tokenId: BigNumberish;
+  orderHash: bigint;
+  tokenAddress: string;
+  tokenId: bigint;
 };
 
 export type FullCancelInfo = {
-  orderHash: BigNumberish;
-  canceller: BigNumberish;
-  tokenChainId: BigNumberish;
-  tokenAddress: BigNumberish;
+  orderHash: bigint;
+  canceller: string;
+  tokenChainId: constants.StarknetChainId;
+  tokenAddress: string;
   tokenId: CairoOption<Uint256>;
 };
 
 export type FulfillInfo = {
-  order_hash: BigNumberish;
-  related_order_hash: CairoOption<BigNumberish>;
-  fulfiller: BigNumberish;
-  token_chain_id: BigNumberish;
-  token_address: BigNumberish;
-  token_id: CairoOption<Uint256>;
-  fulfill_broker_address: BigNumberish;
+  orderHash: bigint;
+  relatedOrderHash: CairoOption<BigNumberish>;
+  fulfiller: string;
+  tokenChainId: constants.StarknetChainId;
+  tokenAddress: string;
+  tokenId: CairoOption<Uint256>;
+  fulfillBrokerAddress: string;
 };
 
 export type BaseFulfillInfo = {
-  orderHash: BigNumberish;
-  tokenAddress: BigNumberish;
-  tokenId: BigNumberish;
-  brokerId: BigNumberish;
+  orderHash: bigint;
+  tokenAddress: string;
+  tokenId: bigint;
+  brokerId: string;
 };
+
+export type FulfillOfferInfo = BaseFulfillInfo;
 
 export type FulfillListingInfo = BaseFulfillInfo;
 
 export type FulfillAuctionInfo = BaseFulfillInfo & {
-  relatedOrderHash: BigNumberish;
+  relatedOrderHash: bigint;
 };
 
 export type ApproveErc20Info = {
-  currencyAddress: BigNumberish;
-  amount: BigNumberish;
+  currencyAddress: string;
+  amount: bigint;
 };
 
 export type ApproveErc721Info = {
-  tokenAddress: BigNumberish;
-  tokenId: BigNumberish;
+  tokenAddress: string;
+  tokenId: bigint;
 };
-
-export type FulfillOfferInfo = BaseFulfillInfo;
