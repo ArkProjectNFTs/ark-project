@@ -1,7 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as efs from "aws-cdk-lib/aws-efs";
-import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 
 interface EfsConstructProps extends cdk.StackProps {
@@ -36,7 +35,7 @@ export class EfsConstruct extends Construct {
     const securityGroup = new ec2.SecurityGroup(this, "EfsSecurityGroup", {
       vpc,
       allowAllOutbound: true,
-      description: "Security group for EFS File Storage",
+      description: "Security group for Recording EFS File Storage",
       securityGroupName: "EfsSecurityGroup"
     });
 
@@ -59,9 +58,24 @@ export class EfsConstruct extends Construct {
         creationInfo: {
           ownerGid: "1000",
           ownerUid: "1000",
-          permissions: "777"
+          permissions: "777" // Changed to 777 to ensure any user can read, write, and execute
         }
       }
+    });
+
+    new cdk.CfnOutput(this, "RecordingEFSFileStorageId", {
+      value: fileSystem.ref,
+      exportName: "RecordingEFSFileStorageId"
+    });
+
+    new cdk.CfnOutput(this, "RecordingEFSFileStorageSecurityGroupId", {
+      value: securityGroup.securityGroupId,
+      exportName: "RecordingEFSFileStorageSecurityGroupId"
+    });
+
+    new cdk.CfnOutput(this, "RecordingEFSFileStorageAccessPointId", {
+      value: accessPoint.ref,
+      exportName: "RecordingEFSFileStorageAccessPointId"
     });
 
     this.fileSystemId = fileSystem.ref;

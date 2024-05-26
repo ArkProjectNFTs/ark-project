@@ -57,7 +57,6 @@ export class EcsWithEfsConstruct extends Construct {
       ]
     });
 
-    // Attach EFS permissions to the ECS task role
     taskRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
