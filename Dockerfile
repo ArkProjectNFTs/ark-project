@@ -15,8 +15,9 @@ RUN apt-get update && apt-get install -y \
   libssl-dev \
   pkg-config \
   libpq-dev &&
-  groupadd -g 1000 appgroup &&
-  useradd -u 1000 -g appgroup -m appuser &&
+  groupadd -r appgroup &&
+  useradd -r -g appgroup -d /app -s /sbin/nologin appuser &&
+  mkdir -p /app &&
   chown -R appuser:appgroup /app
 
 # Switch to the new user
