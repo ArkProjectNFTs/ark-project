@@ -7,6 +7,18 @@ ENV STARKNET_SOLIS_ACCOUNT_ADDRESS=""
 ENV STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY=""
 ENV RUST_LOG=info
 
+RUN apt-get update && apt-get install -y \
+  libclang-dev \
+  build-essential \
+  clang \
+  libssl-dev \
+  pkg-config \
+  libpq-dev &&
+  groupadd -g 1000 appgroup &&
+  useradd -u 1000 -g appgroup -m appuser &&
+  mkdir -p /app &&
+  chown -R appuser:appgroup /app
+
 WORKDIR /app
 
 # Copy the entire workspace context into the container
