@@ -3,7 +3,6 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecsPatterns from "aws-cdk-lib/aws-ecs-patterns";
-import * as efs from "aws-cdk-lib/aws-efs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import { Construct } from "constructs";
@@ -94,17 +93,6 @@ export class EcsWithEfsConstruct extends Construct {
       "Allow HTTPS traffic"
     );
 
-    const loadBalancer = new ecsPatterns.ApplicationLoadBalancedFargateService(
-      this,
-      "LoadBalancedFargateService",
-      {
-        cluster,
-        taskDefinition,
-        publicLoadBalancer: true,
-        securityGroups: [containerSG]
-      }
-    );
-
     const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
       domainName: props.domainName
     });
@@ -114,7 +102,20 @@ export class EcsWithEfsConstruct extends Construct {
       validation: acm.CertificateValidation.fromDns(hostedZone)
     });
 
-    loadBalancer.listener.addCertificates("HttpsCertificate", [certificate]);
+    const loadBalancer = new ecsPatterns.ApplicationLoadBalancedFargateService(
+      this,
+      "LoadBalancedFargateService",
+      {
+        cluster,
+        taskDefinition,
+        publicLoadBalancer: true,
+        securityGroups: [containerSG],
+        listenerPort: 443,
+        domainName: `${props.subdomain}.${props.domainName}`,
+        domainZone: hostedZone,
+        certificate
+      }
+    );
 
     new route53.ARecord(this, "AliasRecord", {
       zone: hostedZone,
