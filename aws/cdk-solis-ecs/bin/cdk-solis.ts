@@ -1,36 +1,44 @@
 import * as cdk from "aws-cdk-lib";
+import * as ecs from "aws-cdk-lib/aws-ecs";
+import { Construct } from "constructs";
 
-import { ArkSolisLambdaStack } from "../lib/cdk-solis-db";
-import { ArkSolisEcsStack } from "../lib/cdk-solis-stack";
-import { ArkSolisEfsStack } from "../lib/cdk-stack-efs";
+import { EcsWithEfsConstruct } from "../lib/ecs-with-efs-construct";
+import { EfsConstruct } from "../lib/efs-construct";
+
+interface ArkSolisEcsStackProps extends cdk.StackProps {
+  vpcId: string;
+}
+
+class ArkSolisEcsStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: ArkSolisEcsStackProps) {
+    super(scope, id, props);
+
+    const efsConstruct = new EfsConstruct(this, "EfsConstruct", {
+      vpcId: props.vpcId
+    });
+
+    new EcsWithEfsConstruct(this, "EcsWithEfsConstruct", {
+      vpcId: props.vpcId,
+      efsFileSystemId: efsConstruct.fileSystemId,
+      efsAccessPointId: efsConstruct.accessPointId,
+      efsSecurityGroupId: efsConstruct.securityGroupId,
+      containerImage: ecs.ContainerImage.fromEcrRepository(
+        cdk.aws_ecr.Repository.fromRepositoryName(
+          this,
+          "ArkProjectRepository",
+          "ark-project-repo"
+        ),
+        "solis-latest"
+      ),
+      containerPort: 7777,
+      domainName: "arkproject.dev",
+      subdomain: "staging.solis"
+    });
+  }
+}
 
 const app = new cdk.App();
-
-new ArkSolisEfsStack(app, "ark-solis-efs-stack", {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION
-  }
+new ArkSolisEcsStack(app, "ArkSolisEcsStack", {
+  vpcId: "vpc-0d11f7ec183208e08"
 });
-
-new ArkSolisLambdaStack(app, "ark-solis-db-stack", {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION
-  }
-});
-
-new ArkSolisEcsStack(app, "ark-solis-production-stack", {
-  vpcId: "vpc-0d11f7ec183208e08",
-  efsFileSystemId: cdk.Fn.importValue("RecordingEFSFileStorageId"),
-  efsAccessPointId: cdk.Fn.importValue("RecordingEFSFileStorageAccessPointId"),
-  efsSecurityGroupId: cdk.Fn.importValue(
-    "RecordingEFSFileStorageSecurityGroupId"
-  ),
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION
-  }
-});
-
 app.synth();
