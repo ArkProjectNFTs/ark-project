@@ -7,19 +7,21 @@ ENV STARKNET_SOLIS_ACCOUNT_ADDRESS=""
 ENV STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY=""
 ENV RUST_LOG=info
 
-# Install dependencies and create a user with the correct UID and GID
-RUN apt-get update && apt-get install -y \
-  libclang-dev \
-  build-essential \
-  clang \
-  libssl-dev \
-  pkg-config \
-  libpq-dev \
-  passwd &&
-  groupadd -g 1000 appgroup &&
-  useradd -u 1000 -g appgroup -m appuser &&
-  mkdir -p /app &&
-  chown -R appuser:appgroup /app
+# Install dependencies
+RUN apt-get update
+RUN apt-get install -y libclang-dev
+RUN apt-get install -y build-essential
+RUN apt-get install -y clang
+RUN apt-get install -y libssl-dev
+RUN apt-get install -y pkg-config
+RUN apt-get install -y libpq-dev
+RUN apt-get install -y passwd
+
+# Create a user with the correct UID and GID
+RUN groupadd -g 1000 appgroup
+RUN useradd -u 1000 -g appgroup -m appuser
+RUN mkdir -p /app
+RUN chown -R appuser:appgroup /app
 
 # Switch to the new user
 USER appuser
