@@ -7,8 +7,9 @@ ENV STARKNET_SOLIS_ACCOUNT_ADDRESS=""
 ENV STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY=""
 ENV RUST_LOG=info
 
-# Create a user with the correct UID and GID
-RUN groupadd -g 1000 appgroup &&
+# Install dependencies and create a user with the correct UID and GID
+RUN apt-get update && apt-get install -y libclang-dev &&
+  groupadd -g 1000 appgroup &&
   useradd -u 1000 -g appgroup -m appuser &&
   chown -R appuser:appgroup /app
 
@@ -19,8 +20,6 @@ WORKDIR /app
 
 # Copy the entire workspace context into the container
 COPY . .
-
-RUN apt-get update && apt-get install -y libclang-dev
 
 # Build the 'solis' crate within the workspace
 RUN cargo build -p solis --release
