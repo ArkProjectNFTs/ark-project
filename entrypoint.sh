@@ -9,25 +9,25 @@ echo "Starting entrypoint.sh..."
 echo "Listing mounted volumes:"
 df -h
 
-# Ensure the /efs/mnt directory is mounted
-if mountpoint -q /efs/mnt; then
-  echo "/efs/mnt is mounted."
+# Ensure the /mnt/efs directory is mounted
+if mountpoint -q /mnt/efs; then
+  echo "/mnt/efs is mounted."
 else
-  echo "Error: /efs/mnt is not mounted." >&2
+  echo "Error: /mnt/efs is not mounted." >&2
   exit 1
 fi
 
-# Ensure the /db directory exists
-mkdir -p /efs/mnt/db
+# Ensure the /mnt/efs/db directory exists
+mkdir -p /mnt/efs/db
 
-# Ensure the /db/test directory exists
-mkdir -p /efs/mnt/db/test
+# Ensure the /mnt/efs/db/test directory exists
+mkdir -p /mnt/efs/db/test
 
-# Check if /db is writable
-if [ -w /efs/mnt/db ]; then
-  echo "/efs/mnt/db is writable."
+# Check if /mnt/efs/db is writable
+if [ -w /mnt/efs/db ]; then
+  echo "/mnt/efs/db is writable."
 else
-  echo "Error: /efs/mnt/db is not writable." >&2
+  echo "Error: /mnt/efs/db is not writable." >&2
   exit 1
 fi
 
@@ -48,13 +48,13 @@ EOF
 echo "Generated messaging.json with the following content:"
 cat crates/solis/messaging.json
 
-# Display the contents of the /efs/mnt directory
-echo "Contents of /efs/mnt directory:"
-ls -l /efs/mnt
+# Display the contents of the /mnt/efs directory
+echo "Contents of /mnt/efs directory:"
+ls -l /mnt/efs
 
-# Display the contents of the /efs/mnt/db directory
-echo "Contents of /efs/mnt/db directory:"
-ls -l /efs/mnt/db
+# Display the contents of the /mnt/efs/db directory
+echo "Contents of /mnt/efs/db directory:"
+ls -l /mnt/efs/db
 
 # Display the contents of the crates/solis directory
 echo "Contents of crates/solis directory:"
@@ -62,4 +62,4 @@ ls -l crates/solis
 
 # Start the application
 echo "Starting the solis application..."
-exec ./target/release/solis --db-dir /efs/mnt/db --messaging crates/solis/messaging.json --dev
+exec ./target/release/solis --db-dir /mnt/efs/db --messaging crates/solis/messaging.json --dev
