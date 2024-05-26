@@ -4,7 +4,6 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecsPatterns from "aws-cdk-lib/aws-ecs-patterns";
 import * as route53 from "aws-cdk-lib/aws-route53";
-import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import { Construct } from "constructs";
 
 interface EcsWithEfsProps extends cdk.StackProps {
@@ -131,14 +130,6 @@ export class EcsWithEfsConstruct extends Construct {
         certificate
       }
     );
-
-    new route53.ARecord(this, "AliasRecord", {
-      zone: hostedZone,
-      target: route53.RecordTarget.fromAlias(
-        new route53Targets.LoadBalancerTarget(loadBalancer.loadBalancer)
-      ),
-      recordName: props.subdomain
-    });
 
     new cdk.CfnOutput(this, "LoadBalancerDNS", {
       value: loadBalancer.loadBalancer.loadBalancerDnsName
