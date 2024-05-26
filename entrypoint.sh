@@ -16,6 +16,9 @@ fi
 # Ensure the /db directory exists
 mkdir -p /efs/mnt/db
 
+# Ensure the /db directory exists
+mkdir -p /efs/mnt/db/test
+
 # Check if /db is writable
 if [ -w /efs/mnt/db ]; then
   echo "/efs/mnt/db is writable."

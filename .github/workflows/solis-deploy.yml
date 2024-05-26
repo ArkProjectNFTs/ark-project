@@ -5,10 +5,10 @@ on:
     branches:
       - main
 
-# on:
-#   push:
-#     branches:
-#       - feat/solis-cd-efs
+on:
+  push:
+    branches:
+      - feat/solis-cd-efs
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
