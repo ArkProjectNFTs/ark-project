@@ -39,6 +39,10 @@ class ArkSolisEcsStack extends cdk.Stack {
 
 const app = new cdk.App();
 new ArkSolisEcsStack(app, "ArkSolisEcsStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION
+  },
   vpcId: "vpc-0d11f7ec183208e08"
 });
 app.synth();
