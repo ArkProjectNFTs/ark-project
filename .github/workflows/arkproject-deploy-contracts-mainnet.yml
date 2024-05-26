@@ -1,6 +1,6 @@
 name: ArkProject Deploy Contracts & Solis Mainnet
 
-# on: workflow_dispatch
+on: workflow_dispatch
 # on:
 #   push:
 #     branches:
