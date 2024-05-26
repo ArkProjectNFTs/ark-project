@@ -23,22 +23,19 @@ RUN useradd -u 1000 -g appgroup -m appuser
 RUN mkdir -p /app
 RUN chown -R appuser:appgroup /app
 
+# Copy the entire workspace context into the container
+COPY . /app
+
+# Make the entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
+
 # Switch to the new user
 USER appuser
 
 WORKDIR /app
 
-# Copy the entire workspace context into the container
-COPY . .
-
 # Build the 'solis' crate within the workspace
 RUN cargo build -p solis --release
-
-# Copy your entrypoint script
-COPY entrypoint.sh .
-
-# Make the entrypoint script executable
-RUN chmod +x entrypoint.sh
 
 # Set the entrypoint script as the entrypoint
 ENTRYPOINT ["./entrypoint.sh"]
