@@ -1,27 +1,11 @@
 FROM rust:slim
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-  libclang-dev \
-  build-essential \
-  clang \
-  libssl-dev \
-  pkg-config \
-  libpq-dev
-
-# Create a new group and user
-RUN groupadd --system appgroup &&
-  useradd --system --gid appgroup --shell /bin/bash --create-home appuser
-
 # Set environment variables
 ENV STARKNET_NODE_URL="" \
   STARKNET_APPCHAIN_MESSAGING_ADDRESS="" \
   STARKNET_SOLIS_ACCOUNT_ADDRESS="" \
   STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY="" \
   RUST_LOG=info
-
-# Switch to the new user
-USER appuser
 
 WORKDIR /app
 
