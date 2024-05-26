@@ -17,6 +17,14 @@ else
   exit 1
 fi
 
+# Debugging: Check current user
+echo "Current user: $(whoami)"
+id
+
+# Debugging: List directory permissions
+echo "Directory permissions for /mnt/efs:"
+ls -ld /mnt/efs
+
 # Ensure the /mnt/efs/db directory exists
 mkdir -p /mnt/efs/db
 

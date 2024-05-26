@@ -59,7 +59,7 @@ export class EfsConstruct extends Construct {
         creationInfo: {
           ownerGid: "1000",
           ownerUid: "1000",
-          permissions: "755"
+          permissions: "777"
         }
       }
     });
