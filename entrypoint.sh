@@ -5,8 +5,24 @@ set -e # Exit immediately if a command exits with a non-zero status
 
 echo "Starting entrypoint.sh..."
 
+# Ensure the /efs/mnt directory is mounted
+if mountpoint -q /efs/mnt; then
+  echo "/efs/mnt is mounted."
+else
+  echo "Error: /efs/mnt is not mounted." >&2
+  exit 1
+fi
+
 # Ensure the /db directory exists
 mkdir -p /efs/mnt/db
+
+# Check if /db is writable
+if [ -w /efs/mnt/db ]; then
+  echo "/efs/mnt/db is writable."
+else
+  echo "Error: /efs/mnt/db is not writable." >&2
+  exit 1
+fi
 
 # Generate the messaging.json file
 cat >crates/solis/messaging.json <<EOF
@@ -25,7 +41,7 @@ EOF
 echo "Generated messaging.json with the following content:"
 cat crates/solis/messaging.json
 
-# Display the contents of the /efs/mnt/db directory
+# Display the contents of the /efs/mnt directory
 echo "Contents of /efs/mnt directory:"
 ls -l /efs/mnt
 
