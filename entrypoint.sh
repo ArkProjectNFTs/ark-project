@@ -5,6 +5,10 @@ set -e # Exit immediately if a command exits with a non-zero status
 
 echo "Starting entrypoint.sh..."
 
+# List mounted volumes
+echo "Listing mounted volumes:"
+df -h
+
 # Ensure the /efs/mnt directory is mounted
 if mountpoint -q /efs/mnt; then
   echo "/efs/mnt is mounted."
@@ -16,7 +20,7 @@ fi
 # Ensure the /db directory exists
 mkdir -p /efs/mnt/db
 
-# Ensure the /db directory exists
+# Ensure the /db/test directory exists
 mkdir -p /efs/mnt/db/test
 
 # Check if /db is writable
