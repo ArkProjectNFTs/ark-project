@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
   clang \
   libssl-dev \
   pkg-config \
-  libpq-dev &&
+  libpq-dev \
+  passwd &&
   groupadd -g 1000 appgroup &&
   useradd -u 1000 -g appgroup -m appuser &&
   mkdir -p /app &&
