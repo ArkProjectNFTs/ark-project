@@ -3,6 +3,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecsPatterns from "aws-cdk-lib/aws-ecs-patterns";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import { Construct } from "constructs";
 
@@ -47,9 +48,33 @@ export class EcsWithEfsConstruct extends Construct {
       "Allow this container to connect to the EFS"
     );
 
+    const taskRole = new iam.Role(this, "EcsTaskRole", {
+      assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AmazonECSTaskExecutionRolePolicy"
+        )
+      ]
+    });
+
+    // Attach EFS permissions to the ECS task role
+    taskRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite",
+          "elasticfilesystem:ClientRootAccess"
+        ],
+        resources: [
+          `arn:aws:elasticfilesystem:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:file-system/${props.efsFileSystemId}`
+        ]
+      })
+    );
+
     const taskDefinition = new ecs.FargateTaskDefinition(this, "TaskDef", {
       memoryLimitMiB: 8192,
-      cpu: 4096
+      cpu: 4096,
+      taskRole: taskRole
     });
 
     const container = taskDefinition.addContainer("AppContainer", {

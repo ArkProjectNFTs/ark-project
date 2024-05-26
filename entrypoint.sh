@@ -25,6 +25,13 @@ id
 echo "Directory permissions for /mnt/efs:"
 ls -ld /mnt/efs
 
+# Debugging: List contents of /mnt/efs
+echo "Contents of /mnt/efs:"
+ls -l /mnt/efs
+
+# Try creating a test directory with root user
+sudo mkdir /mnt/efs/test_root_dir && echo "Created /mnt/efs/test_root_dir with sudo"
+
 # Ensure the /mnt/efs/db directory exists
 mkdir -p /mnt/efs/db
 
