@@ -58,7 +58,22 @@ export class EcsWithEfsConstruct extends Construct {
       memoryLimitMiB: 8192,
       logging: new ecs.AwsLogDriver({
         streamPrefix: "EcsWithEfs"
-      })
+      }),
+      environment: {
+        STARKNET_NODE_URL: process.env.STARKNET_NODE_URL || "default_rpc_url",
+        STARKNET_APPCHAIN_MESSAGING_ADDRESS:
+          process.env.STARKNET_APPCHAIN_MESSAGING_ADDRESS ||
+          "default_contract_address",
+        STARKNET_SOLIS_ACCOUNT_ADDRESS:
+          process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS ||
+          "default_sender_address",
+        STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY:
+          process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY ||
+          "default_private_key",
+        RPC_USER: process.env.RPC_USER || "default_rpc_user",
+        RPC_PASSWORD: process.env.RPC_PASSWORD || "default_rpc_password",
+        DEPLOYMENT_VERSION: Date.now().toString()
+      }
     });
 
     container.addPortMappings({
