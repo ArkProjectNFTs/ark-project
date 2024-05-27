@@ -47,6 +47,9 @@ else
   exit 1
 fi
 
+# Ensure the crates/solis directory is writable
+chmod -R 777 crates/solis
+
 # Generate the messaging.json file
 cat >crates/solis/messaging.json <<EOF
 {
