@@ -60,11 +60,13 @@ export class EcsWithEfsConstruct extends Construct {
     taskRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
+          "elasticfilesystem:*",
           "elasticfilesystem:ClientMount",
           "elasticfilesystem:ClientWrite",
           "elasticfilesystem:ClientRootAccess"
         ],
         resources: [
+          "*",
           `arn:aws:elasticfilesystem:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:file-system/${props.efsFileSystemId}`
         ]
       })

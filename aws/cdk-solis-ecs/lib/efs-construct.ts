@@ -58,7 +58,7 @@ export class EfsConstruct extends Construct {
         creationInfo: {
           ownerGid: "1000",
           ownerUid: "1000",
-          permissions: "777" // Changed to 777 to ensure any user can read, write, and execute
+          permissions: "777"
         }
       }
     });

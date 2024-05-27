@@ -29,8 +29,9 @@ ls -ld /mnt/efs
 echo "Contents of /mnt/efs:"
 ls -l /mnt/efs
 
-# Try creating a test directory with root user
-sudo mkdir /mnt/efs/test_root_dir && echo "Created /mnt/efs/test_root_dir with sudo"
+# Debugging: Check effective UID and GID
+echo "Effective UID: $(id -u)"
+echo "Effective GID: $(id -g)"
 
 # Ensure the /mnt/efs/db directory exists
 mkdir -p /mnt/efs/db
