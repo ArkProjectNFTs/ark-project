@@ -6,9 +6,7 @@ use ark_common::protocol::order_v1::OrderV1;
 use ark_common::protocol::order_types::RouteType;
 
 
-use ark_starknet::interfaces::{
-    IExecutorDispatcher, IExecutorDispatcherTrait,
-};
+use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait,};
 
 use ark_tokens::erc20::IFreeMintDispatcher as Erc20Dispatcher;
 use ark_tokens::erc20::IFreeMintDispatcherTrait as Erc20DispatcherTrait;
@@ -53,7 +51,6 @@ fn deploy_executor() -> ContractAddress {
     messaging_calldata.append(messaging_owner.into());
     messaging_calldata.append(appchain_account.into());
     let messaging_address = messaging_contract.deploy(@messaging_calldata).unwrap();
-
 
     let contract = snf::declare('executor');
     let admin_address = contract_address_const::<'admin'>();
@@ -100,7 +97,7 @@ fn setup_order(erc20_address: ContractAddress, nft_address: ContractAddress) -> 
 }
 
 #[test]
-#[should_panic(expected: ("Caller is not the offerer", ))]
+#[should_panic(expected: ("Caller is not the offerer",))]
 fn test_create_order_offerer_shall_be_caller() {
     let (executor_address, erc20_address, nft_address) = setup();
     let offerer = contract_address_const::<'offerer'>();
@@ -115,18 +112,18 @@ fn test_create_order_offerer_shall_be_caller() {
 }
 
 #[test]
-#[should_panic(expected: ("Offerer does not own enough ERC20 tokens", ))]
+#[should_panic(expected: ("Offerer does not own enough ERC20 tokens",))]
 fn test_create_order_offerer_not_enough_erc20_tokens() {
     let (executor_address, erc20_address, nft_address) = setup();
     let offerer = contract_address_const::<'offerer'>();
     let start_amount = 10_000_000;
     let minted = 10_000;
 
-    Erc20Dispatcher { contract_address: erc20_address}.mint(offerer, minted);
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, minted);
 
     let mut order = setup_order(erc20_address, nft_address);
     order.offerer = offerer;
-    order.start_amount = start_amount; 
+    order.start_amount = start_amount;
 
     snf::start_prank(CheatTarget::One(executor_address), offerer);
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -134,15 +131,17 @@ fn test_create_order_offerer_not_enough_erc20_tokens() {
 }
 
 #[test]
-#[should_panic(expected: ("Offerer does not own the specified ERC721 token", ))]
+#[should_panic(expected: ("Offerer does not own the specified ERC721 token",))]
 fn test_create_order_offerer_not_own_ec721_token() {
     let (executor_address, erc20_address, nft_address) = setup();
     let offerer = contract_address_const::<'offerer'>();
     let other = contract_address_const::<'other'>();
-    
-    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address}.get_current_token_id().into();
-    Erc721Dispatcher { contract_address: nft_address}.mint(other, 'base_uri');
-    
+
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(other, 'base_uri');
+
     let mut order = setup_order(erc20_address, nft_address);
     order.route = RouteType::Erc721ToErc20.into();
     order.offerer = offerer;
@@ -151,5 +150,4 @@ fn test_create_order_offerer_not_own_ec721_token() {
     snf::start_prank(CheatTarget::One(executor_address), offerer);
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
     snf::stop_prank(CheatTarget::One(executor_address));
-
 }

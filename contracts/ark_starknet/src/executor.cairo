@@ -181,7 +181,7 @@ mod executor {
             };
 
             let vinfo = CreateOrderInfo { order: order.clone() };
-            
+
             _verify_create_order(@self, @vinfo);
 
             let mut vinfo_buf = array![];
@@ -320,26 +320,37 @@ mod executor {
 
         match order.route {
             RouteType::Erc20ToErc721 => {
-                assert!(_check_erc20_amount(order.currency_address, *(order.start_amount), order.offerer), "Offerer does not own enough ERC20 tokens");
+                assert!(
+                    _check_erc20_amount(
+                        order.currency_address, *(order.start_amount), order.offerer
+                    ),
+                    "Offerer does not own enough ERC20 tokens"
+                );
             },
             RouteType::Erc721ToErc20 => {
                 match order.token_id {
                     Option::Some(token_id) => {
-                        assert!(_check_erc721_owner(order.token_address, *token_id, order.offerer), "Offerer does not own the specified ERC721 token");
+                        assert!(
+                            _check_erc721_owner(order.token_address, *token_id, order.offerer),
+                            "Offerer does not own the specified ERC721 token"
+                        );
                     },
                     Option::None => panic!("Invalid token id"),
                 }
             },
         }
-
     }
 
-    fn _check_erc20_amount(token_address: @ContractAddress, amount: u256, user: @ContractAddress) -> bool {
+    fn _check_erc20_amount(
+        token_address: @ContractAddress, amount: u256, user: @ContractAddress
+    ) -> bool {
         let contract = IERC20Dispatcher { contract_address: *token_address };
         amount <= contract.balance_of(*user)
     }
 
-    fn _check_erc721_owner(token_address: @ContractAddress, token_id: u256, user: @ContractAddress) -> bool {
+    fn _check_erc721_owner(
+        token_address: @ContractAddress, token_id: u256, user: @ContractAddress
+    ) -> bool {
         let contract = IERC721Dispatcher { contract_address: *token_address };
         contract.owner_of(token_id) == *user
     }
