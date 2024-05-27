@@ -29,10 +29,6 @@ ls -ld /mnt/efs
 echo "Contents of /mnt/efs:"
 ls -l /mnt/efs
 
-# Debugging: Check effective UID and GID
-echo "Effective UID: $(id -u)"
-echo "Effective GID: $(id -g)"
-
 # Ensure the /mnt/efs/db directory exists
 mkdir -p /mnt/efs/db
 
@@ -47,8 +43,13 @@ else
   exit 1
 fi
 
-# Ensure the crates/solis directory is writable
-chmod -R 777 crates/solis
+# Check if crates/solis is writable
+if [ -w crates/solis ]; then
+  echo "crates/solis is writable."
+else
+  echo "Error: crates/solis is not writable." >&2
+  exit 1
+fi
 
 # Generate the messaging.json file
 cat >crates/solis/messaging.json <<EOF

@@ -20,11 +20,17 @@ RUN apt-get install -y passwd
 # Create a user with the correct UID and GID
 RUN groupadd -g 1000 appgroup
 RUN useradd -u 1000 -g appgroup -m appuser
+
+# Create necessary directories and set permissions
 RUN mkdir -p /app
 RUN chown -R appuser:appgroup /app
 
 # Copy the entire workspace context into the container
 COPY . /app
+
+# Set permissions for crates/solis directory before switching to appuser
+RUN chown -R appuser:appgroup /app/crates/solis
+RUN chmod -R 755 /app/crates/solis
 
 # Make the entrypoint script executable
 RUN chmod +x /app/entrypoint.sh
