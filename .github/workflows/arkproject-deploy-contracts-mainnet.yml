@@ -1,10 +1,6 @@
 name: ArkProject Deploy Contracts & Solis Mainnet
 
-# on: workflow_dispatch
-on:
-  push:
-    branches:
-      - feat/solis-cd-efs
+on: workflow_dispatch
 
 jobs:
   deploy-starknet:
