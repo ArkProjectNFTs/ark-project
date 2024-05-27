@@ -52,12 +52,12 @@ const fulfillListing = async (
       contractAddress: approveInfo.currencyAddress as string,
       entrypoint: "approve",
       calldata: CallData.compile({
-        spender: config.starknetContracts.executor,
+        spender: config.starknetExecutorContract,
         amount: cairo.uint256(approveInfo.amount)
       })
     },
     {
-      contractAddress: config.starknetContracts.executor,
+      contractAddress: config.starknetExecutorContract,
       entrypoint: "fulfill_order",
       calldata: CallData.compile({
         fulfill_info: fulfillInfo

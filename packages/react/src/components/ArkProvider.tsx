@@ -11,8 +11,8 @@ import { useAccount, useNetwork, useProvider } from "@starknet-react/core";
 
 import {
   Config,
-  ConfigParameters,
   createConfig,
+  CreateConfigParameters,
   Network
 } from "@ark-project/core";
 
@@ -23,7 +23,7 @@ const OwnerDataContext = createContext<string | undefined>(undefined);
 const ConfigDataContext = createContext<Config | undefined>(undefined);
 
 export type ArkProviderProviderProps = {
-  config: ConfigParameters;
+  config: CreateConfigParameters;
 };
 
 function AlertCircleIcon(props: React.SVGProps<SVGSVGElement>) {

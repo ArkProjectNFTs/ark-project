@@ -9,7 +9,7 @@ interface GetOrderParameters {
 const getOrder = async (config: Config, parameters: GetOrderParameters) => {
   const { orderHash } = parameters;
   const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainContracts.orderbook
+    config.arkchainOrderbookContract
   );
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
@@ -17,7 +17,7 @@ const getOrder = async (config: Config, parameters: GetOrderParameters) => {
 
   const orderbookContract = new Contract(
     orderbookAbi,
-    config.arkchainContracts.orderbook,
+    config.arkchainOrderbookContract,
     config.arkProvider
   );
 

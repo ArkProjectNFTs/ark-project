@@ -25,7 +25,7 @@ export const approveERC721 = async (
     contractAddress: contractAddress,
     entrypoint: "approve",
     calldata: CallData.compile({
-      to: config.starknetContracts.executor,
+      to: config.starknetExecutorContract,
       tokenId: cairo.uint256(tokenId)
     })
   };
@@ -58,7 +58,7 @@ export const approveERC20 = async (
     contractAddress,
     entrypoint: "approve",
     calldata: CallData.compile([
-      config.starknetContracts.executor,
+      config.starknetExecutorContract,
       cairo.uint256(amount)
     ])
   };
@@ -88,7 +88,7 @@ export const increaseERC20 = async (
     contractAddress,
     entrypoint: "increase_allowance",
     calldata: CallData.compile([
-      config.starknetContracts.executor,
+      config.starknetExecutorContract,
       cairo.uint256(amount)
     ])
   };

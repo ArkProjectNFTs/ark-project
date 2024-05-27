@@ -273,6 +273,9 @@ importers:
       tsup:
         specifier: ^8.0.1
         version: 8.0.1(postcss@8.4.32)(ts-node@10.9.1(@types/node@20.10.7)(typescript@5.2.2))(typescript@5.2.2)
+      tsx:
+        specifier: ^4.11.0
+        version: 4.11.0
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -304,6 +307,9 @@ importers:
       '@types/node':
         specifier: ^20.10.7
         version: 20.10.7
+      tsx:
+        specifier: ^4.11.0
+        version: 4.11.0
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -3142,6 +3148,9 @@ packages:
   get-tsconfig@4.7.2:
     resolution: {integrity: sha512-wuMsz4leaj5hbGgg4IvDU0bqJagpftG5l5cXIAvo8uZrqn0NJqwtfupTN00VnkQJPcIRrxYrm1Ue24btpCha2A==}
 
+  get-tsconfig@4.7.5:
+    resolution: {integrity: sha512-ZCuZCnlqNzjb4QprAzXKdpp/gh6KTxSJuw3IBsPnV/7fV4NxC9ckB+vPTt8w7fJA0TaSD7c55BR47JD6MEDyDw==}
+
   git-hooks-list@3.1.0:
     resolution: {integrity: sha512-LF8VeHeR7v+wAbXqfgRlTSX/1BJR9Q1vEMR8JAz1cEg6GX07+zyj3sAdDvYjj/xnlIfVuGgj4qBei1K3hKH+PA==}
 
@@ -4878,6 +4887,11 @@ packages:
     engines: {node: '>= 6'}
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
+
+  tsx@4.11.0:
+    resolution: {integrity: sha512-vzGGELOgAupsNVssAmZjbUDfdm/pWP4R+Kg8TVdsonxbXk0bEpE1qh0yV6/QxUVXaVlNemgcPajGdJJ82n3stg==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   tty-table@4.2.3:
     resolution: {integrity: sha512-Fs15mu0vGzCrj8fmJNP7Ynxt5J7praPXqFN0leZeZBXJwkMxv9cb2D454k1ltrtUSJbZ4yH4e0CynsHLxmUfFA==}
@@ -8592,6 +8606,10 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
+  get-tsconfig@4.7.5:
+    dependencies:
+      resolve-pkg-maps: 1.0.0
+
   git-hooks-list@3.1.0: {}
 
   glob-parent@5.1.2:
@@ -10587,6 +10605,13 @@ snapshots:
     dependencies:
       tslib: 1.14.1
       typescript: 5.2.2
+
+  tsx@4.11.0:
+    dependencies:
+      esbuild: 0.20.2
+      get-tsconfig: 4.7.5
+    optionalDependencies:
+      fsevents: 2.3.3
 
   tty-table@4.2.3:
     dependencies:

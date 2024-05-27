@@ -48,7 +48,7 @@ const fulfillAuction = async (
 
   const result = await starknetAccount.execute([
     {
-      contractAddress: config.starknetContracts.executor,
+      contractAddress: config.starknetExecutorContract,
       entrypoint: "fulfill_order",
       calldata: CallData.compile({
         fulfill_info: fulfillInfo

@@ -30,7 +30,7 @@ const getOrderHash = async (
   const tokenHashMessage = starknet.poseidonHashMany(tokenHashBigIntArray);
 
   const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainContracts.orderbook
+    config.arkchainOrderbookContract
   );
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
@@ -38,7 +38,7 @@ const getOrderHash = async (
 
   const orderbookContract = new Contract(
     orderbookAbi,
-    config.arkchainContracts.orderbook,
+    config.arkchainOrderbookContract,
     config.arkProvider
   );
 

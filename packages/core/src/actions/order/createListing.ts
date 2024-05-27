@@ -48,7 +48,7 @@ const createListing = async (
   const chainId = await config.starknetProvider.getChainId();
   const order: OrderV1 = {
     route: RouteType.Erc721ToErc20,
-    currencyAddress: config.starknetContracts.eth,
+    currencyAddress: config.starknetCurrencyContract,
     currencyChainId: chainId,
     salt: 1,
     offerer: starknetAccount.address,
@@ -72,12 +72,12 @@ const createListing = async (
       contractAddress: approveInfo.tokenAddress as string,
       entrypoint: "approve",
       calldata: CallData.compile({
-        to: config.starknetContracts.executor,
+        to: config.starknetExecutorContract,
         token_id: cairo.uint256(approveInfo.tokenId)
       })
     },
     {
-      contractAddress: config.starknetContracts.executor,
+      contractAddress: config.starknetExecutorContract,
       entrypoint: "create_order",
       calldata: CallData.compile({
         order: order

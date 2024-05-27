@@ -2,7 +2,7 @@
 
 import React from "react";
 
-// import type { Metadata } from "next";
+import { env } from "@/env";
 import { Inter as FontSans } from "next/font/google";
 
 import { networks } from "@ark-project/core";
@@ -29,8 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const config = {
-    arkchainNetwork: networks.mainnet
+    arkchainNetwork: networks.mainnet,
+    arkchainOrderbookContract: env.NEXT_PUBLIC_ARKCHAIN_ORDERBOOK_CONTRACT,
+    starknetEthContract: env.NEXT_PUBLIC_STARKNET_ETH_CONTRACT,
+    starknetNftContract: env.NEXT_PUBLIC_STARKNET_NFT_CONTRACT
   };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body

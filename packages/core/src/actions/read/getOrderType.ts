@@ -12,7 +12,7 @@ const getOrderType = async (
 ) => {
   const { orderHash } = parameters;
   const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainContracts.orderbook
+    config.arkchainOrderbookContract
   );
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
@@ -20,7 +20,7 @@ const getOrderType = async (
 
   const orderbookContract = new Contract(
     orderbookAbi,
-    config.arkchainContracts.orderbook,
+    config.arkchainOrderbookContract,
     config.arkProvider
   );
 

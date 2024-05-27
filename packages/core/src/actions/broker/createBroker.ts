@@ -16,7 +16,7 @@ export const createBroker = async (config: Config, params: Params) => {
   });
 
   const result = await account.execute({
-    contractAddress: config.arkchainContracts.orderbook,
+    contractAddress: config.arkchainOrderbookContract,
     entrypoint: "whitelist_broker",
     calldata: whitelist_broker_calldata
   });
