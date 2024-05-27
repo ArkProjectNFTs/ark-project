@@ -21,6 +21,7 @@ name = "ark_starknet"
 version = "0.1.0"
 dependencies = [
  "ark_common",
+ "ark_tokens",
  "openzeppelin",
  "snforge_std",
 ]
