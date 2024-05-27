@@ -97,6 +97,44 @@ fn setup_order(erc20_address: ContractAddress, nft_address: ContractAddress) -> 
 }
 
 #[test]
+fn test_create_order_erc20_to_erc721_ok() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let mut order = setup_order(erc20_address, nft_address);
+    order.offerer = offerer;
+    order.start_amount = start_amount;
+
+    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}
+
+#[test]
+fn test_create_order_erc721_to_erc20_ok() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let mut order = setup_order(erc20_address, nft_address);
+    order.route = RouteType::Erc721ToErc20.into();
+    order.offerer = offerer;
+    order.token_id = Option::Some(token_id);
+
+    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}
+
+
+#[test]
 #[should_panic(expected: ("Caller is not the offerer",))]
 fn test_create_order_offerer_shall_be_caller() {
     let (executor_address, erc20_address, nft_address) = setup();
