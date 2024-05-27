@@ -29,8 +29,14 @@ ls -ld /mnt/efs
 echo "Contents of /mnt/efs:"
 ls -l /mnt/efs
 
-# Ensure the /mnt/efs/db directory exists
-mkdir -p /mnt/efs/db
+# Ensure the /mnt/efs/db directory exists and is clean
+if [ -d /mnt/efs/db ]; then
+  echo "/mnt/efs/db directory exists. Cleaning up..."
+  rm -rf /mnt/efs/db/*
+else
+  echo "/mnt/efs/db directory does not exist. Creating..."
+  mkdir -p /mnt/efs/db
+fi
 
 # Ensure the /mnt/efs/db/test directory exists
 mkdir -p /mnt/efs/db/test
@@ -82,4 +88,4 @@ ls -l crates/solis
 
 # Start the application
 echo "Starting the solis application..."
-exec ./target/release/solis --db-dir /mnt/efs/db --messaging crates/solis/messaging.json --dev
+exec ./target/release/solis --messaging crates/solis/messaging.json --dev
