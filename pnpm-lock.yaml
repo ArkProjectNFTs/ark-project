@@ -199,6 +199,9 @@ importers:
 
   aws/cdk-solis-ecs:
     dependencies:
+      '@aws-cdk-containers/ecs-service-extensions':
+        specifier: 2.0.1-alpha.373
+        version: 2.0.1-alpha.373(aws-cdk-lib@2.100.0(constructs@10.3.0))(constructs@10.3.0)
       aws-cdk-lib:
         specifier: 2.100.0
         version: 2.100.0(constructs@10.3.0)
@@ -400,6 +403,9 @@ importers:
       '@types/react':
         specifier: ^18
         version: 18.2.43
+      nodemon:
+        specifier: ^3.0.2
+        version: 3.0.2
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -422,6 +428,12 @@ packages:
   '@ampproject/remapping@2.2.1':
     resolution: {integrity: sha512-lFMjJTrFL3j7L9yBxwYfCq2k6qqwHyzuUl/XBnif78PWTJYyL/dfowQHWE3sp6U6ZzqWiiIZnpTMO96zhkjwtg==}
     engines: {node: '>=6.0.0'}
+
+  '@aws-cdk-containers/ecs-service-extensions@2.0.1-alpha.373':
+    resolution: {integrity: sha512-dzkXtL5gCRw5EzFqdIOdgBe4dWRG2P2jGsV2KnzYDnRaLujSZt37gikOt6q/nqfOlBWMqdsVYNFR7YV5HiiaSg==}
+    peerDependencies:
+      aws-cdk-lib: ^2.52.0
+      constructs: ^10.0.5
 
   '@aws-cdk/asset-awscli-v1@2.2.201':
     resolution: {integrity: sha512-INZqcwDinNaIdb5CtW3ez5s943nX5stGBQS6VOP2JDlOFP81hM3fds/9NDknipqfUkZM43dx+HgVvkXYXXARCQ==}
@@ -5391,6 +5403,11 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.20
+
+  '@aws-cdk-containers/ecs-service-extensions@2.0.1-alpha.373(aws-cdk-lib@2.100.0(constructs@10.3.0))(constructs@10.3.0)':
+    dependencies:
+      aws-cdk-lib: 2.100.0(constructs@10.3.0)
+      constructs: 10.3.0
 
   '@aws-cdk/asset-awscli-v1@2.2.201': {}
 

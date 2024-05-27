@@ -20,7 +20,7 @@ interface BuyOrderProps {
 }
 
 const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
-  const { fulfillListing, status, stepStatus } = useFulfillListing();
+  const { fulfillListing, status } = useFulfillListing();
   const { address, account } = useAccount();
   const isOwner = address && areAddressesEqual(token.owner, address);
 
@@ -53,13 +53,7 @@ const BuyOrder: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
         <div className="flex w-full justify-between">
           <div className="uppercase font-bold">
             {status === "idle" && "BUY NOW"}
-            {status === "loading" && (
-              <>
-                {stepStatus === "idle" && "Creating transaction..."}
-                {stepStatus === "approving" && "Approving..."}
-                {stepStatus === "selling" && "Sell in progress..."}
-              </>
-            )}
+            {status === "loading" && "loading"}
             {status === "success" && "Bought"}
             {status === "error" && "Error"}
           </div>

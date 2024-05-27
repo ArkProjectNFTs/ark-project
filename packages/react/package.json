@@ -11,7 +11,8 @@
     "clean": "rm -rf dist tsconfig.tsbuildinfo actions chains codegen connectors query",
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --ext .ts,.tsx . --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --watch src --exec \"pnpm run build\""
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,7 @@
     "starknet": "6.6.6"
   },
   "devDependencies": {
+    "nodemon": "^3.0.2",
     "@ark-project/eslint-config": "workspace:*",
     "@ark-project/typescript-config": "workspace:*",
     "@types/react": "^18",

@@ -70,10 +70,6 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             if *self.start_date >= *self.end_date {
                 return Result::Err(OrderValidationError::StartDateAfterEndDate);
             }
-
-            if *self.start_date < block_timestamp {
-                return Result::Err(OrderValidationError::StartDateInThePast);
-            }
         }
 
         // Salt must be non-zero.
