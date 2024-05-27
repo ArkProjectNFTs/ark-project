@@ -73,6 +73,7 @@ export class EfsConstruct extends Construct {
       }
     });
 
+    // todo remove to check if it is needed
     new cdk.CfnOutput(this, "RecordingEFSFileStorageId", {
       value: fileSystem.ref,
       exportName: "RecordingEFSFileStorageId"
