@@ -19,17 +19,27 @@ export class EfsConstruct extends Construct {
       vpcId: props.vpcId
     });
 
-    const fileSystemName = "RecordingEFSFileStorage";
-
     const fileSystem = new efs.CfnFileSystem(this, "RecordingEFSFileStorage", {
       performanceMode: "maxIO",
       encrypted: true,
       fileSystemTags: [
         {
           key: "Name",
-          value: fileSystemName
+          value: "RecordingEFSFileStorage"
         }
-      ]
+      ],
+      fileSystemPolicy: {
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Effect: "Allow",
+            Principal: {
+              AWS: "*"
+            },
+            Action: ["elasticfilesystem:ClientMount", "elasticfilesystem:*"]
+          }
+        ]
+      }
     });
 
     const securityGroup = new ec2.SecurityGroup(this, "EfsSecurityGroup", {
@@ -39,13 +49,13 @@ export class EfsConstruct extends Construct {
       securityGroupName: "EfsSecurityGroup"
     });
 
-    for (const privateSubnet of vpc.privateSubnets) {
-      new efs.CfnMountTarget(this, `EfsMountTarget-${privateSubnet.node.id}`, {
+    vpc.privateSubnets.forEach((subnet, index) => {
+      new efs.CfnMountTarget(this, `EfsMountTarget-${index}`, {
         fileSystemId: fileSystem.ref,
         securityGroups: [securityGroup.securityGroupId],
-        subnetId: privateSubnet.subnetId
+        subnetId: subnet.subnetId
       });
-    }
+    });
 
     const accessPoint = new efs.CfnAccessPoint(this, "EfsAccessPoint", {
       fileSystemId: fileSystem.ref,
@@ -54,11 +64,11 @@ export class EfsConstruct extends Construct {
         gid: "1000"
       },
       rootDirectory: {
-        path: "/",
+        path: "/efs",
         creationInfo: {
           ownerGid: "1000",
           ownerUid: "1000",
-          permissions: "777"
+          permissions: "777" // Ensure this is set to 777
         }
       }
     });
