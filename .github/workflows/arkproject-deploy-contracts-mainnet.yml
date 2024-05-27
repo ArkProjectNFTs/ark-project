@@ -45,6 +45,7 @@ jobs:
         run: |
           pnpm run deploy:starknet -- --starknet mainnet
   deploy-orderbook:
+    needs: deploy-starknet
     runs-on: ubuntu-latest
     name: Build & Deploy orderbook contract
     steps:
