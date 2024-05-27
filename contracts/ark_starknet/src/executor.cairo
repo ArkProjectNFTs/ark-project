@@ -336,7 +336,7 @@ mod executor {
 
     fn _check_erc20_amount(token_address: @ContractAddress, amount: u256, user: @ContractAddress) -> bool {
         let contract = IERC20Dispatcher { contract_address: *token_address };
-        amount >= contract.balance_of(*user)
+        amount <= contract.balance_of(*user)
     }
 
     fn _check_erc721_owner(token_address: @ContractAddress, token_id: u256, user: @ContractAddress) -> bool {
