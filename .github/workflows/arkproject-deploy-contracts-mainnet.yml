@@ -7,59 +7,59 @@ on:
       - feat/solis-cd-efs
 
 jobs:
-  deploy-solis:
-    name: Deploy Solis latest image to Amazon ECS
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "20"
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          mask-password: true
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-      - name: Install pnpm
-        run: |
-          npm install -g pnpm
-          npm install -g aws-cdk
-          pnpm install
-      - name: Read environment variables from file
-        id: vars
-        run: |
-          content=`cat contracts.json`
-          STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET=$(echo $content | jq -r '.mainnet.messaging')
-          echo "STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET=$STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET" >> $GITHUB_ENV
-      - name: Install dependencies
-        run: |
-          cd aws/cdk-solis-ecs
-          pnpm install
-      - name: Deploy CDK Stack mainnet
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          STARKNET_NODE_URL: ${{ secrets.STARKNET_NODE_URL_MAINNET }}
-          STARKNET_APPCHAIN_MESSAGING_ADDRESS: ${{ env.STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_ADDRESS: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
-          RPC_USER: ${{ secrets.RPC_USER }}
-          RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
-        run: |
-          cd aws/cdk-solis-ecs
-          pnpm cdk context --clear
-          pnpm cdk deploy --all --require-approval never --force
+  # deploy-solis:
+  #   name: Deploy Solis latest image to Amazon ECS
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version: "20"
+  #     - name: Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v1
+  #       with:
+  #         mask-password: true
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  #         AWS_REGION: ${{ secrets.AWS_REGION }}
+  #     - name: Install pnpm
+  #       run: |
+  #         npm install -g pnpm
+  #         npm install -g aws-cdk
+  #         pnpm install
+  #     - name: Read environment variables from file
+  #       id: vars
+  #       run: |
+  #         content=`cat contracts.json`
+  #         STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET=$(echo $content | jq -r '.mainnet.messaging')
+  #         echo "STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET=$STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET" >> $GITHUB_ENV
+  #     - name: Install dependencies
+  #       run: |
+  #         cd aws/cdk-solis-ecs
+  #         pnpm install
+  #     - name: Deploy CDK Stack mainnet
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  #         AWS_REGION: ${{ secrets.AWS_REGION }}
+  #         STARKNET_NODE_URL: ${{ secrets.STARKNET_NODE_URL_MAINNET }}
+  #         STARKNET_APPCHAIN_MESSAGING_ADDRESS: ${{ env.STARKNET_APPCHAIN_MESSAGING_ADDRESS_MAINNET }}
+  #         STARKNET_SOLIS_ACCOUNT_ADDRESS: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET }}
+  #         STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
+  #         RPC_USER: ${{ secrets.RPC_USER }}
+  #         RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
+  #       run: |
+  #         cd aws/cdk-solis-ecs
+  #         pnpm cdk context --clear
+  #         pnpm cdk deploy --all --require-approval never --force
   deploy-orderbook:
-    needs: deploy-solis
+    # needs: deploy-solis
     runs-on: ubuntu-latest
     name: Build & Deploy orderbook contract
     steps:
