@@ -11,7 +11,7 @@ export const MAINNET_CONTRACTS = {
   "nftContract": "0x32d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546",
   "messaging": "0x57d45cc46de463f7ae63b74ce9b6b6b496a1178b02e7ad04d7c307caa698b7b",
   "executor": "0x7b42945bc47001db92fe1b9739d753925263f2f1036c2ae1f87536c916ee6a",
-  "orderbook": "0x7ada414db518a0c8fd9f6bd89fe4059d0b667622e9c56e417ab2022c009534"
+  "orderbook": "0x218f9481c68312b9a20d44f71f01358a297aa763fc5c2bc5588bdaed6fd7ac1"
 };
 export const DEV_CONTRACTS = {
   "messaging": "0xf4d2ec292d26287b6e6c200a12e279fb412e3396925db2df596c64f22ed89f",
