@@ -14,10 +14,12 @@ export type Network = "mainnet" | "goerli" | "sepolia" | "dev";
 export interface Config {
   starknetNetwork: Network;
   starknetProvider: ProviderInterface;
+  starknetRpcUrl: string;
   starknetExecutorContract: string;
   starknetCurrencyContract: string;
   arkchainNetwork: Network;
   arkProvider: ProviderInterface;
+  arkchainRpcUrl: string;
   arkchainOrderbookContract: string;
 }
 
@@ -35,17 +37,18 @@ export interface CreateConfigParameters {
 
 export function createConfig({
   starknetNetwork = networks.dev,
-  starknetRpcUrl = starknetRpcUrls.dev,
+  starknetRpcUrl,
   starknetProvider,
   starknetExecutorContract,
   starknetCurrencyContract = starknetEthContract,
   arkchainNetwork = networks.dev,
-  arkchainRpcUrl = arkchainRpcUrls.dev,
+  arkchainRpcUrl,
   arkProvider,
   arkchainOrderbookContract
 }: CreateConfigParameters): Config {
   return {
     starknetNetwork,
+    starknetRpcUrl: starknetRpcUrl || starknetRpcUrls[starknetNetwork],
     starknetProvider:
       starknetProvider ||
       new RpcProvider({
@@ -55,6 +58,7 @@ export function createConfig({
       starknetExecutorContract || starknetExecutorContracts[starknetNetwork],
     starknetCurrencyContract,
     arkchainNetwork,
+    arkchainRpcUrl: arkchainRpcUrl || arkchainRpcUrls[arkchainNetwork],
     arkProvider:
       arkProvider ||
       new RpcProvider({
