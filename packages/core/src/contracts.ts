@@ -1,4 +1,6 @@
 // This file is auto-generated. Do not edit directly.
+/* eslint-disable */
+/* prettier-ignore */
 
 export const GOERLI_CONTRACTS = {
   nftContract:

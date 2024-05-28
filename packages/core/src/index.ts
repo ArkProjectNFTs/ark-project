@@ -46,4 +46,4 @@ export type {
   CreateConfigParameters
 } from "./createConfig.js";
 
-export { starknetRpcUrls, arkchainRpcUrls } from "./constants.js";
+export { starknetRpcUrls, arkchainRpcUrls, networks } from "./constants.js";
