@@ -1971,7 +1971,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "anyhow",
  "reqwest 0.11.22",
@@ -2403,7 +2403,7 @@ dependencies = [
 [[package]]
 name = "dojo-metrics"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "anyhow",
  "hyper 0.14.27",
@@ -3603,7 +3603,7 @@ dependencies = [
 [[package]]
 name = "katana-core"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "alloy-contract",
  "alloy-network",
@@ -3649,7 +3649,7 @@ dependencies = [
 [[package]]
 name = "katana-db"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "anyhow",
  "cairo-vm",
@@ -3669,7 +3669,7 @@ dependencies = [
 [[package]]
 name = "katana-executor"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "alloy-primitives",
  "blockifier",
@@ -3689,7 +3689,7 @@ dependencies = [
 [[package]]
 name = "katana-primitives"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "alloy-primitives",
  "anyhow",
@@ -3717,7 +3717,7 @@ dependencies = [
 [[package]]
 name = "katana-provider"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "anyhow",
  "auto_impl",
@@ -3734,7 +3734,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -3768,7 +3768,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-api"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "jsonrpsee",
  "katana-core",
@@ -3780,7 +3780,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-types"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "alloy-primitives",
  "anyhow",
@@ -3801,7 +3801,7 @@ dependencies = [
 [[package]]
 name = "katana-rpc-types-builder"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "anyhow",
  "katana-executor",
@@ -3814,7 +3814,7 @@ dependencies = [
 [[package]]
 name = "katana-tasks"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.5-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
+source = "git+https://github.com/ArkProjectNFTs/dojo?tag=v0.7.0.6-solis#f6705a463212b2194b5518a04a6e4280b3e40b24"
 dependencies = [
  "futures",
  "rayon",

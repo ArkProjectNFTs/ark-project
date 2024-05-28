@@ -17,14 +17,14 @@ cfg-if = "1.0.0"
 clap = { version = "4.5.4", features = ["derive"] }
 clap_complete = "4.3"
 console = "0.15.7"
-common = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.5-solis", package = "common" }
-dojo-metrics = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.5-solis", package = "dojo-metrics" }
+common = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "common" }
+dojo-metrics = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "dojo-metrics" }
 dotenv = "0.15.0"
-katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.5-solis", package = "katana-core", default-features = false }
-katana-executor = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.5-solis", package = "katana-executor", default-features = false }
-katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.5-solis", package = "katana-primitives" }
-katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.5-solis", package = "katana-rpc-api" }
-katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.5-solis", package = "katana-rpc" }
+katana-core = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "katana-core", default-features = false }
+katana-executor = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "katana-executor", default-features = false }
+katana-primitives = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "katana-primitives" }
+katana-rpc-api = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "katana-rpc-api" }
+katana-rpc = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "katana-rpc" }
 
 serde_json = "1.0.97"
 shellexpand = "3.1.0"
