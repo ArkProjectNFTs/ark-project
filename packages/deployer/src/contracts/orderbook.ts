@@ -13,7 +13,7 @@ export async function deployOrderBook(
   provider: sn.RpcProvider,
   adminAddress: string,
   chain_id: string
-): Promise<sn.Contract> {
+) {
   const artifacts = loadArtifacts(artifactsPath, "ark_orderbook_orderbook");
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
 
@@ -81,12 +81,12 @@ export async function updateExecutorAddress(
   executorAddress: string
 ) {
   const { abi } = await provider.getClassAt(contractAddress);
-  if (abi === undefined) {
-    throw new Error("no abi.");
-  }
-  const executorContract = new sn.Contract(abi, contractAddress, provider);
-  executorContract.connect(deployerAccount);
-  const response =
-    await executorContract.update_starknet_executor_address(executorAddress);
-  await provider.waitForTransaction(response.transaction_hash);
+  // if (abi === undefined) {
+  //   throw new Error("no abi.");
+  // }
+  // const executorContract = new sn.Contract(abi, contractAddress, provider);
+  // executorContract.connect(deployerAccount);
+  // const response =
+  //   await executorContract.update_starknet_executor_address(executorAddress);
+  // await provider.waitForTransaction(response.transaction_hash);
 }

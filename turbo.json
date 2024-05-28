@@ -48,17 +48,15 @@
       "cache": false,
       "persistent": true
     },
-    "deploy:starknet:tokens": {
-      "cache": false,
-      "persistent": true
+    "deploy:solis:local": {
+      "cache": false
     },
     "deploy:starknet": {
       "cache": false,
       "persistent": true
     },
-    "deploy:starknet:all": {
-      "cache": false,
-      "persistent": true
+    "deploy:starknet:local": {
+      "cache": false
     },
     "accounts:new": {
       "cache": false,
@@ -80,6 +78,7 @@
     "STARKNET_ACCOUNT1_PRIVATE_KEY",
     "STARKNET_ACCOUNT2_ADDRESS",
     "STARKNET_ACCOUNT2_PRIVATE_KEY",
+    "STARKNET_EXECUTOR_ADDRESS_DEV",
     "STARKNET_NETWORK",
     "SOLIS_NODE_URL",
     "STARKNET_CURRENCY_ADDRESS",
