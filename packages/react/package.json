@@ -6,9 +6,10 @@
   "types": "./dist/types/src/index.d.ts",
   "typings": "./dist/types/src/index.d.ts",
   "scripts": {
-    "build": "pnpm run clean && pnpm run build:esm+types",
+    "build": "pnpm build:clean && pnpm build:esm+types",
+    "build:clean": "rm -rf dist",
     "build:esm+types": "tsc --project tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
-    "clean": "rm -rf dist tsconfig.tsbuildinfo actions chains codegen connectors query",
+    "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo",
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --ext .ts,.tsx . --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -19,16 +20,18 @@
   "license": "ISC",
   "dependencies": {
     "@ark-project/core": "workspace:*",
-    "@starknet-react/core": "^2.2.2",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "starknet": "6.6.6"
+    "@starknet-react/chains": "^0.1.7",
+    "@starknet-react/core": "^2.8.1",
+    "get-starknet-core": "^3.3.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "starknet": "^5.24.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
     "@ark-project/eslint-config": "workspace:*",
     "@ark-project/typescript-config": "workspace:*",
     "@types/react": "^18",
+    "nodemon": "^3.0.2",
     "typescript": "^5.3.3"
   }
 }

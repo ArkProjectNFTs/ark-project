@@ -44,6 +44,12 @@
     "lint:fix": {
       "dependsOn": ["^lint:fix"]
     },
+    "clean": {
+      "cache": false
+    },
+    "//#clean": {
+      "cache": false
+    },
     "deploy:solis": {
       "cache": false,
       "persistent": true

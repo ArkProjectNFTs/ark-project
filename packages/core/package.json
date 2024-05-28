@@ -3,9 +3,9 @@
   "version": "1.1.4",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "npm run contracts:generate && pnpm run clean && pnpm run build:esm+types",
+    "build": "pnpm contracts:generate && pnpm build:esm+types",
     "build:esm+types": "tsc --project tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
-    "clean": "rm -rf dist tsconfig.tsbuildinfo actions chains codegen internal query",
+    "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@scure/starknet": "^0.3.0",
-    "starknet": "6.6.6"
+    "starknet": "^5.24.3"
   },
   "devDependencies": {
     "@ark-project/eslint-config": "workspace:*",

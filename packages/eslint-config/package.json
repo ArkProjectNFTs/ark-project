@@ -6,6 +6,9 @@
     "library.js",
     "react-internal.js"
   ],
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^6.11.0",
