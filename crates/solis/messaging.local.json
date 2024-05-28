@@ -1,9 +1,1 @@
-{
-  "chain": "starknet",
-  "rpc_url": "http://0.0.0.0:5050",
-  "contract_address": "0x6e40ed6d24f08a5ec9dc1017c5c6542a002c2d9c5dbed0e95ce930e9eb40d58",
-  "sender_address": "0x2d71e9c974539bb3ffb4b115e66a23d0f62a641ea66c4016e903454c8753bbc",
-  "private_key": "0x33003003001800009900180300d206308b0070db00121318d17b5e6262150b",
-  "interval": 2,
-  "from_block": 0
-}
+{"chain":"starknet","rpc_url":"http://0.0.0.0:5050","contract_address":"0x2a41ab7c8e5fa97e659b6ba2464a9fdae3ac1c817cb3508ab6168c7e6042c0d","sender_address":"0x2d71e9c974539bb3ffb4b115e66a23d0f62a641ea66c4016e903454c8753bbc","private_key":"0x33003003001800009900180300d206308b0070db00121318d17b5e6262150b","interval":2,"from_block":0}
