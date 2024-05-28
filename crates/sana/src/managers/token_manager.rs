@@ -35,7 +35,6 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
             contract_address: event.contract_address.clone(),
             token_id: event.token_id.clone(),
             chain_id: event.chain_id.clone(),
-            token_id_hex: event.token_id_hex.clone(),
             ..Default::default()
         };
 
@@ -55,21 +54,18 @@ impl<S: Storage, C: StarknetClient> TokenManager<S, C> {
 
         self.storage.register_token(&token, block_timestamp).await?;
 
-        match event.event_type {
-            Some(EventType::Mint) => {
-                let _info = TokenMintInfo {
-                    address: event.to_address.clone(),
-                    transaction_hash: event.transaction_hash.clone(),
-                    block_timestamp: event.block_timestamp,
-                    block_number,
-                };
+        if let Some(EventType::Mint) = event.event_type {
+            let _info = TokenMintInfo {
+                address: event.to_address.clone(),
+                transaction_hash: event.transaction_hash.clone(),
+                block_timestamp: event.block_timestamp,
+                block_number,
+            };
 
-                // do we need that as we dont have the field in token table
-                /*self.storage
-                .register_mint(&token.contract_address, &token.token_id_hex, &info)
-                .await?;*/
-            }
-            _ => {}
+            // do we need that as we dont have the field in token table
+            /*self.storage
+            .register_mint(&token.contract_address, &token.token_id_hex, &info)
+            .await?;*/
         };
 
         Ok(())

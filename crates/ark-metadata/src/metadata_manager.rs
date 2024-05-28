@@ -6,10 +6,11 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use ark_starknet::{cairo_string_parser::parse_cairo_string, client::StarknetClient, CairoU256};
+use num_bigint::BigUint;
 use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 use tracing::{debug, error, info, trace};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
@@ -79,21 +80,23 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     /// - A `Result` indicating the success or failure of the metadata refresh operation.
     pub async fn refresh_token_metadata(
         &mut self,
-        contract_address: FieldElement,
-        token_id: CairoU256,
+        contract_address: String,
+        token_id: String,
+        chain_id: String,
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
     ) -> Result<(), MetadataError> {
         trace!(
-            "refresh_token_metadata(contract_address=0x{:064x}, token_id={})",
-            contract_address,
-            token_id.to_decimal(false),
+            "refresh_token_metadata(contract_address={}, token_id={}, chain_id={})",
+            contract_address.clone(),
+            token_id,
+            chain_id
         );
 
         let token_uri = self
-            .get_token_uri(&token_id, contract_address)
+            .get_token_uri(&contract_address, &token_id)
             .await
             .map_err(|err| MetadataError::ParsingError(err.to_string()))?;
 
@@ -115,7 +118,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 .fetch_metadata_media(
                     image_uri.as_str(),
                     cache,
-                    &token_id,
+                    token_id.clone(),
                     image_timeout,
                     ipfs_gateway_uri,
                 )
@@ -150,7 +153,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                             .fetch_metadata_media(
                                 animation_uri.as_str(),
                                 cache,
-                                &token_id,
+                                token_id.clone(),
                                 image_timeout,
                                 ipfs_gateway_uri,
                             )
@@ -168,7 +171,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         }
 
         self.storage
-            .register_token_metadata(&contract_address, token_id, token_metadata)
+            .register_token_metadata(&contract_address, &token_id, &chain_id, token_metadata)
             .await
             .map_err(MetadataError::DatabaseError)?;
 
@@ -188,7 +191,8 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     /// - A `Result` indicating the success or failure of the metadata refresh operation.
     pub async fn refresh_collection_token_metadata(
         &mut self,
-        contract_address: FieldElement,
+        contract_address: String,
+        chain_id: String,
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
@@ -196,14 +200,15 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     ) -> Result<(), MetadataError> {
         let results = self
             .storage
-            .find_token_ids_without_metadata(Some(contract_address))
+            .find_token_ids_without_metadata(Some((contract_address, chain_id)))
             .await
             .map_err(MetadataError::DatabaseError)?;
 
-        for (contract_address, token_id) in results {
+        for (contract_address, token_id, chain_id) in results {
             self.refresh_token_metadata(
                 contract_address,
                 token_id,
+                chain_id,
                 cache,
                 ipfs_gateway_uri,
                 image_timeout,
@@ -234,7 +239,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         &mut self,
         raw_url: &str,
         cache: ImageCacheOption,
-        token_id: &CairoU256,
+        token_id: String,
         timeout: Duration,
         ipfs_url: &str,
     ) -> Result<MetadataMedia> {
@@ -277,7 +282,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 let media_key = self
                     .file_manager
                     .save(&FileInfo {
-                        name: format!("{}.{}", token_id.to_decimal(false), file_ext),
+                        name: format!("{}.{}", token_id, file_ext),
                         content: bytes.to_vec(),
                         dir_path: None,
                     })
@@ -296,16 +301,34 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     /// Retrieves the URI for a token based on its ID and the contract address.
     /// The function first checks the `tokenURI` selector and then the `token_uri` selector.
     /// If both checks fail, an error is returned indicating the token URI was not found.
-    async fn get_token_uri(
-        &mut self,
-        token_id: &CairoU256,
-        contract_address: FieldElement,
-    ) -> Result<String> {
+    async fn get_token_uri(&mut self, contract_address: &str, token_id: &str) -> Result<String> {
+        let contract_address_field_element = match FieldElement::from_hex_be(contract_address) {
+            Ok(contract_address) => contract_address,
+            Err(_) => {
+                return Err(anyhow!("Invalid contract address"));
+            }
+        };
+
+        let token_id_big_number = match BigUint::from_str(&token_id) {
+            Ok(token_id_big_number) => token_id_big_number,
+            Err(_) => {
+                return Err(anyhow!("Invalid token ID"));
+            }
+        };
+
+        let token_id_u256 =
+            match CairoU256::from_hex_be(token_id_big_number.to_str_radix(16).as_str()) {
+                Ok(token_id_u256) => token_id_u256,
+                Err(_) => {
+                    return Err(anyhow!("Invalid token ID"));
+                }
+            };
+
         let token_uri_cairo0 = self
             .get_contract_property_string(
-                contract_address,
+                contract_address_field_element,
                 selector!("tokenURI"),
-                vec![token_id.low.into(), token_id.high.into()],
+                vec![token_id_u256.low.into(), token_id_u256.high.into()],
                 BlockId::Tag(BlockTag::Pending),
             )
             .await;
@@ -315,22 +338,22 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 if self.is_valid_uri(&token_uri_cairo0) {
                     return Ok(token_uri_cairo0);
                 } else {
-                    trace!("tokenURI for token ID {} at contract address 0x{:064x} resulted in an invalid URI: {}", token_id.to_decimal(false), contract_address, token_uri_cairo0);
+                    trace!("tokenURI for token ID {} at contract address {} resulted in an invalid URI: {}", token_id, contract_address, token_uri_cairo0);
                 }
             }
             Err(err) => {
                 trace!(
-                    "Failed to retrieve tokenURI for token ID {} at contract address 0x{:064x}\nError: {:?}",
-                    token_id.to_decimal(false),
+                    "Failed to retrieve tokenURI for token ID {} at contract address {}\nError: {:?}",
+                    token_id,
                     contract_address,
                     err
                 );
 
                 match self
                     .get_contract_property_string(
-                        contract_address,
+                        contract_address_field_element,
                         selector!("token_uri"),
-                        vec![token_id.low.into(), token_id.high.into()],
+                        vec![token_id_u256.low.into(), token_id_u256.high.into()],
                         BlockId::Tag(BlockTag::Pending),
                     )
                     .await
@@ -339,13 +362,13 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                         if self.is_valid_uri(&token_uri_cairo1) {
                             return Ok(token_uri_cairo1);
                         } else {
-                            trace!("token_uri for token ID {} at contract address 0x{:064x} resulted in an invalid URI: {}", token_id.to_decimal(false), contract_address, token_uri_cairo1);
+                            trace!("token_uri for token ID {} at contract address {} resulted in an invalid URI: {}", token_id, contract_address, token_uri_cairo1);
                         }
                     }
                     Err(_) => {
                         return Err(anyhow!(
-                            "Unable to retrieve the token ID {} from contract address 0x{:064x} using both 'token_uri' and 'tokenURI' methods",
-                            token_id.to_decimal(false),
+                            "Unable to retrieve the token ID {} from contract address {} using both 'token_uri' and 'tokenURI' methods",
+                            token_id,
                             contract_address
                         ));
                     }
@@ -354,7 +377,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         }
         Err(anyhow!(
             "Token URI not found for token ID {} at contract address {}",
-            token_id.to_decimal(false),
+            token_id,
             contract_address
         ))
     }
@@ -445,11 +468,8 @@ mod tests {
         // EXECUTION: Call the function under test
         let result = metadata_manager
             .get_token_uri(
-                &CairoU256 { low: 0, high: 1 },
-                FieldElement::from_hex_be(
-                    "0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
-                )
-                .unwrap(),
+                "0x0727a63f78ee3f1bd18f78009067411ab369c31dece1ae22e16f567906409905",
+                "1",
             )
             .await;
 
@@ -463,16 +483,25 @@ mod tests {
         let mut mock_storage = MockStorage::default();
         let mock_file = MockFileManager::default();
 
-        let contract_address = FieldElement::ONE;
+        let contract_address = "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8";
         let ipfs_gateway_uri = "https://ipfs.example.com";
         let request_referrer = "https://arkproject.dev";
+        let chain_id = "SN_MAIN".to_string();
+
+        let filter = (contract_address.to_string(), "SN_MAIN".to_string());
 
         // Mocking expected behaviors
         mock_storage
             .expect_find_token_ids_without_metadata()
             .times(1)
-            .with(eq(Some(contract_address)))
-            .returning(|_| Ok(vec![(FieldElement::ONE, CairoU256 { low: 1, high: 0 })]));
+            .with(eq(Some(filter)))
+            .returning(|_| {
+                Ok(vec![(
+                    contract_address.to_string(),
+                    "1".to_string(),
+                    "SN_MAIN".to_string(),
+                )])
+            }); // Close the square bracket here
 
         mock_client
             .expect_call_contract()
@@ -491,15 +520,16 @@ mod tests {
         mock_storage
             .expect_register_token_metadata()
             .times(1)
-            .with(always(), always(), always())
-            .returning(|_, _, _| Ok(()));
+            .with(always(), always(), always(), always())
+            .returning(|_, _, _, _| Ok(()));
 
         let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file);
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
             .refresh_collection_token_metadata(
-                contract_address,
+                contract_address.to_string(),
+                chain_id,
                 ImageCacheOption::DoNotSave,
                 ipfs_gateway_uri,
                 Duration::from_secs(5),

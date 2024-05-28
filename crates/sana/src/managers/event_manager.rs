@@ -107,7 +107,7 @@ impl<S: Storage> EventManager<S> {
             transaction_hash: to_hex_str(&event.transaction_hash),
             token_id_hex: token_id.to_hex(),
             token_id: token_id.to_decimal(false),
-            block_timestamp: block_timestamp,
+            block_timestamp,
             updated_at: Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
             quantity: 1,
             currency_address: None,
@@ -211,7 +211,7 @@ impl<S: Storage> EventManager<S> {
             token_event_id: to_hex_str(&event_id),
             event_type: EventType::Sale,
             block_number: event.block_number,
-            block_timestamp: block_timestamp,
+            block_timestamp,
             from_address: to_hex_str(taker_address),
             to_address: to_hex_str(maker_address),
             nft_contract_address: to_hex_str(nft_contract_address),
@@ -268,7 +268,6 @@ impl<S: Storage> EventManager<S> {
         token_event.to_address = to_hex_str(&to);
         token_event.contract_address = to_hex_str(&event.from_address);
         token_event.transaction_hash = to_hex_str(&event.transaction_hash);
-        token_event.token_id_hex = token_id.to_hex();
         token_event.token_id = token_id.to_decimal(false);
         token_event.block_timestamp = block_timestamp;
         token_event.event_type = Some(Self::get_event_type(from, to));
