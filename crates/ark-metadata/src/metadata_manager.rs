@@ -80,9 +80,9 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     /// - A `Result` indicating the success or failure of the metadata refresh operation.
     pub async fn refresh_token_metadata(
         &mut self,
-        contract_address: String,
-        token_id: String,
-        chain_id: String,
+        contract_address: &str,
+        token_id: &str,
+        chain_id: &str,
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
@@ -90,7 +90,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     ) -> Result<(), MetadataError> {
         trace!(
             "refresh_token_metadata(contract_address={}, token_id={}, chain_id={})",
-            contract_address.clone(),
+            contract_address,
             token_id,
             chain_id
         );
@@ -118,7 +118,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 .fetch_metadata_media(
                     image_uri.as_str(),
                     cache,
-                    token_id.clone(),
+                    token_id,
                     image_timeout,
                     ipfs_gateway_uri,
                 )
@@ -153,7 +153,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                             .fetch_metadata_media(
                                 animation_uri.as_str(),
                                 cache,
-                                token_id.clone(),
+                                token_id,
                                 image_timeout,
                                 ipfs_gateway_uri,
                             )
@@ -191,8 +191,8 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     /// - A `Result` indicating the success or failure of the metadata refresh operation.
     pub async fn refresh_collection_token_metadata(
         &mut self,
-        contract_address: String,
-        chain_id: String,
+        contract_address: &str,
+        chain_id: &str,
         cache: ImageCacheOption,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
@@ -239,7 +239,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         &mut self,
         raw_url: &str,
         cache: ImageCacheOption,
-        token_id: String,
+        token_id: &str,
         timeout: Duration,
         ipfs_url: &str,
     ) -> Result<MetadataMedia> {
@@ -486,7 +486,7 @@ mod tests {
         let contract_address = "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8";
         let ipfs_gateway_uri = "https://ipfs.example.com";
         let request_referrer = "https://arkproject.dev";
-        let chain_id = "SN_MAIN".to_string();
+        let chain_id = "SN_MAIN";
 
         let filter = (contract_address.to_string(), "SN_MAIN".to_string());
 
@@ -528,7 +528,7 @@ mod tests {
         // EXECUTION: Call the function under test
         let result = metadata_manager
             .refresh_collection_token_metadata(
-                contract_address.to_string(),
+                contract_address,
                 chain_id,
                 ImageCacheOption::DoNotSave,
                 ipfs_gateway_uri,
