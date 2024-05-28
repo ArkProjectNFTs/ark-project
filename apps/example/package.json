@@ -44,7 +44,7 @@
     "react-query": "^3.39.3",
     "react-resizable-panels": "^2.0.1",
     "react-wrap-balancer": "^1.1.0",
-    "starknet": "^5.24.3",
+    "starknet": "^6.9.0",
     "tailwind-merge": "^2.1.0",
     "tailwindcss-animate": "^1.0.7",
     "viem": "^2.12.1",

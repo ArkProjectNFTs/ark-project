@@ -44,6 +44,7 @@ async function deployArkchainContracts(
 
   if (arkchainAdminAccount) {
     const chain_id = await starknetProvider.getChainId();
+    console.log("Chain ID: ", chain_id);
     const existingContracts = await getExistingContracts();
     if (existingContracts[solisNetwork].orderbook) {
       await upgradeOrderbook(
