@@ -202,6 +202,8 @@ mod executor {
 
             let vinfo = FulfillOrderInfo { fulfillInfo: fulfillInfo.clone() };
 
+            _verify_fulfill_order(@self, @vinfo);
+
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
 
@@ -339,6 +341,12 @@ mod executor {
                 }
             },
         }
+    }
+
+    fn _verify_fulfill_order(self: @ContractState, vinfo: @FulfillOrderInfo) {
+        let fulfill_info = vinfo.fulfillInfo;
+        let caller = starknet::get_caller_address();
+        assert!(caller == *(fulfill_info.fulfiller), "Caller is not the fulfiller");
     }
 
     fn _check_erc20_amount(

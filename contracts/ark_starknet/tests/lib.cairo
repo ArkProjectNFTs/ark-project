@@ -1,3 +1,7 @@
+mod common {
+    mod setup;
+}
+
 mod unit {
     mod test_fees;
 }
