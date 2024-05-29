@@ -1,6 +1,4 @@
 // This file is auto-generated. Do not edit directly.
-/* eslint-disable */
-/* prettier-ignore */
 
 export const GOERLI_CONTRACTS = {
   nftContract:
@@ -18,12 +16,4 @@ export const MAINNET_CONTRACTS = {
     "0x57d45cc46de463f7ae63b74ce9b6b6b496a1178b02e7ad04d7c307caa698b7b",
   executor: "0x7b42945bc47001db92fe1b9739d753925263f2f1036c2ae1f87536c916ee6a",
   orderbook: "0x51d61ee6b0814a990a82fa7c8d9515c19f82d4bdb34e35e3d00762caa752bdb"
-};
-export const DEV_CONTRACTS = {
-  messaging: "0xf4d2ec292d26287b6e6c200a12e279fb412e3396925db2df596c64f22ed89f",
-  executor: "0x2dfd771779cdfe0b0e064e2faf79bb561359bc90706fc26292ad2583c01cd61",
-  nftContract:
-    "0x563b45958320651042914b33f82ba0a9783bd17dfa9e00d70df94593978cafd",
-  eth: "0x200184bde479ccffa50a89485417c907bc1d3779f9b1863d2158733135facce",
-  orderbook: "0x5c365d9fde044e0025c29d80207b6f30328225cc1291a8df009fa9505a841ba"
 };

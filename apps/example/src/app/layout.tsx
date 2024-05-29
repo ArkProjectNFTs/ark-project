@@ -29,10 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const config = {
-    arkchainNetwork: networks.mainnet,
-    arkchainOrderbookContract: env.NEXT_PUBLIC_ARKCHAIN_ORDERBOOK_CONTRACT,
-    starknetEthContract: env.NEXT_PUBLIC_STARKNET_ETH_CONTRACT,
-    starknetNftContract: env.NEXT_PUBLIC_STARKNET_NFT_CONTRACT
+    arkchainNetwork: networks.mainnet
   };
 
   return (
