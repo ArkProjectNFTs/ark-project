@@ -1,3 +1,41 @@
+use core::serde::Serde;
+
+use starknet::ContractAddress;
+use starknet::contract_address_to_felt252;
+
+use ark_common::protocol::order_v1::OrderV1;
+use ark_common::protocol::order_types::RouteType;
+
+
+#[derive(Drop, Copy, Debug, Serde, starknet::Store)]
+struct OrderInfo {
+    route: RouteType,
+    // Contract address of the currency used on Starknet for the transfer.
+    currency_address: ContractAddress,
+    // The token contract address.
+    token_address: ContractAddress,
+    // The token id.
+    // TODO: how to store Option<u256> ?
+    token_id: u256,
+    // in wei. --> 10 | 10 | 10 |
+    start_amount: u256,
+}
+
+impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
+    fn into(self: OrderV1) -> OrderInfo {
+        let token_id = match self.token_id {
+            Option::Some(token_id) => token_id,
+            Option::None => 0,
+        };
+        OrderInfo {
+            route: self.route,
+            currency_address: self.currency_address,
+            token_address: self.token_address,
+            token_id: token_id,
+            start_amount: self.start_amount,
+        }
+    }
+}
 //! Executor contract on Starknet for arkchain.
 //!
 //! This contract is responsible of executing the orders
@@ -11,6 +49,8 @@
 
 #[starknet::contract]
 mod executor {
+    use core::zeroable::Zeroable;
+    use core::traits::Into;
     use starknet::contract_address_to_felt252;
     use core::debug::PrintTrait;
     use core::traits::TryInto;
@@ -20,7 +60,7 @@ mod executor {
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
         FulfillOrderInfo, CancelOrderInfo, CancelInfo,
     };
-    use ark_common::protocol::order_v1::OrderV1;
+    use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
@@ -29,6 +69,8 @@ mod executor {
         erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
         erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
     };
+
+    use super::{OrderInfo, OrderV1IntoOrderInfo};
 
     #[storage]
     struct Storage {
@@ -40,6 +82,8 @@ mod executor {
         chain_id: felt252,
         broker_fees: LegacyMap<ContractAddress, u256>,
         ark_fees: u256,
+        // order hash -> OrderInfo
+        orders: LegacyMap<felt252, OrderInfo>,
     }
 
     #[event]
@@ -181,8 +225,11 @@ mod executor {
             };
 
             let vinfo = CreateOrderInfo { order: order.clone() };
-
             _verify_create_order(@self, @vinfo);
+
+            let order_hash = order.compute_order_hash();
+            let order_info = order.into();
+            self.orders.write(order_hash, order_info);
 
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
@@ -346,7 +393,32 @@ mod executor {
     fn _verify_fulfill_order(self: @ContractState, vinfo: @FulfillOrderInfo) {
         let fulfill_info = vinfo.fulfillInfo;
         let caller = starknet::get_caller_address();
+
         assert!(caller == *(fulfill_info.fulfiller), "Caller is not the fulfiller");
+
+        let order_info = self.orders.read(*fulfill_info.order_hash);
+        // default value for ContractAddress is zero
+        // and an order's currency address shall not be zero
+        if order_info.currency_address.is_zero() {
+            panic!("Order not found");
+        }
+
+        match order_info.route {
+            RouteType::Erc20ToErc721 => {
+                assert!(
+                    _check_erc721_owner(@order_info.token_address, order_info.token_id, @caller),
+                    "Fulfiller does not own the specified ERC721 token"
+                );
+            },
+            RouteType::Erc721ToErc20 => {
+                assert!(
+                    _check_erc20_amount(
+                        @order_info.currency_address, order_info.start_amount, @caller
+                    ),
+                    "Fulfiller does not own enough ERC20 tokens"
+                );
+            }
+        }
     }
 
     fn _check_erc20_amount(

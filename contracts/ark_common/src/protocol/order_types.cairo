@@ -280,8 +280,9 @@ struct ExecutionValidationInfo {
 
 /// Type of an route, that may be defined from
 /// incoming order.
-#[derive(Serde, Drop, PartialEq, Copy)]
+#[derive(starknet::Store, Serde, Drop, PartialEq, Copy, Debug)]
 enum RouteType {
+    #[default]
     Erc20ToErc721,
     Erc721ToErc20,
 }
