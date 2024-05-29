@@ -31,20 +31,19 @@ async function run() {
     const contracts: Contracts = JSON.parse(data);
 
     // Initialize the content of the output file
-    let fileContent = `// This file is auto-generated. Do not edit directly.
-/* eslint-disable */
-/* prettier-ignore */
-
-`;
+    let fileContent = `// This file is auto-generated. Do not edit directly.\n\n`;
 
     // Iterate over each network in the contracts object
     for (const network of Object.keys(contracts)) {
-      // Convert the contracts for each network to a JSON string and add it to the file content
-      fileContent += `export const ${network.toUpperCase()}_CONTRACTS = ${JSON.stringify(
-        contracts[network],
-        null,
-        2
-      )};\n`;
+      // TODO: remove dev key direction from contracts.json
+      if (network !== "dev") {
+        // Convert the contracts for each network to a JSON string and add it to the file content
+        fileContent += `export const ${network.toUpperCase()}_CONTRACTS = ${JSON.stringify(
+          contracts[network],
+          null,
+          2
+        )};\n`;
+      }
     }
 
     // Write the generated content to the output file
