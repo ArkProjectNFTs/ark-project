@@ -1,87 +1,72 @@
-import { Account, RpcProvider } from "starknet";
+import { Account } from "starknet";
 
 import { ARTIFACTS_PATH } from "../src/constants";
+import { updateOrderbookAddress } from "../src/contracts/executor";
 import {
   deployOrderBook,
   updateExecutorAddress
 } from "../src/contracts/orderbook";
+import { getSolisProvider, getStarknetProvider } from "../src/providers";
+import { setSolisAddresses } from "../src/solis";
 
 async function run() {
   if (
     !process.env.STARKNET_ADMIN_ADDRESS_DEV ||
-    !process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV
+    !process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV ||
+    !process.env.SOLIS_ADMIN_ADDRESS_DEV ||
+    !process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV ||
+    !process.env.STARKNET_EXECUTOR_ADDRESS_DEV
   ) {
-    throw new Error("STARKNET_ADMIN_ADDRESS_DEV env is not set");
+    console.error(
+      "Missing environment variables, see README.md for more information"
+    );
+    process.exit(1);
   }
 
-  if (
-    !process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS_DEV ||
-    !process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_DEV
-  ) {
-    throw new Error("STARKNET_SOLIS_ACCOUNT_ADDRESS_DEV is not set");
-  }
-
-  if (!process.env.STARKNET_EXECUTOR_ADDRESS_DEV) {
-    throw new Error("STARKNET_SOLIS_ACCOUNT_ADDRESS_DEV is not set");
-  }
-
-  if (!process.env.SOLIS_ADMIN_ADDRESS_DEV) {
-    throw new Error("SOLIS_ADMIN_ADDRESS_DEV is not set");
-  }
-
-  if (!process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV) {
-    throw new Error("SOLIS_ADMIN_PRIVATE_KEY_DEV is not set");
-  }
-
-  const provider = new RpcProvider({ nodeUrl: "http://localhost:5050" });
-  const solisProvider = new RpcProvider({ nodeUrl: "http://localhost:7777" });
+  const { provider: starknetProvider } = getStarknetProvider("dev");
+  const { provider: solisProvider, nodeUrl: solisNodeUrl } =
+    getSolisProvider("dev");
   const starknetAdminAccount = new Account(
-    provider,
+    starknetProvider,
     process.env.STARKNET_ADMIN_ADDRESS_DEV,
     process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV,
     "1"
   );
-  const starknetSolisAccount = new Account(
-    provider,
+  const solisAdminAccount = new Account(
+    solisProvider,
     process.env.SOLIS_ADMIN_ADDRESS_DEV,
     process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV,
     "1"
   );
-  const chainId = await provider.getChainId();
+  const chainId = await starknetProvider.getChainId();
 
   const orderbookContract = await deployOrderBook(
     ARTIFACTS_PATH,
-    starknetSolisAccount,
+    solisAdminAccount,
     solisProvider,
-    starknetSolisAccount.address,
+    solisAdminAccount.address,
     chainId
   );
 
-  console.log({
-    orderbookContract: orderbookContract.address,
-    "process.env.STARKNET_EXECUTOR_ADDRESS_DEV":
-      process.env.STARKNET_EXECUTOR_ADDRESS_DEV
-  });
-
   await updateExecutorAddress(
     solisProvider,
-    starknetSolisAccount,
+    solisAdminAccount,
     orderbookContract.address,
     process.env.STARKNET_EXECUTOR_ADDRESS_DEV
   );
 
-  // await updateOrderbookAddress(
-  //   provider,
-  //   starknetAdminAccount,
-  //   process.env.STARKNET_EXECUTOR_ADDRESS_DEV,
-  //   orderbookContract.address
-  // );
+  await updateOrderbookAddress(
+    starknetProvider,
+    starknetAdminAccount,
+    process.env.STARKNET_EXECUTOR_ADDRESS_DEV,
+    orderbookContract.address
+  );
 
-  // await setSolisAddresses(
-  //   orderbookContract.address,
-  //   process.env.STARKNET_EXECUTOR_ADDRESS_DEV,
-  //   "http://localhost:7777"
-  // );
+  await setSolisAddresses(
+    orderbookContract.address,
+    process.env.STARKNET_EXECUTOR_ADDRESS_DEV,
+    solisNodeUrl
+  );
 
   console.log(`Orderbook contract\t${orderbookContract.address}`);
 }

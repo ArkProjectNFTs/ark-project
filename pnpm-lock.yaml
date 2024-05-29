@@ -204,6 +204,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      starknet:
+        specifier: ^6.9.0
+        version: 6.9.0
       ts-node:
         specifier: ^10.9.1
         version: 10.9.2(@types/node@20.13.0)(typescript@5.4.5)
@@ -293,6 +296,9 @@ importers:
       starknet:
         specifier: ^6.9.0
         version: 6.9.0
+      zod:
+        specifier: ^3.22.4
+        version: 3.23.8
     devDependencies:
       '@ark-project/core':
         specifier: workspace:*
@@ -2354,7 +2360,6 @@ packages:
 
   bun@1.1.10:
     resolution: {integrity: sha512-qOJXrQZSzJ5DbJMt47GZGWtUSmIkbwD7fPSN/XS/T46D4cTTnPK46QDHlyC8VD+Anvs6uKNwuwKIyB31kUdHmQ==}
-    cpu: [arm64, x64]
     os: [darwin, linux, win32]
     hasBin: true
 

@@ -9,7 +9,6 @@ import { AuctionV1, FulfillAuctionInfo, OfferV1 } from "../src/types/index.js";
 import {
   config,
   mintERC721,
-  STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
 } from "./utils/index.js";
@@ -68,7 +67,7 @@ describe("fulfillAuction", () => {
       starknetAccount: buyerAccount,
       offer,
       approveInfo: {
-        currencyAddress: STARKNET_ETH_ADDRESS,
+        currencyAddress: config.starknetCurrencyContract,
         amount: offer.startAmount
       }
     });

@@ -11,7 +11,6 @@ import { stark } from "starknet";
 import {
   approveERC20,
   approveERC721,
-  createAccount,
   createBroker,
   createListing,
   fetchOrCreateAccount,
@@ -21,10 +20,7 @@ import {
 } from "@ark-project/core";
 
 import { config } from "./config/index.js";
-import {
-  STARKNET_ETH_ADDRESS,
-  STARKNET_NFT_ADDRESS
-} from "./constants/index.js";
+import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
 import { mintERC20 } from "./utils/mintERC20.js";
 import { mintERC721 } from "./utils/mintERC721.js";
@@ -125,12 +121,12 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   }
 
   console.log(
-    `=> Approving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
+    `=> Approving ERC20 tokens ${config.starknetCurrencyContract} from minter: ${starknetFulfillerAccount.address} to ArkProject executor`
   );
 
   await approveERC20(config, {
     starknetAccount: starknetFulfillerAccount,
-    contractAddress: STARKNET_ETH_ADDRESS,
+    contractAddress: config.starknetCurrencyContract,
     amount: order.startAmount
   });
 
@@ -153,7 +149,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     starknetAccount: starknetFulfillerAccount,
     fulfillListingInfo,
     approveInfo: {
-      currencyAddress: STARKNET_ETH_ADDRESS,
+      currencyAddress: config.starknetCurrencyContract,
       amount: order.startAmount
     }
   });

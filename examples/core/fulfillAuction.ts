@@ -15,10 +15,7 @@ import {
 } from "@ark-project/core";
 
 import { config } from "./config/index.js";
-import {
-  STARKNET_ETH_ADDRESS,
-  STARKNET_NFT_ADDRESS
-} from "./constants/index.js";
+import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
 import { mintERC721 } from "./utils/mintERC721.js";
 import { whitelistBroker } from "./utils/whitelistBroker.js";
@@ -86,7 +83,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     starknetAccount: buyerAccount,
     offer,
     approveInfo: {
-      currencyAddress: STARKNET_ETH_ADDRESS,
+      currencyAddress: config.starknetCurrencyContract,
       amount: offer.startAmount
     }
   });

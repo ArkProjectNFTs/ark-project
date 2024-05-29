@@ -25,14 +25,17 @@ const starknetProvider = new RpcProvider({
   nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
 });
 
-export const STARKNET_ETH_ADDRESS = contracts.eth;
-export const STARKNET_NFT_ADDRESS = contracts.nftContract;
-export const STARKNET_EXECUTOR_ADDRESS = contracts.executor;
+export const STARKNET_CURRENCY_ADDRESS = process.env.STARKNET_CURRENCY_ADDRESS;
+export const STARKNET_NFT_ADDRESS = process.env.STARKNET_NFT_ADDRESS_DEV || "";
+export const STARKNET_EXECUTOR_ADDRESS =
+  process.env.STARKNET_EXECUTOR_ADDRESS_DEV || "";
+export const SOLIS_ORDERBOOK_ADDRESS =
+  process.env.SOLIS_ORDERBOOK_ADDRESS || "";
 
 export const config = createConfig({
-  starknetProvider: starknetProvider,
-  starknetNetwork: "dev",
-  arkchainNetwork: "dev"
+  starknetExecutorContract: STARKNET_EXECUTOR_ADDRESS,
+  starknetCurrencyContract: STARKNET_CURRENCY_ADDRESS,
+  arkchainOrderbookContract: SOLIS_ORDERBOOK_ADDRESS
 });
 
 export function generateRandomTokenId(): number {
@@ -93,14 +96,16 @@ export const mintERC20 = async ({
   account: Account;
   amount: number;
 }) => {
-  const { abi } = await starknetProvider.getClassAt(STARKNET_ETH_ADDRESS);
+  const { abi } = await starknetProvider.getClassAt(
+    config.starknetCurrencyContract
+  );
 
   if (!abi) {
     throw new Error("no abi.");
   }
 
   const mintERC20Call: Call = {
-    contractAddress: STARKNET_ETH_ADDRESS,
+    contractAddress: config.starknetCurrencyContract,
     entrypoint: "mint",
     calldata: CallData.compile([account.address, cairo.uint256(amount)])
   };
@@ -164,13 +169,19 @@ export const getCurrentTokenId = async (
 };
 
 export const getBalance = async ({ account }: { account: Account }) => {
-  const { abi } = await starknetProvider.getClassAt(STARKNET_ETH_ADDRESS);
+  const { abi } = await starknetProvider.getClassAt(
+    config.starknetCurrencyContract
+  );
 
   if (!abi) {
     throw new Error("no abi.");
   }
 
-  const contract = new Contract(abi, STARKNET_ETH_ADDRESS, starknetProvider);
+  const contract = new Contract(
+    abi,
+    config.starknetCurrencyContract,
+    starknetProvider
+  );
 
   const balance: bigint = await contract.balanceOf(account.address);
 

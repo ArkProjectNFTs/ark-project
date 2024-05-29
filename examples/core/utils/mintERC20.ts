@@ -1,19 +1,21 @@
 import { Account, cairo, Call, CallData, ProviderInterface } from "starknet";
 
-import { STARKNET_ETH_ADDRESS } from "../constants/index.js";
+import { config } from "../config/index.js";
 
 export const mintERC20 = async (
   provider: ProviderInterface,
   starknetAccount: Account,
   amount: bigint
 ) => {
-  const { abi: erc20abi } = await provider.getClassAt(STARKNET_ETH_ADDRESS);
+  const { abi: erc20abi } = await provider.getClassAt(
+    config.starknetCurrencyContract
+  );
   if (erc20abi === undefined) {
     throw new Error("no abi.");
   }
 
   const mintERC20Call: Call = {
-    contractAddress: STARKNET_ETH_ADDRESS,
+    contractAddress: config.starknetCurrencyContract,
     entrypoint: "mint",
     calldata: CallData.compile([starknetAccount.address, cairo.uint256(amount)])
   };

@@ -17,8 +17,6 @@ export async function deployOrderBook(
   const artifacts = loadArtifacts(artifactsPath, "ark_orderbook_orderbook");
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
 
-  console.log(chain_id);
-  console.log(adminAddress);
   const deployR = await account.declareAndDeploy({
     contract: artifacts.sierra,
     casm: artifacts.casm,
@@ -81,12 +79,12 @@ export async function updateExecutorAddress(
   executorAddress: string
 ) {
   const { abi } = await provider.getClassAt(contractAddress);
-  // if (abi === undefined) {
-  //   throw new Error("no abi.");
-  // }
-  // const executorContract = new sn.Contract(abi, contractAddress, provider);
-  // executorContract.connect(deployerAccount);
-  // const response =
-  //   await executorContract.update_starknet_executor_address(executorAddress);
-  // await provider.waitForTransaction(response.transaction_hash);
+  if (abi === undefined) {
+    throw new Error("no abi.");
+  }
+  const executorContract = new sn.Contract(abi, contractAddress, provider);
+  executorContract.connect(deployerAccount);
+  const response =
+    await executorContract.update_starknet_executor_address(executorAddress);
+  await provider.waitForTransaction(response.transaction_hash);
 }
