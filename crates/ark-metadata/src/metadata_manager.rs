@@ -96,7 +96,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         );
 
         let token_uri = self
-            .get_token_uri(&contract_address, &token_id)
+            .get_token_uri(contract_address, token_id)
             .await
             .map_err(|err| MetadataError::ParsingError(err.to_string()))?;
 
@@ -171,7 +171,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         }
 
         self.storage
-            .register_token_metadata(&contract_address, &token_id, &chain_id, token_metadata)
+            .register_token_metadata(contract_address, token_id, chain_id, token_metadata)
             .await
             .map_err(MetadataError::DatabaseError)?;
 
@@ -309,7 +309,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             }
         };
 
-        let token_id_big_number = match BigUint::from_str(&token_id) {
+        let token_id_big_number = match BigUint::from_str(token_id) {
             Ok(token_id_big_number) => token_id_big_number,
             Err(_) => {
                 return Err(anyhow!("Invalid token ID"));
@@ -528,8 +528,8 @@ mod tests {
         // EXECUTION: Call the function under test
         let result = metadata_manager
             .refresh_collection_token_metadata(
-                contract_address,
-                chain_id,
+                contract_address.to_string(),
+                chain_id.to_string(),
                 ImageCacheOption::DoNotSave,
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
