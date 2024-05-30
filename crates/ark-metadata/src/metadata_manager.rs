@@ -78,6 +78,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     ///
     /// # Returns
     /// - A `Result` indicating the success or failure of the metadata refresh operation.
+    #[allow(clippy::too_many_arguments)]
     pub async fn refresh_token_metadata(
         &mut self,
         contract_address: &str,
