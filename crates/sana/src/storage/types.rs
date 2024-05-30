@@ -98,7 +98,6 @@ impl Serialize for TokenEvent {
                 map.insert("contract_address", event.contract_address.clone());
                 map.insert("transaction_hash", event.transaction_hash.clone());
                 map.insert("token_id", event.token_id.clone());
-                map.insert("token_id_hex", event.token_id_hex.clone());
                 map.insert("contract_type", event.contract_type.clone());
                 map.insert("event_type", "transfer".to_string());
                 map.insert("block_timestamp", event.block_timestamp.to_string());
@@ -357,7 +356,6 @@ mod tests {
             contract_type: "ERC721".to_string(),
             transaction_hash: "0xhash".to_string(),
             token_id: "123".to_string(),
-            token_id_hex: "0x123".to_string(),
             event_type: Some(EventType::Transfer),
             token_event_id: "evt123".to_string(),
             block_number: Some(123),
@@ -377,7 +375,6 @@ mod tests {
             "contract_address": "0xcontract",
             "transaction_hash": "0xhash",
             "token_id": "123",
-            "token_id_hex": "0x123",
             "contract_type": "ERC721",
             "chain_id": "SN_MAIN"
         });

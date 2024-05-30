@@ -38,7 +38,6 @@ impl From<OrderPlaced> for PlacedData {
             order_version: to_hex_str(&value.order_version),
             order_type: format!("{:?}", value.order_type),
             cancelled_order_hash: to_hex_str_opt(&value.cancelled_order_hash),
-
             route: format!("{:?}", value.order.route),
             currency_address: to_hex_str(&FieldElement::from(value.order.currency_address)),
             currency_chain_id: to_hex_str(&value.order.currency_chain_id),

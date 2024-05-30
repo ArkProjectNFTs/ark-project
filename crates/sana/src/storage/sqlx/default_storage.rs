@@ -76,7 +76,7 @@ impl MarketplaceSqlxStorage {
         &self,
         token_event_id: &str,
     ) -> Result<Option<EventData>, StorageError> {
-        let q = "SELECT token_event_id, contract_address, chain_id, broker_id, order_hash, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address, amount, canceled_reason FROM token_event WHERE token_event_id = $1";
+        let q = "SELECT token_event_id, contract_address, chain_id, broker_id, order_hash, token_id, event_type, block_timestamp, transaction_hash, to_address, from_address, amount, canceled_reason FROM token_event WHERE token_event_id = $1";
 
         match sqlx::query(q)
             .bind(token_event_id)
@@ -236,8 +236,8 @@ impl Storage for MarketplaceSqlxStorage {
             return Ok(());
         }
 
-        let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
+        let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
 
         let event_type = self.to_title_case(&event.event_type.to_string().to_lowercase());
 
@@ -246,9 +246,9 @@ impl Storage for MarketplaceSqlxStorage {
             .bind(event.nft_contract_address.clone())
             .bind(event.chain_id.clone())
             .bind(event.token_id.clone())
+            .bind(event.token_id_hex.clone())
             .bind(event_type)
             .bind(event.block_timestamp as i64)
-            .bind(event.token_id_hex.clone())
             .bind(event.transaction_hash.clone())
             .bind(event.to_address.clone())
             .bind(event.from_address.clone())
@@ -293,8 +293,8 @@ impl Storage for MarketplaceSqlxStorage {
         } else {
             trace!("Inserting new transfer event {:?}", event.token_event_id);
 
-            let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, event_type, block_timestamp, token_id_hex, transaction_hash, to_address, from_address)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
+            let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
 
             let event_type = match &event.event_type {
                 Some(e) => {
@@ -309,9 +309,9 @@ impl Storage for MarketplaceSqlxStorage {
                 .bind(event.contract_address.clone())
                 .bind(event.chain_id.clone())
                 .bind(event.token_id.clone())
+                .bind(event.token_id_hex.clone())
                 .bind(event_type)
                 .bind(event.block_timestamp as i64)
-                .bind(event.token_id_hex.clone())
                 .bind(event.transaction_hash.clone())
                 .bind(event.to_address.clone())
                 .bind(event.from_address.clone())
