@@ -5,6 +5,7 @@
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct TokenData {
     pub contract_address: String,
+    pub chain_id: String,
     pub token_id: String,
 }
 
@@ -17,7 +18,6 @@ pub struct EventData {
     pub to_address: String,
     pub transaction_hash: String,
     pub token_id: String,
-    pub token_id_hex: String,
     pub event_type: String,
 }
 
@@ -28,6 +28,13 @@ pub struct BlockData {
     pub block_status: String,
     pub indexer_version: String,
     pub indexer_identifier: String,
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct TokenPrimaryKey {
+    pub contract_address: String,
+    pub token_id: String,
+    pub chain_id: String,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
