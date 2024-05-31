@@ -8,13 +8,12 @@ import { deployERC20 } from "../src/contracts/erc20";
 import { deployERC721 } from "../src/contracts/erc721";
 import { deployExecutor } from "../src/contracts/executor";
 import { deployMessaging } from "../src/contracts/messaging";
+import { getFeeAddress } from "../src/providers";
 
 async function run() {
   if (
     !process.env.STARKNET_ADMIN_ADDRESS_DEV ||
     !process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV ||
-    !process.env.STARKNET_EXECUTOR_ADDRESS_DEV ||
-    !process.env.STARKNET_CURRENCY_ADDRESS_DEV ||
     !process.env.SOLIS_ADMIN_ADDRESS_DEV ||
     !process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
   ) {
@@ -49,7 +48,7 @@ async function run() {
     ARTIFACTS_PATH,
     starknetAdminAccount,
     provider,
-    process.env.STARKNET_CURRENCY_ADDRESS_DEV,
+    getFeeAddress("dev"),
     messagingContract.address
   );
 
@@ -71,7 +70,6 @@ async function run() {
     __dirname,
     "../../../crates/solis/messaging.local.json"
   );
-
   const messagingConfigContent = JSON.stringify({
     chain: "starknet",
     rpc_url: "http://0.0.0.0:5050",
@@ -81,13 +79,16 @@ async function run() {
     interval: 2,
     from_block: 0
   });
-
   await fs.writeFile(messagingConfigFilePath, messagingConfigContent);
 
-  console.log(`Messaging contract\t${messagingContract.address}`);
-  console.log(`Executor contract\t${executorContract.address}`);
-  console.log(`ERC721 contract\t\t${nftContract.address}`);
-  console.log(`ERC20 contract\t\t${ethContract.address}`);
+  const contractsFilePath = resolve(__dirname, "../../../contracts.dev.json");
+  const contractsContent = JSON.stringify({
+    messaging: messagingContract.address,
+    executor: executorContract.address,
+    nftContract: nftContract.address,
+    eth: ethContract.address
+  });
+  await fs.writeFile(contractsFilePath, contractsContent);
 }
 
 run();

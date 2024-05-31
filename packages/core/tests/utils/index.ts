@@ -8,7 +8,7 @@ import {
   RpcProvider
 } from "starknet";
 
-import contractsByNetworks from "../../../../contracts.json";
+import contracts from "../../../../contracts.dev.json";
 import { Config, createConfig } from "../../src/createConfig.js";
 
 type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
@@ -25,17 +25,12 @@ const starknetProvider = new RpcProvider({
   nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
 });
 
-export const STARKNET_CURRENCY_ADDRESS = process.env.STARKNET_CURRENCY_ADDRESS;
-export const STARKNET_NFT_ADDRESS = process.env.STARKNET_NFT_ADDRESS_DEV || "";
-export const STARKNET_EXECUTOR_ADDRESS =
-  process.env.STARKNET_EXECUTOR_ADDRESS_DEV || "";
-export const SOLIS_ORDERBOOK_ADDRESS =
-  process.env.SOLIS_ORDERBOOK_ADDRESS || "";
+export const STARKNET_NFT_ADDRESS = contracts.erc721;
 
 export const config = createConfig({
-  starknetExecutorContract: STARKNET_EXECUTOR_ADDRESS,
-  starknetCurrencyContract: STARKNET_CURRENCY_ADDRESS,
-  arkchainOrderbookContract: SOLIS_ORDERBOOK_ADDRESS
+  starknetExecutorContract: contracts.executor,
+  starknetCurrencyContract: contracts.erc20,
+  arkchainOrderbookContract: contracts.orderbook
 });
 
 export function generateRandomTokenId(): number {
@@ -120,17 +115,17 @@ export const mintERC20 = async ({
 };
 
 export async function mintERC721({ account }: { account: Account }) {
-  const { abi } = await starknetProvider.getClassAt(STARKNET_NFT_ADDRESS);
+  const { abi } = await starknetProvider.getClassAt(contracts.erc721);
 
   if (!abi) {
     throw new Error("no abi.");
   }
 
-  const contract = new Contract(abi, STARKNET_NFT_ADDRESS, starknetProvider);
+  const contract = new Contract(abi, contracts.erc721, starknetProvider);
   const tokenId: bigint = await contract.get_current_token_id();
 
   const mintCall: Call = {
-    contractAddress: STARKNET_NFT_ADDRESS,
+    contractAddress: contracts.erc721,
     entrypoint: "mint",
     calldata: CallData.compile({
       recipient: account.address,
@@ -260,7 +255,7 @@ export const setFees = async ({
   await setBrokerFees(
     config,
     adminAccount,
-    STARKNET_EXECUTOR_ADDRESS,
+    contracts.executor,
     brokerId,
     brokerFee
   );

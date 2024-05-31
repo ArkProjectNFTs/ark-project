@@ -57,3 +57,6 @@ dbdata/
 
 # cairo
 .snfoundry_cache
+
+# contracts
+contracts.dev.json

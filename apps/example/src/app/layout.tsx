@@ -2,7 +2,6 @@
 
 import React from "react";
 
-import { env } from "@/env";
 import { Inter as FontSans } from "next/font/google";
 
 import { networks } from "@ark-project/core";
