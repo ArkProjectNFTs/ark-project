@@ -8,6 +8,7 @@ export {
 export {
   cancelOrder,
   createAuction,
+  createCollectionOffer,
   createListing,
   createOffer,
   fulfillAuction,
