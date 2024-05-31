@@ -34,6 +34,7 @@ export {
   type FulfillAuctionResult
 } from "./fulfillAuction.js";
 
+export { createCollectionOffer } from "./createCollectionOffer.js";
 export {
   fulfillOffer,
   type FulfillOfferParameters,

@@ -1,5 +1,15 @@
 import type { BigNumberish, CairoOption, constants, Uint256 } from "starknet";
 
+export type CollectionOfferV1 = {
+  brokerId: BigNumberish;
+  tokenAddress: BigNumberish;
+  currencyAddress?: BigNumberish;
+  currencyChainId?: BigNumberish;
+  startAmount: BigNumberish;
+  startDate?: number;
+  endDate?: number;
+};
+
 export enum RouteType {
   Erc20ToErc721 = 0,
   Erc721ToErc20 = 1
