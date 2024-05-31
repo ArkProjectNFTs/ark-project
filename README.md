@@ -88,7 +88,15 @@ install packages
 pnpm install
 ```
 
-WARNING: be sure to remove old contract addresses in contracts.json
+build the contracts
+WARNING: be sure to have the scarb version specified in the .tool-versions file installed
+
+```bash
+cd contracts
+scarb build
+```
+
+WARNING: be sure to remove old contracts addresses in contracts.json (dev part)
 
 deploy starknet contracts
 
