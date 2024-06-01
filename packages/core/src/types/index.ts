@@ -73,7 +73,7 @@ export type FullCancelInfo = {
 
 export type FulfillInfo = {
   orderHash: bigint;
-  relatedOrderHash: CairoOption<BigNumberish>;
+  relatedOrderHash: CairoOption<bigint>;
   fulfiller: string;
   tokenChainId: constants.StarknetChainId;
   tokenAddress: string;

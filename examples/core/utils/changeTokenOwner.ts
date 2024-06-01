@@ -1,4 +1,4 @@
-import { AccountInterface, BigNumberish, cairo, CallData } from "starknet";
+import { AccountInterface, cairo, CallData } from "starknet";
 
 import { Config } from "../../src/createConfig.js";
 
@@ -7,7 +7,7 @@ export const changeTokenOwner = async (
   nftContractAddress: string,
   owner: AccountInterface,
   to: string,
-  tokenId: BigNumberish
+  tokenId: bigint
 ) => {
   const { abi } = await config.starknetProvider.getClassAt(nftContractAddress);
   if (abi === undefined) {

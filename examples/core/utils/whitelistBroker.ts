@@ -1,11 +1,11 @@
-import { Account, BigNumberish, CallData } from "starknet";
+import { Account, CallData } from "starknet";
 
 import { Config } from "../../src/createConfig.js";
 
 export const whitelistBroker = async (
   config: Config,
   adminAccount: Account,
-  brokerId: BigNumberish
+  brokerId: string
 ) => {
   const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
     config.arkchainContracts.orderbook

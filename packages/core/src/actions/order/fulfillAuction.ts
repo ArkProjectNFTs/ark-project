@@ -1,6 +1,5 @@
 import {
   AccountInterface,
-  BigNumberish,
   cairo,
   CairoOption,
   CairoOptionVariant,
@@ -33,7 +32,7 @@ const fulfillAuction = async (
 
   const fulfillInfo: FulfillInfo = {
     orderHash: fulfillAuctionInfo.orderHash,
-    relatedOrderHash: new CairoOption<BigNumberish>(
+    relatedOrderHash: new CairoOption<bigint>(
       CairoOptionVariant.Some,
       fulfillAuctionInfo.relatedOrderHash
     ),

@@ -1,17 +1,11 @@
-import {
-  AccountInterface,
-  cairo,
-  Call,
-  CallData,
-  type BigNumberish
-} from "starknet";
+import { AccountInterface, cairo, Call, CallData } from "starknet";
 
 import { Config } from "../../createConfig.js";
 
 interface ApproveERC721Parameters {
   starknetAccount: AccountInterface;
   contractAddress: string;
-  tokenId: BigNumberish;
+  tokenId: bigint;
 }
 
 export const approveERC721 = async (
@@ -45,7 +39,7 @@ export const approveERC721 = async (
 interface ERC20Parameters {
   starknetAccount: AccountInterface;
   contractAddress: string;
-  amount: BigNumberish;
+  amount: bigint;
 }
 
 export const approveERC20 = async (

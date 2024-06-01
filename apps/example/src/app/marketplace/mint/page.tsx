@@ -9,7 +9,6 @@ import {
   useContractWrite,
   useWaitForTransaction
 } from "@starknet-react/core";
-import { BigNumberish, toNumber } from "ethers";
 import Image from "next/image";
 
 import { useConfig } from "@ark-project/react";
@@ -99,7 +98,7 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       if (!isLoading && !isError && data !== null && data !== undefined) {
-        let currentTokenId = toNumber(data as BigNumberish);
+        let currentTokenId = Number(data);
         setTokenId(currentTokenId);
         try {
           const response = await fetch(
