@@ -279,7 +279,7 @@ impl Storage for DefaultSqlxStorage {
             )));
         }
 
-        let q = "INSERT INTO contract (contract_address, contract_type, block_timestamp) VALUES (?, ?, ?)";
+        let q = "INSERT INTO contract (contract_address, contract_type, deployed_timestamp) VALUES ($1, $2, $3)";
 
         let _r = sqlx::query(q)
             .bind(info.contract_address.clone())

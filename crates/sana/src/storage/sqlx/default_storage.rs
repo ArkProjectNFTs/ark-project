@@ -372,32 +372,24 @@ impl Storage for MarketplaceSqlxStorage {
             .await?)
             .is_some()
         {
-            let q = "UPDATE contract SET updated_timestamp = $1 WHERE contract_address = $2 AND chain_id = $3";
-            sqlx::query(q)
-                .bind(block_timestamp as i64)
-                .bind(info.contract_address.clone())
-                .bind(info.chain_id.clone())
-                .execute(&self.pool)
-                .await?;
-
             return Err(StorageError::AlreadyExists(format!(
                 "contract addr = {}",
                 info.contract_address
             )));
         }
 
-        let q = "INSERT INTO contract (contract_address, chain_id, contract_type, updated_timestamp, contract_symbol, contract_image, contract_name, metadata_ok)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
+        let q = "INSERT INTO contract (contract_address, chain_id, contract_type, updated_timestamp, contract_symbol, contract_image, contract_name, metadata_ok, deployed_timestamp)
+                VALUES ($1, $2, $3, EXTRACT(epoch FROM now())::bigint, $4, $5, $6, $7, $8) ON CONFLICT (contract_address) DO NOTHING";
 
         let _r = sqlx::query(q)
             .bind(info.contract_address.clone())
             .bind(info.chain_id.clone())
             .bind(info.contract_type.to_string())
-            .bind(block_timestamp as i64)
             .bind(info.symbol.clone().unwrap_or_default())
             .bind(info.image.clone().unwrap_or_default())
             .bind(info.name.clone().unwrap_or_default())
             .bind(false)
+            .bind(block_timestamp as i64)
             .execute(&self.pool)
             .await?;
 
