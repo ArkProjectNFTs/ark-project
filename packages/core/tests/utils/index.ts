@@ -4,26 +4,13 @@ import {
   CairoCustomEnum,
   Call,
   CallData,
-  Contract,
-  RpcProvider
+  Contract
 } from "starknet";
 
 import contracts from "../../../../contracts.dev.json";
 import { Config, createConfig } from "../../src/createConfig.js";
 
 type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
-
-type StarknetContract = {
-  eth: string;
-  messaging: string;
-  executor: string;
-  nftContract: string;
-};
-
-const contracts = contractsByNetworks["dev"] as StarknetContract;
-const starknetProvider = new RpcProvider({
-  nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
-});
 
 export const STARKNET_NFT_ADDRESS = contracts.nftContract;
 
@@ -91,7 +78,7 @@ export const mintERC20 = async ({
   account: Account;
   amount: number;
 }) => {
-  const { abi } = await starknetProvider.getClassAt(
+  const { abi } = await config.starknetProvider.getClassAt(
     config.starknetCurrencyContract
   );
 
@@ -107,7 +94,7 @@ export const mintERC20 = async ({
 
   const result = await account.execute(mintERC20Call, [abi]);
 
-  await starknetProvider.waitForTransaction(result.transaction_hash, {
+  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
   });
 
@@ -115,13 +102,19 @@ export const mintERC20 = async ({
 };
 
 export async function mintERC721({ account }: { account: Account }) {
-  const { abi } = await starknetProvider.getClassAt(contracts.nftContract);
+  const { abi } = await config.starknetProvider.getClassAt(
+    contracts.nftContract
+  );
 
   if (!abi) {
     throw new Error("no abi.");
   }
 
-  const contract = new Contract(abi, contracts.nftContract, starknetProvider);
+  const contract = new Contract(
+    abi,
+    contracts.nftContract,
+    config.starknetProvider
+  );
   const tokenId: bigint = await contract.get_current_token_id();
 
   const mintCall: Call = {
@@ -135,7 +128,7 @@ export async function mintERC721({ account }: { account: Account }) {
 
   const { transaction_hash } = await account.execute(mintCall, [abi]);
 
-  await starknetProvider.waitForTransaction(transaction_hash, {
+  await config.starknetProvider.waitForTransaction(transaction_hash, {
     retryInterval: 1000
   });
 
@@ -164,7 +157,7 @@ export const getCurrentTokenId = async (
 };
 
 export const getBalance = async ({ account }: { account: Account }) => {
-  const { abi } = await starknetProvider.getClassAt(
+  const { abi } = await config.starknetProvider.getClassAt(
     config.starknetCurrencyContract
   );
 
@@ -175,7 +168,7 @@ export const getBalance = async ({ account }: { account: Account }) => {
   const contract = new Contract(
     abi,
     config.starknetCurrencyContract,
-    starknetProvider
+    config.starknetProvider
   );
 
   const balance: bigint = await contract.balanceOf(account.address);
