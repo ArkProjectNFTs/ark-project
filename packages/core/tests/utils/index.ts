@@ -25,11 +25,11 @@ const starknetProvider = new RpcProvider({
   nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
 });
 
-export const STARKNET_NFT_ADDRESS = contracts.erc721;
+export const STARKNET_NFT_ADDRESS = contracts.nftContract;
 
 export const config = createConfig({
   starknetExecutorContract: contracts.executor,
-  starknetCurrencyContract: contracts.erc20,
+  starknetCurrencyContract: contracts.eth,
   arkchainOrderbookContract: contracts.orderbook
 });
 
@@ -115,17 +115,17 @@ export const mintERC20 = async ({
 };
 
 export async function mintERC721({ account }: { account: Account }) {
-  const { abi } = await starknetProvider.getClassAt(contracts.erc721);
+  const { abi } = await starknetProvider.getClassAt(contracts.nftContract);
 
   if (!abi) {
     throw new Error("no abi.");
   }
 
-  const contract = new Contract(abi, contracts.erc721, starknetProvider);
+  const contract = new Contract(abi, contracts.nftContract, starknetProvider);
   const tokenId: bigint = await contract.get_current_token_id();
 
   const mintCall: Call = {
-    contractAddress: contracts.erc721,
+    contractAddress: contracts.nftContract,
     entrypoint: "mint",
     calldata: CallData.compile({
       recipient: account.address,
