@@ -1,6 +1,6 @@
 import { AccountInterface, cairo, CallData } from "starknet";
 
-import { Config } from "../../src/createConfig.js";
+import { Config } from "@ark-project/core"
 
 export const changeTokenOwner = async (
   config: Config,
@@ -21,7 +21,7 @@ export const changeTokenOwner = async (
   });
 
   await owner.execute({
-    contractAddress: config.starknetContracts.nftContract,
+    contractAddress: nftContractAddress,
     entrypoint: "transfer_from",
     calldata: hash_calldata
   });

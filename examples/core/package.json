@@ -3,7 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "run:example": "bun run"
+    "run:example": "bun run",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -11,6 +12,7 @@
   "dependencies": {
     "@ark-project/core": "workspace:*",
     "dotenv": "^16.4.5",
+    "starknet": "^6.9.0",
     "ts-node": "^10.9.1"
   },
   "peerDependencies": {

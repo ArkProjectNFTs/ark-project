@@ -19,8 +19,7 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { config } from "./config/index.js";
-import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
+import { config, nftContract } from "./config/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
 import { mintERC20 } from "./utils/mintERC20.js";
 import { mintERC721 } from "./utils/mintERC721.js";
@@ -54,7 +53,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
   );
 
-  console.log("=> Minting token at contract address: ", STARKNET_NFT_ADDRESS);
+  console.log("=> Minting token at contract address: ", nftContract);
   const transaction_hash = await mintERC721(
     starknetProvider,
     starknetOffererAccount
@@ -69,12 +68,12 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   }
 
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+  const tokenId = await getCurrentTokenId(config, nftContract);
   console.log("=> Token minted with tokenId: ", tokenId);
 
   console.log(`=> Approving for all`);
   await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
+    contractAddress: nftContract,
     starknetAccount: starknetOffererAccount,
     tokenId
   });
@@ -83,7 +82,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Define the order details
   const order: ListingV1 = {
     brokerId, // The broker ID
-    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenAddress: nftContract, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: BigInt(100000000000000000) // The starting amount for the order
   };
@@ -94,7 +93,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     starknetAccount: starknetOffererAccount,
     order,
     approveInfo: {
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress: nftContract,
       tokenId
     }
   });

@@ -12,8 +12,7 @@ import {
   getOrderStatus
 } from "@ark-project/core";
 
-import { config } from "./config/index.js";
-import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
+import { config, nftContract } from "./config/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
 import { mintERC721 } from "./utils/mintERC721.js";
 import { whitelistBroker } from "./utils/whitelistBroker.js";
@@ -37,11 +36,11 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   await whitelistBroker(config, adminAccount, brokerId);
 
   // Mint and approve seller NFT
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+  const tokenId = await getCurrentTokenId(config, nftContract);
 
   await mintERC721(config.starknetProvider, sellerAccount);
   await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
+    contractAddress: nftContract,
     starknetAccount: sellerAccount,
     tokenId
   });
@@ -49,7 +48,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Create auction
   const order: AuctionV1 = {
     brokerId,
-    tokenAddress: STARKNET_NFT_ADDRESS,
+    tokenAddress: nftContract,
     tokenId,
     startAmount: BigInt(1),
     endAmount: BigInt(10)
@@ -59,7 +58,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     starknetAccount: sellerAccount,
     order,
     approveInfo: {
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress: nftContract,
       tokenId
     }
   });

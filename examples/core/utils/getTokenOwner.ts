@@ -1,6 +1,6 @@
 import { Contract } from "starknet";
 
-import { Config } from "../../src/createConfig.js";
+import { Config } from "@ark-project/core"
 
 export const getTokenOwner = async (
   config: Config,

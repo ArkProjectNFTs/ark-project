@@ -1,20 +1,19 @@
 import { Account, Call, CallData, ProviderInterface } from "starknet";
 
 import "dotenv/config";
-
-import { STARKNET_NFT_ADDRESS } from "../constants/index.js";
+import { nftContract } from "../config/index.js";
 
 export async function mintERC721(
   provider: ProviderInterface,
   starknetAccount: Account
 ) {
-  const { abi: erc721abi } = await provider.getClassAt(STARKNET_NFT_ADDRESS);
+  const { abi: erc721abi } = await provider.getClassAt(nftContract);
   if (erc721abi === undefined) {
     throw new Error("no abi.");
   }
 
   const mintCall: Call = {
-    contractAddress: STARKNET_NFT_ADDRESS,
+    contractAddress: nftContract,
     entrypoint: "mint",
     calldata: CallData.compile({
       recipient: starknetAccount.address,
