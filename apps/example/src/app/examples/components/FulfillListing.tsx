@@ -34,7 +34,7 @@ export default function FulfillListing() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startAmount: "42000000000000000",
+      startAmount: "0.1",
       orderHash: undefined,
       tokenAddress:
         "0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672",

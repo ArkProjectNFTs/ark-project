@@ -89,7 +89,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     brokerId, // The broker ID
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
-    startAmount: 100000000000000000 // The starting amount for the order
+    startAmount: BigInt(100000000000000000) // The starting amount for the order
   };
 
   console.log("=> Creating listing...");

@@ -2,8 +2,6 @@ import { Account, CallData } from "starknet";
 
 import { Config } from "../../createConfig.js";
 
-import "dotenv/config";
-
 interface Params {
   brokerID: string;
 }

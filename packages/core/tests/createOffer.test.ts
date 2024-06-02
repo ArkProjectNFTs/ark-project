@@ -38,7 +38,7 @@ describe("createOffer", () => {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: 1
+      startAmount: BigInt(1)
     };
 
     const orderHash = await createOffer(config, {
@@ -47,7 +47,7 @@ describe("createOffer", () => {
         brokerId,
         tokenAddress: STARKNET_NFT_ADDRESS,
         tokenId,
-        startAmount: 1
+        startAmount: BigInt(1)
       },
       approveInfo: {
         currencyAddress: STARKNET_ETH_ADDRESS,

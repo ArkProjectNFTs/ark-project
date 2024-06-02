@@ -1,6 +1,5 @@
 import {
   AccountInterface,
-  BigNumberish,
   cairo,
   CairoOption,
   CairoOptionVariant,
@@ -36,16 +35,16 @@ const fulfillListing = async (
   const { starknetAccount, fulfillListingInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fulfillInfo: FulfillInfo = {
-    order_hash: fulfillListingInfo.orderHash,
-    related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),
+    orderHash: fulfillListingInfo.orderHash,
+    relatedOrderHash: new CairoOption<bigint>(CairoOptionVariant.None),
     fulfiller: starknetAccount.address,
-    token_chain_id: chainId,
-    token_address: fulfillListingInfo.tokenAddress,
-    token_id: new CairoOption<Uint256>(
+    tokenChainId: chainId,
+    tokenAddress: fulfillListingInfo.tokenAddress,
+    tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
       cairo.uint256(fulfillListingInfo.tokenId)
     ),
-    fulfill_broker_address: fulfillListingInfo.brokerId
+    fulfillBrokerAddress: fulfillListingInfo.brokerId
   };
 
   const result = await starknetAccount.execute([

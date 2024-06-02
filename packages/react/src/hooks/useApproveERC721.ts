@@ -1,4 +1,4 @@
-import { AccountInterface, BigNumberish, Contract } from "starknet";
+import { AccountInterface, Contract } from "starknet";
 
 import { approveERC721 as approveERC721Core, Config } from "@ark-project/core";
 
@@ -7,10 +7,7 @@ import { useConfig } from "./useConfig";
 function useApproveERC721() {
   const config = useConfig();
 
-  async function getApproveERC721(
-    tokenAddress: BigNumberish,
-    tokenId: BigNumberish
-  ) {
+  async function getApproveERC721(tokenAddress: string, tokenId: bigint) {
     const compressedContract = await config?.starknetProvider.getClassAt(
       tokenAddress.toString()
     );
@@ -31,8 +28,8 @@ function useApproveERC721() {
 
   async function approveERC721(
     starknetAccount: AccountInterface,
-    tokenId: BigNumberish,
-    tokenAddress: BigNumberish
+    tokenId: bigint,
+    tokenAddress: string
   ) {
     let isApproved = await getApproveERC721(tokenAddress, tokenId);
     if (!isApproved) {

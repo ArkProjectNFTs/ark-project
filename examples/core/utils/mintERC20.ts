@@ -1,18 +1,11 @@
-import {
-  Account,
-  BigNumberish,
-  cairo,
-  Call,
-  CallData,
-  ProviderInterface
-} from "starknet";
+import { Account, cairo, Call, CallData, ProviderInterface } from "starknet";
 
 import { STARKNET_ETH_ADDRESS } from "../constants/index.js";
 
 export const mintERC20 = async (
   provider: ProviderInterface,
   starknetAccount: Account,
-  amount: BigNumberish
+  amount: bigint
 ) => {
   const { abi: erc20abi } = await provider.getClassAt(STARKNET_ETH_ADDRESS);
   if (erc20abi === undefined) {

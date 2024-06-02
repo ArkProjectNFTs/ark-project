@@ -46,7 +46,7 @@ import { mintERC721 } from "./utils/mintERC721.js";
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS, // The token address
     tokenId: tokenId, // The ID of the token
-    startAmount: 600000000000000000 // The starting amount for the order
+    startAmount: BigInt(600000000000000000) // The starting amount for the order
   };
 
   console.log("Creating listing order...");

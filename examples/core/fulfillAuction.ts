@@ -57,8 +57,8 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId,
-    startAmount: 1,
-    endAmount: 10
+    startAmount: BigInt(1),
+    endAmount: BigInt(10)
   };
 
   console.log("Creating auction...");
@@ -78,7 +78,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     brokerId,
     tokenAddress: STARKNET_NFT_ADDRESS,
     tokenId,
-    startAmount: 1
+    startAmount: BigInt(1)
   };
 
   console.log("Creating offer...");

@@ -6,7 +6,7 @@ import { env } from "@/env";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
-import { Web3 } from "web3";
+import { parseEther } from "viem";
 import * as z from "zod";
 
 import { useCreateListing } from "@ark-project/react";
@@ -45,7 +45,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startAmount: Web3.utils.fromWei(42000000000000000, "ether")
+      startAmount: "0.1"
     }
   });
 
@@ -73,8 +73,8 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({
     const processedValues = {
       brokerId: env.NEXT_PUBLIC_BROKER_ID, // Assuming this is a static value or received from elsewhere
       tokenAddress: token?.contract_address,
-      tokenId: parseInt(token.token_id, 10),
-      startAmount: Web3.utils.toWei(values.startAmount, "ether")
+      tokenId: BigInt(token.token_id),
+      startAmount: parseEther(values.startAmount)
     };
 
     await createListing({

@@ -41,7 +41,6 @@ const createOffer = async (
   parameters: CreateListingParameters
 ) => {
   const { starknetAccount, offer: baseOrder, approveInfo } = parameters;
-
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
@@ -71,7 +70,7 @@ const createOffer = async (
 
   const result = await starknetAccount.execute([
     {
-      contractAddress: approveInfo.currencyAddress as string,
+      contractAddress: approveInfo.currencyAddress,
       entrypoint: "approve",
       calldata: CallData.compile({
         spender: config.starknetContracts.executor,

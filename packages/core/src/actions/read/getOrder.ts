@@ -1,9 +1,9 @@
-import { BigNumberish, CallData, Contract } from "starknet";
+import { CallData, Contract } from "starknet";
 
 import { Config } from "../../createConfig.js";
 
 interface GetOrderParameters {
-  orderHash: BigNumberish;
+  orderHash: bigint;
 }
 
 const getOrder = async (config: Config, parameters: GetOrderParameters) => {

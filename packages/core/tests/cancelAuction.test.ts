@@ -37,8 +37,8 @@ describe("cancelAuction", () => {
         brokerId,
         tokenAddress: STARKNET_NFT_ADDRESS,
         tokenId,
-        startAmount: 1,
-        endAmount: 10
+        startAmount: BigInt(1),
+        endAmount: BigInt(10)
       },
       approveInfo: {
         tokenAddress: STARKNET_NFT_ADDRESS,

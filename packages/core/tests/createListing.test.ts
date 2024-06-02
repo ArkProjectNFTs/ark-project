@@ -42,7 +42,7 @@ describe("createListing", () => {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: 1
+      startAmount: BigInt(1)
     };
 
     const orderHash = await createListing(config, {

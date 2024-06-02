@@ -1,6 +1,5 @@
 import {
   Account,
-  BigNumberish,
   cairo,
   CairoCustomEnum,
   Call,
@@ -10,7 +9,7 @@ import {
 } from "starknet";
 
 import contractsByNetworks from "../../../../contracts.json";
-import { Config, createConfig, Network } from "../../src/createConfig.js";
+import { Config, createConfig } from "../../src/createConfig.js";
 
 type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
 
@@ -21,8 +20,7 @@ type StarknetContract = {
   nftContract: string;
 };
 
-const network = process.env.STARKNET_NETWORK_ID as Network;
-const contracts = contractsByNetworks[network] as StarknetContract;
+const contracts = contractsByNetworks["dev"] as StarknetContract;
 const starknetProvider = new RpcProvider({
   nodeUrl: process.env.STARKNET_RPC_URL ?? "localhost:5050"
 });
@@ -61,7 +59,7 @@ export function getTypeFromCairoCustomEnum(cairoCustomEnum: CairoCustomEnum) {
 export const whitelistBroker = async (
   config: Config,
   adminAccount: Account,
-  brokerId: BigNumberish
+  brokerId: string
 ) => {
   const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
     config.arkchainContracts.orderbook

@@ -1,10 +1,10 @@
 import * as starknet from "@scure/starknet";
-import { BigNumberish, cairo, CallData, Contract, shortString } from "starknet";
+import { cairo, CallData, Contract, shortString } from "starknet";
 
 import { Config } from "../../createConfig.js";
 
 interface GetOrderHashParameters {
-  tokenId: BigNumberish;
+  tokenId: bigint;
   tokenAddress: string;
 }
 

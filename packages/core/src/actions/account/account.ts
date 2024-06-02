@@ -53,7 +53,7 @@ export const createAccount = async (provider: ProviderInterface) => {
       addressSalt: publicKey
     });
   } catch (e) {
-    console.log(e);
+    throw new Error(`Account deploy failed for ${address}`);
   }
 
   if (!response) {

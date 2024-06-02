@@ -1,9 +1,9 @@
-import { BigNumberish, CairoCustomEnum, CallData, Contract } from "starknet";
+import { CairoCustomEnum, CallData, Contract } from "starknet";
 
 import { Config } from "../../createConfig.js";
 
 interface GetOrderStatusParameters {
-  orderHash: BigNumberish;
+  orderHash: bigint;
 }
 
 const getOrderStatus = async (

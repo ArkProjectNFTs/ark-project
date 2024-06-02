@@ -45,7 +45,8 @@ export default function Cancel() {
     if (account === undefined) return;
     const processedValues = {
       ...values,
-      tokenId: parseInt(values.tokenId, 10)
+      orderHash: BigInt(values.orderHash),
+      tokenId: BigInt(values.tokenId)
     };
     cancel({
       starknetAccount: account,

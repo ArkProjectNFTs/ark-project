@@ -5,7 +5,7 @@ import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
-import { Web3 } from "web3";
+import { parseEther } from "viem";
 import * as z from "zod";
 
 import { useCreateListing } from "@ark-project/react";
@@ -35,7 +35,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
   const { response, createListing, status } = useCreateListing();
 
   const formSchema = z.object({
-    brokerId: z.number(),
+    brokerId: z.string(),
     tokenAddress: z
       .string()
       .startsWith("0x", { message: "Please enter a valid address" })
@@ -49,10 +49,10 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      brokerId: 123,
+      brokerId: "123",
       tokenAddress: currentToken?.contract_address,
       tokenId: currentToken?.token_id,
-      startAmount: Web3.utils.fromWei(42000000000000000, "ether")
+      startAmount: "0.1"
     }
   });
 
@@ -72,8 +72,8 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
     if (account === undefined) return;
     const processedValues = {
       ...values,
-      tokenId: parseInt(values.tokenId, 10),
-      startAmount: Web3.utils.toWei(values.startAmount, "ether")
+      tokenId: BigInt(values.tokenId),
+      startAmount: parseEther("0.1")
     };
     createListing({
       starknetAccount: account,
