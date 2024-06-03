@@ -56,7 +56,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   const offer: OfferV1 = {
     brokerId, // The broker ID
     tokenAddress: nftContract, // The token address
-    tokenId: 20, // The ID of the token
+    tokenId: BigInt(20), // The ID of the token
     startAmount: BigInt(100000000000000000), // The starting amount for the order
     currencyAddress: config.starknetCurrencyContract // The ERC20 address
   };
