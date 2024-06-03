@@ -28,6 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const config = {
+    starknetNetwork: networks.mainnet,
     arkchainNetwork: networks.mainnet
   };
 

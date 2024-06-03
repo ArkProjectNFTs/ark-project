@@ -57,7 +57,7 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
     createConfig({
       starknetProvider: starknetProvider,
       starknetNetwork: starknetChain.network as Network,
-      arkchainNetwork: baseConfig.arkchainNetwork
+      arkchainNetwork: baseConfig.arkchainNetwork as Network
     })
   );
 
@@ -65,7 +65,7 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
     const newConfig = createConfig({
       starknetProvider: starknetProvider,
       starknetNetwork: starknetChain.network as Network,
-      arkchainNetwork: baseConfig.arkchainNetwork
+      arkchainNetwork: baseConfig.arkchainNetwork as Network
     });
     setConfig(newConfig);
   }, [starknetProvider, starknetChain, baseConfig]);
