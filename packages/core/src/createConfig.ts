@@ -23,29 +23,37 @@ export interface Config {
   arkchainOrderbookContract: string;
 }
 
-export interface CreateConfigParameters {
-  starknetNetwork?: Network;
+export type CreateConfigParameters = {
+  starknetNetwork: Network;
   starknetRpcUrl?: string;
   starknetProvider?: ProviderInterface;
   starknetExecutorContract?: string;
   starknetCurrencyContract?: string;
-  arkchainNetwork?: Network;
+  arkchainNetwork: Network;
   arkchainRpcUrl?: string;
   arkProvider?: ProviderInterface;
   arkchainOrderbookContract?: string;
-}
+};
 
 export function createConfig({
-  starknetNetwork = networks.dev,
+  starknetNetwork,
   starknetRpcUrl,
   starknetProvider,
   starknetExecutorContract,
   starknetCurrencyContract = starknetEthContract,
-  arkchainNetwork = networks.dev,
+  arkchainNetwork,
   arkchainRpcUrl,
   arkProvider,
   arkchainOrderbookContract
 }: CreateConfigParameters): Config {
+  if (starknetNetwork === networks.dev && !starknetExecutorContract) {
+    throw new Error("starknetExecutorContract is required for dev network");
+  }
+
+  if (arkchainNetwork === networks.dev && !arkchainOrderbookContract) {
+    throw new Error("arkchainOrderbookContract is required for dev network");
+  }
+
   return {
     starknetNetwork,
     starknetRpcUrl: starknetRpcUrl || starknetRpcUrls[starknetNetwork],

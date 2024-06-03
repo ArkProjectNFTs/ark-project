@@ -15,8 +15,10 @@ type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
 export const STARKNET_NFT_ADDRESS = contracts.nftContract;
 
 export const config = createConfig({
+  starknetNetwork: "dev",
   starknetExecutorContract: contracts.executor,
   starknetCurrencyContract: contracts.eth,
+  arkchainNetwork: "dev",
   arkchainOrderbookContract: contracts.orderbook
 });
 
