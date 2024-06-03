@@ -62,9 +62,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   console.log(transaction_hash);
 
   if (config.starknetNetwork !== "dev") {
-    console.log(
-      "=> Waiting for 5 minutes for transaction complete on goerli..."
-    );
+    console.log("=> Waiting for 5 minutes for transaction complete...");
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   }
 

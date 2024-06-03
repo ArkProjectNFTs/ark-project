@@ -9,7 +9,7 @@ import {
   starknetRpcUrls
 } from "./constants.js";
 
-export type Network = "mainnet" | "goerli" | "sepolia" | "dev";
+export type Network = "mainnet" | "sepolia" | "dev";
 
 export interface Config {
   starknetNetwork: Network;

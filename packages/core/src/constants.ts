@@ -1,29 +1,25 @@
-import { GOERLI_CONTRACTS, MAINNET_CONTRACTS } from "./contracts.js";
+import { MAINNET_CONTRACTS } from "./contracts.js";
 
 export const networks = {
   mainnet: "mainnet",
-  goerli: "goerli",
   sepolia: "sepolia",
   dev: "dev"
 } as const;
 
 export const arkchainRpcUrls = {
-  mainnet: "https://solis.arkproject.dev",
-  goerli: "https://staging.solis.arkproject.dev",
+  mainnet: "https://production.solis.arkproject.dev",
   sepolia: "https://sepolia.solis.arkproject.dev",
   dev: "http://0.0.0.0:7777"
 };
 
 export const starknetRpcUrls = {
   mainnet: "https://starknet-mainnet.public.blastapi.io/rpc/v0_6",
-  goerli: "https://starknet-mainnet.public.blastapi.io/rpc/v0_6",
   sepolia: "https://starknet-sepolia.public.blastapi.io/rpc/v0_6",
   dev: "http://0.0.0.0:5050"
 };
 
 export const starknetExecutorContracts = {
   mainnet: MAINNET_CONTRACTS.executor,
-  goerli: GOERLI_CONTRACTS.executor,
   sepolia: "",
   dev: ""
 };
@@ -33,7 +29,6 @@ export const starknetEthContract =
 
 export const arkchainOrderbookContracts = {
   mainnet: MAINNET_CONTRACTS.orderbook,
-  goerli: GOERLI_CONTRACTS.orderbook,
   sepolia: "",
   dev: ""
 };

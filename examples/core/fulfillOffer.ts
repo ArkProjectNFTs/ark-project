@@ -61,9 +61,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   );
   await mintERC721(starknetProvider, starknetFulfillerAccount);
   if (config.starknetNetwork !== "dev") {
-    console.log(
-      "=> Waiting for 5 minutes for transaction complete on goerli..."
-    );
+    console.log("=> Waiting for 5 minutes for transaction complete...");
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   }
 
@@ -125,9 +123,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   });
 
   if (config.starknetNetwork !== "dev") {
-    console.log(
-      "=> Waiting for 5 minutes for transaction complete on goerli..."
-    );
+    console.log("=> Waiting for 5 minutes for transaction complete...");
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   }
 
