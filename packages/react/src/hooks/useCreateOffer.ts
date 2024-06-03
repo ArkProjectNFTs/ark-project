@@ -50,7 +50,7 @@ export default function useCreateOffer() {
         approveInfo: {
           currencyAddress:
             parameters.currencyAddress ||
-            (config?.starknetContracts.eth as string),
+            (config?.starknetCurrencyContract as string),
           amount: parameters.startAmount
         }
       });
