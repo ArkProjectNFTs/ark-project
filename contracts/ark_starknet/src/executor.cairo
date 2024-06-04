@@ -1,7 +1,6 @@
 use core::serde::Serde;
 
 use starknet::ContractAddress;
-use starknet::contract_address_to_felt252;
 
 use ark_common::protocol::order_v1::OrderV1;
 use ark_common::protocol::order_types::RouteType;
@@ -19,6 +18,8 @@ struct OrderInfo {
     token_id: u256,
     // in wei. --> 10 | 10 | 10 |
     start_amount: u256,
+    //
+    offerer: ContractAddress,
 }
 
 impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
@@ -33,6 +34,7 @@ impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
             token_address: self.token_address,
             token_id: token_id,
             start_amount: self.start_amount,
+            offerer: self.offerer,
         }
     }
 }
@@ -52,6 +54,8 @@ mod executor {
     use core::zeroable::Zeroable;
     use core::traits::Into;
     use starknet::contract_address_to_felt252;
+    use starknet::get_contract_address;
+
     use core::debug::PrintTrait;
     use core::traits::TryInto;
     use core::box::BoxTrait;
@@ -403,12 +407,35 @@ mod executor {
             panic!("Order not found");
         }
 
+        let contract_address = get_contract_address();
+
         match order_info.route {
             RouteType::Erc20ToErc721 => {
                 assert!(
                     _check_erc721_owner(@order_info.token_address, order_info.token_id, @caller),
                     "Fulfiller does not own the specified ERC721 token"
                 );
+                assert!(
+                    _check_erc721_approval(
+                        @order_info.token_address, order_info.token_id, @caller, @contract_address,
+                    ),
+                    "Executor not approved"
+                );
+                assert!(
+                    _check_erc20_amount(
+                        @order_info.currency_address, order_info.start_amount, @order_info.offerer
+                    ),
+                    "Offerer does not own enough ERC20 tokens"
+                );
+                assert!(
+                    _check_erc20_allowance(
+                        @order_info.currency_address,
+                        order_info.start_amount,
+                        @order_info.offerer,
+                        @contract_address,
+                    ),
+                    "Executor allowance is not enough"
+                )
             },
             RouteType::Erc721ToErc20 => {
                 assert!(
@@ -416,6 +443,30 @@ mod executor {
                         @order_info.currency_address, order_info.start_amount, @caller
                     ),
                     "Fulfiller does not own enough ERC20 tokens"
+                );
+                assert!(
+                    _check_erc20_allowance(
+                        @order_info.currency_address,
+                        order_info.start_amount,
+                        @caller,
+                        @get_contract_address()
+                    ),
+                    "Executor allowance is not enough"
+                );
+                assert!(
+                    _check_erc721_owner(
+                        @order_info.token_address, order_info.token_id, @order_info.offerer
+                    ),
+                    "Offerer does not own the specified ERC721 token"
+                );
+                assert!(
+                    _check_erc721_approval(
+                        @order_info.token_address,
+                        order_info.token_id,
+                        @order_info.offerer,
+                        @contract_address,
+                    ),
+                    "Executor not approved"
                 );
             }
         }
@@ -428,10 +479,31 @@ mod executor {
         amount <= contract.balance_of(*user)
     }
 
+    fn _check_erc20_allowance(
+        token_address: @ContractAddress,
+        amount: u256,
+        owner: @ContractAddress,
+        spender: @ContractAddress
+    ) -> bool {
+        let contract = IERC20Dispatcher { contract_address: *token_address };
+        amount <= contract.allowance(*owner, *spender)
+    }
+
     fn _check_erc721_owner(
         token_address: @ContractAddress, token_id: u256, user: @ContractAddress
     ) -> bool {
         let contract = IERC721Dispatcher { contract_address: *token_address };
         contract.owner_of(token_id) == *user
+    }
+
+    fn _check_erc721_approval(
+        token_address: @ContractAddress,
+        token_id: u256,
+        owner: @ContractAddress,
+        operator: @ContractAddress
+    ) -> bool {
+        let contract = IERC721Dispatcher { contract_address: *token_address };
+        contract.is_approved_for_all(*owner, *operator)
+            || (contract.get_approved(token_id) == *operator)
     }
 }
