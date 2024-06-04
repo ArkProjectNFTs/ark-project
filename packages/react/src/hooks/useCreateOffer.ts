@@ -41,7 +41,7 @@ export default function useCreateOffer() {
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId,
           currencyAddress:
-            parameters.currencyAddress || config?.starknetContracts.eth,
+            parameters.currencyAddress || config?.starknetCurrencyAddress,
           currencyChainId:
             parameters.currencyChainId || config?.starknetProvider.getChainId(),
           brokerId: parameters.brokerId,
