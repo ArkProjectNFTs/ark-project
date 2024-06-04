@@ -1,6 +1,5 @@
 import {
   AccountInterface,
-  cairo,
   CairoOption,
   CairoOptionVariant,
   CallData,
@@ -10,7 +9,6 @@ import {
 import { Config } from "../../createConfig.js";
 import {
   CancelCollectionOfferInfo,
-  CancelInfo,
   FullCancelInfo
 } from "../../types/index.js";
 

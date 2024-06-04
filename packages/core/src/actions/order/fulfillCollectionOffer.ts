@@ -1,7 +1,6 @@
 import {
   AccountInterface,
   BigNumberish,
-  cairo,
   CairoOption,
   CairoOptionVariant,
   CallData,
@@ -9,12 +8,7 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import {
-  ApproveErc721Info,
-  FulfillCollectionOfferInfo,
-  FulfillInfo,
-  FulfillOfferInfo
-} from "../../types/index.js";
+import { FulfillCollectionOfferInfo, FulfillInfo } from "../../types/index.js";
 
 /**
  * Fulfill an offer on the Arkchain.

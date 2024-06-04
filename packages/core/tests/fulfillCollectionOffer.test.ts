@@ -41,7 +41,6 @@ describe("fulfillCollectionOffer", () => {
 
     await mintERC20({ account: buyerAccount, amount: 100000000000000000 });
 
-    const initialSellerBalance = await getBalance({ account: sellerAccount });
     const initialBuyerBalance = await getBalance({ account: buyerAccount });
 
     const offer: CollectionOfferV1 = {
@@ -76,7 +75,6 @@ describe("fulfillCollectionOffer", () => {
       orderHash
     });
 
-    const sellerBalance = await getBalance({ account: sellerAccount });
     const buyerBalance = await getBalance({ account: buyerAccount });
     const fees = (BigInt(offer.startAmount) * BigInt(1)) / BigInt(100);
     const amount = BigInt(offer.startAmount) - fees;
