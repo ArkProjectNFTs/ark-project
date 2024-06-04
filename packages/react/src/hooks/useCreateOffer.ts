@@ -11,10 +11,7 @@ import {
 } from "@ark-project/core";
 
 import { Status } from "../types";
-import { useApproveERC20 } from "./useApproveERC20";
-import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
-import { useOwner } from "./useOwner";
 
 export type CreateOfferParameters = {
   starknetAccount: AccountInterface;
@@ -30,26 +27,12 @@ export type CreateOfferParameters = {
 
 export default function useCreateOffer() {
   const [status, setStatus] = useState<Status>("idle");
-  const { approveERC20 } = useApproveERC20();
   const [response, setResponse] = useState<bigint | undefined>();
-  const owner = useOwner();
   const config = useConfig();
-  const arkAccount = useBurnerWallet();
 
   async function createOffer(parameters: CreateOfferParameters) {
-    console.log("createOffer", parameters);
-    if (!arkAccount) {
-      throw new Error("No burner wallet.");
-    }
-
     try {
       setStatus("loading");
-      await approveERC20({
-        starknetAccount: parameters.starknetAccount,
-        startAmount: parameters.startAmount,
-        currencyAddress:
-          parameters.currencyAddress || config?.starknetContracts.eth
-      });
       const orderHash = await createOfferCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
         offer: {
@@ -57,7 +40,7 @@ export default function useCreateOffer() {
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId,
           currencyAddress:
-            parameters.currencyAddress || config?.starknetContracts.eth,
+            parameters.currencyAddress || config?.starknetCurrencyAddress,
           currencyChainId:
             parameters.currencyChainId || config?.starknetProvider.getChainId(),
           brokerId: parameters.brokerId,

@@ -11,7 +11,6 @@ import {
 } from "@ark-project/core";
 
 import { Status } from "../types";
-import { useBurnerWallet } from "./useBurnerWallet";
 import { useConfig } from "./useConfig";
 
 export type CreateListingParameters = {
@@ -22,10 +21,8 @@ function useCreateListing() {
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>();
   const config = useConfig();
-  const arkAccount = useBurnerWallet();
 
   async function createListing(parameters: CreateListingParameters) {
-    if (!arkAccount) throw new Error("No burner wallet.");
     try {
       const orderHash = await createListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
@@ -34,7 +31,7 @@ function useCreateListing() {
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId,
           currencyAddress:
-            parameters.currencyAddress || config?.starknetContracts.eth,
+            parameters.currencyAddress || config?.starknetCurrencyAddress,
           currencyChainId:
             parameters.currencyChainId || config?.starknetProvider.getChainId(),
           brokerId: parameters.brokerId,
