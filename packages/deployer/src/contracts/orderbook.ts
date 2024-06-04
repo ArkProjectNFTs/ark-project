@@ -13,12 +13,10 @@ export async function deployOrderBook(
   provider: sn.RpcProvider,
   adminAddress: string,
   chain_id: string
-): Promise<sn.Contract> {
+) {
   const artifacts = loadArtifacts(artifactsPath, "ark_orderbook_orderbook");
   const contractCallData = new sn.CallData(artifacts.sierra.abi);
 
-  console.log(chain_id);
-  console.log(adminAddress);
   const deployR = await account.declareAndDeploy({
     contract: artifacts.sierra,
     casm: artifacts.casm,

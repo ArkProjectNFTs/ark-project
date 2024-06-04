@@ -47,17 +47,18 @@ const fulfillListing = async (
     fulfillBrokerAddress: fulfillListingInfo.brokerId
   };
 
+  console.log("Fulfilling order with the following info:", fulfillInfo);
   const result = await starknetAccount.execute([
     {
       contractAddress: approveInfo.currencyAddress as string,
       entrypoint: "approve",
       calldata: CallData.compile({
-        spender: config.starknetContracts.executor,
+        spender: config.starknetExecutorContract,
         amount: cairo.uint256(approveInfo.amount)
       })
     },
     {
-      contractAddress: config.starknetContracts.executor,
+      contractAddress: config.starknetExecutorContract,
       entrypoint: "fulfill_order",
       calldata: CallData.compile({
         fulfill_info: fulfillInfo

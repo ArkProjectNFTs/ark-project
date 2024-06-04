@@ -1,7 +1,6 @@
 import { promises as fs } from "fs";
 
 import { program } from "commander";
-import loading from "loading-cli";
 import { CallData, Contract } from "starknet";
 
 import { ARTIFACTS_PATH } from "./constants";
@@ -22,12 +21,6 @@ export async function deployStarknetContracts(
   const { starknetAdminAccount } = getStarknetAccounts(starknetNetwork);
   let existingContracts = await getExistingContracts();
 
-  console.log("\nSTARKNET ACCOUNTS");
-  console.log("=================\n");
-  console.log(`| Admin account |  ${starknetAdminAccount.address}`);
-  console.log("");
-
-  const starknetSpinner = loading("Deploying Nft Contract...").start();
   const artifacts = loadArtifacts(ARTIFACTS_PATH, "ark_tokens_FreeMintNFT");
 
   const contractCallData = new CallData(artifacts.sierra.abi);
@@ -61,9 +54,8 @@ export async function deployStarknetContracts(
   await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
 
   let ethContract: Contract | undefined;
-  if (starknetNetwork === "dev") {
-    starknetSpinner.text = "Deploying Eth Contract...";
 
+  if (starknetNetwork === "dev") {
     ethContract = await deployERC20(
       ARTIFACTS_PATH,
       starknetAdminAccount,
@@ -86,8 +78,8 @@ export async function deployStarknetContracts(
     );
   }
 
-  starknetSpinner.stop();
   console.log("- Nft contract: ", nftContract.address);
+
   if (ethContract) {
     console.log("- Eth contract: ", ethContract.address);
   }

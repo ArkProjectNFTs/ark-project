@@ -2,7 +2,6 @@
 
 import React from "react";
 
-// import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 
 import { networks } from "@ark-project/core";
@@ -29,8 +28,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const config = {
+    starknetNetwork: networks.mainnet,
     arkchainNetwork: networks.mainnet
   };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body

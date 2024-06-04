@@ -49,7 +49,7 @@ export default function CreateOffer({ token }: CreateOfferProps) {
 
     const processedValues = {
       brokerId: env.NEXT_PUBLIC_BROKER_ID,
-      currencyAddress: config?.starknetContracts.eth,
+      currencyAddress: config?.starknetCurrencyContract,
       tokenAddress: token.contract_address,
       tokenId: BigInt(token.token_id),
       startAmount: parseEther(values.startAmount)

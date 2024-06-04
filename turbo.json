@@ -44,21 +44,25 @@
     "lint:fix": {
       "dependsOn": ["^lint:fix"]
     },
+    "clean": {
+      "cache": false
+    },
+    "//#clean": {
+      "cache": false
+    },
     "deploy:solis": {
       "cache": false,
       "persistent": true
     },
-    "deploy:starknet:tokens": {
-      "cache": false,
-      "persistent": true
+    "deploy:solis:local": {
+      "cache": false
     },
     "deploy:starknet": {
       "cache": false,
       "persistent": true
     },
-    "deploy:starknet:all": {
-      "cache": false,
-      "persistent": true
+    "deploy:starknet:local": {
+      "cache": false
     },
     "accounts:new": {
       "cache": false,
@@ -71,25 +75,31 @@
   },
   "globalEnv": [
     "ACCOUNT_CLASS_HASH",
-    "ORDERBOOK_CONTRACT",
-    "STARKNET_RPC_URL",
     "ARKCHAIN_RPC_URL",
-    "STARKNET_NETWORK_ID",
+    "BROKER_ID",
+    "NEXT_PUBLIC_BROKER_ID",
+    "NEXT_PUBLIC_NFT_API_KEY",
+    "NEXT_PUBLIC_NFT_API_URL",
+    "NEXT_PUBLIC_ORDERBOOK_API_URL",
+    "NEXT_PUBLIC_STARKNET_NFT_CONTRACT",
+    "ORDERBOOK_CONTRACT",
+    "SOLIS_ACCOUNT_CLASS_HASH",
+    "SOLIS_ADMIN_ADDRESS",
+    "SOLIS_ADMIN_ADDRESS_DEV",
+    "SOLIS_ADMIN_PRIVATE_KEY",
     "SOLIS_NETWORK_ID",
+    "SOLIS_NODE_URL",
     "STARKNET_ACCOUNT1_ADDRESS",
     "STARKNET_ACCOUNT1_PRIVATE_KEY",
     "STARKNET_ACCOUNT2_ADDRESS",
     "STARKNET_ACCOUNT2_PRIVATE_KEY",
-    "STARKNET_NETWORK",
-    "SOLIS_NODE_URL",
+    "STARKNET_ADMIN_ADDRESS_DEV",
+    "STARKNET_ADMIN_PRIVATE_KEY_DEV",
     "STARKNET_CURRENCY_ADDRESS",
-    "SOLIS_ACCOUNT_CLASS_HASH",
-    "NEXT_PUBLIC_NFT_API_KEY",
-    "NEXT_PUBLIC_ORDERBOOK_API_URL",
-    "NEXT_PUBLIC_NFT_API_URL",
-    "SOLIS_ADMIN_PRIVATE_KEY",
-    "SOLIS_ADMIN_ADDRESS",
-    "NEXT_PUBLIC_BROKER_ID",
-    "BROKER_ID"
+    "STARKNET_EXECUTOR_ADDRESS_DEV",
+    "STARKNET_NETWORK",
+    "STARKNET_NETWORK_ID",
+    "STARKNET_NFT_ADDRESS_DEV",
+    "STARKNET_RPC_URL"
   ]
 }

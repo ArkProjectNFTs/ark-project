@@ -52,12 +52,12 @@ const fulfillOffer = async (
       contractAddress: approveInfo.tokenAddress as string,
       entrypoint: "approve",
       calldata: CallData.compile({
-        to: config.starknetContracts.executor,
+        to: config.starknetExecutorContract,
         token_id: cairo.uint256(approveInfo.tokenId)
       })
     },
     {
-      contractAddress: config.starknetContracts.executor,
+      contractAddress: config.starknetExecutorContract,
       entrypoint: "fulfill_order",
       calldata: CallData.compile({
         fulfill_info: fulfillInfo

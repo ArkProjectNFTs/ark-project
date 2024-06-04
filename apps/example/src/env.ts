@@ -16,7 +16,8 @@ export const env = createEnv({
     NEXT_PUBLIC_ORDERBOOK_API_URL: z.string(),
     NEXT_PUBLIC_NFT_API_URL: z.string(),
     NEXT_PUBLIC_NFT_API_KEY: z.string(),
-    NEXT_PUBLIC_BROKER_ID: z.string()
+    NEXT_PUBLIC_BROKER_ID: z.string(),
+    NEXT_PUBLIC_STARKNET_NFT_CONTRACT: z.string()
   },
   /*
    * Due to how Next.js bundles environment variables on Edge and Client,
@@ -28,6 +29,8 @@ export const env = createEnv({
     NEXT_PUBLIC_NFT_API_KEY: process.env.NEXT_PUBLIC_NFT_API_KEY,
     NEXT_PUBLIC_ORDERBOOK_API_URL: process.env.NEXT_PUBLIC_ORDERBOOK_API_URL,
     NEXT_PUBLIC_NFT_API_URL: process.env.NEXT_PUBLIC_NFT_API_URL,
-    NEXT_PUBLIC_BROKER_ID: process.env.NEXT_PUBLIC_BROKER_ID
+    NEXT_PUBLIC_BROKER_ID: process.env.NEXT_PUBLIC_BROKER_ID,
+    NEXT_PUBLIC_STARKNET_NFT_CONTRACT:
+      process.env.NEXT_PUBLIC_STARKNET_NFT_CONTRACT
   }
 });

@@ -40,7 +40,7 @@ export default function useCreateOffer() {
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId,
           currencyAddress:
-            parameters.currencyAddress || config?.starknetCurrencyAddress,
+            parameters.currencyAddress || config?.starknetCurrencyContract,
           currencyChainId:
             parameters.currencyChainId || config?.starknetProvider.getChainId(),
           brokerId: parameters.brokerId,
@@ -50,7 +50,7 @@ export default function useCreateOffer() {
         approveInfo: {
           currencyAddress:
             parameters.currencyAddress ||
-            (config?.starknetContracts.eth as string),
+            (config?.starknetCurrencyContract as string),
           amount: parameters.startAmount
         }
       });

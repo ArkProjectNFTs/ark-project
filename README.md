@@ -72,65 +72,52 @@ by Diri.
 
 ## Quick start for local development
 
-install the latest dojo version on your machine (currently 0.0.7-alpha.1)
+> Install the latest dojo version on your machine (currently 0.0.7-alpha.1)
+> https://book.dojoengine.org/getting-started
 
-https://book.dojoengine.org/getting-started
-
-launch a katana (0.6.0)
-
-```bash
-katana
-```
-
-install packages
+Install packages
 
 ```bash
 pnpm install
 ```
 
-build the contracts
-WARNING: be sure to have the scarb version specified in the .tool-versions file installed
+Build contracts
 
-```bash
-cd contracts
-scarb build
+```
+cd contracts && scarb build --workspaces
 ```
 
-WARNING: be sure to remove old contracts addresses in contracts.json (dev part)
-
-deploy starknet contracts
+Launch a katana (0.6.0)
 
 ```bash
-pnpm deploy:starknet
+katana
 ```
 
-it should modify the messaging.local.json file to add the contract addresses that will use to on solis
-
-deploy starknet test tokens contracts for erc20 and erc721
+Deploy starknet contracts
 
 ```bash
-pnpm deploy:starknet:tokens
+pnpm deploy:starknet:local
 ```
 
-Launch Solis sequencer
+Launch solis
 
 ```bash
 cargo run -p solis -- --chain-id 0x736f6c6973 --messaging crates/solis/messaging.local.json --disable-fee -p 7777
 ```
 
-deploy Solis ArkProject contracts
+Deploy solis contracts
 
 ```bash
-pnpm deploy:solis
+pnpm deploy:solis:local
 ```
 
-Build the SDKs
+Build the core and react SDKs
 
 ```bash
-pnpm run build
+pnpm build --filer=core --filer-react
 ```
 
-Try some examples
+Try some core SDK examples
 
 ```bash
 cd examples/core

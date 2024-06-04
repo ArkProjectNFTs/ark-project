@@ -16,8 +16,7 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { config } from "./config/index.js";
-import { STARKNET_NFT_ADDRESS } from "./constants/index.js";
+import { config, nftContract } from "./config/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
 import { mintERC721 } from "./utils/mintERC721.js";
 
@@ -39,12 +38,12 @@ import { mintERC721 } from "./utils/mintERC721.js";
   );
 
   await mintERC721(config.starknetProvider, starknetOffererAccount);
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+  const tokenId = await getCurrentTokenId(config, nftContract);
 
   // Define the order details
   const order: ListingV1 = {
     brokerId,
-    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenAddress: nftContract, // The token address
     tokenId: tokenId, // The ID of the token
     startAmount: BigInt(600000000000000000) // The starting amount for the order
   };
@@ -55,7 +54,7 @@ import { mintERC721 } from "./utils/mintERC721.js";
     starknetAccount: starknetOffererAccount,
     order,
     approveInfo: {
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress: nftContract,
       tokenId
     }
   });

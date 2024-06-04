@@ -1,6 +1,6 @@
 import { Account, CallData } from "starknet";
 
-import { Config } from "../../src/createConfig.js";
+import { Config } from "@ark-project/core"
 
 export const whitelistBroker = async (
   config: Config,
@@ -8,7 +8,7 @@ export const whitelistBroker = async (
   brokerId: string
 ) => {
   const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainContracts.orderbook
+    config.arkchainOrderbookContract
   );
 
   if (orderbookAbi === undefined) {
@@ -20,7 +20,7 @@ export const whitelistBroker = async (
   });
 
   const result = await adminAccount.execute({
-    contractAddress: config.arkchainContracts.orderbook,
+    contractAddress: config.arkchainOrderbookContract,
     entrypoint: "whitelist_broker",
     calldata: whitelist_hash_calldata
   });

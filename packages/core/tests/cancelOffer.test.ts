@@ -11,7 +11,6 @@ import {
 import {
   config,
   mintERC721,
-  STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
 } from "./utils/index.js";
@@ -47,7 +46,7 @@ describe("cancelOffer", () => {
       starknetAccount: sellerAccount,
       offer,
       approveInfo: {
-        currencyAddress: STARKNET_ETH_ADDRESS,
+        currencyAddress: config.starknetCurrencyContract,
         amount: offer.startAmount
       }
     });

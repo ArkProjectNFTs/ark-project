@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { env } from "@/env";
 import {
   useAccount,
   useContract,
@@ -10,8 +11,6 @@ import {
   useWaitForTransaction
 } from "@starknet-react/core";
 import Image from "next/image";
-
-import { useConfig } from "@ark-project/react";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -35,7 +34,6 @@ type TokenMetadata = {
 
 export default function Home() {
   const { address } = useAccount();
-  const config = useConfig();
   const [tokenId, setTokenId] = useState<number | null>(null);
   const [tokenMetadata, setTokenMetadata] = useState<TokenMetadata | null>(
     null
@@ -43,12 +41,12 @@ export default function Home() {
 
   const { contract } = useContract({
     abi: ABI,
-    address: config?.starknetContracts.nftContract
+    address: env.NEXT_PUBLIC_STARKNET_NFT_CONTRACT
   });
   const { data, isError, isLoading, error } = useContractRead({
     functionName: "get_current_token_id",
     abi: ABI,
-    address: config?.starknetContracts.nftContract,
+    address: env.NEXT_PUBLIC_STARKNET_NFT_CONTRACT,
     watch: true
   });
 

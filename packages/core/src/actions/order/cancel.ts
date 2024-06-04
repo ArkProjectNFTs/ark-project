@@ -53,7 +53,7 @@ const cancelOrder = async (
 
   // Execute the transaction
   const result = await starknetAccount.execute({
-    contractAddress: config.starknetContracts.executor,
+    contractAddress: config.starknetExecutorContract,
     entrypoint: "cancel_order",
     calldata: CallData.compile({
       order: fullCancelInfo

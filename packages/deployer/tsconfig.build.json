@@ -6,10 +6,6 @@
     "declarationDir": "./dist",
     "sourceMap": true
   },
-  "include": [
-    "**/*.ts",
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "scripts"]
 }

@@ -1,4 +1,4 @@
-export { createConfig, networks } from "./createConfig.js";
+export { createConfig } from "./createConfig.js";
 
 export {
   fetchOrCreateAccount,
@@ -39,4 +39,16 @@ export type {
   RouteType,
   FulfillAuctionInfo
 } from "./types/index.js";
-export type { Config, Network, ConfigParameters } from "./createConfig.js";
+
+export type {
+  Config,
+  Network,
+  CreateConfigParameters
+} from "./createConfig.js";
+
+export {
+  starknetRpcUrls,
+  arkchainRpcUrls,
+  networks,
+  starknetEthContract
+} from "./constants.js";

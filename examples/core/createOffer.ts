@@ -10,7 +10,6 @@ import "dotenv/config";
 import { stark } from "starknet";
 
 import {
-  createAccount,
   createBroker,
   createOffer,
   fetchOrCreateAccount,
@@ -18,11 +17,7 @@ import {
   OfferV1
 } from "@ark-project/core";
 
-import { config } from "./config/index.js";
-import {
-  STARKNET_ETH_ADDRESS,
-  STARKNET_NFT_ADDRESS
-} from "./constants/index.js";
+import { config, nftContract } from "./config/index.js";
 import { mintERC20 } from "./utils/mintERC20.js";
 import { whitelistBroker } from "./utils/whitelistBroker.js";
 
@@ -31,14 +26,13 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
  */
 (async () => {
   console.log(`=> Getting config...`);
-  const { arkProvider, starknetProvider } = config;
+  const { starknetProvider } = config;
+
   const brokerId = stark.randomAddress();
   await createBroker(config, { brokerID: brokerId });
 
   console.log(`=> Creating account`);
   // Create a new account for the offer using the provider
-  const { account: arkAccount } = await createAccount(arkProvider);
-
   const solisAdminAccount = await fetchOrCreateAccount(
     config.arkProvider,
     process.env.SOLIS_ADMIN_ADDRESS_DEV,
@@ -61,10 +55,10 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   // Define the offer details
   const offer: OfferV1 = {
     brokerId, // The broker ID
-    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
+    tokenAddress: nftContract, // The token address
     tokenId: BigInt(20), // The ID of the token
     startAmount: BigInt(100000000000000000), // The starting amount for the order
-    currencyAddress: STARKNET_ETH_ADDRESS // The ERC20 address
+    currencyAddress: config.starknetCurrencyContract // The ERC20 address
   };
 
   if (process.env.STARKNET_NETWORK_ID === "dev") {
@@ -82,7 +76,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     starknetAccount: starknetOffererAccount,
     offer,
     approveInfo: {
-      currencyAddress: STARKNET_ETH_ADDRESS,
+      currencyAddress: config.starknetCurrencyContract,
       amount: offer.startAmount
     }
   });

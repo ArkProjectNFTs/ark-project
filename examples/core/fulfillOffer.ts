@@ -20,11 +20,7 @@ import {
   OfferV1
 } from "@ark-project/core";
 
-import { config } from "./config/index.js";
-import {
-  STARKNET_ETH_ADDRESS,
-  STARKNET_NFT_ADDRESS
-} from "./constants/index.js";
+import { config, nftContract } from "./config/index.js";
 import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
 import { mintERC20 } from "./utils/mintERC20.js";
 import { mintERC721 } from "./utils/mintERC721.js";
@@ -61,25 +57,23 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   );
 
   console.log(
-    `=> Minting token at contract address: ${STARKNET_NFT_ADDRESS} with fulfiller account: ${starknetFulfillerAccount.address}`
+    `=> Minting token at contract address: ${nftContract} with fulfiller account: ${starknetFulfillerAccount.address}`
   );
   await mintERC721(starknetProvider, starknetFulfillerAccount);
   if (config.starknetNetwork !== "dev") {
-    console.log(
-      "=> Waiting for 5 minutes for transaction complete on goerli..."
-    );
+    console.log("=> Waiting for 5 minutes for transaction complete...");
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   }
 
-  const tokenId = await getCurrentTokenId(config, STARKNET_NFT_ADDRESS);
+  const tokenId = await getCurrentTokenId(config, nftContract);
   console.log("=> Token minted with tokenId: ", tokenId);
 
   console.log(`=> Creating offer for tokenId: ${tokenId}`);
   // Define the order details
   const offer: OfferV1 = {
     brokerId, // The broker ID
-    tokenAddress: STARKNET_NFT_ADDRESS, // The token address
-    tokenId, // The ID of the token
+    tokenAddress: nftContract, // The token address
+    tokenId: tokenId, // The ID of the token
     startAmount: BigInt(100000000000000000) // The starting amount for the order
   };
 
@@ -102,11 +96,11 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
   }
 
   console.log(
-    `=> Approuving ERC20 tokens ${STARKNET_ETH_ADDRESS} from minter: ${starknetOffererAccount.address} to ArkProject executor`
+    `=> Approuving ERC20 tokens ${config.starknetCurrencyContract} from minter: ${starknetOffererAccount.address} to ArkProject executor`
   );
   await approveERC20(config, {
     starknetAccount: starknetOffererAccount,
-    contractAddress: STARKNET_ETH_ADDRESS,
+    contractAddress: config.starknetCurrencyContract,
     amount: offer.startAmount
   });
 
@@ -116,22 +110,20 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     starknetAccount: starknetOffererAccount,
     offer,
     approveInfo: {
-      currencyAddress: STARKNET_ETH_ADDRESS,
+      currencyAddress: config.starknetCurrencyContract,
       amount: offer.startAmount
     }
   });
 
   console.log(`=> Approving collection ${offer.tokenId}`);
   await approveERC721(config, {
-    contractAddress: STARKNET_NFT_ADDRESS,
+    contractAddress: nftContract,
     starknetAccount: starknetFulfillerAccount,
     tokenId
   });
 
   if (config.starknetNetwork !== "dev") {
-    console.log(
-      "=> Waiting for 5 minutes for transaction complete on goerli..."
-    );
+    console.log("=> Waiting for 5 minutes for transaction complete...");
     await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
   }
 
@@ -149,7 +141,7 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     starknetAccount: starknetFulfillerAccount,
     fulfillOfferInfo,
     approveInfo: {
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress: nftContract,
       tokenId: tokenId
     }
   });

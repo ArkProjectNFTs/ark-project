@@ -39,7 +39,7 @@ function useFulfillListing() {
         } as FulfillListingInfo,
         approveInfo: {
           currencyAddress: (parameters.currencyAddress ||
-            config?.starknetCurrencyAddress) as string,
+            config?.starknetCurrencyContract) as string,
           amount: BigInt(parameters.startAmount)
         }
       });

@@ -5,19 +5,19 @@
   "main": "index.js",
   "private": true,
   "scripts": {
+    "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "pnpm run clean && pnpm run build:esm+types",
+    "build": "pnpm build:clean && pnpm run build:esm+types",
+    "build:esm+types": "tsc --project tsconfig.build.json",
+    "build:clean": "rm -rf dist",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "accounts:new": "npm run build && node ./dist/accounts/new.js",
     "accounts:deploy": "npm run build && node ./dist/accounts/deploy.js",
-    "deploy:solis": "npm run build && node ./dist/deployArkchainContracts.js",
-    "deploy:starknet:tokens": "npm run build && node ./dist/deployStarknetFreemintNft.js",
     "deploy:starknet": "npm run build && node ./dist/deployStarknetContracts.js",
-    "deploy:starknet:all": "pnpm run deploy:clean && pnpm run deploy:starknet && pnpm run deploy:starknet:tokens",
-    "deploy:clean": "npm run build && node ./dist/cleanContracts.js",
-    "clean": "rm -rf dist tsconfig.tsbuildinfo",
-    "build:esm+types": "tsc --project tsconfig.build.json"
+    "deploy:starknet:local": "tsx scripts/deploy-starknet-local.ts",
+    "deploy:solis": "npm run build && node ./dist/deployArkchainContracts.js",
+    "deploy:solis:local": "tsx scripts/deploy-solis-local.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,12 +27,15 @@
     "dotenv": "^16.3.1",
     "loading-cli": "^1.1.2",
     "node-fetch": "^3.3.2",
-    "starknet": "6.6.6"
+    "starknet": "^6.9.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/node": "^20.10.7",
-    "typescript": "^5.3.3",
+    "@ark-project/core": "workspace:*",
     "@ark-project/eslint-config": "workspace:*",
-    "@ark-project/typescript-config": "workspace:*"
+    "@ark-project/typescript-config": "workspace:*",
+    "@types/node": "^20.10.7",
+    "tsx": "^4.11.0",
+    "typescript": "^5.3.3"
   }
 }

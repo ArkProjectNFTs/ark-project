@@ -1,122 +1,78 @@
-import { ProviderInterface, RpcProvider } from "starknet";
+import { RpcProvider, type ProviderInterface } from "starknet";
 
 import {
-  DEV_CONTRACTS,
-  GOERLI_CONTRACTS,
-  MAINNET_CONTRACTS,
-  SEPOLIA_CONTRACTS
-} from "./contracts.js";
+  arkchainOrderbookContracts,
+  arkchainRpcUrls,
+  networks,
+  starknetEthContract,
+  starknetExecutorContracts,
+  starknetRpcUrls
+} from "./constants.js";
 
-export type Network = "mainnet" | "goerli" | "sepolia" | "dev";
-export const networks: { [key: string]: Network } = {
-  mainnet: "mainnet",
-  goerli: "goerli",
-  sepolia: "sepolia",
-  dev: "dev"
-};
-const defaultCurrencyAddress =
-  "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
-const defaultAccountClassHash =
-  "0x05400e90f7e0ae78bd02c77cd75527280470e2fe19c54970dd79dc37a9d3645c";
-
-export interface ConfigParameters {
-  starknetNetwork?: Network;
-  arkchainNetwork: Network;
-  arkchainRpcUrl?: string;
-  starknetCurrencyAddress?: string;
-  arkchainAccountClassHash?: string;
-  arkProvider?: ProviderInterface;
-  starknetProvider?: ProviderInterface;
-}
+export type Network = "mainnet" | "sepolia" | "dev";
 
 export interface Config {
   starknetNetwork: Network;
-  arkchainNetwork: Network;
-  arkchainRpcUrl: string;
-  starknetCurrencyAddress: string;
-  arkchainAccountClassHash: string;
-  arkProvider: ProviderInterface;
   starknetProvider: ProviderInterface;
-  starknetContracts: StarknetContract;
-  arkchainContracts: ArkchainContract;
+  starknetRpcUrl: string;
+  starknetExecutorContract: string;
+  starknetCurrencyContract: string;
+  arkchainNetwork: Network;
+  arkProvider: ProviderInterface;
+  arkchainRpcUrl: string;
+  arkchainOrderbookContract: string;
 }
 
-interface ArkchainContract {
-  orderbook: string;
-}
-
-interface StarknetContract {
-  eth: string;
-  messaging: string;
-  executor: string;
-  nftContract: string;
-}
-
-const getArkchainRpcUrl = (network: Network): string => {
-  switch (network) {
-    case "dev":
-      return "http://0.0.0.0:7777";
-    case "goerli":
-      return "https://staging.solis.arkproject.dev";
-    case "sepolia":
-      return "https://sepolia.solis.arkproject.dev";
-    case "mainnet":
-      return "https://staging.solis.arkproject.dev";
-    default:
-      return "http://0.0.0.0:7777";
-  }
+export type CreateConfigParameters = {
+  starknetNetwork: Network;
+  starknetRpcUrl?: string;
+  starknetProvider?: ProviderInterface;
+  starknetExecutorContract?: string;
+  starknetCurrencyContract?: string;
+  arkchainNetwork: Network;
+  arkchainRpcUrl?: string;
+  arkProvider?: ProviderInterface;
+  arkchainOrderbookContract?: string;
 };
 
-export const createConfig = (ConfigParameters: ConfigParameters): Config => {
-  if (!ConfigParameters.starknetProvider) {
-    throw new Error("A starknetProvider must be provided");
+export function createConfig({
+  starknetNetwork,
+  starknetRpcUrl,
+  starknetProvider,
+  starknetExecutorContract,
+  starknetCurrencyContract = starknetEthContract,
+  arkchainNetwork,
+  arkchainRpcUrl,
+  arkProvider,
+  arkchainOrderbookContract
+}: CreateConfigParameters): Config {
+  if (starknetNetwork === networks.dev && !starknetExecutorContract) {
+    throw new Error("starknetExecutorContract is required for dev network");
   }
 
-  const contracts = {
-    goerli: GOERLI_CONTRACTS,
-    sepolia: SEPOLIA_CONTRACTS,
-    mainnet: MAINNET_CONTRACTS,
-    dev: DEV_CONTRACTS
-  };
+  if (arkchainNetwork === networks.dev && !arkchainOrderbookContract) {
+    throw new Error("arkchainOrderbookContract is required for dev network");
+  }
 
-  const selectedStarknetContracts = contracts[
-    ConfigParameters.starknetNetwork || "dev"
-  ] as StarknetContract;
-  const selectedArkchainContracts = contracts[
-    ConfigParameters.arkchainNetwork || "dev"
-  ] as ArkchainContract;
-
-  const starknetContracts: StarknetContract = {
-    eth: selectedStarknetContracts.eth || defaultCurrencyAddress,
-    messaging: selectedStarknetContracts.messaging,
-    executor: selectedStarknetContracts.executor,
-    nftContract: selectedStarknetContracts.nftContract
-  };
-
-  const arkchainContracts: ArkchainContract = {
-    orderbook: selectedArkchainContracts.orderbook
-  };
-
-  const arkchainRpcUrl =
-    ConfigParameters.arkchainRpcUrl ||
-    getArkchainRpcUrl(ConfigParameters.arkchainNetwork || "dev");
-  const config: Config = {
-    starknetProvider: ConfigParameters.starknetProvider,
-    starknetNetwork: ConfigParameters.starknetNetwork || "dev",
-    arkchainNetwork: ConfigParameters.arkchainNetwork || "dev",
-    arkchainRpcUrl: arkchainRpcUrl,
-    starknetCurrencyAddress:
-      ConfigParameters.starknetCurrencyAddress || defaultCurrencyAddress,
-    arkchainAccountClassHash:
-      ConfigParameters.arkchainAccountClassHash || defaultAccountClassHash,
-    arkProvider:
-      ConfigParameters.arkProvider ||
+  return {
+    starknetNetwork,
+    starknetRpcUrl: starknetRpcUrl || starknetRpcUrls[starknetNetwork],
+    starknetProvider:
+      starknetProvider ||
       new RpcProvider({
-        nodeUrl: arkchainRpcUrl
+        nodeUrl: starknetRpcUrl || starknetRpcUrls[starknetNetwork]
       }),
-    starknetContracts: starknetContracts,
-    arkchainContracts: arkchainContracts
+    starknetExecutorContract:
+      starknetExecutorContract || starknetExecutorContracts[starknetNetwork],
+    starknetCurrencyContract,
+    arkchainNetwork,
+    arkchainRpcUrl: arkchainRpcUrl || arkchainRpcUrls[arkchainNetwork],
+    arkProvider:
+      arkProvider ||
+      new RpcProvider({
+        nodeUrl: arkchainRpcUrl || arkchainRpcUrls[arkchainNetwork]
+      }),
+    arkchainOrderbookContract:
+      arkchainOrderbookContract || arkchainOrderbookContracts[arkchainNetwork]
   };
-
-  return config;
-};
+}

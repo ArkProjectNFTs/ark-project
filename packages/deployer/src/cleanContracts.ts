@@ -6,7 +6,6 @@ import { getContractsFilePath } from "./utils";
   await fs.writeFile(
     getContractsFilePath(),
     JSON.stringify({
-      goerli: {},
       sepolia: {},
       mainnet: {},
       dev: {}

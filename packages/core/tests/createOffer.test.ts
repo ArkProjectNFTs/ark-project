@@ -10,7 +10,6 @@ import {
 import {
   config,
   mintERC721,
-  STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
 } from "./utils/index.js";
@@ -29,6 +28,7 @@ describe("createOffer", () => {
     );
 
     const brokerId = stark.randomAddress();
+
     await createBroker(config, { brokerID: brokerId });
     await whitelistBroker(config, adminAccount, brokerId);
 
@@ -50,7 +50,7 @@ describe("createOffer", () => {
         startAmount: BigInt(1)
       },
       approveInfo: {
-        currencyAddress: STARKNET_ETH_ADDRESS,
+        currencyAddress: config.starknetCurrencyContract,
         amount: offer.startAmount
       }
     });
