@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { AccountInterface, BigNumberish } from "starknet";
+import { AccountInterface } from "starknet";
 
 import {
   Config,
@@ -15,8 +15,8 @@ import { useConfig } from "./useConfig";
 
 export type ApproveERC20Parameters = {
   starknetAccount: AccountInterface;
-  startAmount: BigNumberish;
-  currencyAddress?: BigNumberish;
+  startAmount: bigint;
+  currencyAddress?: string;
 };
 
 export type fulfillListingParameters = ApproveERC20Parameters &
@@ -39,8 +39,8 @@ function useFulfillListing() {
         } as FulfillListingInfo,
         approveInfo: {
           currencyAddress: (parameters.currencyAddress ||
-            config?.starknetContracts.eth) as string,
-          amount: parameters.startAmount
+            config?.starknetCurrencyContract) as string,
+          amount: BigInt(parameters.startAmount)
         }
       });
       setStatus("success");
