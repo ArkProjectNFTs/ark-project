@@ -6,12 +6,14 @@ export {
 } from "./actions/account/index.js";
 
 export {
+  cancelCollectionOffer,
   cancelOrder,
   createAuction,
   createCollectionOffer,
   createListing,
   createOffer,
   fulfillAuction,
+  fulfillCollectionOffer,
   fulfillListing,
   fulfillOffer,
   type CancelOrderParameters,
