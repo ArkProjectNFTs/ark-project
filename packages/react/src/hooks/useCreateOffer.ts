@@ -31,7 +31,6 @@ export default function useCreateOffer() {
   const config = useConfig();
 
   async function createOffer(parameters: CreateOfferParameters) {
-    console.log("createOffer", parameters);
     try {
       setStatus("loading");
       const orderHash = await createOfferCore(config as Config, {
