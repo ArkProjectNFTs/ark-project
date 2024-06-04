@@ -67,6 +67,11 @@ export type AuctionV1 = {
   endDate?: number;
 };
 
+export type CancelCollectionOfferInfo = {
+  orderHash: bigint;
+  tokenAddress: string;
+};
+
 export type CancelInfo = {
   orderHash: bigint;
   tokenAddress: string;
@@ -98,8 +103,6 @@ export type BaseFulfillInfo = {
   brokerId: string;
 };
 
-export type FulfillOfferInfo = BaseFulfillInfo;
-
 export type FulfillListingInfo = BaseFulfillInfo;
 
 export type FulfillAuctionInfo = BaseFulfillInfo & {
@@ -115,3 +118,7 @@ export type ApproveErc721Info = {
   tokenAddress: string;
   tokenId: bigint;
 };
+
+export type FulfillOfferInfo = BaseFulfillInfo;
+
+export type FulfillCollectionOfferInfo = Omit<BaseFulfillInfo, "tokenId">;
