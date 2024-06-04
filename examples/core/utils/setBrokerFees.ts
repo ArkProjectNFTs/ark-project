@@ -1,7 +1,7 @@
 import { cairo } from "starknet";
 import * as sn from "starknet";
 
-import { Config } from "@ark-project/core"
+import { Config } from "@ark-project/core";
 
 export const setBrokerFees = async (
   config: Config,

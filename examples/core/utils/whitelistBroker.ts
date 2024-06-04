@@ -1,6 +1,6 @@
 import { Account, CallData } from "starknet";
 
-import { Config } from "@ark-project/core"
+import { Config } from "@ark-project/core";
 
 export const whitelistBroker = async (
   config: Config,

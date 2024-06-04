@@ -1,6 +1,7 @@
 import { Account, Call, CallData, ProviderInterface } from "starknet";
 
 import "dotenv/config";
+
 import { nftContract } from "../config/index.js";
 
 export async function mintERC721(
