@@ -8,7 +8,11 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
+import {
+  ApproveErc20Info,
+  FulfillAuctionInfo,
+  FulfillInfo
+} from "../../types/index.js";
 
 /**
  * Fulfill an auction on the Arkchain.
@@ -21,13 +25,14 @@ import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
 interface FulfillAuctionParameters {
   starknetAccount: AccountInterface;
   fulfillAuctionInfo: FulfillAuctionInfo;
+  approveInfo: ApproveErc20Info;
 }
 
 const fulfillAuction = async (
   config: Config,
   parameters: FulfillAuctionParameters
 ) => {
-  const { starknetAccount, fulfillAuctionInfo } = parameters;
+  const { starknetAccount, fulfillAuctionInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
@@ -47,6 +52,14 @@ const fulfillAuction = async (
   };
 
   const result = await starknetAccount.execute([
+    {
+      contractAddress: approveInfo.currencyAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        spender: config.starknetExecutorContract,
+        amount: cairo.uint256(approveInfo.amount)
+      })
+    },
     {
       contractAddress: config.starknetExecutorContract,
       entrypoint: "fulfill_order",

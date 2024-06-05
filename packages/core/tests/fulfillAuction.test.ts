@@ -84,7 +84,11 @@ describe("fulfillAuction", () => {
 
     await fulfillAuction(config, {
       starknetAccount: sellerAccount,
-      fulfillAuctionInfo
+      fulfillAuctionInfo,
+      approveInfo: {
+        currencyAddress: config.starknetCurrencyContract,
+        amount: order.startAmount
+      }
     });
 
     await new Promise((resolve) => setTimeout(resolve, 5_000));
