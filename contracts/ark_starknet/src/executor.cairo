@@ -406,6 +406,10 @@ mod executor {
         if order_info.currency_address.is_zero() {
             panic!("Order not found");
         }
+        assert!(
+            order_info.offerer != *(fulfill_info.fulfiller),
+            "Orderer and fulfiller must be different"
+        );
 
         let contract_address = get_contract_address();
 
