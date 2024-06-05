@@ -27,7 +27,7 @@ export function getTypeFromCairoCustomEnum(cairoCustomEnum: CairoCustomEnum) {
   throw new Error("No valid variant found in CairoCustomEnum");
 }
 
-function useOrderType({ orderHash }: { orderHash: string }) {
+function useOrderType({ orderHash }: { orderHash: bigint }) {
   const [type, setType] = useState<string | null>(null);
   const config = useConfig();
 
