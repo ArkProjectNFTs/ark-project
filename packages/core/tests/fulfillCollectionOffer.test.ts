@@ -12,7 +12,7 @@ import {
   config,
   getBalance,
   mintERC20,
-  STARKNET_ETH_ADDRESS,
+  mintERC721,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
 } from "./utils/index.js";
@@ -39,21 +39,23 @@ describe("fulfillCollectionOffer", () => {
     await createBroker(config, { brokerID: brokerId });
     await whitelistBroker(config, adminAccount, brokerId);
 
-    await mintERC20({ account: buyerAccount, amount: 100000000000000000 });
+    const tokenId = await mintERC721({ account: sellerAccount });
+    const startAmount = 1000;
+    await mintERC20({ account: buyerAccount, amount: startAmount });
 
     const initialBuyerBalance = await getBalance({ account: buyerAccount });
 
     const offer: CollectionOfferV1 = {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
-      startAmount: BigInt(1000)
+      startAmount: BigInt(startAmount)
     };
 
     const orderHash = await createCollectionOffer(config, {
       starknetAccount: buyerAccount,
       offer,
       approveInfo: {
-        currencyAddress: STARKNET_ETH_ADDRESS,
+        currencyAddress: config.starknetCurrencyContract,
         amount: offer.startAmount
       }
     });
@@ -65,7 +67,12 @@ describe("fulfillCollectionOffer", () => {
       fulfillOfferInfo: {
         orderHash,
         tokenAddress: offer.tokenAddress,
+        tokenId: tokenId,
         brokerId
+      },
+      approveInfo: {
+        tokenAddress: offer.tokenAddress,
+        tokenId: tokenId
       }
     });
 
@@ -75,11 +82,11 @@ describe("fulfillCollectionOffer", () => {
       orderHash
     });
 
-    const buyerBalance = await getBalance({ account: buyerAccount });
+    const sellerBalance = await getBalance({ account: sellerAccount });
     const fees = (BigInt(offer.startAmount) * BigInt(1)) / BigInt(100);
     const amount = BigInt(offer.startAmount) - fees;
 
-    expect(orderStatusFulfilled).toBe("Fulfilled");
-    expect(buyerBalance).toEqual(initialBuyerBalance - amount);
+    expect(orderStatusFulfilled).toBe("Executed");
+    expect(sellerBalance).toEqual(initialBuyerBalance - amount);
   }, 50_000);
 });

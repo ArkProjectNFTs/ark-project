@@ -1,6 +1,6 @@
 import {
   AccountInterface,
-  BigNumberish,
+  cairo,
   CairoOption,
   CairoOptionVariant,
   CallData,
@@ -8,7 +8,11 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { FulfillCollectionOfferInfo, FulfillInfo } from "../../types/index.js";
+import {
+  ApproveErc721Info,
+  BaseFulfillInfo,
+  FulfillInfo
+} from "../../types/index.js";
 
 /**
  * Fulfill an offer on the Arkchain.
@@ -20,29 +24,40 @@ import { FulfillCollectionOfferInfo, FulfillInfo } from "../../types/index.js";
  */
 interface FulfillCollectionOfferParameters {
   starknetAccount: AccountInterface;
-  fulfillOfferInfo: FulfillCollectionOfferInfo;
-  // approveInfo: ApproveErc721Info;
+  fulfillOfferInfo: BaseFulfillInfo;
+  approveInfo: ApproveErc721Info;
 }
 
 const fulfillCollectionOffer = async (
   config: Config,
   parameters: FulfillCollectionOfferParameters
 ) => {
-  const { starknetAccount, fulfillOfferInfo } = parameters;
+  const { starknetAccount, fulfillOfferInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fulfillInfo: FulfillInfo = {
-    order_hash: fulfillOfferInfo.orderHash,
-    related_order_hash: new CairoOption<BigNumberish>(CairoOptionVariant.None),
+    orderHash: fulfillOfferInfo.orderHash,
+    relatedOrderHash: new CairoOption<bigint>(CairoOptionVariant.None),
     fulfiller: starknetAccount.address,
-    token_chain_id: chainId,
-    token_address: fulfillOfferInfo.tokenAddress,
-    token_id: new CairoOption<Uint256>(CairoOptionVariant.None),
-    fulfill_broker_address: fulfillOfferInfo.brokerId
+    tokenChainId: chainId,
+    tokenAddress: fulfillOfferInfo.tokenAddress,
+    tokenId: new CairoOption<Uint256>(
+      CairoOptionVariant.Some,
+      cairo.uint256(fulfillOfferInfo.tokenId)
+    ),
+    fulfillBrokerAddress: fulfillOfferInfo.brokerId
   };
 
   const result = await starknetAccount.execute([
     {
-      contractAddress: config.starknetContracts.executor,
+      contractAddress: approveInfo.tokenAddress as string,
+      entrypoint: "approve",
+      calldata: CallData.compile({
+        to: config.starknetExecutorContract,
+        token_id: cairo.uint256(approveInfo.tokenId)
+      })
+    },
+    {
+      contractAddress: config.starknetExecutorContract,
       entrypoint: "fulfill_order",
       calldata: CallData.compile({
         fulfill_info: fulfillInfo

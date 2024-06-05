@@ -9,7 +9,6 @@ import {
 import { CollectionOfferV1 } from "../src/types/index.js";
 import {
   config,
-  STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
 } from "./utils/index.js";
@@ -34,14 +33,14 @@ describe("createCollectionOffer", () => {
     const offer: CollectionOfferV1 = {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
-      startAmount: 1
+      startAmount: BigInt(1)
     };
 
     const orderHash = await createCollectionOffer(config, {
       starknetAccount: buyerAccount,
       offer,
       approveInfo: {
-        currencyAddress: STARKNET_ETH_ADDRESS,
+        currencyAddress: config.starknetCurrencyContract,
         amount: offer.startAmount
       }
     });
