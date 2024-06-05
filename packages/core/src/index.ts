@@ -57,7 +57,9 @@ export {
 
 export type {
   AuctionV1,
+  CancelCollectionOfferInfo,
   CancelInfo,
+  CollectionOfferV1,
   FulfillAuctionInfo,
   ListingV1,
   OfferV1,

@@ -10,7 +10,6 @@ import {
 import { CollectionOfferV1 } from "../src/types/index.js";
 import {
   config,
-  STARKNET_ETH_ADDRESS,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
 } from "./utils/index.js";
@@ -42,8 +41,8 @@ describe("cancelOffer", () => {
       starknetAccount: buyerAccount,
       offer,
       approveInfo: {
-        currencyAddress: STARKNET_ETH_ADDRESS,
-        amount: offer.startAmount
+        currencyAddress: config.starknetCurrencyContract,
+        amount: BigInt(offer.startAmount)
       }
     });
 
