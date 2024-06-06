@@ -190,7 +190,7 @@ impl Default for TokenTransferEvent {
             event_id: "0".to_string(),
             block_number: None,
             updated_at: None,
-            chain_id: "SN_MAIN".to_string(),
+            chain_id: "0x534e5f4d41494e".to_string(),
         }
     }
 }
@@ -343,7 +343,7 @@ mod tests {
             event_id: "evt123".to_string(),
             block_number: Some(123),
             updated_at: Some(1625101200),
-            chain_id: "SN_MAIN".to_string(),
+            chain_id: "0x534e5f4d41494e".to_string(),
         });
 
         let serialized = serde_json::to_string(&event).expect("Failed to serialize TokenEvent");
