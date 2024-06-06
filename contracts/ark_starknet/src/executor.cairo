@@ -423,7 +423,7 @@ mod executor {
                     _check_erc721_approval(
                         @order_info.token_address, order_info.token_id, @caller, @contract_address,
                     ),
-                    "Executor not approved"
+                    "Executor not approved by fulfiller"
                 );
                 assert!(
                     _check_erc20_amount(
@@ -438,7 +438,7 @@ mod executor {
                         @order_info.offerer,
                         @contract_address,
                     ),
-                    "Executor allowance is not enough"
+                    "Offerer's allowance of executor is not enough"
                 )
             },
             RouteType::Erc721ToErc20 => {
@@ -455,7 +455,7 @@ mod executor {
                         @caller,
                         @get_contract_address()
                     ),
-                    "Executor allowance is not enough"
+                    "Fulfiller's allowance of executor is not enough"
                 );
                 assert!(
                     _check_erc721_owner(
@@ -470,7 +470,7 @@ mod executor {
                         @order_info.offerer,
                         @contract_address,
                     ),
-                    "Executor not approved"
+                    "Executor not approved by offerer"
                 );
             }
         }
