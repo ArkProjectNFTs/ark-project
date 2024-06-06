@@ -1,6 +1,10 @@
 name: ArkProject Deploy Contracts & Solis Mainnet
 
-on: workflow_dispatch
+# on: workflow_dispatch
+on:
+  push:
+    branches:
+      - feature/dev-499-deploy-sepolia
 
 jobs:
   deploy-starknet:
