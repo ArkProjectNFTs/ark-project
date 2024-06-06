@@ -487,9 +487,9 @@ mod tests {
         let contract_address = "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8";
         let ipfs_gateway_uri = "https://ipfs.example.com";
         let request_referrer = "https://arkproject.dev";
-        let chain_id = "SN_MAIN";
+        let chain_id = "0x534e5f4d41494e";
 
-        let filter = (contract_address.to_string(), "SN_MAIN".to_string());
+        let filter = (contract_address.to_string(), chain_id.to_string());
 
         // Mocking expected behaviors
         mock_storage
@@ -500,7 +500,7 @@ mod tests {
                 Ok(vec![(
                     contract_address.to_string(),
                     "1".to_string(),
-                    "SN_MAIN".to_string(),
+                    "0x534e5f4d41494e".to_string(),
                 )])
             }); // Close the square bracket here
 

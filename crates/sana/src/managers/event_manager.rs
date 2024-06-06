@@ -114,7 +114,7 @@ impl<S: Storage> EventManager<S> {
             marketplace_contract_address: to_hex_str(&event.from_address),
             marketplace_name: "Ventory".to_string(),
             price: price.to_big_decimal(0).to_string(),
-            chain_id: "SN_MAIN".to_string(),
+            chain_id: "0x534e5f4d41494e".to_string(),
         })
     }
 

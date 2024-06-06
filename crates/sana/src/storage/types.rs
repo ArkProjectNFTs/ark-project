@@ -210,7 +210,7 @@ impl Default for TokenTransferEvent {
             event_type: None,
             block_number: None,
             updated_at: None,
-            chain_id: "SN_MAIN".to_string(),
+            chain_id: "0x534e5f4d41494e".to_string(),
         }
     }
 }
@@ -360,7 +360,7 @@ mod tests {
             token_event_id: "evt123".to_string(),
             block_number: Some(123),
             updated_at: Some(1625101200),
-            chain_id: "SN_MAIN".to_string(),
+            chain_id: "0x534e5f4d41494e".to_string(),
             token_id_hex: "0x123".to_string(),
         });
 
@@ -377,7 +377,7 @@ mod tests {
             "transaction_hash": "0xhash",
             "token_id": "123",
             "contract_type": "ERC721",
-            "chain_id": "SN_MAIN"
+            "chain_id": "0x534e5f4d41494e"
         });
 
         let expected = expected_json.to_string();
