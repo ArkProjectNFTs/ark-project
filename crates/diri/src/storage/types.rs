@@ -43,7 +43,7 @@ impl From<OrderPlaced> for PlacedData {
             currency_chain_id: to_hex_str(&value.order.currency_chain_id),
             salt: to_hex_str(&value.order.salt),
             offerer: to_hex_str(&FieldElement::from(value.order.offerer)),
-            token_chain_id: to_hex_str(&value.order.token_chain_id),
+            token_chain_id: format!("0x{:x}", value.order.token_chain_id),
             token_address: to_hex_str(&FieldElement::from(value.order.token_address)),
             token_id: u256_to_hex_opt(&value.order.token_id),
             quantity: u256_to_hex(&value.order.quantity),
