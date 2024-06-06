@@ -10,7 +10,7 @@ export function getStarknetProvider(starknetNetwork: string) {
       starknetNodeUrl = process.env.STARKNET_NODE_URL_MAINNET || "";
       break;
     case "sepolia":
-      starknetNodeUrl = process.env.STARKNET_NODE_URL_GOERLI || "";
+      starknetNodeUrl = process.env.STARKNET_NODE_URL_SEPOLIA || "";
       break;
     default:
       throw new Error(`Unsupported starknetNetwork: ${starknetNetwork}`);
@@ -32,7 +32,7 @@ export function getSolisProvider(solisNetwork?: string) {
       solisNodeUrl = process.env.SOLIS_NODE_URL_MAINNET || "";
       break;
     case "sepolia":
-      solisNodeUrl = process.env.SOLIS_NODE_URL_GOERLI || "";
+      solisNodeUrl = process.env.SOLIS_NODE_URL_SEPOLIA || "";
       break;
     default:
       throw new Error(`Unsupported solisNetwork: ${solisNetwork}`);

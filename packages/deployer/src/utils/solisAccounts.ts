@@ -14,9 +14,9 @@ export function getSolisAccounts(solisNetwork: ProviderNetwork) {
       publicKey: process.env.SOLIS_ADMIN_PUBLIC_KEY_DEV || ""
     },
     {
-      address: process.env.SOLIS_ADMIN_ADDRESS_GOERLI || "",
-      privateKey: process.env.SOLIS_ADMIN_PRIVATE_KEY_GOERLI || "",
-      publicKey: process.env.SOLIS_ADMIN_PUBLIC_KEY_GOERLI || ""
+      address: process.env.SOLIS_ADMIN_ADDRESS_SEPOLIA || "",
+      privateKey: process.env.SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA || "",
+      publicKey: process.env.SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA || ""
     },
     {
       address: process.env.SOLIS_ADMIN_ADDRESS_MAINNET || "",

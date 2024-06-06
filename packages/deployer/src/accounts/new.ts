@@ -62,7 +62,7 @@ export async function createNewAccounts(
 
 const program = new Command();
 program
-  .option("-n, --network <type>", "Network to use", "goerli")
+  .option("-n, --network <type>", "Network to use", "sepolia")
   .option("-a, --accounts <number>", "Number of accounts to create", "1");
 
 program.parse(process.argv);
