@@ -1,4 +1,4 @@
-name: ArkProject Deploy Contracts & Solis Mainnet
+name: ArkProject Deploy Contracts & Solis Sepolia
 
 # on: workflow_dispatch
 on:
