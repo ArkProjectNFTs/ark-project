@@ -399,7 +399,7 @@ fn test_fulfill_classic_collection_offer() {
         fulfiller: order_listing.offerer,
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
-        token_id: Option::None,
+        token_id: Option::Some(1),
         fulfill_broker_address: test_address()
     };
 

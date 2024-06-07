@@ -218,7 +218,7 @@ fn test_fulfill_collection_offer() {
         token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
             .try_into()
             .unwrap(),
-        token_id: Option::None,
+        token_id: Option::Some(1),
         fulfill_broker_address: test_address(),
     };
 
@@ -230,6 +230,70 @@ fn test_fulfill_collection_offer() {
 #[test]
 #[should_panic(expected: ('OB: order expired',))]
 fn test_fulfill_expired_collection_offer() {
+    let contract = declare('orderbook');
+    let chain_id = 0x534e5f4d41494e;
+    let contract_data = array![
+        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
+    ];
+    let contract_address = contract.deploy(@contract_data).unwrap();
+    let dispatcher = OrderbookDispatcher { contract_address };
+
+    let data = array![];
+    let data_span = data.span();
+
+    let order_offer = OrderV1 {
+        route: RouteType::Erc20ToErc721.into(),
+        currency_address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+            .try_into()
+            .unwrap(),
+        currency_chain_id: chain_id,
+        salt: 1,
+        offerer: 0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078
+            .try_into()
+            .unwrap(),
+        token_chain_id: chain_id,
+        token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
+            .try_into()
+            .unwrap(),
+        token_id: Option::None,
+        quantity: 1,
+        start_amount: 600000000000000000,
+        end_amount: 0,
+        start_date: 100,
+        end_date: 1000,
+        broker_id: test_address(),
+        additional_data: data_span,
+    };
+
+    let offer_order_hash = order_offer.compute_order_hash();
+    let offer_signer = sign_mock(offer_order_hash, order_offer.offerer);
+    whitelist_creator_broker(contract_address, order_offer.broker_id, dispatcher);
+    dispatcher.create_order(order: order_offer, signer: offer_signer);
+
+    start_warp(CheatTarget::One(contract_address), order_offer.end_date);
+
+    let fulfill_info = FulfillInfo {
+        order_hash: order_offer.compute_order_hash(),
+        related_order_hash: Option::None,
+        fulfiller: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc8
+            .try_into()
+            .unwrap(),
+        token_chain_id: chain_id,
+        token_address: 0x01435498bf393da86b4733b9264a86b58a42b31f8d8b8ba309593e5c17847672
+            .try_into()
+            .unwrap(),
+        token_id: Option::Some(1),
+        fulfill_broker_address: test_address()
+    };
+
+    let fulfill_info_hash = serialized_hash(fulfill_info);
+    let signer = sign_mock(fulfill_info_hash, fulfill_info.fulfiller);
+    dispatcher.fulfill_order(fulfill_info, signer);
+}
+
+#[test]
+#[should_panic(expected: ('OB: token id is missing',))]
+fn test_fulfill_collection_offer_andatory_token_id() {
     let contract = declare('orderbook');
     let chain_id = 0x534e5f4d41494e;
     let contract_data = array![
