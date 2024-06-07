@@ -114,7 +114,7 @@ pnpm deploy:solis:local
 Build the core and react SDKs
 
 ```bash
-pnpm build --filer=core --filer-react
+pnpm build --filter=core --filter=react
 ```
 
 Try some core SDK examples
