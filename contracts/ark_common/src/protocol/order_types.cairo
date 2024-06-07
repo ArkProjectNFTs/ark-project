@@ -4,8 +4,9 @@ use poseidon::poseidon_hash_span;
 use ark_common::protocol::order_v1::OrderV1;
 
 /// Order types.
-#[derive(Serde, Drop, PartialEq, Copy)]
+#[derive(Serde, Drop, PartialEq, Copy, Debug, starknet::Store)]
 enum OrderType {
+    #[default]
     Listing,
     Auction,
     Offer,
