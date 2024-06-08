@@ -51,10 +51,6 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
       starknetSolisAccount?.address || ""
     );
     existingContracts[starknetNetwork].messaging = messagingContract.address;
-    await fs.writeFile(
-      getContractsFilePath(),
-      JSON.stringify(existingContracts)
-    );
   }
 
   starknetSpinner.text = "⚡ Deploying Executor Contract...";
@@ -78,10 +74,6 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
       messagingContract.address
     );
     existingContracts[starknetNetwork].executor = executorContract.address;
-    await fs.writeFile(
-      getContractsFilePath(),
-      JSON.stringify(existingContracts)
-    );
   }
 
   // Determine from_block based on the network
@@ -108,6 +100,20 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   await fs.writeFile(
     messagingFilePath,
     JSON.stringify(messagingFileContent, null, 2)
+  );
+
+  // Update the contracts.json file
+  const contractsFilePath = getContractsFilePath();
+  const contractsContent = JSON.parse(
+    await fs.readFile(contractsFilePath, "utf8")
+  );
+
+  contractsContent[starknetNetwork].messaging = messagingContract.address;
+  contractsContent[starknetNetwork].executor = executorContract.address;
+
+  await fs.writeFile(
+    contractsFilePath,
+    JSON.stringify(contractsContent, null, 2)
   );
 
   starknetSpinner.stop();
