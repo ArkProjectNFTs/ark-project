@@ -25,6 +25,10 @@ function getMessagingFilePath() {
 }
 
 async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
+  console.log("\nSTARKNET NETWORK");
+  console.log("================\n");
+  console.log(`| Network | ${starknetNetwork}`);
+
   const { provider: starknetProvider, nodeUrl: starknetNodeUrl } =
     getStarknetProvider(starknetNetwork);
   const { starknetAdminAccount, starknetSolisAccount } =
@@ -102,6 +106,11 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
     interval: 10,
     from_block: fromBlock
   };
+
+  console.log("\nMESSAGING FILE");
+  console.log("==============\n");
+  console.log(`| Contract       | ${messagingFileContent}`);
+
   await fs.writeFile(
     messagingFilePath,
     JSON.stringify(messagingFileContent, null, 2)
