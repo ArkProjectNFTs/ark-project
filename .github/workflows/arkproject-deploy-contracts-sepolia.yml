@@ -44,61 +44,91 @@ jobs:
           STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA }}
         run: |
           pnpm run deploy:starknet -- --starknet sepolia
-  # deploy-orderbook:
-  #   needs: deploy-starknet
-  #   runs-on: ubuntu-latest
-  #   name: Build & Deploy orderbook contract
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
 
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v2
-  #       with:
-  #         node-version: "20"
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SCALEWAY_SSH_KEY }}
 
-  #     - name: Setup Scarb
-  #       uses: software-mansion/setup-scarb@v1
-  #       with:
-  #         scarb-version: 2.5.4
+      - name: Upload generated messaging file to Scaleway instance
+        env:
+          SCALEWAY_MAINNET_IP: ${{ secrets.SCALEWAY_MAINNET_IP }}
+        run: |
+          scp -o StrictHostKeyChecking=no ./messaging.json root@${{ env.SCALEWAY_MAINNET_IP }}:/root/solis/config/messaging.json
 
-  #     - name: Build contracts
-  #       run: |
-  #         cd contracts
-  #         scarb build --workspace
+      - name: Restart solis service on Scaleway instance
+        env:
+          SCALEWAY_MAINNET_IP: ${{ secrets.SCALEWAY_MAINNET_IP }}
+        run: |
+          ssh -o StrictHostKeyChecking=no root@${{ env.SCALEWAY_MAINNET_IP }} 'sudo systemctl restart solis.service'
 
-  #     - name: Install pnpm & dependencies
-  #       run: |
-  #         npm install -g pnpm
-  #         pnpm install
+      - name: Commit and Push Generated contract file
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "account@screenshot.co"
+          git config --global user.name "Solis Bot"
+          git add contracts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "feat: update contracts.json for sepolia deployment"
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit"
+  deploy-orderbook:
+    needs: deploy-starknet
+    runs-on: ubuntu-latest
+    name: Build & Deploy orderbook contract
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  #     - name: Deploy orderbook contracts
-  #       env:
-  #         STARKNET_NODE_URL_SEPOLIA: ${{ secrets.STARKNET_NODE_URL_SEPOLIA }}
-  #         SOLIS_NODE_URL_SEPOLIA: ${{ secrets.SOLIS_NODE_URL_SEPOLIA }}
-  #         STARKNET_ADMIN_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_ADMIN_ADDRESS_SEPOLIA }}
-  #         STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA }}
-  #         STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA }}
-  #         STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA }}
-  #         STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA }}
-  #         STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA }}
-  #         SOLIS_ADMIN_ADDRESS_SEPOLIA: ${{ secrets.SOLIS_ADMIN_ADDRESS_SEPOLIA }}
-  #         SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA }}
-  #         SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA }}
-  #         RPC_USER: ${{ secrets.RPC_USER }}
-  #         RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
-  #       run: |
-  #         pnpm run deploy:solis -- --solis sepolia --starknet sepolia
-  #     - name: Commit and Push Generated contract file
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       run: |
-  #         git config --global user.email "account@screenshot.co"
-  #         git config --global user.name "Solis Bot"
-  #         git add contracts.json
-  #         if ! git diff --cached --quiet; then
-  #           git commit -m "feat: update contracts.json for sepolia deployment"
-  #           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
-  #         else
-  #           echo "No changes to commit"
-  #         fi
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: 2.5.4
+
+      - name: Build contracts
+        run: |
+          cd contracts
+          scarb build --workspace
+
+      - name: Install pnpm & dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install
+
+      - name: Deploy orderbook contracts
+        env:
+          STARKNET_NODE_URL_SEPOLIA: ${{ secrets.STARKNET_NODE_URL_SEPOLIA }}
+          SOLIS_NODE_URL_SEPOLIA: ${{ secrets.SOLIS_NODE_URL_SEPOLIA }}
+          STARKNET_ADMIN_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_ADMIN_ADDRESS_SEPOLIA }}
+          STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA }}
+          STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA }}
+          SOLIS_ADMIN_ADDRESS_SEPOLIA: ${{ secrets.SOLIS_ADMIN_ADDRESS_SEPOLIA }}
+          SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA }}
+          SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA }}
+          RPC_USER: ${{ secrets.RPC_USER }}
+          RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
+        run: |
+          pnpm run deploy:solis -- --solis sepolia --starknet sepolia
+      - name: Commit and Push Generated contract file
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "account@screenshot.co"
+          git config --global user.name "Solis Bot"
+          git add contracts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "feat: update contracts.json for sepolia deployment"
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit"
+          fi
