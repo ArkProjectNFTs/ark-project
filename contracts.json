@@ -1,5 +1,8 @@
 {
-  "sepolia": {},
+  "sepolia": {
+    "messaging": "0x7c7d32694d8292322133c718ddc3f457a3bc0eb55cf9e49e7e4301afe441feb",
+    "executor": "0x3d596a108a1349908839e06f0f27490106fa212be51b33af8e48b0a30447bc8"
+  },
   "mainnet": {
     "nftContract": "0x32d99485b22f2e58c8a0206d3b3bb259997ff0db70cffd25585d7dd9a5b0546",
     "messaging": "0x57d45cc46de463f7ae63b74ce9b6b6b496a1178b02e7ad04d7c307caa698b7b",
