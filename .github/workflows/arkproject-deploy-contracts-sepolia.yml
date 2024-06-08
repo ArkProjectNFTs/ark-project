@@ -64,6 +64,9 @@ jobs:
         run: |
           ls -la
 
+      - name: Mask SSH key
+        run: echo "::add-mask::$${{ secrets.SCALEWAY_SSH_KEY }}"
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
