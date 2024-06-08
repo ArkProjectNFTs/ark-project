@@ -19,6 +19,11 @@ import {
   getStarknetAccounts
 } from "./utils";
 
+// Function to get the path for messaging.json
+function getMessagingFilePath() {
+  return path.join(__dirname, "../../../../messaging.json");
+}
+
 async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   const { provider: starknetProvider, nodeUrl: starknetNodeUrl } =
     getStarknetProvider(starknetNetwork);
@@ -86,8 +91,8 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
     fromBlock = 0; // default or handle other networks if any
   }
 
-  // Create the messaging file at the root of the project
-  const messagingFilePath = path.join(process.cwd(), "messaging.json");
+  // Create the messaging file at the specified path
+  const messagingFilePath = getMessagingFilePath();
   const messagingFileContent = {
     chain: "starknet",
     rpc_url: starknetNodeUrl,
