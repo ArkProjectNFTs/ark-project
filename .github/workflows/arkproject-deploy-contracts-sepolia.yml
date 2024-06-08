@@ -75,15 +75,15 @@ jobs:
 
       - name: Upload generated messaging file to Scaleway instance
         env:
-          SCALEWAY_MAINNET_IP: ${{ secrets.SCALEWAY_MAINNET_IP }}
+          SCALEWAY_SEPOLIA_IP: ${{ secrets.SCALEWAY_SEPOLIA_IP }}
         run: |
-          scp -o StrictHostKeyChecking=no ./messaging.json root@${{ env.SCALEWAY_MAINNET_IP }}:/root/solis/config/messaging.json
+          scp -o StrictHostKeyChecking=no ./messaging.json root@${{ env.SCALEWAY_SEPOLIA_IP }}:/root/solis/config/messaging.json
 
       - name: Restart solis service on Scaleway instance
         env:
-          SCALEWAY_MAINNET_IP: ${{ secrets.SCALEWAY_MAINNET_IP }}
+          SCALEWAY_SEPOLIA_IP: ${{ secrets.SCALEWAY_SEPOLIA_IP }}
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ env.SCALEWAY_MAINNET_IP }} 'sudo systemctl restart solis.service'
+          ssh -o StrictHostKeyChecking=no root@${{ env.SCALEWAY_SEPOLIA_IP }} 'sudo systemctl restart solis.service'
 
   deploy-orderbook:
     needs: deploy-starknet
