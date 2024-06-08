@@ -21,7 +21,7 @@ import {
 
 // Function to get the path for messaging.json
 function getMessagingFilePath() {
-  return path.join(__dirname, "../../../../messaging.json");
+  return path.join(__dirname, "../../../messaging.json");
 }
 
 async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
