@@ -2,7 +2,7 @@ import React from "react";
 
 import { useAccount } from "@starknet-react/core";
 import { useQuery } from "react-query";
-import { Web3 } from "web3";
+import { formatEther, hexToNumber } from "viem";
 
 import { Token } from "@/types/schema";
 import {
@@ -87,16 +87,9 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
                   {tokenOffers.offers.map((offer: any) => (
                     <TableRow className="group" key={offer.order_hash}>
                       <TableCell>
-                        {`${Web3.utils.fromWei(
-                          offer.offer_amount,
-                          "ether"
-                        )} ETH`}
+                        {`${formatEther(offer.offer_amount)} ETH`}
                       </TableCell>
-                      <TableCell>
-                        {Web3.utils
-                          .hexToNumber(offer.offer_quantity)
-                          .toString()}
-                      </TableCell>
+                      <TableCell>{hexToNumber(offer.offer_quantity)}</TableCell>
                       <TableCell>
                         in {getRoundedRemainingTime(offer.end_date)}
                       </TableCell>

@@ -6,7 +6,7 @@ import { env } from "@/env";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
-import { Web3 } from "web3";
+import { parseEther } from "viem";
 import * as z from "zod";
 
 import { useCreateAuction } from "@ark-project/react";
@@ -53,8 +53,8 @@ const CreateAuction: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
       brokerId: env.NEXT_PUBLIC_BROKER_ID,
       tokenAddress: currentToken?.contract_address,
       tokenId: currentToken?.token_id,
-      startAmount: Web3.utils.fromWei(42000000000000000, "ether"),
-      endAmount: Web3.utils.fromWei(84000000000000000, "ether")
+      startAmount: "0.01",
+      endAmount: "0.05"
     }
   });
 
@@ -78,9 +78,9 @@ const CreateAuction: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
     await create({
       starknetAccount: account,
       ...values,
-      tokenId: parseInt(values.tokenId, 10),
-      startAmount: Web3.utils.toWei(values.startAmount, "ether"),
-      endAmount: Web3.utils.toWei(values.endAmount, "ether")
+      tokenId: BigInt(values.tokenId),
+      startAmount: parseEther(values.startAmount),
+      endAmount: parseEther(values.endAmount)
     });
   }
 

@@ -37,7 +37,7 @@ const CancelOffer: React.FC<CancelOfferProps> = ({ token, offer }) => {
     await cancel({
       starknetAccount: account,
       tokenAddress: token.contract_address,
-      tokenId: token.token_id,
+      tokenId: BigInt(token.token_id),
       orderHash: offer.order_hash
     });
   };

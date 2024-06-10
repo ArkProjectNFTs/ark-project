@@ -5,7 +5,7 @@ import React from "react";
 import { TokenMarketData } from "@/types";
 import { ClockIcon } from "@radix-ui/react-icons";
 import moment from "moment";
-import Web3 from "web3";
+import { formatEther } from "viem";
 
 import { useOrderType } from "@ark-project/react";
 
@@ -25,10 +25,10 @@ interface ListingProps {
 
 const Listing: React.FC<ListingProps> = ({ token, tokenMarketData }) => {
   const orderType = useOrderType({
-    orderHash: tokenMarketData.order_hash
+    orderHash: BigInt(tokenMarketData.order_hash)
   });
-  const price = Web3.utils.fromWei(tokenMarketData.start_amount, "ether");
-  const reservePrice = Web3.utils.fromWei(tokenMarketData.end_amount, "ether");
+  const price = formatEther(BigInt(tokenMarketData.start_amount));
+  const reservePrice = formatEther(BigInt(tokenMarketData.end_amount));
 
   if (!orderType) {
     return null;

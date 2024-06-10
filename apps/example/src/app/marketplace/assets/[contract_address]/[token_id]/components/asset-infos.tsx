@@ -5,7 +5,7 @@ import React from "react";
 import { TokenMarketData } from "@/types";
 import { useAccount } from "@starknet-react/core";
 import { SiEthereum } from "react-icons/si";
-import { Web3 } from "web3";
+import { formatEther } from "viem";
 
 import { Token } from "@/types/schema";
 import { areAddressesEqual, shortAddress } from "@/lib/utils";
@@ -40,7 +40,7 @@ const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
             <TableCell className="font-medium">
               {tokenMarketData && tokenMarketData.start_amount ? (
                 <div className="flex space-x-2 items-center">
-                  {Web3.utils.fromWei(tokenMarketData.start_amount, "ether")}
+                  {formatEther(BigInt(tokenMarketData?.start_amount))}
                   <SiEthereum />
                 </div>
               ) : (
@@ -48,20 +48,13 @@ const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
               )}
             </TableCell>
             <TableCell>
-              {" "}
               {tokenMarketData && tokenMarketData.last_price
-                ? `${Web3.utils.fromWei(
-                    tokenMarketData.last_price,
-                    "ether"
-                  )}  ETH`
+                ? `${formatEther(BigInt(tokenMarketData.last_price))}  ETH`
                 : "-"}
             </TableCell>
             <TableCell>
               {tokenMarketData?.top_bid?.amount
-                ? `${Web3.utils.fromWei(
-                    tokenMarketData?.top_bid?.amount,
-                    "ether"
-                  )}  ETH`
+                ? `${formatEther(BigInt(tokenMarketData?.top_bid?.amount))}  ETH`
                 : "-"}
             </TableCell>
             <TableCell>-</TableCell>

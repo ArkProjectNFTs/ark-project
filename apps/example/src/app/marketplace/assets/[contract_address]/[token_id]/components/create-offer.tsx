@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
-import { parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import * as z from "zod";
 
 import { useConfig, useCreateOffer } from "@ark-project/react";
@@ -93,9 +93,8 @@ export default function CreateOffer({
   }
 
   const isDisabled = form.formState.isSubmitting || status === "loading";
-  const price = tokenMarketData.start_amount
-    ? Web3.utils.fromWei(tokenMarketData.start_amount, "ether")
-    : "-";
+
+  console.log("CreateOffer tokenMarketData", tokenMarketData);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -117,7 +116,10 @@ export default function CreateOffer({
           <div className="grow" />
           <div className="">
             <div className="font-bold text-right">
-              {tokenMarketData.is_listed ? price : "-"} ETH
+              {tokenMarketData?.is_listed
+                ? formatEther(BigInt(tokenMarketData.start_amount))
+                : "-"}{" "}
+              ETH
             </div>
           </div>
         </div>

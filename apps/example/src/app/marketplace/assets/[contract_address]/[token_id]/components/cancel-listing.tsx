@@ -32,9 +32,9 @@ const CancelListing: React.FC<CancelListingProps> = ({
   const handleClick = async () => {
     await cancel({
       starknetAccount: account,
-      orderHash: tokenMarketData.order_hash,
+      orderHash: BigInt(tokenMarketData.order_hash),
       tokenAddress: token.contract_address,
-      tokenId: token.token_id
+      tokenId: BigInt(token.token_id)
     });
   };
 

@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
 import { useForm } from "react-hook-form";
-import { Web3 } from "web3";
+import { formatEther, parseEther } from "viem";
 import * as z from "zod";
 
 import { useConfig, useCreateOffer } from "@ark-project/react";
@@ -54,7 +54,7 @@ export default function CreateBid({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startAmount: Web3.utils.fromWei(tokenMarketData.start_amount, "ether")
+      startAmount: formatEther(BigInt(tokenMarketData.start_amount))
     }
   });
 
@@ -69,7 +69,7 @@ export default function CreateBid({
   }, [response]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!account) {
+    if (!account || !config) {
       return;
     }
 
@@ -82,10 +82,10 @@ export default function CreateBid({
 
     const processedValues = {
       brokerId: env.NEXT_PUBLIC_BROKER_ID,
-      currencyAddress: config?.starknetContracts.eth,
+      currencyAddress: config.starknetCurrencyContract,
       tokenAddress: token.contract_address,
-      tokenId: tokenIdNumber,
-      startAmount: Web3.utils.toWei(values.startAmount, "ether")
+      tokenId: BigInt(token.token_id),
+      startAmount: parseEther(values.startAmount)
     };
 
     await createOffer({
@@ -99,8 +99,8 @@ export default function CreateBid({
   }
 
   const isDisabled = form.formState.isSubmitting || status === "loading";
-  const price = Web3.utils.fromWei(tokenMarketData.start_amount, "ether");
-  const reservePrice = Web3.utils.fromWei(tokenMarketData.end_amount, "ether");
+  const price = formatEther(BigInt(tokenMarketData.start_amount));
+  const reservePrice = formatEther(BigInt(tokenMarketData.end_amount));
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

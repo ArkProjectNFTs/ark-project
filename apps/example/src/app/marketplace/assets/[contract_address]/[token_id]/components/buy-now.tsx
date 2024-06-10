@@ -6,7 +6,7 @@ import { env } from "@/env";
 import { TokenMarketData } from "@/types";
 import { useAccount } from "@starknet-react/core";
 import { SiEthereum } from "react-icons/si";
-import { Web3 } from "web3";
+import { formatEther } from "viem";
 
 import { useFulfillListing } from "@ark-project/react";
 
@@ -19,23 +19,6 @@ interface BuyOrderProps {
   token: Token;
   tokenMarketData: TokenMarketData;
 }
-
-const LABELS_BY_STATUS = {
-  idle: "Buy now",
-  loading: "Loading...",
-  error: "Error",
-  success: "DWA",
-  approved: "Approved"
-};
-
-const LABELS_BY_STEP_STATUS = {
-  idle: "Creating transaction...",
-  approving: "Approving...",
-  approved: "Approved",
-  selling: "Sell in progress...",
-  sold: "Sold",
-  error: "Error"
-};
 
 const BuyNow: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
   const { fulfillListing, status } = useFulfillListing();
@@ -76,7 +59,7 @@ const BuyNow: React.FC<BuyOrderProps> = ({ token, tokenMarketData }) => {
         </div>
         <Separator orientation="vertical" className="mx-2" />
         <div className="flex items-center space-x-1">
-          <div>{Web3.utils.fromWei(tokenMarketData.start_amount, "ether")}</div>
+          <div>{formatEther(BigInt(tokenMarketData.start_amount))}</div>
           <SiEthereum />
         </div>
       </div>

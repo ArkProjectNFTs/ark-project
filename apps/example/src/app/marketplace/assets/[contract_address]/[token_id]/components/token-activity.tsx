@@ -2,7 +2,7 @@ import React from "react";
 
 import { env } from "@/env";
 import { useQuery } from "react-query";
-import { Web3 } from "web3";
+import { formatEther } from "viem";
 
 import { timeSince } from "@/lib/utils";
 import {
@@ -90,7 +90,7 @@ const Activity: React.FC<ActivityProps> = ({ params }) => {
                     <TableCell>{activity.event_type}</TableCell>
                     <TableCell className="text-nowrap">
                       {activity.amount
-                        ? `${Web3.utils.fromWei(activity.amount, "ether")} ETH`
+                        ? `${formatEther(BigInt(activity.amount))} ETH`
                         : "-"}
                     </TableCell>
                     <TableCell className="text-nowrap">

@@ -6,7 +6,7 @@ import { env } from "@/env";
 import { TokenMarketData } from "@/types";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
-import Web3 from "web3";
+import { formatEther } from "viem";
 
 import { useFulfillOffer } from "@ark-project/react";
 
@@ -48,7 +48,7 @@ const AcceptBestOffer: React.FC<BuyOrderProps> = ({
 
   const isDisabled = status === "loading";
   const isLoading = ["loading", "fulfilling"].includes(status);
-  const amount = Web3.utils.fromWei(tokenMarketData?.top_bid?.amount, "ether");
+  const amount = formatEther(tokenMarketData?.top_bid?.amount);
 
   return (
     <Button onClick={handleClick} disabled={isDisabled}>

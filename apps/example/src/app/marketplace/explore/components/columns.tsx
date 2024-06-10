@@ -4,7 +4,7 @@ import { useAccount } from "@starknet-react/core";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { SiEthereum } from "react-icons/si";
-import { Web3 } from "web3";
+import { formatEther, parseEther } from "viem";
 
 import { areAddressesEqual, timeSince, truncateString } from "@/lib/utils";
 
@@ -66,7 +66,7 @@ export const columns: ColumnDef<Token>[] = [
       ) {
         return <div className="w-[100px] items-center">-</div>;
       } else {
-        const price = Web3.utils.fromWei(row.getValue("start_amount"), "ether");
+        const price = parseEther(row.getValue("start_amount"));
         return (
           <div className="w-[100px] items-center flex">
             <span>{price}</span>
@@ -131,7 +131,7 @@ export const columns: ColumnDef<Token>[] = [
       }
       return (
         <div className="w-[100px] items-center flex">
-          <span>{Web3.utils.fromWei(topBid.amount, "ether")}</span>
+          <span>{formatEther(BigInt(topBid.amount))}</span>
           <SiEthereum />
         </div>
       );

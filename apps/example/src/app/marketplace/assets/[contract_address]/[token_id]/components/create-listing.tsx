@@ -3,6 +3,7 @@
 import React from "react";
 
 import { env } from "@/env";
+import { TokenMarketData } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
 import moment from "moment";
@@ -12,6 +13,7 @@ import * as z from "zod";
 
 import { useCreateAuction, useCreateListing } from "@ark-project/react";
 
+import { Token } from "@/types/schema";
 import { Button } from "@/components/ui/Button";
 import {
   Form,
@@ -32,44 +34,33 @@ import {
 } from "@/components/ui/select";
 
 interface OrderBookActionsProps {
-  token?: any;
-  tokenMarketData?: any;
+  token?: Token;
+  tokenMarketData?: TokenMarketData;
 }
 
 const FIXED = "fixed";
 const AUCTION = "auction";
 
-const formSchema = z
-  .object({
-    startAmount: z.coerce
-      .number({
-        invalid_type_error: "Please enter a valid amount"
-      })
-      .positive({
-        message: "Please enter a valid amount"
-      }),
-    endAmount: z.coerce.number({
+const formSchema = z.object({
+  startAmount: z.string({
+    invalid_type_error: "Please enter a valid amount"
+  }),
+  endAmount: z
+    .string({
       invalid_type_error: "Please enter a valid amount"
-    }),
-    // .positive({
-    //   message: "Please enter a valid amount"
-    // }),
-    duration: z.coerce.number(),
-    type: z.enum(["fixed", "auction"])
-  })
-  .refine(
-    (data) =>
-      data.type === AUCTION ? data.endAmount > data.startAmount : true,
-    {
-      message: "Reserve price must be greater than starting price",
-      path: ["endAmount"]
-    }
-  );
-// .refine((data) => {
-//   console.log("data", data);
-//   console.log(data.endAmount > data.startAmount);
-//   return false;
-// }, "Reserve price must be greater than starting price.");
+    })
+    .optional(),
+  duration: z.string(),
+  type: z.enum([FIXED, AUCTION])
+});
+// .refine(
+//   (data) =>
+//     data.type === AUCTION ? data.endAmount > data.startAmount : true,
+//   {
+//     message: "Reserve price must be greater than starting price",
+//     path: ["endAmount"]
+//   }
+// );
 
 const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
   const { account } = useAccount();
@@ -80,11 +71,17 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     defaultValues: {
-      startAmount: "0.1"
+      type: FIXED,
+      startAmount: "0.1",
+      duration: "1"
     }
   });
 
+  console.log("errors", form.formState.errors);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("onSubmit");
+
     if (account === undefined || !token?.contract_address || !token?.token_id) {
       console.error("Account, token address, or token ID is missing");
       return;
@@ -97,16 +94,14 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
       return;
     }
 
-    // Prepare the data for submission, including props data
     const processedValues = {
-      brokerId: env.NEXT_PUBLIC_BROKER_ID, // Assuming this is a static value or received from elsewhere
+      brokerId: env.NEXT_PUBLIC_BROKER_ID,
       tokenAddress: token?.contract_address,
       tokenId: BigInt(token.token_id),
-      startAmount: parseEther(values.startAmount)
+      startAmount: parseEther(values.startAmount),
+      endAmount: values.endAmount ? parseEther(values.endAmount) : BigInt(0),
+      endDate: moment().add(values.duration, "hours").unix()
     };
-
-    const startAmount = Web3.utils.toWei(values.startAmount, "ether");
-    const endDate = moment().add(values.duration, "hours").unix();
 
     try {
       if (values.type === AUCTION) {
@@ -114,21 +109,19 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
           starknetAccount: account,
           brokerId: env.NEXT_PUBLIC_BROKER_ID,
           tokenAddress: token.contract_address,
-          tokenId,
-          endDate,
-          startAmount,
-          endAmount: values.endAmount
-            ? Web3.utils.toWei(values.endAmount, "ether")
-            : 0
+          tokenId: processedValues.tokenId,
+          endDate: processedValues.endDate,
+          startAmount: processedValues.startAmount,
+          endAmount: processedValues.endAmount
         });
       } else {
         await createListing({
           starknetAccount: account,
           brokerId: env.NEXT_PUBLIC_BROKER_ID,
           tokenAddress: token.contract_address,
-          tokenId,
-          endDate,
-          startAmount
+          tokenId: processedValues.tokenId,
+          endDate: processedValues.endDate,
+          startAmount: processedValues.startAmount
         });
       }
     } catch (error) {
@@ -230,7 +223,7 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
                 </div>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value.toString()}
+                  defaultValue={field.value?.toString()}
                 >
                   <FormControl>
                     <SelectTrigger className="">

@@ -1,5 +1,5 @@
 import { TokenMarketData } from "@/types";
-import Web3 from "web3";
+import { formatEther } from "viem";
 
 import { Token } from "@/types/schema";
 
@@ -12,8 +12,8 @@ type BestOfferProps = {
 };
 
 export function BestOffer({ token, tokenMarketData, isOwner }: BestOfferProps) {
-  const price = tokenMarketData.top_bid.amount
-    ? Web3.utils.fromWei(tokenMarketData.top_bid.amount, "ether")
+  const price = tokenMarketData?.top_bid.amount
+    ? formatEther(tokenMarketData.top_bid.amount)
     : "-";
 
   return (
