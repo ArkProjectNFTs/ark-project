@@ -14,9 +14,9 @@ export function getStarknetAccounts(starknetNetwork: ProviderNetwork) {
       publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_DEV || ""
     },
     {
-      address: process.env.STARKNET_ADMIN_ADDRESS_GOERLI || "",
-      privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_GOERLI || "",
-      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_GOERLI || ""
+      address: process.env.STARKNET_ADMIN_ADDRESS_SEPOLIA || "",
+      privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA || "",
+      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA || ""
     },
     {
       address: process.env.STARKNET_ADMIN_ADDRESS_MAINNET || "",
@@ -32,9 +32,9 @@ export function getStarknetAccounts(starknetNetwork: ProviderNetwork) {
       publicKey: process.env.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_DEV || ""
     },
     {
-      address: process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS_GOERLI || "",
-      privateKey: process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_GOERLI || "",
-      publicKey: process.env.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_GOERLI || ""
+      address: process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA || "",
+      privateKey: process.env.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA || "",
+      publicKey: process.env.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA || ""
     },
     {
       address: process.env.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET || "",

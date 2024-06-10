@@ -1,11 +1,11 @@
-name: ArkProject Deploy Contracts & Solis Mainnet
+name: ArkProject Deploy Contracts & Solis Sepolia
 
 on: workflow_dispatch
 
 jobs:
   deploy-starknet:
     runs-on: ubuntu-latest
-    name: Build & Deploy Starknet Contracts
+    name: Build & Deploy starknet contracts
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -30,18 +30,18 @@ jobs:
           npm install -g pnpm
           pnpm install
 
-      - name: Deploy Starknet contracts
+      - name: Deploy starknet contracts
         env:
-          STARKNET_NODE_URL_MAINNET: ${{ secrets.STARKNET_NODE_URL_MAINNET }}
-          SOLIS_NODE_URL_MAINNET: ${{ secrets.SOLIS_NODE_URL_MAINNET }}
-          STARKNET_ADMIN_ADDRESS_MAINNET: ${{ secrets.STARKNET_ADMIN_ADDRESS_MAINNET }}
-          STARKNET_ADMIN_PRIVATE_KEY_MAINNET: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_MAINNET }}
-          STARKNET_ADMIN_PUBLIC_KEY_MAINNET: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET }}
+          STARKNET_NODE_URL_SEPOLIA: ${{ secrets.STARKNET_NODE_URL_SEPOLIA }}
+          SOLIS_NODE_URL_SEPOLIA: ${{ secrets.SOLIS_NODE_URL_SEPOLIA }}
+          STARKNET_ADMIN_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_ADMIN_ADDRESS_SEPOLIA }}
+          STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA }}
+          STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA }}
         run: |
-          pnpm run deploy:starknet -- --starknet mainnet
+          pnpm run deploy:starknet -- --starknet sepolia
 
       - name: Commit and Push Generated contract file
         env:
@@ -51,7 +51,7 @@ jobs:
           git config --global user.name "Solis Bot"
           git add contracts.json
           if ! git diff --cached --quiet; then
-            git commit -m "feat: update contracts.json for mainnet deployment"
+            git commit -m "feat: update contracts.json for sepolia deployment"
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
           else
             echo "No changes to commit"
@@ -72,20 +72,20 @@ jobs:
 
       - name: Upload generated messaging file to Scaleway instance
         env:
-          SCALEWAY_MAINNET_IP: ${{ secrets.SCALEWAY_MAINNET_IP }}
+          SCALEWAY_SEPOLIA_IP: ${{ secrets.SCALEWAY_SEPOLIA_IP }}
         run: |
-          scp -o StrictHostKeyChecking=no ./messaging.json root@${{ env.SCALEWAY_MAINNET_IP }}:/root/solis/config/messaging.json
+          scp -o StrictHostKeyChecking=no ./messaging.json root@${{ env.SCALEWAY_SEPOLIA_IP }}:/root/solis/config/messaging.json
 
       - name: Restart solis service on Scaleway instance
         env:
-          SCALEWAY_MAINNET_IP: ${{ secrets.SCALEWAY_MAINNET_IP }}
+          SCALEWAY_SEPOLIA_IP: ${{ secrets.SCALEWAY_SEPOLIA_IP }}
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ env.SCALEWAY_MAINNET_IP }} 'sudo systemctl restart solis.service'
+          ssh -o StrictHostKeyChecking=no root@${{ env.SCALEWAY_SEPOLIA_IP }} 'sudo systemctl restart solis.service'
 
   deploy-orderbook:
     needs: deploy-starknet
     runs-on: ubuntu-latest
-    name: Build & Deploy Orderbook Contract
+    name: Build & Deploy orderbook contract
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -112,21 +112,21 @@ jobs:
 
       - name: Deploy orderbook contracts
         env:
-          STARKNET_NODE_URL_MAINNET: ${{ secrets.STARKNET_NODE_URL_MAINNET }}
-          SOLIS_NODE_URL_MAINNET: ${{ secrets.SOLIS_NODE_URL_MAINNET }}
-          STARKNET_ADMIN_ADDRESS_MAINNET: ${{ secrets.STARKNET_ADMIN_ADDRESS_MAINNET }}
-          STARKNET_ADMIN_PRIVATE_KEY_MAINNET: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_MAINNET }}
-          STARKNET_ADMIN_PUBLIC_KEY_MAINNET: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_MAINNET }}
-          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_MAINNET }}
-          SOLIS_ADMIN_ADDRESS_MAINNET: ${{ secrets.SOLIS_ADMIN_ADDRESS_MAINNET }}
-          SOLIS_ADMIN_PRIVATE_KEY_MAINNET: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_MAINNET }}
-          SOLIS_ADMIN_PUBLIC_KEY_MAINNET: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_MAINNET }}
+          STARKNET_NODE_URL_SEPOLIA: ${{ secrets.STARKNET_NODE_URL_SEPOLIA }}
+          SOLIS_NODE_URL_SEPOLIA: ${{ secrets.SOLIS_NODE_URL_SEPOLIA }}
+          STARKNET_ADMIN_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_ADMIN_ADDRESS_SEPOLIA }}
+          STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA }}
+          STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_ADDRESS_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PRIVATE_KEY_SEPOLIA }}
+          STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA: ${{ secrets.STARKNET_SOLIS_ACCOUNT_PUBLIC_KEY_SEPOLIA }}
+          SOLIS_ADMIN_ADDRESS_SEPOLIA: ${{ secrets.SOLIS_ADMIN_ADDRESS_SEPOLIA }}
+          SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA: ${{ secrets.SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA }}
+          SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA: ${{ secrets.SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA }}
           RPC_USER: ${{ secrets.RPC_USER }}
           RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
         run: |
-          pnpm run deploy:solis -- --solis mainnet --starknet mainnet
+          pnpm run deploy:solis -- --solis sepolia --starknet sepolia
 
       - name: Commit and Push Generated contract file
         env:
@@ -136,7 +136,7 @@ jobs:
           git config --global user.name "Solis Bot"
           git add contracts.json
           if ! git diff --cached --quiet; then
-            git commit -m "feat: update contracts.json for mainnet deployment"
+            git commit -m "feat: update contracts.json for sepolia deployment"
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
           else
             echo "No changes to commit"
