@@ -120,6 +120,7 @@ mod orderbook_errors {
     const ORDER_MISSING_RELATED_ORDER: felt252 = 'OB: order missing related order';
     const ORDER_HASH_DOES_NOT_MATCH: felt252 = 'OB: order hash does not match';
     const ORDER_TOKEN_ID_DOES_NOT_MATCH: felt252 = 'OB: token id does not match';
+    const ORDER_TOKEN_ID_IS_MISSING: felt252 = 'OB: token id is missing';
     const ORDER_TOKEN_HASH_DOES_NOT_MATCH: felt252 = 'OB: token hash does not match';
     const ORDER_NOT_AN_OFFER: felt252 = 'OB: order is not an offer';
     const ORDER_NOT_OPEN: felt252 = 'OB: order is not open';
@@ -749,6 +750,8 @@ mod orderbook {
                 assert(auction_order_hash.is_zero(), orderbook_errors::USE_FULFILL_AUCTION);
             }
 
+            assert(fulfill_info.token_id.is_some(), orderbook_errors::ORDER_TOKEN_ID_IS_MISSING);
+
             let current_date = starknet::get_block_timestamp();
             // assert(current_date > order.start_date, orderbook_errors::OFFER_NOT_STARTED);
             assert(order.end_date > current_date, orderbook_errors::ORDER_EXPIRED);
@@ -773,24 +776,23 @@ mod orderbook {
             if order.token_id.is_some() {
                 // remove token from listed tokens
                 self.token_listings.write(order.compute_token_hash(), 0);
-
-                let execute_info = ExecutionInfo {
-                    order_hash: order.compute_order_hash(),
-                    nft_address: order.token_address,
-                    nft_from: fulfill_info.fulfiller,
-                    nft_to: order.offerer,
-                    nft_token_id: order.token_id.unwrap(),
-                    payment_from: order.offerer,
-                    payment_to: fulfill_info.fulfiller,
-                    payment_amount: order.start_amount,
-                    payment_currency_address: order.currency_address,
-                    payment_currency_chain_id: order.currency_chain_id,
-                    listing_broker_address: order.broker_id,
-                    fulfill_broker_address: fulfill_info.fulfill_broker_address
-                };
-                execute_info.serialize(ref buf);
-                starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap();
             }
+            let execute_info = ExecutionInfo {
+                order_hash: order.compute_order_hash(),
+                nft_address: order.token_address,
+                nft_from: fulfill_info.fulfiller,
+                nft_to: order.offerer,
+                nft_token_id: fulfill_info.token_id.unwrap(),
+                payment_from: order.offerer,
+                payment_to: fulfill_info.fulfiller,
+                payment_amount: order.start_amount,
+                payment_currency_address: order.currency_address,
+                payment_currency_chain_id: order.currency_chain_id,
+                listing_broker_address: order.broker_id,
+                fulfill_broker_address: fulfill_info.fulfill_broker_address
+            };
+            execute_info.serialize(ref buf);
+            starknet::send_message_to_l1_syscall('EXE', buf.span()).unwrap();
         }
 
         /// Fulfill listing order
