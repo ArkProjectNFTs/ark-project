@@ -429,7 +429,7 @@ impl Storage for MarketplaceSqlxStorage {
                 .execute(&self.pool)
                 .await?
         } else {
-            let q = "INSERT INTO block (block_timestamp, block_number, block_status, indexer_identifier) VALUES ($1, $2, $3, $4)";
+            let q = "INSERT INTO block (block_timestamp, block_number, block_status, indexer_identifier) VALUES ($1, $2, $3, $4) ON CONFLICT (block_number) DO NOTHING";
 
             sqlx::query(q)
                 .bind(block_timestamp as i64)
