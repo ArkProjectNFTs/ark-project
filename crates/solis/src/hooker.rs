@@ -12,23 +12,21 @@ use katana_primitives::chain::ChainId;
 use katana_primitives::contract::ContractAddress;
 use katana_primitives::transaction::{ExecutableTx, ExecutableTxWithHash, L1HandlerTx};
 use katana_primitives::utils::transaction::compute_l1_message_hash;
+use serde_json::json;
+use serde_json::Value;
 use starknet::accounts::Call;
 use starknet::core::types::BroadcastedInvokeTransaction;
 use starknet::core::types::FieldElement;
 use starknet::macros::selector;
 use starknet::providers::Provider;
-use std::sync::Arc;
 use std::fs::File;
 use std::fs::OpenOptions;
-use std::io::Write;
 use std::io::Read;
-use serde_json::Value;
+use std::io::Write;
 use std::path::Path;
-use serde_json::json;
-
+use std::sync::Arc;
 
 const FILE_PATH_ADDRESSES: &str = "addresses.json";
-
 
 use crate::contracts::orderbook::{OrderV1, RouteType};
 use crate::contracts::starknet_utils::StarknetUtilsReader;
@@ -220,7 +218,8 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
 impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
     SolisHooker<P, EF>
 {
-    fn get_addresses_from_file() -> Result<(FieldElement, FieldElement), Box<dyn std::error::Error>> {
+    fn get_addresses_from_file() -> Result<(FieldElement, FieldElement), Box<dyn std::error::Error>>
+    {
         let mut file = match File::open(FILE_PATH_ADDRESSES) {
             Ok(file) => file,
             Err(_) => return Err("File not found".into()),
@@ -254,7 +253,10 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
             Err(_) => return Err("Failed to parse sn_executor_address".into()),
         };
 
-        println!("Addresses loaded from file: {:?}, {:?}", orderbook_address, sn_executor_address);
+        println!(
+            "Addresses loaded from file: {:?}, {:?}",
+            orderbook_address, sn_executor_address
+        );
         Ok((orderbook_address?, sn_executor_address?))
     }
 
@@ -264,7 +266,9 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
         orderbook_address: FieldElement,
         sn_executor_address: FieldElement,
     ) -> Self {
-        let (orderbook_address, sn_executor_address) = if orderbook_address == FieldElement::ZERO && sn_executor_address == FieldElement::ZERO {
+        let (orderbook_address, sn_executor_address) = if orderbook_address == FieldElement::ZERO
+            && sn_executor_address == FieldElement::ZERO
+        {
             match Self::get_addresses_from_file() {
                 Ok((orderbook, executor)) => (orderbook, executor),
                 Err(e) => {
@@ -369,10 +373,7 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
         self.sn_executor_address = addresses.executor_starknet;
 
         let path = Path::new(FILE_PATH_ADDRESSES);
-        let file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(&path);
+        let file = OpenOptions::new().write(true).create(true).open(&path);
 
         match file {
             Ok(mut file) => {
