@@ -4,8 +4,9 @@ use poseidon::poseidon_hash_span;
 use ark_common::protocol::order_v1::OrderV1;
 
 /// Order types.
-#[derive(Serde, Drop, PartialEq, Copy)]
+#[derive(Serde, Drop, PartialEq, Copy, Debug, starknet::Store)]
 enum OrderType {
+    #[default]
     Listing,
     Auction,
     Offer,
@@ -280,8 +281,9 @@ struct ExecutionValidationInfo {
 
 /// Type of an route, that may be defined from
 /// incoming order.
-#[derive(Serde, Drop, PartialEq, Copy)]
+#[derive(starknet::Store, Serde, Drop, PartialEq, Copy, Debug)]
 enum RouteType {
+    #[default]
     Erc20ToErc721,
     Erc721ToErc20,
 }

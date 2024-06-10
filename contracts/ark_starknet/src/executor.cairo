@@ -1,3 +1,45 @@
+use ark_common::protocol::order_types::OrderTrait;
+use core::serde::Serde;
+
+use starknet::ContractAddress;
+
+use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
+use ark_common::protocol::order_types::OrderType;
+
+
+#[derive(Drop, Copy, Debug, Serde, starknet::Store)]
+struct OrderInfo {
+    order_type: OrderType,
+    // Contract address of the currency used on Starknet for the transfer.
+    currency_address: ContractAddress,
+    // The token contract address.
+    token_address: ContractAddress,
+    // The token id.
+    // TODO: how to store Option<u256> ?
+    token_id: u256,
+    // in wei. --> 10 | 10 | 10 |
+    start_amount: u256,
+    //
+    offerer: ContractAddress,
+}
+
+impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
+    fn into(self: OrderV1) -> OrderInfo {
+        let order_type = self.validate_order_type().expect('Unsupported Order');
+        let token_id = match self.token_id {
+            Option::Some(token_id) => token_id,
+            Option::None => 0,
+        };
+        OrderInfo {
+            order_type,
+            currency_address: self.currency_address,
+            token_address: self.token_address,
+            token_id: token_id,
+            start_amount: self.start_amount,
+            offerer: self.offerer,
+        }
+    }
+}
 //! Executor contract on Starknet for arkchain.
 //!
 //! This contract is responsible of executing the orders
@@ -11,16 +53,22 @@
 
 #[starknet::contract]
 mod executor {
+    use core::zeroable::Zeroable;
+    use core::traits::Into;
     use starknet::contract_address_to_felt252;
+    use starknet::get_contract_address;
+
     use core::debug::PrintTrait;
     use core::traits::TryInto;
     use core::box::BoxTrait;
+    use core::option::OptionTrait;
+
     use starknet::{ContractAddress, ClassHash};
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
-        FulfillOrderInfo, CancelOrderInfo, CancelInfo,
+        FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
     };
-    use ark_common::protocol::order_v1::OrderV1;
+    use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
@@ -29,6 +77,8 @@ mod executor {
         erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
         erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
     };
+
+    use super::{OrderInfo, OrderV1IntoOrderInfo};
 
     #[storage]
     struct Storage {
@@ -40,6 +90,8 @@ mod executor {
         chain_id: felt252,
         broker_fees: LegacyMap<ContractAddress, u256>,
         ark_fees: u256,
+        // order hash -> OrderInfo
+        orders: LegacyMap<felt252, OrderInfo>,
     }
 
     #[event]
@@ -181,6 +233,11 @@ mod executor {
             };
 
             let vinfo = CreateOrderInfo { order: order.clone() };
+            _verify_create_order(@self, @vinfo);
+
+            let order_hash = order.compute_order_hash();
+            let order_info = order.into();
+            self.orders.write(order_hash, order_info);
 
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
@@ -199,6 +256,8 @@ mod executor {
             };
 
             let vinfo = FulfillOrderInfo { fulfillInfo: fulfillInfo.clone() };
+
+            _verify_fulfill_order(@self, @vinfo);
 
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
@@ -309,5 +368,242 @@ mod executor {
                 Result::Err(revert_reason) => panic(revert_reason),
             };
         }
+    }
+
+    fn _verify_create_order(self: @ContractState, vinfo: @CreateOrderInfo) {
+        let order = vinfo.order;
+        let caller = starknet::get_caller_address();
+        assert!(caller == *(order.offerer), "Caller is not the offerer");
+
+        match order.route {
+            RouteType::Erc20ToErc721 => {
+                assert!(
+                    _check_erc20_amount(
+                        order.currency_address, *(order.start_amount), order.offerer
+                    ),
+                    "Offerer does not own enough ERC20 tokens"
+                );
+            },
+            RouteType::Erc721ToErc20 => {
+                match order.token_id {
+                    Option::Some(token_id) => {
+                        assert!(
+                            _check_erc721_owner(order.token_address, *token_id, order.offerer),
+                            "Offerer does not own the specified ERC721 token"
+                        );
+                    },
+                    Option::None => panic!("Invalid token id"),
+                }
+            },
+        }
+    }
+
+    fn _verify_fulfill_order(self: @ContractState, vinfo: @FulfillOrderInfo) {
+        let fulfill_info = vinfo.fulfillInfo;
+        let caller = starknet::get_caller_address();
+        let fulfiller = *(fulfill_info.fulfiller);
+        assert!(caller == fulfiller, "Caller is not the fulfiller");
+
+        let order_info = self.orders.read(*fulfill_info.order_hash);
+        // default value for ContractAddress is zero
+        // and an order's currency address shall not be zero
+        if order_info.currency_address.is_zero() {
+            panic!("Order not found");
+        }
+        assert!(order_info.offerer != fulfiller, "Orderer and fulfiller must be different");
+
+        let contract_address = get_contract_address();
+        match order_info.order_type {
+            OrderType::Listing => {
+                _verify_fulfill_listing_order(order_info, fulfill_info, contract_address);
+            },
+            OrderType::Offer => {
+                _verify_fulfill_offer_order(order_info, fulfill_info, contract_address);
+            },
+            OrderType::Auction => {
+                _verify_fulfill_auction_order(order_info, fulfill_info, contract_address);
+            },
+            OrderType::CollectionOffer => {
+                _verify_fulfill_collection_offer_order(order_info, fulfill_info, contract_address);
+            }
+        }
+    }
+
+    fn _verify_fulfill_listing_order(
+        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+    ) {
+        let fulfiller = *(fulfill_info.fulfiller);
+        assert!(
+            _check_erc20_amount(@order_info.currency_address, order_info.start_amount, @fulfiller),
+            "Fulfiller does not own enough ERC20 tokens"
+        );
+        assert!(
+            _check_erc20_allowance(
+                @order_info.currency_address,
+                order_info.start_amount,
+                @fulfiller,
+                @get_contract_address()
+            ),
+            "Fulfiller's allowance of executor is not enough"
+        );
+        assert!(
+            _check_erc721_owner(
+                @order_info.token_address, order_info.token_id, @order_info.offerer
+            ),
+            "Offerer does not own the specified ERC721 token"
+        );
+        assert!(
+            _check_erc721_approval(
+                @order_info.token_address,
+                order_info.token_id,
+                @order_info.offerer,
+                @contract_address,
+            ),
+            "Executor not approved by offerer"
+        );
+    }
+
+    fn _verify_fulfill_offer_order(
+        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+    ) {
+        let fulfiller = *(fulfill_info.fulfiller);
+        let token_id = match *(fulfill_info.token_id) {
+            Option::None => panic!("Token id must be set for a collection offer"),
+            Option::Some(token_id) => token_id,
+        };
+        assert!(order_info.token_id == token_id, "Fulfiller token id is different than order");
+
+        assert!(
+            _check_erc721_owner(@order_info.token_address, token_id, @fulfiller),
+            "Fulfiller does not own the specified ERC721 token"
+        );
+        assert!(
+            _check_erc721_approval(
+                @order_info.token_address, token_id, @fulfiller, @contract_address,
+            ),
+            "Executor not approved by fulfiller"
+        );
+        assert!(
+            _check_erc20_amount(
+                @order_info.currency_address, order_info.start_amount, @order_info.offerer
+            ),
+            "Offerer does not own enough ERC20 tokens"
+        );
+        assert!(
+            _check_erc20_allowance(
+                @order_info.currency_address,
+                order_info.start_amount,
+                @order_info.offerer,
+                @contract_address,
+            ),
+            "Offerer's allowance of executor is not enough"
+        )
+    }
+
+    fn _verify_fulfill_auction_order(
+        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+    ) {
+        let fulfiller = *(fulfill_info.fulfiller);
+
+        assert!(
+            _check_erc20_amount(@order_info.currency_address, order_info.start_amount, @fulfiller),
+            "Fulfiller does not own enough ERC20 tokens"
+        );
+        assert!(
+            _check_erc20_allowance(
+                @order_info.currency_address,
+                order_info.start_amount,
+                @fulfiller,
+                @get_contract_address()
+            ),
+            "Fulfiller's allowance of executor is not enough"
+        );
+        assert!(
+            _check_erc721_owner(
+                @order_info.token_address, order_info.token_id, @order_info.offerer
+            ),
+            "Offerer does not own the specified ERC721 token"
+        );
+        assert!(
+            _check_erc721_approval(
+                @order_info.token_address,
+                order_info.token_id,
+                @order_info.offerer,
+                @contract_address,
+            ),
+            "Executor not approved by offerer"
+        );
+    }
+
+    fn _verify_fulfill_collection_offer_order(
+        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+    ) {
+        let fulfiller = *(fulfill_info.fulfiller);
+        let token_id = match *(fulfill_info.token_id) {
+            Option::None => panic!("Token id must be set for a collection offer"),
+            Option::Some(token_id) => token_id,
+        };
+
+        assert!(
+            _check_erc721_owner(@order_info.token_address, token_id, @fulfiller),
+            "Fulfiller does not own the specified ERC721 token"
+        );
+        assert!(
+            _check_erc721_approval(
+                @order_info.token_address, token_id, @fulfiller, @contract_address,
+            ),
+            "Executor not approved by fulfiller"
+        );
+
+        assert!(
+            _check_erc20_amount(
+                @order_info.currency_address, order_info.start_amount, @order_info.offerer
+            ),
+            "Offerer does not own enough ERC20 tokens"
+        );
+        assert!(
+            _check_erc20_allowance(
+                @order_info.currency_address,
+                order_info.start_amount,
+                @order_info.offerer,
+                @contract_address,
+            ),
+            "Offerer's allowance of executor is not enough"
+        )
+    }
+
+    fn _check_erc20_amount(
+        token_address: @ContractAddress, amount: u256, user: @ContractAddress
+    ) -> bool {
+        let contract = IERC20Dispatcher { contract_address: *token_address };
+        amount <= contract.balance_of(*user)
+    }
+
+    fn _check_erc20_allowance(
+        token_address: @ContractAddress,
+        amount: u256,
+        owner: @ContractAddress,
+        spender: @ContractAddress
+    ) -> bool {
+        let contract = IERC20Dispatcher { contract_address: *token_address };
+        amount <= contract.allowance(*owner, *spender)
+    }
+
+    fn _check_erc721_owner(
+        token_address: @ContractAddress, token_id: u256, user: @ContractAddress
+    ) -> bool {
+        let contract = IERC721Dispatcher { contract_address: *token_address };
+        contract.owner_of(token_id) == *user
+    }
+
+    fn _check_erc721_approval(
+        token_address: @ContractAddress,
+        token_id: u256,
+        owner: @ContractAddress,
+        operator: @ContractAddress
+    ) -> bool {
+        let contract = IERC721Dispatcher { contract_address: *token_address };
+        contract.is_approved_for_all(*owner, *operator)
+            || (contract.get_approved(token_id) == *operator)
     }
 }
