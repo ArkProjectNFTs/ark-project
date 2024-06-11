@@ -33,7 +33,7 @@ impl<S: Storage> BlockManager<S> {
         &self,
         block_number: u64,
         block_timestamp: u64,
-        indexer_version: &str,
+        indexer_version: Option<String>,
         do_force: bool,
     ) -> Result<bool, StorageError> {
         if do_force {
@@ -47,24 +47,32 @@ impl<S: Storage> BlockManager<S> {
                 Err(_) => Ok(true),
             }
         } else {
+            if indexer_version.is_none() {
+                return Ok(true);
+            }
+
             match self.storage.get_block_info(block_number).await {
                 Ok(info) => {
-                    trace!("Block {} already indexed", block_number);
-                    debug!(
-                        "Checking indexation version: current={:?}, last={:?}",
-                        indexer_version, info.indexer_version
-                    );
+                    if let Some(iv) = info.indexer_version {
+                        trace!("Block {} already indexed", block_number);
+                        debug!(
+                            "Checking indexation version: current={:?}, last={:?}",
+                            indexer_version, iv
+                        );
 
-                    // Compare the indexer versions.
-                    match compare(indexer_version, info.indexer_version) {
-                        // if the current version is greater, clean the block & return false we index the block
-                        Ok(Cmp::Gt) => self
-                            .storage
-                            .clean_block(block_timestamp, Some(block_number))
-                            .await
-                            .map(|_| false),
-                        // if the current version is equal, return false we skip the block indexation
-                        _ => Ok(true),
+                        // Compare the indexer versions.
+                        match compare(indexer_version.unwrap(), iv) {
+                            // if the current version is greater, clean the block & return false we index the block
+                            Ok(Cmp::Gt) => self
+                                .storage
+                                .clean_block(block_timestamp, Some(block_number))
+                                .await
+                                .map(|_| false),
+                            // if the current version is equal, return false we skip the block indexation
+                            _ => Ok(true),
+                        }
+                    } else {
+                        Ok(true)
                     }
                 }
                 Err(StorageError::NotFound(_s)) => Ok(false),
@@ -77,8 +85,8 @@ impl<S: Storage> BlockManager<S> {
         &self,
         block_number: u64,
         block_timestamp: u64,
-        indexer_version: &str,
-        indexer_identifier: &str,
+        indexer_version: Option<String>,
+        indexer_identifier: Option<String>,
         block_status: BlockIndexingStatus,
     ) -> Result<(), StorageError> {
         self.storage
@@ -86,8 +94,8 @@ impl<S: Storage> BlockManager<S> {
                 block_number,
                 block_timestamp,
                 BlockInfo {
-                    indexer_version: indexer_version.to_string(),
-                    indexer_identifier: indexer_identifier.to_string(),
+                    indexer_version,
+                    indexer_identifier,
                     block_status,
                     block_number,
                 },
@@ -173,7 +181,7 @@ mod tests {
 
         // Should return false as the block is not found.
         let result = manager
-            .should_skip_indexing(block_number, 0, "v0.0.2", false)
+            .should_skip_indexing(block_number, 0, Some("v0.0.2".to_string()), false)
             .await
             .unwrap();
 
@@ -196,8 +204,8 @@ mod tests {
                 Box::pin(futures::future::ready(if block_number == 1 {
                     Ok(BlockInfo {
                         block_status: BlockIndexingStatus::Processing,
-                        indexer_version: String::from("v0.0.1"),
-                        indexer_identifier: String::from("TASK#123"),
+                        indexer_version: Some(String::from("v0.0.1")),
+                        indexer_identifier: Some(String::from("TASK#123")),
                         block_number: 123,
                     })
                 } else {
@@ -216,14 +224,14 @@ mod tests {
 
         // New version, should return true for indexing.
         let result = manager
-            .should_skip_indexing(1, 0, "v0.0.2", false)
+            .should_skip_indexing(1, 0, Some("v0.0.2".to_string()), false)
             .await
             .unwrap();
         assert!(result == false);
 
         // Force but same version, should return true for indexing.
         let result = manager
-            .should_skip_indexing(2, 0, "v0.0.1", true)
+            .should_skip_indexing(2, 0, Some("v0.0.1".to_string()), true)
             .await
             .unwrap();
         assert!(result == false);

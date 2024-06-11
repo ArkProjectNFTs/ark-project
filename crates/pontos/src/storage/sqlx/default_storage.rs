@@ -112,8 +112,8 @@ impl DefaultSqlxStorage {
         }
     }
 
-    async fn get_block_by_timestamp(&self, ts: u64) -> Result<Option<BlockData>, StorageError> {
-        let q = "SELECT * FROM block WHERE block_timestamp = $1";
+    async fn get_block_by_timestamp(&self, ts: u64) -> Result<Option<Block>, StorageError> {
+        let q = "SELECT block_number, block_status, block_timestamp, indexer_identifier FROM block WHERE block_timestamp = $1";
 
         match sqlx::query(q)
             .bind(ts.to_string())
@@ -124,7 +124,7 @@ impl DefaultSqlxStorage {
                 if rows.is_empty() {
                     Ok(None)
                 } else {
-                    Ok(Some(BlockData::from_row(&rows[0])?))
+                    Ok(Some(Block::from_row(&rows[0])?))
                 }
             }
             Err(e) => Err(StorageError::DatabaseError(e.to_string())),
@@ -315,24 +315,21 @@ impl Storage for DefaultSqlxStorage {
         }
 
         let _r = if (self.get_block_by_timestamp(block_timestamp).await?).is_some() {
-            let q = "UPDATE block SET block_timestamp = $1, block_number = $2, status = $3, indexer_version = $4, indexer_identifier = $5 WHERE block_timestamp = $6";
+            let q = "UPDATE block SET block_number = $1, block_status = $2, indexer_identifier = $3 WHERE block_timestamp = $4";
             sqlx::query(q)
-                .bind(block_timestamp.to_string())
                 .bind(block_number.to_string())
                 .bind(info.status.to_string())
-                .bind(info.indexer_version.clone())
                 .bind(info.indexer_identifier.clone())
                 .bind(block_timestamp.to_string())
                 .execute(&self.pool)
                 .await?
         } else {
-            let q = "INSERT INTO block (block_timestamp, block_number, status, indexer_version, indexer_identifier) VALUES (?, ?, ?, ?, ?)";
+            let q = "INSERT INTO block (block_timestamp, block_number, block_status, indexer_identifier) VALUES ($1, $2, $3, $4) ON CONFLICT (block_number) DO NOTHING";
 
             sqlx::query(q)
                 .bind(block_timestamp.to_string())
                 .bind(block_number.to_string())
                 .bind(info.status.to_string())
-                .bind(info.indexer_version.clone())
                 .bind(info.indexer_identifier.clone())
                 .execute(&self.pool)
                 .await?

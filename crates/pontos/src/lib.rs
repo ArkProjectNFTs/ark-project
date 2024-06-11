@@ -66,8 +66,8 @@ impl fmt::Display for IndexerError {
 impl std::error::Error for IndexerError {}
 
 pub struct PontosConfig {
-    pub indexer_version: String,
-    pub indexer_identifier: String,
+    pub indexer_version: Option<String>,
+    pub indexer_identifier: Option<String>,
 }
 
 pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {
@@ -285,7 +285,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 .should_skip_indexing(
                     current_u64,
                     block_ts,
-                    &self.config.indexer_version,
+                    self.config.indexer_version.clone(),
                     do_force,
                 )
                 .await?
@@ -304,8 +304,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 .set_block_info(
                     current_u64,
                     block_ts,
-                    &self.config.indexer_version,
-                    &self.config.indexer_identifier,
+                    self.config.indexer_version.clone(),
+                    self.config.indexer_identifier.clone(),
                     BlockIndexingStatus::Processing,
                 )
                 .await?;
@@ -340,8 +340,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
                 .set_block_info(
                     current_u64,
                     block_ts,
-                    &self.config.indexer_version,
-                    &self.config.indexer_identifier,
+                    self.config.indexer_version.clone(),
+                    self.config.indexer_identifier.clone(),
                     BlockIndexingStatus::Terminated,
                 )
                 .await?;
