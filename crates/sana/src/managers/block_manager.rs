@@ -181,7 +181,7 @@ mod tests {
 
         // Should return false as the block is not found.
         let result = manager
-            .should_skip_indexing(block_number, 0, "v0.0.2", false)
+            .should_skip_indexing(block_number, 0, Some("v0.0.2".to_string()), false)
             .await
             .unwrap();
 
@@ -224,14 +224,14 @@ mod tests {
 
         // New version, should return true for indexing.
         let result = manager
-            .should_skip_indexing(1, 0, "v0.0.2", false)
+            .should_skip_indexing(1, 0, Some("v0.0.2".to_string()), false)
             .await
             .unwrap();
         assert!(result == false);
 
         // Force but same version, should return true for indexing.
         let result = manager
-            .should_skip_indexing(2, 0, "v0.0.1", true)
+            .should_skip_indexing(2, 0, Some("v0.0.1".to_string()), true)
             .await
             .unwrap();
         assert!(result == false);
