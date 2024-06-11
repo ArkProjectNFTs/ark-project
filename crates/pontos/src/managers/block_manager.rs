@@ -49,34 +49,34 @@ impl<S: Storage> BlockManager<S> {
         } else {
             if indexer_version.is_none() {
                 return Ok(true);
-            } else {
-                match self.storage.get_block_info(block_number).await {
-                    Ok(info) => {
-                        if let Some(iv) = info.indexer_version {
-                            trace!("Block {} already indexed", block_number);
-                            debug!(
-                                "Checking indexation version: current={:?}, last={:?}",
-                                indexer_version, iv
-                            );
+            }
 
-                            // Compare the indexer versions.
-                            match compare(indexer_version.unwrap(), iv) {
-                                // if the current version is greater, clean the block & return false we index the block
-                                Ok(Cmp::Gt) => self
-                                    .storage
-                                    .clean_block(block_timestamp, Some(block_number))
-                                    .await
-                                    .map(|_| false),
-                                // if the current version is equal, return false we skip the block indexation
-                                _ => Ok(true),
-                            }
-                        } else {
-                            Ok(true)
+            match self.storage.get_block_info(block_number).await {
+                Ok(info) => {
+                    if let Some(iv) = info.indexer_version {
+                        trace!("Block {} already indexed", block_number);
+                        debug!(
+                            "Checking indexation version: current={:?}, last={:?}",
+                            indexer_version, iv
+                        );
+
+                        // Compare the indexer versions.
+                        match compare(indexer_version.unwrap(), iv) {
+                            // if the current version is greater, clean the block & return false we index the block
+                            Ok(Cmp::Gt) => self
+                                .storage
+                                .clean_block(block_timestamp, Some(block_number))
+                                .await
+                                .map(|_| false),
+                            // if the current version is equal, return false we skip the block indexation
+                            _ => Ok(true),
                         }
+                    } else {
+                        Ok(true)
                     }
-                    Err(StorageError::NotFound(_s)) => Ok(false),
-                    Err(e) => Err(e),
                 }
+                Err(StorageError::NotFound(_s)) => Ok(false),
+                Err(e) => Err(e),
             }
         }
     }
