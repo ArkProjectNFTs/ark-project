@@ -129,7 +129,7 @@ impl MarketplaceSqlxStorage {
     async fn get_block_by_timestamp(&self, ts: u64) -> Result<Option<BlockData>, StorageError> {
         let q = "SELECT b.block_number, b.block_status, b.block_timestamp, b.indexer_identifier, i.indexer_version
         FROM block as b
-        INNER JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
+        LEFT JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
         WHERE block_timestamp = $1";
 
         match sqlx::query(q).bind(ts as i64).fetch_all(&self.pool).await {
@@ -379,7 +379,7 @@ impl Storage for MarketplaceSqlxStorage {
         }
 
         let q = "INSERT INTO contract (contract_address, chain_id, contract_type, updated_timestamp, contract_symbol, contract_image, contract_name, metadata_ok, deployed_timestamp)
-                VALUES ($1, $2, $3, EXTRACT(epoch FROM now())::bigint, $4, $5, $6, $7, $8) ON CONFLICT (contract_address) DO NOTHING";
+                VALUES ($1, $2, $3, EXTRACT(epoch FROM now())::bigint, $4, $5, $6, $7, $8) ON CONFLICT (contract_address, chain_id) DO NOTHING";
 
         let _r = sqlx::query(q)
             .bind(info.contract_address.clone())
@@ -402,8 +402,6 @@ impl Storage for MarketplaceSqlxStorage {
         block_timestamp: u64,
         info: BlockInfo,
     ) -> Result<(), StorageError> {
-        trace!("Setting block info {:?} for block #{}", info, block_number);
-
         let exists = sqlx::query("SELECT 1 FROM indexer WHERE indexer_identifier = $1")
             .bind(info.indexer_identifier.clone())
             .fetch_optional(&self.pool)
@@ -420,12 +418,16 @@ impl Storage for MarketplaceSqlxStorage {
         }
 
         let _r = if (self.get_block_by_timestamp(block_timestamp).await?).is_some() {
-            let q = "UPDATE block SET block_timestamp = $1, block_number = $2, block_status = $3, indexer_identifier = $4 WHERE block_timestamp = $1";
+            let q = r#"
+                UPDATE block 
+                SET block_number = $1, block_status = $2, indexer_identifier = $3 
+                WHERE block_timestamp = $4;
+            "#;
             sqlx::query(q)
-                .bind(block_timestamp as i64)
                 .bind(block_number as i64)
                 .bind(info.block_status.to_string())
                 .bind(info.indexer_identifier.clone())
+                .bind(block_timestamp as i64)
                 .execute(&self.pool)
                 .await?
         } else {
@@ -446,7 +448,10 @@ impl Storage for MarketplaceSqlxStorage {
     async fn get_block_info(&self, block_number: u64) -> Result<BlockInfo, StorageError> {
         trace!("Getting block info for block #{}", block_number);
 
-        let q = "SELECT b.block_timestamp, b.indexer_identifier, b.block_status, b.block_number, i.indexer_version FROM block as b INNER JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier WHERE b.block_number = $1";
+        let q = "SELECT b.block_number, b.block_status, b.block_timestamp, b.indexer_identifier, i.indexer_version
+        FROM block as b
+        LEFT JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
+        WHERE block_number = $1";
 
         match sqlx::query(q)
             .bind(block_number as i64)
