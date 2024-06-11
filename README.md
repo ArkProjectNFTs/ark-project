@@ -14,6 +14,7 @@ ArkProject is a liquidity layer for digital assets, uniting markets, empowering 
 ## Documentation and Community
 
 - **Documentation**: [docs.arkproject.dev](https://docs.arkproject.dev/)
+- **Changelog**: [https://changelog.arkproject.dev](https://changelog.arkproject.dev/changelog)
 - **Telegram**: [Join our Telegram group](https://t.me/arkprojectnfts)
 - **X**: [Follow us on X](https://x.com/arkprojectnfts)
 
