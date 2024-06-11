@@ -13,10 +13,21 @@
 
 ArkProject is a liquidity layer for digital assets, uniting markets, empowering creators, and bridging the gap to mass adoption. Built on top of Starknet, ArkProject is designed to provide a fully decentralized and trustless orderbook on-chain.
 
-## Documentation and Community
+---
 
-- **Documentation**: [docs.arkproject.dev](https://docs.arkproject.dev/)
+## Documentation
+
+- **For documentation and guides, visit**: [docs.arkproject.dev](https://docs.arkproject.dev/)
 - **Changelog**: [https://changelog.arkproject.dev](https://changelog.arkproject.dev/changelog)
+
+## Community
+
+For help, discussion about best practices, or any other conversation that would benefit from being searchable:
+
+[Discuss ArkProject on GitHub](https://github.com/ArkProjectNFTs/ark-project/discussions)
+
+For casual chat with others using the ArkProject:
+
 - **Telegram**: [Join our Telegram group](https://t.me/arkprojectnfts)
 - **X**: [Follow us on X](https://x.com/arkprojectnfts)
 
