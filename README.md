@@ -1,129 +1,113 @@
-# arkproject in 🦀🦀
+# ArkProject: A Global Infrastructure for Digital Assets Exchange
 
-## Overview
+Welcome to the ArkProject repository! Here, we are building a comprehensive liquidity layer for digital assets, uniting markets, empowering creators, and bridging the gap to mass adoption. Built on top of Starknet, ArkProject is designed to provide a fully decentralized and trustless orderbook on-chain.
 
-Rust libraries and binaries related to the ArkProject.
+## Project Overview
 
-This library aims at providing the building block
-and functionalities for the Starknet community in
-order to work with NFTs.
+### Key Components
 
-## Architecture
+- **Layer 3 on Starknet**: Utilizes a modified version of the Dojo Katana sequencer.
+- **Starknet Smart Contracts**: Handle order creation, fulfillment, and marketplace registration.
+- **Orderbook Smart Contracts**: Enable a decentralized and trustless orderbook on Layer 3.
+- **Crosschain Messaging**: Facilitates interaction between Starknet contracts and orderbooks.
 
-The indexation of NFTs is at the moment a challenge on Starknet
-due to the standards being in progress.
+### Features
 
-To propose a flexible and evolutive approach, `arkproject` provides
-several crates to modularize the process.
+- **Marketplace Fees & Creator Fees**: Handled via our protocol, supporting EIP-2981 for royalties.
+- **Open Source Marketplaces**: Allows anyone to create their own marketplaces for collections or private projects.
+- **SDKs**: Vanilla JS library and React hook library for seamless integration into front ends.
 
-### - Pontos
+## Repository Structure
 
-Pontos is an NFT indexer library for Starknet.
-By defining a core process, Pontos is highly extensible using it's two traits:
+### Contracts
 
-`StorageManager`: This trait exposes all the functions that Pontos uses to
-access/store data required for the indexation.
+- [Common Contracts](https://github.com/ArkProjectNFTs/ark-project/tree/main/contracts/ark_common)
+- [Orderbook Contracts](https://github.com/ArkProjectNFTs/ark-project/tree/main/contracts/ark_orderbook)
+- [Starknet Contracts](https://github.com/ArkProjectNFTs/ark-project/tree/main/contracts/ark_starknet)
+- [Test Tokens Contracts](https://github.com/ArkProjectNFTs/ark-project/tree/main/contracts/ark_tokens)
 
-`EventHandler`: During the core process of Pontos, some events may be
-interesting to be handled by external code, without modifying the core
-code of Pontos. You can impl this trait to react on each event emitted
-by Pontos.
+### Libraries
 
-### - [Metadata](/crates/ark-metadata/README.md)
+- [ArkProject Core Vanilla JS Library](https://github.com/ArkProjectNFTs/ark-project/tree/main/packages/core)
+- [ArkProject React Library](https://github.com/ArkProjectNFTs/ark-project/tree/main/packages/react)
 
-Even if the metadata are not at the core of the indexing process, they are
-vital for any NFT ecosystem.
-The `metadata` crate aims at providing basic functions to work with normalized metadata.
-In the current design, this crate totally separated from the indexation loop as it can be massively optimized elsewhere.
+### Example App
 
-### - Starknet
+- [Mini Marketplace Demo](https://github.com/ArkProjectNFTs/ark-project/tree/main/apps)
 
-To work, the indexer must interact with Starknet. The `starknet` crate provides
-an epurated Starknet provider interface required by indexers and utilitary functions
-related to Starknet types.
+### Deployment Tools
 
-### - Solis
+- [Deploy Package](https://github.com/ArkProjectNFTs/ark-project/tree/main/packages/deployer)
 
-Solis is the sequencer that powers the Arkchain, where the decentralized orderbook lives.
-For now Solis is not decentralizable, but it will be.
+### Crates for NFT Indexation
 
-Solis is for now based on Katana from [Dojo](https://www.dojoengine.org/en/) project.
-To run Solis, `cargo run -p solis`.
+- [Pontos (NFT Indexer Library)](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/pontos)
+- [Metadata](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/ark-metadata)
+- [Starknet Utilities](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/ark-starknet)
+- [Diri (Indexer Library for Solis and Arkchain)](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/diri)
 
-### - Diri
+### Layer 3 Sequencer
 
-Diri is an indexer library for Solis and the Arkchain smart contracts.
-As Pontos, Diri defines a core logic that can be configured using the two following traits:
+- [Solis](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/solis)
 
-`StorageManager`: This trait exposes all the functions that Diri uses to
-access/store data required for the indexation.
+## Quick Start for Local Development
 
-`EventHandler`: During the core process of Diri, some events may be
-interesting to be handled by external code, without modifying the core
-code of Diri. You can impl this trait to react on each event emitted
-by Diri.
+1. **Install the latest Dojo version** (currently 0.0.7-alpha.1)
 
-## Features
+   - Follow the guide: https://book.dojoengine.org/getting-started
 
-- Indexer logic for Starknet NFT
-- Indexer for arkchain orderbook
-- Generic storage for indexer data with SQL-lite
-- NFT Metadata manager interface
+2. **Install Packages**
 
-## Quick start for local development
+   ```bash
+   pnpm install
+   ```
 
-> Install the latest dojo version on your machine (currently 0.0.7-alpha.1)
-> https://book.dojoengine.org/getting-started
+3. **Build Contracts**
 
-Install packages
+   ```bash
+   cd contracts && scarb build --workspaces
+   ```
 
-```bash
-pnpm install
-```
+4. **Launch Katana**
 
-Build contracts
+   ```bash
+   katana
+   ```
 
-```
-cd contracts && scarb build --workspaces
-```
+5. **Deploy Starknet Contracts**
 
-Launch a katana (0.6.0)
+   ```bash
+   pnpm deploy:starknet:local
+   ```
 
-```bash
-katana
-```
+6. **Launch Solis**
 
-Deploy starknet contracts
+   ```bash
+   cargo run -p solis -- --chain-id 0x736f6c6973 --messaging crates/solis/messaging.local.json --disable-fee -p 7777
+   ```
 
-```bash
-pnpm deploy:starknet:local
-```
+7. **Deploy Solis Contracts**
 
-Launch solis
+   ```bash
+   pnpm deploy:solis:local
+   ```
 
-```bash
-cargo run -p solis -- --chain-id 0x736f6c6973 --messaging crates/solis/messaging.local.json --disable-fee -p 7777
-```
+8. **Build the Core and React SDKs**
 
-Deploy solis contracts
+   ```bash
+   pnpm build --filter=core --filter=react
+   ```
 
-```bash
-pnpm deploy:solis:local
-```
-
-Build the core and react SDKs
-
-```bash
-pnpm build --filter=core --filter=react
-```
-
-Try some core SDK examples
-
-```bash
-cd examples/core
-npx bun fulfillListing.ts
-```
+9. **Try Core SDK Examples**
+   ```bash
+   cd examples/core
+   npx bun fulfillListing.ts
+   ```
 
 ## License
 
-Ark Project is licensed under the [Apache License](./LICENCE).
+ArkProject is licensed under the [Apache License](./LICENCE).
+
+---
+
+We hope you find ArkProject useful and encourage you to contribute to its development. If you have any questions, please open an issue or submit a pull request. Happy coding!
