@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://www.arkproject.dev">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/ArkProjectNFTs/ark-project/assets/243668/d2fe57d6-9ce9-4245-8496-b5ed157831ab">
+      <img alt="wagmi logo" src="https://github.com/ArkProjectNFTs/ark-project/assets/243668/d2fe57d6-9ce9-4245-8496-b5ed157831ab" width="auto" height="60">
+    </picture>
+  </a>
+</p>
+
 # ArkProject: A Global Infrastructure for Digital Assets Exchange
 
 Welcome to the ArkProject repository! Here, we are building a comprehensive liquidity layer for digital assets, uniting markets, empowering creators, and bridging the gap to mass adoption. Built on top of Starknet, ArkProject is designed to provide a fully decentralized and trustless orderbook on-chain.
