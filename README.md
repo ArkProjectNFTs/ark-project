@@ -15,7 +15,21 @@ ArkProject is a liquidity layer for digital assets, uniting markets, empowering 
 
 - **Documentation**: [docs.arkproject.dev](https://docs.arkproject.dev/)
 - **Telegram**: [Join our Telegram group](https://t.me/arkprojectnfts)
-- **X (formerly Twitter)**: [Follow us on X](https://x.com/arkprojectnfts)
+- **X**: [Follow us on X](https://x.com/arkprojectnfts)
+
+### What You Can Build with ArkProject
+
+ArkProject offers a flexible and powerful infrastructure for building various decentralized applications and services in the digital assets space. Here are some examples of what you can build:
+
+- **Decentralized Marketplaces**: Create fully decentralized and trustless marketplaces for digital assets, enabling direct user-to-user trading without intermediaries.
+- **Custom Marketplaces for Collections**: Develop specialized marketplaces tailored to specific NFT collections, providing creators with dedicated platforms.
+- **Generic Marketplaces**: Build general-purpose marketplaces that support a wide range of digital assets.
+- **Private Marketplaces**: Establish private marketplaces for exclusive projects or communities.
+- **Integration with Existing Platforms**: Enhance existing marketplaces, wallets, and decentralized apps with ArkProject's decentralized trading capabilities.
+- **Market Makers**: Develop scripts to automate buying and selling activities, providing liquidity and market efficiency.
+- **Mobile Apps**: Create mobile applications that leverage ArkProject’s infrastructure for on-the-go access to decentralized marketplaces and trading functionalities.
+
+These capabilities allow developers to leverage ArkProject for a wide variety of use cases in the growing digital assets ecosystem.
 
 ## Project Overview
 
