@@ -7,7 +7,9 @@
   </a>
 </p>
 
-# ArkProject: A Global Infrastructure for Digital Assets Exchange
+<p align="center">
+  Infrastructure for Digital Assets Exchange
+<p>
 
 ArkProject is a liquidity layer for digital assets, uniting markets, empowering creators, and bridging the gap to mass adoption. Built on top of Starknet, ArkProject is designed to provide a fully decentralized and trustless orderbook on-chain.
 
