@@ -9,7 +9,13 @@
 
 # ArkProject: A Global Infrastructure for Digital Assets Exchange
 
-Welcome to the ArkProject repository! Here, we are building a comprehensive liquidity layer for digital assets, uniting markets, empowering creators, and bridging the gap to mass adoption. Built on top of Starknet, ArkProject is designed to provide a fully decentralized and trustless orderbook on-chain.
+ArkProject is a liquidity layer for digital assets, uniting markets, empowering creators, and bridging the gap to mass adoption. Built on top of Starknet, ArkProject is designed to provide a fully decentralized and trustless orderbook on-chain.
+
+## Documentation and Community
+
+- **Documentation**: [docs.arkproject.dev](https://docs.arkproject.dev/)
+- **Telegram**: [Join our Telegram group](https://t.me/arkprojectnfts)
+- **X (formerly Twitter)**: [Follow us on X](https://x.com/arkprojectnfts)
 
 ## Project Overview
 
@@ -25,6 +31,22 @@ Welcome to the ArkProject repository! Here, we are building a comprehensive liqu
 - **Marketplace Fees & Creator Fees**: Handled via our protocol, supporting EIP-2981 for royalties.
 - **Open Source Marketplaces**: Allows anyone to create their own marketplaces for collections or private projects.
 - **SDKs**: Vanilla JS library and React hook library for seamless integration into front ends.
+
+### Networks
+
+#### Mainnet
+
+- **Sequencer Address (Arkchain)**: [https://production.solis.arkproject.dev/](https://production.solis.arkproject.dev/)
+- **Starknet Executor Contract**: [https://starkscan.co/contract/0x007b42945bc47001db92fe1b9739d753925263f2f1036c2ae1f87536c916ee6a](https://starkscan.co/contract/0x007b42945bc47001db92fe1b9739d753925263f2f1036c2ae1f87536c916ee6a)
+
+#### Sepolia
+
+- **Sequencer Address (Arkchain)**: [https://sepolia.solis.arkproject.dev/](https://sepolia.solis.arkproject.dev/)
+- **Starknet Executor Contract**: [https://sepolia.starkscan.co/contract/0x00b86ab357c15c12fb78f9b0a19fa974c730fcbab96f17881827dde871665f0b](https://sepolia.starkscan.co/contract/0x00b86ab357c15c12fb78f9b0a19fa974c730fcbab96f17881827dde871665f0b)
+
+### Demo
+
+Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](https://ark-project-sdk-demo.vercel.app/)
 
 ## Repository Structure
 
@@ -108,6 +130,7 @@ Welcome to the ArkProject repository! Here, we are building a comprehensive liqu
    ```
 
 9. **Try Core SDK Examples**
+
    ```bash
    cd examples/core
    npx bun fulfillListing.ts
