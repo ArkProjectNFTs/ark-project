@@ -55,13 +55,14 @@ const createAuction = async (
     throw new Error("Invalid end date");
   }
 
-  if (BigInt(baseOrder.startAmount) === BigInt(0)) {
+  if (baseOrder.startAmount === BigInt(0)) {
     throw new Error("Invalid start amount");
   }
 
   if (baseOrder.endAmount < baseOrder.startAmount) {
     throw new Error("Invalid end amount");
   }
+
   const order: OrderV1 = {
     route: RouteType.Erc721ToErc20,
     currencyAddress: config.starknetCurrencyContract,

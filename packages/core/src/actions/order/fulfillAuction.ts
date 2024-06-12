@@ -9,7 +9,7 @@ import {
 
 import { Config } from "../../createConfig.js";
 import {
-  ApproveErc20Info,
+  ApproveErc721Info,
   FulfillAuctionInfo,
   FulfillInfo
 } from "../../types/index.js";
@@ -25,7 +25,7 @@ import {
 interface FulfillAuctionParameters {
   starknetAccount: AccountInterface;
   fulfillAuctionInfo: FulfillAuctionInfo;
-  approveInfo: ApproveErc20Info;
+  approveInfo: ApproveErc721Info;
 }
 
 const fulfillAuction = async (
@@ -53,11 +53,11 @@ const fulfillAuction = async (
 
   const result = await starknetAccount.execute([
     {
-      contractAddress: approveInfo.currencyAddress as string,
+      contractAddress: approveInfo.tokenAddress as string,
       entrypoint: "approve",
       calldata: CallData.compile({
-        spender: config.starknetExecutorContract,
-        amount: cairo.uint256(approveInfo.amount)
+        to: config.starknetExecutorContract,
+        token_id: cairo.uint256(approveInfo.tokenId)
       })
     },
     {
