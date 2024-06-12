@@ -410,7 +410,10 @@ mod executor {
         if order_info.currency_address.is_zero() {
             panic!("Order not found");
         }
-        assert!(order_info.offerer != fulfiller, "Orderer and fulfiller must be different");
+
+        if order_info.order_type != OrderType::Auction {
+            assert!(order_info.offerer != fulfiller, "Orderer and fulfiller must be different");
+        }
 
         let contract_address = get_contract_address();
         match order_info.order_type {
