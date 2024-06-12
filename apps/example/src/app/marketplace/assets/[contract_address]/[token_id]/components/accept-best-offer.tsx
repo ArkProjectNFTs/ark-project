@@ -8,7 +8,7 @@ import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
 import { formatEther } from "viem";
 
-import { useFulfillOffer } from "@ark-project/react";
+import { useFulfillAuction, useFulfillOffer } from "@ark-project/react";
 
 import { Token } from "@/types/schema";
 import { areAddressesEqual } from "@/lib/utils";
@@ -18,13 +18,17 @@ import { Separator } from "@/components/ui/separator";
 interface BuyOrderProps {
   token: Token;
   tokenMarketData: TokenMarketData;
+  isAuction: boolean;
 }
 
 const AcceptBestOffer: React.FC<BuyOrderProps> = ({
   token,
-  tokenMarketData
+  tokenMarketData,
+  isAuction
 }) => {
   const { address, account } = useAccount();
+  const { fulfill: fulfillAuction, status: statusAuction } =
+    useFulfillAuction();
   const { fulfillOffer, status } = useFulfillOffer();
   const isOwner = areAddressesEqual(token.owner, address);
 
@@ -34,21 +38,31 @@ const AcceptBestOffer: React.FC<BuyOrderProps> = ({
 
   const handleClick = async () => {
     try {
-      await fulfillOffer({
-        starknetAccount: account,
-        brokerId: env.NEXT_PUBLIC_BROKER_ID,
-        tokenAddress: token.contract_address,
-        tokenId: token.token_id,
-        orderHash: tokenMarketData.top_bid.order_hash
-      });
+      if (isAuction) {
+        await fulfillAuction({
+          starknetAccount: account,
+          brokerId: env.NEXT_PUBLIC_BROKER_ID,
+          tokenAddress: token.contract_address,
+          tokenId: token.token_id,
+          orderHash: tokenMarketData.top_bid.order_hash,
+          relatedOrderHash: tokenMarketData.order_hash
+        });
+      } else {
+        await fulfillOffer({
+          starknetAccount: account,
+          brokerId: env.NEXT_PUBLIC_BROKER_ID,
+          tokenAddress: token.contract_address,
+          tokenId: token.token_id,
+          orderHash: tokenMarketData.top_bid.order_hash
+        });
+      }
     } catch (error) {
       console.log("Error accepting offer");
     }
   };
 
   const isDisabled = status === "loading";
-  const isLoading = ["loading", "fulfilling"].includes(status);
-  const amount = formatEther(tokenMarketData?.top_bid?.amount);
+  const isLoading = status === "loading" || statusAuction === "loading";
 
   return (
     <Button onClick={handleClick} disabled={isDisabled}>
@@ -58,7 +72,7 @@ const AcceptBestOffer: React.FC<BuyOrderProps> = ({
         <>
           Accept offer
           <Separator orientation="vertical" className="mx-4" />
-          {amount} ETH
+          {formatEther(BigInt(tokenMarketData?.top_bid?.amount))} ETH
         </>
       )}
     </Button>

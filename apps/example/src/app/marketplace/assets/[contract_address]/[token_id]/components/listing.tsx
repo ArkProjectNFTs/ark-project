@@ -24,17 +24,17 @@ interface ListingProps {
 }
 
 const Listing: React.FC<ListingProps> = ({ token, tokenMarketData }) => {
-  const orderType = useOrderType({
-    orderHash: BigInt(tokenMarketData.order_hash)
+  const { type } = useOrderType({
+    orderHash: tokenMarketData?.order_hash
   });
   const price = formatEther(BigInt(tokenMarketData.start_amount));
   const reservePrice = formatEther(BigInt(tokenMarketData.end_amount));
 
-  if (!orderType) {
+  if (!type) {
     return null;
   }
 
-  const isAuction = orderType === "AUCTION";
+  const isAuction = type === "AUCTION";
 
   return (
     <div className="w-full border rounded">
@@ -59,7 +59,11 @@ const Listing: React.FC<ListingProps> = ({ token, tokenMarketData }) => {
           <>
             <div className="text-muted-foreground">Current Price</div>
             <div className="text-3xl font-bold mb-4">{price} ETH</div>
-            <AcceptOffer token={token} tokenMarketData={tokenMarketData} />
+            <AcceptOffer
+              token={token}
+              tokenMarketData={tokenMarketData}
+              isAuction={isAuction}
+            />
             <div className="flex space-x-2">
               <FulfillListing token={token} tokenMarketData={tokenMarketData} />
               <CreateOffer token={token} tokenMarketData={tokenMarketData} />

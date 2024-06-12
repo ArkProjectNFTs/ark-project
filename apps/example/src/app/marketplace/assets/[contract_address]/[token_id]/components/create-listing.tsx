@@ -77,8 +77,6 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
     }
   });
 
-  console.log("errors", form.formState.errors);
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("onSubmit");
 

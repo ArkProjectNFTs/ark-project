@@ -1,5 +1,6 @@
 import React from "react";
 
+import { TokenMarketData } from "@/types";
 import { useAccount } from "@starknet-react/core";
 import { useQuery } from "react-query";
 import { formatEther, hexToNumber } from "viem";
@@ -25,9 +26,15 @@ import CancelOffer from "./cancel-offer";
 
 interface TokenOffersProps {
   token: Token;
+  tokenMarketData: TokenMarketData;
+  isAuction: boolean;
 }
 
-const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
+const TokenOffers: React.FC<TokenOffersProps> = ({
+  token,
+  tokenMarketData,
+  isAuction
+}) => {
   const {
     data: tokenOffers,
     error: tokenOffersError,
@@ -87,7 +94,7 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
                   {tokenOffers.offers.map((offer: any) => (
                     <TableRow className="group" key={offer.order_hash}>
                       <TableCell>
-                        {`${formatEther(offer.offer_amount)} ETH`}
+                        {`${formatEther(BigInt(offer.offer_amount))} ETH`}
                       </TableCell>
                       <TableCell>{hexToNumber(offer.offer_quantity)}</TableCell>
                       <TableCell>
@@ -101,7 +108,12 @@ const TokenOffers: React.FC<TokenOffersProps> = ({ token }) => {
                       <TableCell className="flex justify-end">
                         <>
                           {isOwner && (
-                            <AcceptOffer token={token} offer={offer} />
+                            <AcceptOffer
+                              token={token}
+                              tokenMarketData={tokenMarketData}
+                              offer={offer}
+                              isAuction={isAuction}
+                            />
                           )}
                           {areAddressesEqual(offer.offer_maker, address) && (
                             <CancelOffer token={token} offer={offer} />

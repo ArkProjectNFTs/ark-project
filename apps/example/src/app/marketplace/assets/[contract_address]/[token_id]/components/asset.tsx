@@ -9,6 +9,8 @@ import { RiTwitterXLine } from "react-icons/ri";
 import { SiOpensea } from "react-icons/si";
 import { useQuery } from "react-query";
 
+import { useOrderType } from "@ark-project/react";
+
 import { areAddressesEqual } from "@/lib/utils";
 
 import { getTokenData, getTokenMarketData } from "../data";
@@ -51,6 +53,10 @@ const Asset: React.FC<AssetProps> = ({ params }) => {
     }
   );
 
+  const { type } = useOrderType({
+    orderHash: tokenMarketData?.order_hash
+  });
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -61,6 +67,7 @@ const Asset: React.FC<AssetProps> = ({ params }) => {
 
   const token = tokenData.result;
   const isOwner = areAddressesEqual(token.owner, address);
+  const isAuction = type === "AUCTION";
 
   return (
     <div className="grid grid-rows-3 grid-cols-3 gap-6 min-h-[700px]">
@@ -123,7 +130,11 @@ const Asset: React.FC<AssetProps> = ({ params }) => {
             )}
           </>
         )}
-        <TokenOffers token={token} />
+        <TokenOffers
+          token={token}
+          tokenMarketData={tokenMarketData}
+          isAuction={isAuction}
+        />
         <Activity params={params} />
       </div>
     </div>
