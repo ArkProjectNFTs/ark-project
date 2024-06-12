@@ -17,7 +17,7 @@ use snf::{ContractClass, ContractClassTrait, CheatTarget};
 
 use super::super::common::setup::{setup, setup_order};
 
-fn create_order_erc20_to_erc721(
+fn create_offer_order(
     executor_address: ContractAddress,
     erc20_address: ContractAddress,
     nft_address: ContractAddress,
@@ -32,6 +32,28 @@ fn create_order_erc20_to_erc721(
     order.offerer = offerer;
     order.start_amount = start_amount;
     order.token_id = Option::Some(token_id);
+
+    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    snf::stop_prank(CheatTarget::One(executor_address));
+
+    (order.compute_order_hash(), offerer, start_amount)
+}
+
+fn create_collection_offer_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    nft_address: ContractAddress,
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let mut order = setup_order(erc20_address, nft_address);
+    order.offerer = offerer;
+    order.start_amount = start_amount;
+    order.token_id = Option::None;
 
     snf::start_prank(CheatTarget::One(executor_address), offerer);
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -109,7 +131,7 @@ fn create_fulfill_info(
 }
 
 #[test]
-fn test_fulfill_order_erc20_to_erc721_ok() {
+fn test_fulfill_offer_order_ok() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
 
@@ -117,7 +139,7 @@ fn test_fulfill_order_erc20_to_erc721_ok() {
         .get_current_token_id()
         .into();
     Erc721Dispatcher { contract_address: nft_address }.mint(fulfiller, 'base_uri');
-    let (order_hash, offerer, start_amount) = create_order_erc20_to_erc721(
+    let (order_hash, offerer, start_amount) = create_offer_order(
         executor_address, erc20_address, nft_address, token_id
     );
 
@@ -201,7 +223,7 @@ fn test_fulfill_listing_order_fulfiller_not_enough_erc20_token() {
 
 #[test]
 #[should_panic(expected: ("Fulfiller does not own the specified ERC721 token",))]
-fn test_fulfill_order_fulfiller_not_owner() {
+fn test_fulfill_offer_order_fulfiller_not_owner() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
     let other = contract_address_const::<'other'>();
@@ -210,7 +232,7 @@ fn test_fulfill_order_fulfiller_not_owner() {
         .get_current_token_id()
         .into();
     Erc721Dispatcher { contract_address: nft_address }.mint(other, 'base_uri');
-    let (order_hash, _, _) = create_order_erc20_to_erc721(
+    let (order_hash, _, _) = create_offer_order(
         executor_address, erc20_address, nft_address, token_id
     );
 
@@ -236,7 +258,7 @@ fn test_fulfill_order_not_found() {
 
 #[test]
 #[should_panic(expected: ("Offerer's allowance of executor is not enough",))]
-fn test_fulfill_order_offerer_not_enough_allowance() {
+fn test_fulfill_offer_order_offerer_not_enough_allowance() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
 
@@ -244,7 +266,7 @@ fn test_fulfill_order_offerer_not_enough_allowance() {
         .get_current_token_id()
         .into();
     Erc721Dispatcher { contract_address: nft_address }.mint(fulfiller, 'base_uri');
-    let (order_hash, offerer, start_amount) = create_order_erc20_to_erc721(
+    let (order_hash, offerer, start_amount) = create_offer_order(
         executor_address, erc20_address, nft_address, token_id
     );
 
@@ -321,7 +343,7 @@ fn test_fulfill_listing_order_offerer_not_approved() {
 
 #[test]
 #[should_panic(expected: ("Executor not approved by fulfiller",))]
-fn test_fulfill_order_fulfiller_not_approved() {
+fn test_fulfill_offer_order_fulfiller_not_approved() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
 
@@ -329,7 +351,7 @@ fn test_fulfill_order_fulfiller_not_approved() {
         .get_current_token_id()
         .into();
     Erc721Dispatcher { contract_address: nft_address }.mint(fulfiller, 'base_uri');
-    let (order_hash, offerer, start_amount) = create_order_erc20_to_erc721(
+    let (order_hash, offerer, start_amount) = create_offer_order(
         executor_address, erc20_address, nft_address, token_id
     );
 
@@ -347,13 +369,13 @@ fn test_fulfill_order_fulfiller_not_approved() {
 
 #[test]
 #[should_panic(expected: ("Offerer and fulfiller must be different",))]
-fn test_fulfill_order_fulfiller_same_as_offerer_erc20_to_erc721() {
+fn test_fulfill_offer_order_fulfiller_same_as_offerer_erc20_to_erc721() {
     let (executor_address, erc20_address, nft_address) = setup();
 
     let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
         .get_current_token_id()
         .into();
-    let (order_hash, offerer, start_amount) = create_order_erc20_to_erc721(
+    let (order_hash, offerer, start_amount) = create_offer_order(
         executor_address, erc20_address, nft_address, token_id
     );
     let fulfiller = offerer;
