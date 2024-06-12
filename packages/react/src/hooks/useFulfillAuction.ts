@@ -7,7 +7,7 @@ import { AccountInterface } from "starknet";
 import { fulfillAuction } from "@ark-project/core";
 import { FulfillAuctionInfo } from "@ark-project/core/src/types";
 
-import { Status, StepStatus } from "../types";
+import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
 type ApproveERC20Parameters = {
