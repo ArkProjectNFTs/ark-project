@@ -7,12 +7,12 @@ use starknet::{ContractAddress};
 fn test_add_broker() {
     let mut state = executor::contract_state_for_testing();
 
-    let fee = 100;
+    let fee = (10_u256, 100_u256);
 
     let broker_address = test_address();
 
     // Call the add_broker method.
-    executor::ExecutorImpl::set_broker_fees(ref state, broker_address, fee);
+    executor::ExecutorImpl::set_broker_fees(ref state, broker_address, 10_u256, 100_u256);
 
     let result = executor::ExecutorImpl::get_broker_fees(ref state, broker_address);
 
@@ -23,9 +23,9 @@ fn test_add_broker() {
 fn test_set_ark_fees() {
     let mut state = executor::contract_state_for_testing();
 
-    let fee = 100;
+    let fee = (10_u256, 100_u256);
 
-    executor::ExecutorImpl::set_ark_fees(ref state, fee);
+    executor::ExecutorImpl::set_ark_fees(ref state, 10_u256, 100_u256);
 
     let result = executor::ExecutorImpl::get_ark_fees(ref state);
 

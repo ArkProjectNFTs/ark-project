@@ -122,12 +122,16 @@ fn test_execute_order_check_fee() {
     );
 
     snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
-    executor.set_broker_fees(fulfill_broker, 10);
-    executor.set_broker_fees(listing_broker, 5);
+    executor.set_broker_fees(fulfill_broker, 10, 100);
+    executor.set_broker_fees(listing_broker, 5, 100);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    assert_eq!(executor.get_broker_fees(fulfill_broker), 10, "Fulfill broker fees not updated");
-    assert_eq!(executor.get_broker_fees(listing_broker), 5, "Listing broker fees not updated");
+    assert_eq!(
+        executor.get_broker_fees(fulfill_broker), (10, 100), "Fulfill broker fees not updated"
+    );
+    assert_eq!(
+        executor.get_broker_fees(listing_broker), (5, 100), "Listing broker fees not updated"
+    );
 
     let fulfill_broker_balance = erc20.balance_of(fulfill_broker);
     let listing_broker_balance = erc20.balance_of(listing_broker);
