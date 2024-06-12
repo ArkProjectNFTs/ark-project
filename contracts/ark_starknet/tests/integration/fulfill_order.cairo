@@ -346,8 +346,8 @@ fn test_fulfill_order_fulfiller_not_approved() {
 
 
 #[test]
-#[should_panic(expected: ("Orderer and fulfiller must be different",))]
-fn test_fulfill_order_fulfiller_same_as_orderer_erc20_to_erc721() {
+#[should_panic(expected: ("Offerer and fulfiller must be different",))]
+fn test_fulfill_order_fulfiller_same_as_offerer_erc20_to_erc721() {
     let (executor_address, erc20_address, nft_address) = setup();
 
     let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
@@ -376,8 +376,8 @@ fn test_fulfill_order_fulfiller_same_as_orderer_erc20_to_erc721() {
 }
 
 #[test]
-#[should_panic(expected: ("Orderer and fulfiller must be different",))]
-fn test_fulfill_listing_order_fulfiller_same_as_orderer_erc721_to_erc20() {
+#[should_panic(expected: ("Offerer and fulfiller must be different",))]
+fn test_fulfill_listing_order_fulfiller_same_as_offerer_erc721_to_erc20() {
     let (executor_address, erc20_address, nft_address) = setup();
     let start_amount = 10_000_000;
 
@@ -405,7 +405,7 @@ fn test_fulfill_listing_order_fulfiller_same_as_orderer_erc721_to_erc20() {
 }
 
 #[test]
-fn test_fulfill_auction_order_fulfiller_same_as_orderer() {
+fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
     let (executor_address, erc20_address, nft_address) = setup();
     let start_amount = 10_000_000;
     let end_amount = 20_000_000;

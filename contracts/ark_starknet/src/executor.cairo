@@ -412,7 +412,7 @@ mod executor {
         }
 
         if order_info.order_type != OrderType::Auction {
-            assert!(order_info.offerer != fulfiller, "Orderer and fulfiller must be different");
+            assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
         }
 
         let contract_address = get_contract_address();
