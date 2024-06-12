@@ -300,14 +300,14 @@ mod executor {
                 .transfer_from(
                     execution_info.payment_from,
                     execution_info.fulfill_broker_address,
-                    execution_info.payment_amount * (fulfill_broker_fees / 100)
+                    (execution_info.payment_amount / 100) * fulfill_broker_fees
                 );
 
             currency_contract
                 .transfer_from(
                     execution_info.payment_from,
                     execution_info.listing_broker_address,
-                    execution_info.payment_amount * (listing_broker_fees / 100)
+                    (execution_info.payment_amount / 100) * listing_broker_fees
                 );
 
             // finally transfer to the seller
