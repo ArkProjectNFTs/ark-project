@@ -39,11 +39,6 @@ function useFulfillAuction() {
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId,
           brokerId: parameters.brokerId
-        },
-        approveInfo: {
-          currencyAddress: (parameters.currencyAddress ||
-            config?.starknetCurrencyContract) as string,
-          amount: BigInt(parameters.startAmount)
         }
       });
 
