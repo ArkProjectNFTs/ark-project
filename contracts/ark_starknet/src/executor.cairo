@@ -86,10 +86,10 @@ mod executor {
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
-        arkchain_fee: u256,
+        arkchain_fee: (u256, u256),
         chain_id: felt252,
-        broker_fees: LegacyMap<ContractAddress, u256>,
-        ark_fees: u256,
+        broker_fees: LegacyMap<ContractAddress, (u256, u256)>,
+        ark_fees: (u256, u256),
         // order hash -> OrderInfo
         orders: LegacyMap<felt252, OrderInfo>,
     }
@@ -121,27 +121,38 @@ mod executor {
         self.eth_contract_address.write(eth_contract_address);
         self.messaging_address.write(messaging_address);
         self.chain_id.write(chain_id);
+        self.ark_fees.write((0, 1));
     }
 
     #[abi(embed_v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
-        fn set_broker_fees(ref self: ContractState, broker_address: ContractAddress, fee: u256) {
-            self.broker_fees.write(broker_address, fee);
+        fn set_broker_fees(
+            ref self: ContractState,
+            broker_address: ContractAddress,
+            fee_numerator: u256,
+            fee_denominator: u256
+        ) {
+            assert(fee_denominator > fee_numerator, 'Fee ratio shall be less than 1');
+            self.broker_fees.write(broker_address, (fee_numerator, fee_denominator));
         }
 
-        fn get_broker_fees(ref self: ContractState, broker_address: ContractAddress) -> u256 {
+        fn get_broker_fees(
+            ref self: ContractState, broker_address: ContractAddress
+        ) -> (u256, u256) {
             self.broker_fees.read(broker_address)
         }
 
-        fn set_ark_fees(ref self: ContractState, fee: u256) {
+        fn set_ark_fees(ref self: ContractState, fee_numerator: u256, fee_denominator: u256) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            self.ark_fees.write(fee);
+            assert(fee_denominator > fee_numerator, 'Fee ratio shall be less than 1');
+
+            self.ark_fees.write((fee_numerator, fee_denominator));
         }
 
-        fn get_ark_fees(ref self: ContractState) -> u256 {
+        fn get_ark_fees(ref self: ContractState) -> (u256, u256) {
             self.ark_fees.read()
         }
 
@@ -191,13 +202,16 @@ mod executor {
             self.arkchain_orderbook_address.write(orderbook_address);
         }
 
-        fn update_arkchain_fee(ref self: ContractState, arkchain_fee: u256) {
+        fn update_arkchain_fee(
+            ref self: ContractState, fee_numerator: u256, fee_denominator: u256
+        ) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
+            assert(fee_denominator > fee_numerator, 'Fee ratio shall be less than 1');
 
-            self.arkchain_fee.write(arkchain_fee);
+            self.arkchain_fee.write((fee_numerator, fee_denominator));
         }
 
         fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
@@ -287,27 +301,45 @@ mod executor {
                 contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
-            let fulfill_broker_fees = self.broker_fees.read(execution_info.fulfill_broker_address);
-            let listing_broker_fees = self.broker_fees.read(execution_info.listing_broker_address);
-            let ark_fees = self.ark_fees.read();
-            let creator_fees = 1;
+            let (fulfill_broker_fees_num, fulfill_broker_fees_den) = self
+                .broker_fees
+                .read(execution_info.fulfill_broker_address);
+            let (listing_broker_fees_num, listing_broker_fees_den) = self
+                .broker_fees
+                .read(execution_info.listing_broker_address);
+            let (ark_fees_num, ark_fees_den) = self.ark_fees.read();
+            let creator_fees = (1_u256, 100_u256);
+
+            let fulfill_broker_fees_amount = _compute_fees_amount(
+                execution_info.payment_amount, fulfill_broker_fees_num, fulfill_broker_fees_den
+            );
+            let listing_broker_fees_amount = _compute_fees_amount(
+                execution_info.payment_amount, listing_broker_fees_num, listing_broker_fees_den
+            );
+            let creator_fees_amount = 0;
+            let ark_fees_amount = _compute_fees_amount(
+                execution_info.payment_amount, ark_fees_num, ark_fees_den
+            );
 
             let seller_amount = execution_info.payment_amount
-                * (100 - fulfill_broker_fees - listing_broker_fees - creator_fees - ark_fees)
-                / 100;
+                - (fulfill_broker_fees_amount
+                    + listing_broker_fees_amount
+                    + creator_fees_amount
+                    + ark_fees_amount);
+
             // split the fees
             currency_contract
                 .transfer_from(
                     execution_info.payment_from,
                     execution_info.fulfill_broker_address,
-                    (execution_info.payment_amount / 100) * fulfill_broker_fees
+                    fulfill_broker_fees_amount,
                 );
 
             currency_contract
                 .transfer_from(
                     execution_info.payment_from,
                     execution_info.listing_broker_address,
-                    (execution_info.payment_amount / 100) * listing_broker_fees
+                    listing_broker_fees_amount
                 );
 
             // finally transfer to the seller
@@ -632,5 +664,13 @@ mod executor {
         let contract = IERC721Dispatcher { contract_address: *token_address };
         contract.is_approved_for_all(*owner, *operator)
             || (contract.get_approved(token_id) == *operator)
+    }
+
+    fn _fee_is_valid(numerator: u256, denominator: u256) -> bool {
+        denominator != 0 && numerator < denominator
+    }
+
+    fn _compute_fees_amount(amount: u256, fees_numerator: u256, fees_denominator: u256) -> u256 {
+        (amount / fees_denominator) * fees_numerator
     }
 }
