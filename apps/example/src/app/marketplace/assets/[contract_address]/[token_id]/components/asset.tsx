@@ -53,7 +53,7 @@ const Asset: React.FC<AssetProps> = ({ params }) => {
     }
   );
 
-  const { type } = useOrderType({
+  const type = useOrderType({
     orderHash: tokenMarketData?.order_hash
   });
 

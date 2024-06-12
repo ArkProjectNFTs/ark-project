@@ -24,9 +24,10 @@ interface ListingProps {
 }
 
 const Listing: React.FC<ListingProps> = ({ token, tokenMarketData }) => {
-  const { type } = useOrderType({
-    orderHash: tokenMarketData?.order_hash
+  const type = useOrderType({
+    orderHash: BigInt(tokenMarketData?.order_hash)
   });
+
   const price = formatEther(BigInt(tokenMarketData.start_amount));
   const reservePrice = formatEther(BigInt(tokenMarketData.end_amount));
 
