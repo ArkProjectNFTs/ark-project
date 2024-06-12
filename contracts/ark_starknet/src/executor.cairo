@@ -418,22 +418,27 @@ mod executor {
         let contract_address = get_contract_address();
         match order_info.order_type {
             OrderType::Listing => {
-                _verify_fulfill_listing_order(order_info, fulfill_info, contract_address);
+                _verify_fulfill_listing_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::Offer => {
-                _verify_fulfill_offer_order(order_info, fulfill_info, contract_address);
+                _verify_fulfill_offer_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::Auction => {
-                _verify_fulfill_auction_order(order_info, fulfill_info, contract_address);
+                _verify_fulfill_auction_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::CollectionOffer => {
-                _verify_fulfill_collection_offer_order(order_info, fulfill_info, contract_address);
+                _verify_fulfill_collection_offer_order(
+                    self, order_info, fulfill_info, contract_address
+                );
             }
         }
     }
 
     fn _verify_fulfill_listing_order(
-        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+        self: @ContractState,
+        order_info: OrderInfo,
+        fulfill_info: @FulfillInfo,
+        contract_address: ContractAddress
     ) {
         let fulfiller = *(fulfill_info.fulfiller);
         assert!(
@@ -467,7 +472,10 @@ mod executor {
     }
 
     fn _verify_fulfill_offer_order(
-        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+        self: @ContractState,
+        order_info: OrderInfo,
+        fulfill_info: @FulfillInfo,
+        contract_address: ContractAddress
     ) {
         let fulfiller = *(fulfill_info.fulfiller);
         let token_id = match *(fulfill_info.token_id) {
@@ -504,22 +512,35 @@ mod executor {
     }
 
     fn _verify_fulfill_auction_order(
-        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+        self: @ContractState,
+        order_info: OrderInfo,
+        fulfill_info: @FulfillInfo,
+        contract_address: ContractAddress
     ) {
-        let fulfiller = *(fulfill_info.fulfiller);
+        let related_order_info = match *(fulfill_info.related_order_hash) {
+            Option::None => panic!("Fulfill auction order require a related order"),
+            Option::Some(related_order_hash) => self.orders.read(related_order_hash),
+        };
+        assert!(
+            @order_info.currency_address == @related_order_info.currency_address,
+            "Order and related order use different currency"
+        );
+        let buyer = related_order_info.offerer;
 
         assert!(
-            _check_erc20_amount(@order_info.currency_address, order_info.start_amount, @fulfiller),
-            "Fulfiller does not own enough ERC20 tokens"
+            _check_erc20_amount(
+                @related_order_info.currency_address, related_order_info.start_amount, @buyer
+            ),
+            "Buyer does not own enough ERC20 tokens"
         );
         assert!(
             _check_erc20_allowance(
-                @order_info.currency_address,
-                order_info.start_amount,
-                @fulfiller,
+                @related_order_info.currency_address,
+                related_order_info.start_amount,
+                @buyer,
                 @get_contract_address()
             ),
-            "Fulfiller's allowance of executor is not enough"
+            "Buyer's allowance of executor is not enough"
         );
         assert!(
             _check_erc721_owner(
@@ -539,7 +560,10 @@ mod executor {
     }
 
     fn _verify_fulfill_collection_offer_order(
-        order_info: OrderInfo, fulfill_info: @FulfillInfo, contract_address: ContractAddress
+        self: @ContractState,
+        order_info: OrderInfo,
+        fulfill_info: @FulfillInfo,
+        contract_address: ContractAddress
     ) {
         let fulfiller = *(fulfill_info.fulfiller);
         let token_id = match *(fulfill_info.token_id) {

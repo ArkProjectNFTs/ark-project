@@ -41,9 +41,7 @@ fn create_offer_order(
 }
 
 fn create_collection_offer_order(
-    executor_address: ContractAddress,
-    erc20_address: ContractAddress,
-    nft_address: ContractAddress,
+    executor_address: ContractAddress, erc20_address: ContractAddress, nft_address: ContractAddress,
 ) -> (felt252, ContractAddress, u256) {
     let offerer = contract_address_const::<'offerer'>();
     let start_amount = 10_000_000;
@@ -369,7 +367,7 @@ fn test_fulfill_offer_order_fulfiller_not_approved() {
 
 #[test]
 #[should_panic(expected: ("Offerer and fulfiller must be different",))]
-fn test_fulfill_offer_order_fulfiller_same_as_offerer_erc20_to_erc721() {
+fn test_fulfill_offer_order_fulfiller_same_as_offerer() {
     let (executor_address, erc20_address, nft_address) = setup();
 
     let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
@@ -399,7 +397,7 @@ fn test_fulfill_offer_order_fulfiller_same_as_offerer_erc20_to_erc721() {
 
 #[test]
 #[should_panic(expected: ("Offerer and fulfiller must be different",))]
-fn test_fulfill_listing_order_fulfiller_same_as_offerer_erc721_to_erc20() {
+fn test_fulfill_listing_order_fulfiller_same_as_offerer() {
     let (executor_address, erc20_address, nft_address) = setup();
     let start_amount = 10_000_000;
 
@@ -427,26 +425,77 @@ fn test_fulfill_listing_order_fulfiller_same_as_offerer_erc721_to_erc20() {
 }
 
 #[test]
-fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
+fn test_fulfill_auction_order_ok() {
     let (executor_address, erc20_address, nft_address) = setup();
     let start_amount = 10_000_000;
     let end_amount = 20_000_000;
+    let buyer = contract_address_const::<'buyer'>();
 
     let (order_hash, offerer, token_id) = create_auction_order(
         executor_address, erc20_address, nft_address, start_amount, end_amount
     );
-    let fulfiller = offerer;
+    let fulfiller = contract_address_const::<'fulfiller'>();
 
-    IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfiller, start_amount);
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
+
+    let mut buyer_order = setup_order(erc20_address, nft_address);
+    buyer_order.offerer = buyer;
+    buyer_order.start_amount = start_amount;
+    buyer_order.token_id = Option::Some(token_id);
+
+    snf::start_prank(CheatTarget::One(executor_address), buyer);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
+    snf::stop_prank(CheatTarget::One(executor_address));
 
     snf::start_prank(CheatTarget::One(nft_address), offerer);
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
     snf::stop_prank(CheatTarget::One(nft_address));
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let mut fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
 
-    snf::start_prank(CheatTarget::One(erc20_address), fulfiller);
+    snf::start_prank(CheatTarget::One(erc20_address), buyer);
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+    snf::stop_prank(CheatTarget::One(erc20_address));
+
+    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}
+
+#[test]
+fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let start_amount = 10_000_000;
+    let end_amount = 20_000_000;
+    let buyer = contract_address_const::<'buyer'>();
+
+    let (order_hash, offerer, token_id) = create_auction_order(
+        executor_address, erc20_address, nft_address, start_amount, end_amount
+    );
+    let fulfiller = offerer;
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
+
+    let mut buyer_order = setup_order(erc20_address, nft_address);
+    buyer_order.offerer = buyer;
+    buyer_order.start_amount = start_amount;
+    buyer_order.token_id = Option::Some(token_id);
+
+    snf::start_prank(CheatTarget::One(executor_address), buyer);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
+    snf::stop_prank(CheatTarget::One(executor_address));
+
+    snf::start_prank(CheatTarget::One(nft_address), offerer);
+    IERC721Dispatcher { contract_address: nft_address }
+        .set_approval_for_all(executor_address, true);
+    snf::stop_prank(CheatTarget::One(nft_address));
+
+    let mut fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
+
+    snf::start_prank(CheatTarget::One(erc20_address), buyer);
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
     snf::stop_prank(CheatTarget::One(erc20_address));
 
