@@ -3,11 +3,13 @@ import { stark } from "starknet";
 import { fetchOrCreateAccount } from "../src/actions/account/account.js";
 import { fulfillAuction } from "../src/actions/order/fulfillAuction.js";
 import { createAuction, createOffer } from "../src/actions/order/index.js";
-import { getOrderStatus } from "../src/actions/read/index.js";
+import { getOrderStatus, getOrderType } from "../src/actions/read/index.js";
 import { createBroker } from "../src/index.js";
 import { AuctionV1, FulfillAuctionInfo, OfferV1 } from "../src/types/index.js";
 import {
   config,
+  getBalance,
+  mintERC20,
   mintERC721,
   STARKNET_NFT_ADDRESS,
   whitelistBroker
@@ -36,13 +38,17 @@ describe("fulfillAuction", () => {
     await whitelistBroker(config, adminAccount, brokerId);
 
     const tokenId = await mintERC721({ account: sellerAccount });
+    const startAmount = 100000000000000000;
+    await mintERC20({ account: buyerAccount, amount: startAmount });
+
+    const initialSellerBalance = await getBalance({ account: sellerAccount });
 
     const order: AuctionV1 = {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: BigInt(1),
-      endAmount: BigInt(10)
+      startAmount: BigInt(5),
+      endAmount: BigInt(20)
     };
 
     const orderHash = await createAuction(config, {
@@ -60,7 +66,7 @@ describe("fulfillAuction", () => {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: BigInt(1)
+      startAmount: BigInt(1500000000)
     };
 
     const offerOrderHash = await createOffer(config, {
@@ -74,20 +80,18 @@ describe("fulfillAuction", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-    const fulfillAuctionInfo: FulfillAuctionInfo = {
-      orderHash,
-      relatedOrderHash: offerOrderHash,
-      tokenAddress: order.tokenAddress,
-      tokenId,
-      brokerId
-    };
-
     await fulfillAuction(config, {
       starknetAccount: sellerAccount,
-      fulfillAuctionInfo,
+      fulfillAuctionInfo: {
+        orderHash,
+        relatedOrderHash: offerOrderHash,
+        tokenAddress: order.tokenAddress,
+        tokenId,
+        brokerId
+      },
       approveInfo: {
-        currencyAddress: config.starknetCurrencyContract,
-        amount: order.startAmount
+        tokenAddress: offer.tokenAddress,
+        tokenId: offer.tokenId
       }
     });
 
@@ -97,6 +101,11 @@ describe("fulfillAuction", () => {
       orderHash
     });
 
+    const sellerBalance = await getBalance({ account: sellerAccount });
+    const fees = (BigInt(offer.startAmount) * BigInt(1)) / BigInt(100);
+    const amount = BigInt(offer.startAmount) - fees;
+
     expect(orderStatus).toBe("Executed");
+    expect(sellerBalance).toEqual(initialSellerBalance + amount);
   }, 50_000);
 });
