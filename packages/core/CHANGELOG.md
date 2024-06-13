@@ -1,5 +1,18 @@
 # @ark-project/core
 
+## 2.0.0
+
+### Major Changes
+
+- 7c82ab2: Introduce multicall approve & execute order listing/fullfillment, this is a breaking change
+
+### Patch Changes
+
+- 8b260b0: Using stricter types
+- ca5fe10: Update packages readme
+- 26f94ed: react: update react sdk to remove deprecated hooks & approves
+- c001f31: update tests to pass with single tx implementation
+
 ## 1.1.4
 
 ### Patch Changes
