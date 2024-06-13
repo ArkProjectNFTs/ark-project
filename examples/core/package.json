@@ -2,6 +2,7 @@
   "name": "@ark-project/core-examples",
   "module": "index.ts",
   "type": "module",
+  "version": "0.0.1",
   "scripts": {
     "run:example": "bun run",
     "typecheck": "tsc --noEmit"
