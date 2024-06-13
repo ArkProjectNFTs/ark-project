@@ -10,14 +10,9 @@ import { FulfillAuctionInfo } from "@ark-project/core/src/types";
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-type ApproveERC20Parameters = {
+export type FulfillAuctionParameters = FulfillAuctionInfo & {
   starknetAccount: AccountInterface;
-  startAmount: bigint;
-  currencyAddress?: string;
 };
-
-export type FulfillAuctionParameters = FulfillAuctionInfo &
-  ApproveERC20Parameters;
 
 function useFulfillAuction() {
   const [status, setStatus] = useState<Status>("idle");
