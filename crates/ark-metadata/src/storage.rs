@@ -1,4 +1,4 @@
-use crate::types::{StorageError, TokenMetadata};
+use crate::types::{StorageError, TokenMetadata, TokenWithoutMetadata};
 use anyhow::Result;
 use async_trait::async_trait;
 #[cfg(any(test, feature = "mock"))]
@@ -18,7 +18,7 @@ pub trait Storage {
     async fn find_token_ids_without_metadata(
         &self,
         filter: Option<(String, String)>,
-    ) -> Result<Vec<(String, String, String)>, StorageError>;
+    ) -> Result<Vec<TokenWithoutMetadata>, StorageError>;
 
     async fn update_token_metadata_status(
         &self,
