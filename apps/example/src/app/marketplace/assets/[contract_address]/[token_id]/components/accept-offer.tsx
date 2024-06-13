@@ -8,7 +8,6 @@ import { ReloadIcon } from "@radix-ui/react-icons";
 import { useAccount } from "@starknet-react/core";
 
 import { useFulfillAuction, useFulfillOffer } from "@ark-project/react";
-import { FulfillAuctionParameters } from "@ark-project/react/dist/types/src/hooks/useFulfillAuction";
 
 import { Offer, Token } from "@/types/schema";
 import { areAddressesEqual } from "@/lib/utils";
@@ -28,7 +27,6 @@ const AcceptOffer: React.FC<AcceptOfferProps> = ({
   isAuction
 }) => {
   const { address, account } = useAccount();
-
   const { fulfillOffer, status } = useFulfillOffer();
   const { fulfill: fulfillAuction, status: statusAuction } =
     useFulfillAuction();
@@ -40,8 +38,6 @@ const AcceptOffer: React.FC<AcceptOfferProps> = ({
   }
 
   const handleClick = async () => {
-    console.log("isAuction", isAuction, tokenMarketData, offer);
-
     if (isListed && isAuction) {
       await fulfillAuction({
         starknetAccount: account,
@@ -63,11 +59,10 @@ const AcceptOffer: React.FC<AcceptOfferProps> = ({
     }
   };
 
-  const isDisabled = status === "loading";
-  const isLoading = ["loading", "cancelling"].includes(status);
+  const isLoading = status === "loading" || statusAuction === "loading";
 
   return (
-    <Button onClick={handleClick} disabled={isDisabled} size="sm">
+    <Button onClick={handleClick} disabled={isLoading} size="sm">
       {isLoading ? <ReloadIcon className="animate-spin" /> : "Accept"}
     </Button>
   );

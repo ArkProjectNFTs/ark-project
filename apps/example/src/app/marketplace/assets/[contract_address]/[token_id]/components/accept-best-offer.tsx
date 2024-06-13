@@ -61,11 +61,10 @@ const AcceptBestOffer: React.FC<BuyOrderProps> = ({
     }
   };
 
-  const isDisabled = status === "loading";
   const isLoading = status === "loading" || statusAuction === "loading";
 
   return (
-    <Button onClick={handleClick} disabled={isDisabled}>
+    <Button onClick={handleClick} disabled={isLoading}>
       {isLoading ? (
         <ReloadIcon className="animate-spin" />
       ) : (
