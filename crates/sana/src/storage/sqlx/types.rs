@@ -46,6 +46,14 @@ pub struct TokenPrimaryKey {
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
+pub struct TokenWithoutMetadata {
+    pub contract_address: String,
+    pub token_id: String,
+    pub chain_id: String,
+    pub is_verified: String,
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
 pub struct ContractData {
     pub contract_address: String,
     pub updated_timestamp: i64,
