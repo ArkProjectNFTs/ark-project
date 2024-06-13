@@ -6,7 +6,7 @@ use ark_common::protocol::order_v1::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, ExecutionInfo, OrderTrait, RouteType};
 
 
-use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait,};
+use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait, FeesRatio};
 
 use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
@@ -122,15 +122,23 @@ fn test_execute_order_check_fee() {
     );
 
     snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
-    executor.set_broker_fees(fulfill_broker, 10, 100);
-    executor.set_broker_fees(listing_broker, 5, 100);
+    let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
+
+    let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
+
+    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
+    executor.set_broker_fees(listing_broker, listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
-        executor.get_broker_fees(fulfill_broker), (10, 100), "Fulfill broker fees not updated"
+        executor.get_broker_fees(fulfill_broker),
+        fulfill_fees_ratio,
+        "Fulfill broker fees not updated"
     );
     assert_eq!(
-        executor.get_broker_fees(listing_broker), (5, 100), "Listing broker fees not updated"
+        executor.get_broker_fees(listing_broker),
+        listing_fees_ratio,
+        "Listing broker fees not updated"
     );
 
     let fulfill_broker_balance = erc20.balance_of(fulfill_broker);
