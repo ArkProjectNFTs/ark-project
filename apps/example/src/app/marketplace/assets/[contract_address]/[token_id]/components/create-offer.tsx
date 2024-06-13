@@ -94,8 +94,6 @@ export default function CreateOffer({
 
   const isDisabled = form.formState.isSubmitting || status === "loading";
 
-  console.log("CreateOffer tokenMarketData", tokenMarketData);
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>

@@ -78,8 +78,6 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("onSubmit");
-
     if (account === undefined || !token?.contract_address || !token?.token_id) {
       console.error("Account, token address, or token ID is missing");
       return;
