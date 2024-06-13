@@ -137,7 +137,7 @@ mod executor {
         }
 
         fn get_broker_fees(
-            ref self: ContractState, broker_address: ContractAddress
+            self: @ContractState, broker_address: ContractAddress
         ) -> (u256, u256) {
             self.broker_fees.read(broker_address)
         }
@@ -152,15 +152,15 @@ mod executor {
             self.ark_fees.write((fee_numerator, fee_denominator));
         }
 
-        fn get_ark_fees(ref self: ContractState) -> (u256, u256) {
+        fn get_ark_fees(self: @ContractState) -> (u256, u256) {
             self.ark_fees.read()
         }
 
-        fn get_messaging_address(ref self: ContractState) -> ContractAddress {
+        fn get_messaging_address(self: @ContractState) -> ContractAddress {
             self.messaging_address.read()
         }
 
-        fn get_orderbook_address(ref self: ContractState) -> ContractAddress {
+        fn get_orderbook_address(self: @ContractState) -> ContractAddress {
             self.arkchain_orderbook_address.read()
         }
 
