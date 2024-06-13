@@ -2,12 +2,12 @@ import { stark } from "starknet";
 
 import {
   createBroker,
-  createOffer,
+  createCollectionOffer,
   fetchOrCreateAccount,
-  fulfillOffer,
-  getOrderStatus,
-  OfferV1
+  fulfillCollectionOffer,
+  getOrderStatus
 } from "../src/index.js";
+import { CollectionOfferV1 } from "../src/types/index.js";
 import {
   config,
   getBalance,
@@ -17,7 +17,7 @@ import {
   whitelistBroker
 } from "./utils/index.js";
 
-describe("fulfillOffer", () => {
+describe("fulfillCollectionOffer", () => {
   it("default", async function () {
     const adminAccount = await fetchOrCreateAccount(
       config.arkProvider,
@@ -40,19 +40,18 @@ describe("fulfillOffer", () => {
     await whitelistBroker(config, adminAccount, brokerId);
 
     const tokenId = await mintERC721({ account: sellerAccount });
-    const startAmount = 100000000000000000;
+    const startAmount = 1000;
     await mintERC20({ account: buyerAccount, amount: startAmount });
 
-    const initialSellerBalance = await getBalance({ account: sellerAccount });
+    const initialBuyerBalance = await getBalance({ account: buyerAccount });
 
-    const offer: OfferV1 = {
+    const offer: CollectionOfferV1 = {
       brokerId,
       tokenAddress: STARKNET_NFT_ADDRESS,
-      tokenId,
-      startAmount: BigInt(1000000000)
+      startAmount: BigInt(startAmount)
     };
 
-    const orderHash = await createOffer(config, {
+    const orderHash = await createCollectionOffer(config, {
       starknetAccount: buyerAccount,
       offer,
       approveInfo: {
@@ -61,17 +60,19 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await fulfillOffer(config, {
+    await new Promise((resolve) => setTimeout(resolve, 3_000));
+
+    await fulfillCollectionOffer(config, {
       starknetAccount: sellerAccount,
       fulfillOfferInfo: {
         orderHash,
         tokenAddress: offer.tokenAddress,
-        tokenId: offer.tokenId,
+        tokenId: tokenId,
         brokerId
       },
       approveInfo: {
         tokenAddress: offer.tokenAddress,
-        tokenId: offer.tokenId
+        tokenId: tokenId
       }
     });
 
@@ -80,14 +81,12 @@ describe("fulfillOffer", () => {
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash
     });
+
     const sellerBalance = await getBalance({ account: sellerAccount });
-    const fees = (offer.startAmount * BigInt(1)) / BigInt(100);
-    const amount = offer.startAmount - fees;
+    const fees = (BigInt(offer.startAmount) * BigInt(1)) / BigInt(100);
+    const amount = BigInt(offer.startAmount) - fees;
 
     expect(orderStatusFulfilled).toBe("Executed");
-    expect(sellerBalance).toEqual(initialSellerBalance + amount);
+    expect(sellerBalance).toEqual(initialBuyerBalance - amount);
   }, 50_000);
-
-  // it("error: owner of token changed", async function () {
-  // }, 50000);
 });

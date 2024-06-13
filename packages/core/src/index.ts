@@ -15,7 +15,10 @@ export {
   createAuction,
   createListing,
   createOffer,
+  createCollectionOffer,
+  fulfillCollectionOffer,
   cancelOrder,
+  cancelCollectionOffer,
   fulfillAuction,
   fulfillListing,
   fulfillOffer
@@ -35,7 +38,9 @@ export type {
   AuctionV1,
   ListingV1,
   OfferV1,
+  CollectionOfferV1,
   CancelInfo,
+  CancelCollectionOfferInfo,
   RouteType,
   FulfillAuctionInfo
 } from "./types/index.js";
