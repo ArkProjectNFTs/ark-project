@@ -5,6 +5,7 @@ use starknet::ContractAddress;
 
 use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 use ark_common::protocol::order_types::OrderType;
+use ark_starknet::interfaces::FeesRatio;
 
 
 #[derive(Drop, Copy, Debug, Serde, starknet::Store)]
@@ -69,7 +70,7 @@ mod executor {
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-    use ark_starknet::interfaces::{IExecutor, IUpgradable};
+    use ark_starknet::interfaces::{IExecutor, IUpgradable, FeesRatio};
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
     };
@@ -86,10 +87,10 @@ mod executor {
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
-        arkchain_fee: (u256, u256),
+        arkchain_fee: FeesRatio,
         chain_id: felt252,
-        broker_fees: LegacyMap<ContractAddress, (u256, u256)>,
-        ark_fees: (u256, u256),
+        broker_fees: LegacyMap<ContractAddress, FeesRatio>,
+        ark_fees: FeesRatio,
         // order hash -> OrderInfo
         orders: LegacyMap<felt252, OrderInfo>,
     }
@@ -121,38 +122,33 @@ mod executor {
         self.eth_contract_address.write(eth_contract_address);
         self.messaging_address.write(messaging_address);
         self.chain_id.write(chain_id);
-        self.ark_fees.write((0, 1));
+        self.ark_fees.write(FeesRatio { numerator: 0, denominator: 1 });
     }
 
     #[abi(embed_v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
         fn set_broker_fees(
-            ref self: ContractState,
-            broker_address: ContractAddress,
-            fee_numerator: u256,
-            fee_denominator: u256
+            ref self: ContractState, broker_address: ContractAddress, fees_ratio: FeesRatio
         ) {
-            assert(fee_denominator > fee_numerator, 'Fee ratio shall be less than 1');
-            self.broker_fees.write(broker_address, (fee_numerator, fee_denominator));
+            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            self.broker_fees.write(broker_address, fees_ratio);
         }
 
-        fn get_broker_fees(
-            self: @ContractState, broker_address: ContractAddress
-        ) -> (u256, u256) {
+        fn get_broker_fees(self: @ContractState, broker_address: ContractAddress) -> FeesRatio {
             self.broker_fees.read(broker_address)
         }
 
-        fn set_ark_fees(ref self: ContractState, fee_numerator: u256, fee_denominator: u256) {
+        fn set_ark_fees(ref self: ContractState, fees_ratio: FeesRatio) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(fee_denominator > fee_numerator, 'Fee ratio shall be less than 1');
+            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
 
-            self.ark_fees.write((fee_numerator, fee_denominator));
+            self.ark_fees.write(fees_ratio);
         }
 
-        fn get_ark_fees(self: @ContractState) -> (u256, u256) {
+        fn get_ark_fees(self: @ContractState) -> FeesRatio {
             self.ark_fees.read()
         }
 
@@ -202,16 +198,14 @@ mod executor {
             self.arkchain_orderbook_address.write(orderbook_address);
         }
 
-        fn update_arkchain_fee(
-            ref self: ContractState, fee_numerator: u256, fee_denominator: u256
-        ) {
+        fn update_arkchain_fee(ref self: ContractState, fees_ratio: FeesRatio) {
             assert(
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(fee_denominator > fee_numerator, 'Fee ratio shall be less than 1');
+            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
 
-            self.arkchain_fee.write((fee_numerator, fee_denominator));
+            self.arkchain_fee.write(fees_ratio);
         }
 
         fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
@@ -301,26 +295,28 @@ mod executor {
                 contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
-            let (fulfill_broker_fees_num, fulfill_broker_fees_den) = self
-                .broker_fees
-                .read(execution_info.fulfill_broker_address);
-            let (listing_broker_fees_num, listing_broker_fees_den) = self
-                .broker_fees
-                .read(execution_info.listing_broker_address);
-            let (ark_fees_num, ark_fees_den) = self.ark_fees.read();
-            let creator_fees = (1_u256, 100_u256);
+            let fulfill_broker_fees = self.broker_fees.read(execution_info.fulfill_broker_address);
+            let listing_broker_fees = self.broker_fees.read(execution_info.listing_broker_address);
+            let ark_fees = self.ark_fees.read();
+            let creator_fees = FeesRatio { numerator: 1, denominator: 100 };
 
             let fulfill_broker_fees_amount = _compute_fees_amount(
-                execution_info.payment_amount, fulfill_broker_fees_num, fulfill_broker_fees_den
+                execution_info.payment_amount, @fulfill_broker_fees
             );
             let listing_broker_fees_amount = _compute_fees_amount(
-                execution_info.payment_amount, listing_broker_fees_num, listing_broker_fees_den
+                execution_info.payment_amount, @listing_broker_fees
             );
             let creator_fees_amount = 0;
-            let ark_fees_amount = _compute_fees_amount(
-                execution_info.payment_amount, ark_fees_num, ark_fees_den
-            );
+            let ark_fees_amount = _compute_fees_amount(execution_info.payment_amount, @ark_fees);
 
+            assert!(
+                execution_info
+                    .payment_amount > (fulfill_broker_fees_amount
+                        + listing_broker_fees_amount
+                        + creator_fees_amount
+                        + ark_fees_amount),
+            );
+            
             let seller_amount = execution_info.payment_amount
                 - (fulfill_broker_fees_amount
                     + listing_broker_fees_amount
@@ -666,11 +662,11 @@ mod executor {
             || (contract.get_approved(token_id) == *operator)
     }
 
-    fn _fee_is_valid(numerator: u256, denominator: u256) -> bool {
-        denominator != 0 && numerator < denominator
+    fn _fees_ratio_is_valid(fees_ratio: @FeesRatio) -> bool {
+        *fees_ratio.denominator != 0 && *fees_ratio.numerator < *fees_ratio.denominator
     }
 
-    fn _compute_fees_amount(amount: u256, fees_numerator: u256, fees_denominator: u256) -> u256 {
-        (amount / fees_denominator) * fees_numerator
+    fn _compute_fees_amount(amount: u256, fees_ratio: @FeesRatio) -> u256 {
+        (amount / *fees_ratio.denominator) * *fees_ratio.numerator
     }
 }
