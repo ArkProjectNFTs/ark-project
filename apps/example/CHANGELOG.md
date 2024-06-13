@@ -1,5 +1,18 @@
 # example
 
+## 0.2.10
+
+### Patch Changes
+
+- 8b260b0: Using stricter types
+- Updated dependencies [8b260b0]
+- Updated dependencies [ca5fe10]
+- Updated dependencies [7c82ab2]
+- Updated dependencies [26f94ed]
+- Updated dependencies [c001f31]
+  - @ark-project/react@1.0.0
+  - @ark-project/core@2.0.0
+
 ## 0.2.9
 
 ### Patch Changes
