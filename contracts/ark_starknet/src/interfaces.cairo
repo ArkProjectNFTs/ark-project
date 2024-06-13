@@ -15,15 +15,15 @@ trait IExecutor<T> {
     fn update_orderbook_address(ref self: T, orderbook_address: ContractAddress);
     fn update_eth_address(ref self: T, eth_address: ContractAddress);
     fn update_messaging_address(ref self: T, msger_address: ContractAddress);
-    fn get_messaging_address(ref self: T) -> ContractAddress;
-    fn get_orderbook_address(ref self: T) -> ContractAddress;
+    fn get_messaging_address(self: @T) -> ContractAddress;
+    fn get_orderbook_address(self: @T) -> ContractAddress;
     fn update_arkchain_orderbook_address(ref self: T, orderbook_address: ContractAddress);
     fn set_broker_fees(
         ref self: T, broker_address: ContractAddress, fee_numerator: u256, fee_denominator: u256
     );
-    fn get_broker_fees(ref self: T, broker_address: ContractAddress) -> (u256, u256);
+    fn get_broker_fees(self: @T, broker_address: ContractAddress) -> (u256, u256);
     fn set_ark_fees(ref self: T, fee_numerator: u256, fee_denominator: u256);
-    fn get_ark_fees(ref self: T) -> (u256, u256);
+    fn get_ark_fees(self: @T) -> (u256, u256);
 }
 
 #[starknet::interface]
