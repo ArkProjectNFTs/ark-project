@@ -24,6 +24,7 @@ function useCreateListing() {
 
   async function createListing(parameters: CreateListingParameters) {
     try {
+      setStatus("loading");
       const orderHash = await createListingCore(config as Config, {
         starknetAccount: parameters.starknetAccount,
         order: {

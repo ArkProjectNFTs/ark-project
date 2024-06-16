@@ -1,4 +1,4 @@
-# wagmi
+# ArkProject React SDK
 
 React Hooks for Ark Project.
 
