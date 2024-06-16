@@ -26,6 +26,7 @@
     "deploy:solis:local": "dotenv -- turbo run deploy:solis:local --log-prefix=none",
     "deploy:starknet": "dotenv -- turbo run deploy:starknet",
     "deploy:starknet:local": "dotenv -- turbo run deploy:starknet:local --log-prefix=none",
+    "deploy:starknet:tokens": "dotenv -- turbo run deploy:starknet:tokens --log-prefix=none",
     "version:update": "bun .scripts/updateVersion.ts"
   },
   "dependencies": {

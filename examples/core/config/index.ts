@@ -1,13 +1,17 @@
 import { createConfig, Network, starknetEthContract } from "@ark-project/core";
 
 import contractsDev from "../../../contracts.dev.json";
-import contractsProd from "../../../contracts.json";
+import contractsDeployed from "../../../contracts.json";
 
 // Only mainnet and dev are supported for now
 const network = (process.env.STARKNET_NETWORK_ID || "dev") as Network;
 const isDev = network === "dev";
 
-export const contracts = isDev ? contractsDev : contractsProd.mainnet;
+export const contracts = isDev
+  ? contractsDev
+  : network === "sepolia"
+    ? contractsDeployed.sepolia
+    : contractsDeployed.mainnet;
 const starknetExecutorContract = isDev
   ? contractsDev.executor
   : contracts.executor;

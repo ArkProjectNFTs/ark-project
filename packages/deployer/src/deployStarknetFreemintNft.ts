@@ -5,7 +5,6 @@ import { CallData, Contract } from "starknet";
 
 import { ARTIFACTS_PATH } from "./constants";
 import { loadArtifacts } from "./contracts/common";
-import { deployERC20 } from "./contracts/erc20";
 import { getStarknetProvider } from "./providers";
 import { ProviderNetwork } from "./types";
 import {
@@ -25,8 +24,8 @@ export async function deployStarknetContracts(
 
   const contractCallData = new CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
-    name: "ARKTEST",
-    symbol: "ARKTEST",
+    name: "ARKSEPOLIA",
+    symbol: "ARKSEPOLIA",
     base_uri:
       "https://ipfs.io/ipfs/QmVXJ2eEx3xrD2mSdPqLBEEYM5obj6DRYkn5yant6rXPmw/"
   });
@@ -53,36 +52,36 @@ export async function deployStarknetContracts(
 
   await fs.writeFile(getContractsFilePath(), JSON.stringify(existingContracts));
 
-  let ethContract: Contract | undefined;
+  // let ethContract: Contract | undefined;
 
-  if (starknetNetwork === "dev") {
-    ethContract = await deployERC20(
-      ARTIFACTS_PATH,
-      starknetAdminAccount,
-      starknetProvider,
-      "ETH",
-      "ETH"
-    );
+  // if (starknetNetwork === "dev") {
+  //   ethContract = await deployERC20(
+  //     ARTIFACTS_PATH,
+  //     starknetAdminAccount,
+  //     starknetProvider,
+  //     "ETH",
+  //     "ETH"
+  //   );
 
-    existingContracts = {
-      ...existingContracts,
-      [starknetNetwork]: {
-        ...existingContracts[starknetNetwork],
-        eth: ethContract.address
-      }
-    };
+  //   existingContracts = {
+  //     ...existingContracts,
+  //     [starknetNetwork]: {
+  //       ...existingContracts[starknetNetwork],
+  //       eth: ethContract.address
+  //     }
+  //   };
 
-    await fs.writeFile(
-      getContractsFilePath(),
-      JSON.stringify(existingContracts)
-    );
-  }
+  //   await fs.writeFile(
+  //     getContractsFilePath(),
+  //     JSON.stringify(existingContracts)
+  //   );
+  // }
 
-  console.log("- Nft contract: ", nftContract.address);
+  // console.log("- Nft contract: ", nftContract.address);
 
-  if (ethContract) {
-    console.log("- Eth contract: ", ethContract.address);
-  }
+  // if (ethContract) {
+  //   console.log("- Eth contract: ", ethContract.address);
+  // }
 }
 
 program.option("-sn, --starknet <type>", "Starknet Network", "dev");

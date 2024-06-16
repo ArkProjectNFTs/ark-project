@@ -1,4 +1,4 @@
-import { MAINNET_CONTRACTS } from "./contracts.js";
+import { MAINNET_CONTRACTS, SEPOLIA_CONTRACTS } from "./contracts.js";
 
 export const networks = {
   mainnet: "mainnet",
@@ -20,7 +20,7 @@ export const starknetRpcUrls = {
 
 export const starknetExecutorContracts = {
   mainnet: MAINNET_CONTRACTS.executor,
-  sepolia: "",
+  sepolia: SEPOLIA_CONTRACTS.executor,
   dev: ""
 };
 
@@ -29,7 +29,7 @@ export const starknetEthContract =
 
 export const arkchainOrderbookContracts = {
   mainnet: MAINNET_CONTRACTS.orderbook,
-  sepolia: "",
+  sepolia: SEPOLIA_CONTRACTS.orderbook,
   dev: ""
 };
 
