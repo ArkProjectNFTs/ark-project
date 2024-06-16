@@ -1,5 +1,11 @@
 # @ark-project/react
 
+## 1.0.1
+
+### Patch Changes
+
+- 87f1a94: Update missing loading state & readme
+
 ## 1.0.0
 
 ### Major Changes
