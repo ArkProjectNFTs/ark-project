@@ -128,6 +128,7 @@ mod executor {
         self.messaging_address.write(messaging_address);
         self.chain_id.write(chain_id);
         self.ark_fees.write(Default::default());
+        self.arkchain_fee.write(Default::default());
     }
 
     #[abi(embed_v0)]
@@ -140,7 +141,13 @@ mod executor {
         }
 
         fn get_broker_fees(self: @ContractState, broker_address: ContractAddress) -> FeesRatio {
-            self.broker_fees.read(broker_address)
+            let fees_ratio = self.broker_fees.read(broker_address);
+            // non initialized value in storage is zero not default
+            if fees_ratio.denominator == 0 {
+                Default::default()
+            } else {
+                fees_ratio
+            }
         }
 
         fn set_ark_fees(ref self: ContractState, fees_ratio: FeesRatio) {
@@ -300,8 +307,8 @@ mod executor {
                 contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
-            let fulfill_broker_fees = self.broker_fees.read(execution_info.fulfill_broker_address);
-            let listing_broker_fees = self.broker_fees.read(execution_info.listing_broker_address);
+            let fulfill_broker_fees = self.get_broker_fees(execution_info.fulfill_broker_address);
+            let listing_broker_fees = self.get_broker_fees(execution_info.listing_broker_address);
             let ark_fees = self.ark_fees.read();
 
             let fulfill_broker_fees_amount = _compute_fees_amount(
