@@ -48,7 +48,7 @@ pub struct BlockData {
     #[sqlx(rename = "block_status")]
     pub status: String,
     pub indexer_version: Option<String>,
-    pub indexer_identifier: Option<String>,
+    pub indexer_identifier: String,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]

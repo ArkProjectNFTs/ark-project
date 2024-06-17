@@ -86,7 +86,7 @@ impl<S: Storage> BlockManager<S> {
         block_number: u64,
         block_timestamp: u64,
         indexer_version: Option<String>,
-        indexer_identifier: Option<String>,
+        indexer_identifier: String,
         status: BlockIndexingStatus,
     ) -> Result<(), StorageError> {
         self.storage
@@ -205,7 +205,7 @@ mod tests {
                     Ok(BlockInfo {
                         status: BlockIndexingStatus::Processing,
                         indexer_version: Some(String::from("v0.0.1")),
-                        indexer_identifier: Some(String::from("TASK#123")),
+                        indexer_identifier: String::from("TASK#123"),
                         block_number: 123,
                     })
                 } else {

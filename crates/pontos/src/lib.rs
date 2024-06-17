@@ -67,7 +67,7 @@ impl std::error::Error for IndexerError {}
 
 pub struct PontosConfig {
     pub indexer_version: Option<String>,
-    pub indexer_identifier: Option<String>,
+    pub indexer_identifier: String,
 }
 
 pub struct Pontos<S: Storage, C: StarknetClient, E: EventHandler> {

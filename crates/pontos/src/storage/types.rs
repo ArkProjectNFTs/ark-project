@@ -277,7 +277,7 @@ pub struct BlockIndexing {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlockInfo {
     pub indexer_version: Option<String>,
-    pub indexer_identifier: Option<String>,
+    pub indexer_identifier: String,
     pub status: BlockIndexingStatus,
     pub block_number: u64,
 }
