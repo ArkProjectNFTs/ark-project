@@ -1,5 +1,13 @@
 # example
 
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies [e0306a2]
+  - @ark-project/core@2.0.1
+  - @ark-project/react@1.0.2
+
 ## 0.2.11
 
 ### Patch Changes

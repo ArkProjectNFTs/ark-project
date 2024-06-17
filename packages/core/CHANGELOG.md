@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 2.0.1
+
+### Patch Changes
+
+- e0306a2: Add Sepolia Contracts to the SDK
+
 ## 2.0.0
 
 ### Major Changes
