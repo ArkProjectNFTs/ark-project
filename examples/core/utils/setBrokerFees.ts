@@ -23,7 +23,7 @@ export const setBrokerFees = async (
   executorContract.connect(deployerAccount);
   const response = await executorContract.set_broker_fees(
     brokerAddress,
-    cairo.uint256(fees)
+    { numerator: cairo.uint256(fees), denominator: cairo.uint256(100) },
   );
   await config.starknetProvider.waitForTransaction(response.transaction_hash);
 };
