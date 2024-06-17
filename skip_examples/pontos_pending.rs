@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
 
     // Typically loaded from env.
     let config = PontosConfig {
-        indexer_version: String::from("0.0.1"),
+        indexer_version: Some(String::from("0.0.1")),
         indexer_identifier: "TASK#123".to_string(),
     };
 

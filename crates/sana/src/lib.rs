@@ -64,7 +64,7 @@ impl std::error::Error for IndexerError {}
 
 pub struct SanaConfig {
     pub indexer_version: Option<String>,
-    pub indexer_identifier: Option<String>,
+    pub indexer_identifier: String,
 }
 
 pub struct Sana<S: Storage, C: StarknetClient, E: EventHandler> {

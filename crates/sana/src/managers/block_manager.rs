@@ -86,7 +86,7 @@ impl<S: Storage> BlockManager<S> {
         block_number: u64,
         block_timestamp: u64,
         indexer_version: Option<String>,
-        indexer_identifier: Option<String>,
+        indexer_identifier: String,
         block_status: BlockIndexingStatus,
     ) -> Result<(), StorageError> {
         self.storage
@@ -95,7 +95,7 @@ impl<S: Storage> BlockManager<S> {
                 block_timestamp,
                 BlockInfo {
                     indexer_version,
-                    indexer_identifier,
+                    indexer_identifier: Some(indexer_identifier),
                     block_status,
                     block_number,
                 },
