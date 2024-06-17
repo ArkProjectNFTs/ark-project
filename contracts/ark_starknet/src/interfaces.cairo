@@ -4,11 +4,7 @@ use ark_common::protocol::order_types::ExecutionInfo;
 use ark_common::protocol::order_types::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
 
-#[derive(Serde, Drop, PartialEq, Copy, Debug, starknet::Store)]
-pub struct FeesRatio {
-    numerator: u256,
-    denominator: u256,
-}
+use super::fees_ratio::FeesRatio;
 
 #[starknet::interface]
 trait IExecutor<T> {

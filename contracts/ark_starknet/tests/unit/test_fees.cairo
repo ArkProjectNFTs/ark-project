@@ -35,7 +35,7 @@ fn test_set_ark_fees() {
 }
 
 #[test]
-#[should_panic(expected: ('Fees ratio is invalid', ))]
+#[should_panic(expected: ('Fees ratio is invalid',))]
 fn test_fees_ratio_bigger_than_1_broker_fees() {
     let mut state = executor::contract_state_for_testing();
 
@@ -47,7 +47,7 @@ fn test_fees_ratio_bigger_than_1_broker_fees() {
 }
 
 #[test]
-#[should_panic(expected: ('Fees ratio is invalid', ))]
+#[should_panic(expected: ('Fees ratio is invalid',))]
 fn test_fees_ratio_bigger_than_1_ark_fees() {
     let mut state = executor::contract_state_for_testing();
 
@@ -57,7 +57,7 @@ fn test_fees_ratio_bigger_than_1_ark_fees() {
 }
 
 #[test]
-#[should_panic(expected: ('Fees ratio is invalid', ))]
+#[should_panic(expected: ('Fees ratio is invalid',))]
 fn test_fees_denominator_0_broker_fees() {
     let mut state = executor::contract_state_for_testing();
 
@@ -69,7 +69,7 @@ fn test_fees_denominator_0_broker_fees() {
 }
 
 #[test]
-#[should_panic(expected: ('Fees ratio is invalid', ))]
+#[should_panic(expected: ('Fees ratio is invalid',))]
 fn test_fees_denominator_0_ark_fees() {
     let mut state = executor::contract_state_for_testing();
 
