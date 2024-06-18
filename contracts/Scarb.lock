@@ -30,6 +30,7 @@ dependencies = [
 name = "ark_tokens"
 version = "0.1.0"
 dependencies = [
+ "ark_common",
  "openzeppelin",
  "snforge_std",
 ]

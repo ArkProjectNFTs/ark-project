@@ -12,3 +12,7 @@ mod crypto {
     mod constants;
     mod common;
 }
+
+mod oz {
+    mod erc2981;
+}

@@ -70,8 +70,11 @@ mod executor {
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
+    use ark_common::oz::erc2981::{
+        IERC2981_ID, IERC2981, IERC2981Dispatcher, IERC2981DispatcherTrait
+    };
+
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
-    use ark_starknet::erc2981::{IERC2981_ID, IERC2981, IERC2981Dispatcher, IERC2981DispatcherTrait};
 
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
