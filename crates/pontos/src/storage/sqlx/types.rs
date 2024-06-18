@@ -47,7 +47,7 @@ pub struct BlockData {
     pub number: i64,
     #[sqlx(rename = "block_status")]
     pub status: String,
-    pub indexer_version: Option<String>,
+    pub indexer_version: String,
     pub indexer_identifier: String,
 }
 
