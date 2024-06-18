@@ -229,19 +229,40 @@ fn test_execute_order_royalty_check_fees_ok() {
     let fulfill_broker_balance = erc20.balance_of(fulfill_broker);
     let listing_broker_balance = erc20.balance_of(listing_broker);
     let creator_balance = erc20.balance_of(creator);
+    let offerer_balance = erc20.balance_of(offerer);
+    let fulfiller_balance = erc20.balance_of(fulfiller);
+
+    let fulfill_broker_delta = 1_000_000; // 10%
+    let listing_broker_delta = 500_000; // 5%
+    let creator_delta = 200_000; // 2%
+    let offerer_delta = start_amount;
+    let fulfiller_delta = start_amount
+        - fulfill_broker_delta
+        - listing_broker_delta
+        - creator_delta;
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
     assert_eq!(
         erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
-        1_000_000,
+        fulfill_broker_delta,
         "Fulfill broker balance not correct"
     );
     assert_eq!(
         erc20.balance_of(listing_broker) - listing_broker_balance,
-        500_000,
+        listing_broker_delta,
         "Listing broker balance not correct"
     );
-    assert_eq!(erc20.balance_of(creator) - creator_balance, 200_000, "Creator balance not correct");
+    assert_eq!(
+        erc20.balance_of(creator) - creator_balance, creator_delta, "Creator balance not correct"
+    );
+    assert_eq!(
+        offerer_balance - erc20.balance_of(offerer), offerer_delta, "Offerer balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(fulfiller) - fulfiller_balance,
+        fulfiller_delta,
+        "Fulfiller balance not correct"
+    );
 }
 
 #[test]
