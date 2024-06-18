@@ -231,8 +231,16 @@ fn test_execute_order_royalty_check_fees_ok() {
     let creator_balance = erc20.balance_of(creator);
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
-    assert_eq!(erc20.balance_of(fulfill_broker) - fulfill_broker_balance, 1_000_000, "Fulfill broker balance not correct");
-    assert_eq!(erc20.balance_of(listing_broker) - listing_broker_balance, 500_000, "Listing broker balance not correct");
+    assert_eq!(
+        erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
+        1_000_000,
+        "Fulfill broker balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(listing_broker) - listing_broker_balance,
+        500_000,
+        "Listing broker balance not correct"
+    );
     assert_eq!(erc20.balance_of(creator) - creator_balance, 200_000, "Creator balance not correct");
 }
 

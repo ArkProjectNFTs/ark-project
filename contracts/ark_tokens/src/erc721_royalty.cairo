@@ -1,14 +1,5 @@
 use starknet::ContractAddress;
 
-// TODO: compute interface ID
-const IERC2981_ID: felt252 = 0x020c8d7f792d748c72d5a4bd64e1d352ef0a9f32a2cb0f281fe929c2c127ded4;
-
-#[starknet::interface]
-trait IERC2981<T> {
-    fn royalty_info(self: @T, token_id: u256, sale_price: u256) -> (ContractAddress, u256);
-}
-
-
 #[starknet::interface]
 trait IFreeMint<T> {
     fn mint(ref self: T, recipient: ContractAddress, token_uri: felt252);
@@ -26,7 +17,7 @@ mod FreeMintNFTRoyalty {
     use super::IFreeMint;
     use core::array::ArrayTrait;
 
-    use super::{IERC2981_ID, IERC2981};
+    use ark_common::oz::erc2981::{IERC2981_ID, IERC2981};
 
     component!(path: ERC721Component, storage: erc721, event: ERC721Event);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -89,7 +80,9 @@ mod FreeMintNFTRoyalty {
 
     #[abi(embed_v0)]
     impl ImplERC2981 of IERC2981<ContractState> {
-        fn royalty_info(self: @ContractState, token_id: u256, sale_price: u256) -> (ContractAddress, u256) {
+        fn royalty_info(
+            self: @ContractState, token_id: u256, sale_price: u256
+        ) -> (ContractAddress, u256) {
             // same fees for every token
             let num = 2;
             let denom = 100;
