@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use sqlx::{any::AnyPoolOptions, AnyPool, Error as SqlxError, FromRow};
 use std::str::FromStr;
-use tracing::trace;
+use tracing::{error, trace};
 
 use super::types::*;
 use crate::storage::types::*;
@@ -129,7 +129,7 @@ impl MarketplaceSqlxStorage {
     async fn get_block_by_timestamp(&self, ts: u64) -> Result<Option<BlockData>, StorageError> {
         let q = "SELECT b.block_number, b.block_status, b.block_timestamp, b.indexer_identifier, i.indexer_version
         FROM block as b
-        LEFT JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
+        INNER JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
         WHERE block_timestamp = $1";
 
         match sqlx::query(q).bind(ts as i64).fetch_all(&self.pool).await {
@@ -453,7 +453,7 @@ impl Storage for MarketplaceSqlxStorage {
         LEFT JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
         WHERE block_number = $1";
 
-        match sqlx::query(q)
+        match sqlx::query_as::<_, BlockData>(q)
             .bind(block_number as i64)
             .fetch_all(&self.pool)
             .await
@@ -464,7 +464,7 @@ impl Storage for MarketplaceSqlxStorage {
                         "block number {block_number}"
                     )))
                 } else {
-                    let d = BlockData::from_row(&rows[0])?;
+                    let d = rows[0].clone();
                     Ok(BlockInfo {
                         indexer_identifier: d.indexer_identifier.clone(),
                         indexer_version: d.indexer_version.clone(),
@@ -473,7 +473,10 @@ impl Storage for MarketplaceSqlxStorage {
                     })
                 }
             }
-            Err(e) => Err(StorageError::DatabaseError(e.to_string())),
+            Err(e) => {
+                error!("Database error: {:?}", e);
+                Err(StorageError::DatabaseError(e.to_string()))
+            }
         }
     }
 

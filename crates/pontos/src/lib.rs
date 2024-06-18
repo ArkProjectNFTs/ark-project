@@ -66,7 +66,7 @@ impl fmt::Display for IndexerError {
 impl std::error::Error for IndexerError {}
 
 pub struct PontosConfig {
-    pub indexer_version: Option<String>,
+    pub indexer_version: String,
     pub indexer_identifier: String,
 }
 
