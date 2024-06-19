@@ -167,6 +167,7 @@ Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](http
 
    ```bash
    cd examples/core
+   cp .env.example .env
    npx bun fulfillListing.ts
    ```
 
