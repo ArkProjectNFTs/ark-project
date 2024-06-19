@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 2.1.0
+
+### Minor Changes
+
+- ca2d829: Added SDK React auction
+
 ## 2.0.2
 
 ### Patch Changes

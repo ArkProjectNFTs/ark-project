@@ -1,5 +1,18 @@
 # example
 
+## 0.3.0
+
+### Minor Changes
+
+- ca2d829: Added SDK React auction
+
+### Patch Changes
+
+- Updated dependencies [ca2d829]
+- Updated dependencies [f0f672f]
+  - @ark-project/react@1.1.0
+  - @ark-project/core@2.1.0
+
 ## 0.2.13
 
 ### Patch Changes
