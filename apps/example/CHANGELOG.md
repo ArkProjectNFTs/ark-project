@@ -1,5 +1,14 @@
 # example
 
+## 0.2.13
+
+### Patch Changes
+
+- 36a7a4b: Update to support multiple network on the ark provider
+- Updated dependencies [36a7a4b]
+  - @ark-project/react@1.0.3
+  - @ark-project/core@2.0.2
+
 ## 0.2.12
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 2.0.2
+
+### Patch Changes
+
+- 36a7a4b: Update to support multiple network on the ark provider
+
 ## 2.0.1
 
 ### Patch Changes

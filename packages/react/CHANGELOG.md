@@ -1,5 +1,13 @@
 # @ark-project/react
 
+## 1.0.3
+
+### Patch Changes
+
+- 36a7a4b: Update to support multiple network on the ark provider
+- Updated dependencies [36a7a4b]
+  - @ark-project/core@2.0.2
+
 ## 1.0.2
 
 ### Patch Changes
