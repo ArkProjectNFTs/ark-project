@@ -1,6 +1,6 @@
 {
   "name": "@ark-project/react",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "./dist/esm/src/index.js",
   "types": "./dist/types/src/index.d.ts",
