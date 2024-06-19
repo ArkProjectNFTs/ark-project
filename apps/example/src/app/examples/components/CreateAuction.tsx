@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { parseEther } from "viem";
 import * as z from "zod";
 
-import { useCreateListing } from "@ark-project/react";
+import { useCreateAuction } from "@ark-project/react";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+import ConnectWallet from "./ConnectWallet";
+
 interface Token {
   token_id?: string;
   contract_address?: string;
@@ -31,55 +33,59 @@ interface OrderBookActionsProps {
   currentToken?: Token;
 }
 
-const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
+const formSchema = z.object({
+  brokerId: z.string(),
+  tokenAddress: z
+    .string()
+    .startsWith("0x", { message: "Please enter a valid address" })
+    .length(66, { message: "Please enter a valid address" }),
+  tokenId: z.string().regex(/^\d+$/, { message: "Token ID must be a number" }),
+  startAmount: z.string(),
+  endAmount: z.string()
+});
+
+const CreateAuction: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
   const { account } = useAccount();
-  const { response, createListing, status } = useCreateListing();
-
-  const formSchema = z.object({
-    brokerId: z.string(),
-    tokenAddress: z
-      .string()
-      .startsWith("0x", { message: "Please enter a valid address" })
-      .length(66, { message: "Please enter a valid address" }),
-    tokenId: z
-      .string()
-      .regex(/^\d+$/, { message: "Token ID must be a number" }),
-    startAmount: z.string()
-  });
-
+  const { create, response, status } = useCreateAuction();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       brokerId: env.NEXT_PUBLIC_BROKER_ID,
       tokenAddress: currentToken?.contract_address,
       tokenId: currentToken?.token_id,
-      startAmount: "0.1"
+      startAmount: "0.01",
+      endAmount: "0.05"
     }
   });
 
   useEffect(() => {
-    if (currentToken) {
-      form.reset({
-        ...form.getValues(),
-        tokenAddress: currentToken.contract_address,
-        tokenId: currentToken.token_id
-      });
+    if (!currentToken) {
+      return;
     }
+
+    form.reset({
+      ...form.getValues(),
+      tokenAddress: currentToken.contract_address,
+      tokenId: currentToken.token_id
+    });
   }, [currentToken, form]);
 
-  if (account === undefined) return;
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!account) {
+      return;
+    }
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    if (account === undefined) return;
-    const processedValues = {
+    await create({
+      starknetAccount: account,
       ...values,
       tokenId: BigInt(values.tokenId),
-      startAmount: parseEther("0.1")
-    };
-    createListing({
-      starknetAccount: account,
-      ...processedValues
+      startAmount: parseEther(values.startAmount),
+      endAmount: parseEther(values.endAmount)
     });
+  }
+
+  if (!account) {
+    return <ConnectWallet />;
   }
 
   return (
@@ -138,6 +144,19 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="endAmount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>End Amount</FormLabel>
+                <FormControl>
+                  <Input placeholder="End Amount in ETH" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <Button type="submit">
             {account
               ? status === "loading"
@@ -156,4 +175,4 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({ currentToken }) => {
   );
 };
 
-export default CreateListing;
+export default CreateAuction;

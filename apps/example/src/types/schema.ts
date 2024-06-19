@@ -61,6 +61,19 @@ export const tokenMarketDataSchema = z.object({
   end_date: z.number().optional()
 });
 
+const offerSchema = z.object({
+  currency_address: z.string(),
+  currency_chain_id: z.string(),
+  end_date: z.number(),
+  offer_amount: z.string(),
+  offer_maker: z.string(),
+  offer_quantity: z.string(),
+  offer_timestamp: z.number(),
+  order_hash: z.string(),
+  start_date: z.number(),
+  status: z.string()
+});
+
 const TokenWithMarketDataSchema = z.object({
   // Fields from the first API
   contract_address: z.string(),
@@ -82,6 +95,8 @@ const TokenWithMarketDataSchema = z.object({
   start_date: z.number().optional(),
   updated_timestamp: z.number().optional()
 });
+
+export type Offer = z.infer<typeof offerSchema>;
 
 export type Token = z.infer<typeof tokenSchema>;
 

@@ -4,8 +4,10 @@ import Tab from "@/components/ui/tab-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import Cancel from "./Cancel";
+import CreateAuction from "./CreateAuction";
 import CreateListing from "./CreateListing";
 import CreateOffer from "./CreateOffer";
+import FulfillAuction from "./FulfillAuction";
 import FulfillListing from "./FulfillListing";
 import FulfillOffer from "./FulfillOffer";
 
@@ -15,6 +17,7 @@ const SdkExamples = () => {
       <Tabs defaultValue="createListing" className="basis-1/2">
         <TabsList>
           <TabsTrigger value="createListing">useCreateListing</TabsTrigger>
+          <TabsTrigger value="createAuction">useCreateAuction</TabsTrigger>
           <TabsTrigger value="createOffer">useCreateOffer</TabsTrigger>
         </TabsList>
         <TabsContent value="createListing" className="mx-auto">
@@ -23,6 +26,14 @@ const SdkExamples = () => {
             cardDescription="A form illustrating how to create a listing using useCreateListing hook."
           >
             <CreateListing />
+          </Tab>
+        </TabsContent>
+        <TabsContent value="createAuction">
+          <Tab
+            cardTitle="Create an auction"
+            cardDescription="A form illustrating how to create an auction using useCreateAuction hook."
+          >
+            <CreateAuction />
           </Tab>
         </TabsContent>
         <TabsContent value="createOffer">
@@ -38,6 +49,7 @@ const SdkExamples = () => {
         <TabsList>
           <TabsTrigger value="cancel">useCancel</TabsTrigger>
           <TabsTrigger value="fulfillListing">useFulfillListing</TabsTrigger>
+          <TabsTrigger value="fulfillAuction">useFulfillAuction</TabsTrigger>
           <TabsTrigger value="fulfillOffer">useFulfillOffer</TabsTrigger>
         </TabsList>
         <TabsContent value="cancel">
@@ -54,6 +66,14 @@ const SdkExamples = () => {
             cardDescription="A form illustrating how to fulfill a listing using useFulfillListing hook."
           >
             <FulfillListing />
+          </Tab>
+        </TabsContent>
+        <TabsContent value="fulfillAuction">
+          <Tab
+            cardTitle="Fulfill an auction"
+            cardDescription="A form illustrating how to fulfill an auction using useFulfillAuction hook."
+          >
+            <FulfillAuction />
           </Tab>
         </TabsContent>
         <TabsContent value="fulfillOffer">

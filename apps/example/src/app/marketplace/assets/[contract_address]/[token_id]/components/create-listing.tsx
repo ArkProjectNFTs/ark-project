@@ -3,15 +3,17 @@
 import React from "react";
 
 import { env } from "@/env";
+import { TokenMarketData } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount } from "@starknet-react/core";
+import moment from "moment";
 import { useForm } from "react-hook-form";
 import { parseEther } from "viem";
 import * as z from "zod";
 
-import { useCreateListing } from "@ark-project/react";
+import { useCreateAuction, useCreateListing } from "@ark-project/react";
 
-import { areAddressesEqual } from "@/lib/utils";
+import { Token } from "@/types/schema";
 import { Button } from "@/components/ui/Button";
 import {
   Form,
@@ -22,39 +24,58 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 interface OrderBookActionsProps {
-  token?: any;
-  tokenMarketData?: any;
+  token?: Token;
+  tokenMarketData?: TokenMarketData;
 }
 
-const CreateListing: React.FC<OrderBookActionsProps> = ({
-  token,
-  tokenMarketData
-}) => {
-  const { address, account } = useAccount();
-  const isOwner = address && areAddressesEqual(token.owner, address);
-  const { response, createListing, status } = useCreateListing();
+const FIXED = "fixed";
+const AUCTION = "auction";
 
-  // Define the schema for startAmount only
-  const formSchema = z.object({
-    startAmount: z.string()
-  });
+const formSchema = z.object({
+  startAmount: z.string({
+    invalid_type_error: "Please enter a valid amount"
+  }),
+  endAmount: z
+    .string({
+      invalid_type_error: "Please enter a valid amount"
+    })
+    .optional(),
+  duration: z.string(),
+  type: z.enum([FIXED, AUCTION])
+});
+// .refine(
+//   (data) =>
+//     data.type === AUCTION ? data.endAmount > data.startAmount : true,
+//   {
+//     message: "Reserve price must be greater than starting price",
+//     path: ["endAmount"]
+//   }
+// );
 
-  // Initialize form with startAmount's default value
+const CreateListing: React.FC<OrderBookActionsProps> = ({ token }) => {
+  const { account } = useAccount();
+  const { createListing, status } = useCreateListing();
+  const { create: createAuction, status: statusAuction } = useCreateAuction();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: {
-      startAmount: "0.1"
+      type: FIXED,
+      startAmount: "0.1",
+      duration: "1"
     }
   });
-
-  if (
-    account === undefined ||
-    !isOwner ||
-    (tokenMarketData && tokenMarketData.is_listed)
-  )
-    return;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (account === undefined || !token?.contract_address || !token?.token_id) {
@@ -62,67 +83,166 @@ const CreateListing: React.FC<OrderBookActionsProps> = ({
       return;
     }
 
-    // Convert tokenId to a number
-    const tokenIdNumber = parseInt(token.token_id, 10);
-    if (isNaN(tokenIdNumber)) {
-      console.error("Invalid token ID");
+    const tokenId = parseInt(token.token_id, 10);
+
+    if (isNaN(tokenId)) {
+      console.error("Invalid tokenId");
       return;
     }
 
-    // Prepare the data for submission, including props data
     const processedValues = {
-      brokerId: env.NEXT_PUBLIC_BROKER_ID, // Assuming this is a static value or received from elsewhere
+      brokerId: env.NEXT_PUBLIC_BROKER_ID,
       tokenAddress: token?.contract_address,
       tokenId: BigInt(token.token_id),
-      startAmount: parseEther(values.startAmount)
+      startAmount: parseEther(values.startAmount),
+      endAmount: values.endAmount ? parseEther(values.endAmount) : BigInt(0),
+      endDate: moment().add(values.duration, "hours").unix()
     };
 
-    await createListing({
-      starknetAccount: account,
-      ...processedValues
-    });
+    try {
+      if (values.type === AUCTION) {
+        await createAuction({
+          starknetAccount: account,
+          brokerId: env.NEXT_PUBLIC_BROKER_ID,
+          tokenAddress: token.contract_address,
+          tokenId: processedValues.tokenId,
+          endDate: processedValues.endDate,
+          startAmount: processedValues.startAmount,
+          endAmount: processedValues.endAmount
+        });
+      } else {
+        await createListing({
+          starknetAccount: account,
+          brokerId: env.NEXT_PUBLIC_BROKER_ID,
+          tokenAddress: token.contract_address,
+          tokenId: processedValues.tokenId,
+          endDate: processedValues.endDate,
+          startAmount: processedValues.startAmount
+        });
+      }
+    } catch (error) {
+      console.error("error: create listing failed", error);
+    }
   }
 
-  // Render the component
+  const isLoading = status === "loading" || statusAuction === "loading";
+  const isAuction = form.getValues("type") === AUCTION;
+  const duration = form.watch("duration");
+  const expiredAt = moment().add(duration, "hours").format("LLLL");
+
   return (
-    <div className="w-full flex flex-col space-y-4 rounded border p-4">
-      <h1 className="font-medium">Create a listing</h1>
+    <div className="w-full border rounded p-4">
+      <div className="font-semibold mb-4">List for sale</div>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex w-full space-x-4 justify-between items-end"
+          className="flex flex-col space-y-4"
         >
-          <div className="w-[80%]">
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem className="">
+                <FormLabel>Choose a type of sale</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="border rounded gap-0"
+                  >
+                    <FormItem className="flex items-center justify-center p-4 border-b">
+                      <FormLabel className="font-normal flex flex-col space-y-2 flex-grow">
+                        <span className="font-semibold">Fixed price</span>
+                        <span className="">
+                          The item is listed at the price you set.
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <RadioGroupItem value={FIXED} className="h-6 w-6" />
+                      </FormControl>
+                    </FormItem>
+                    <FormItem className="flex items-center justify-center p-4">
+                      <FormLabel className="font-normal flex flex-col space-y-2 flex-grow">
+                        <span className="font-semibold">
+                          Sell to highest bidder
+                        </span>
+                        <span className="">
+                          The item is listed for auction.
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <RadioGroupItem value={AUCTION} className="h-6 w-6" />
+                      </FormControl>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="startAmount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Starting Price</FormLabel>
+                <FormControl>
+                  <Input placeholder="Amount" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {isAuction && (
             <FormField
               control={form.control}
-              name="startAmount"
+              name="endAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Listing Price in ETH</FormLabel>
+                  <FormLabel>Reserve Price</FormLabel>
                   <FormControl>
-                    <Input placeholder="your price" {...field} />
+                    <Input placeholder="Amount" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-          <Button type="submit" className="w-[20%]">
-            {account
-              ? status === "loading"
-                ? "Loading..."
-                : status === "error"
-                  ? "Error"
-                  : status === "success"
-                    ? "Success"
-                    : "Create Listing"
-              : "Connect your wallet"}
+          )}
+          <FormField
+            control={form.control}
+            name="duration"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex justify-between">
+                  <FormLabel>Duration</FormLabel>
+                  <div className="text-sm">Expires {expiredAt}</div>
+                </div>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value?.toString()}
+                >
+                  <FormControl>
+                    <SelectTrigger className="">
+                      <SelectValue placeholder="Theme" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1">1 hour</SelectItem>
+                    <SelectItem value="3">3 hours</SelectItem>
+                    <SelectItem value="6">6 hours</SelectItem>
+                    <SelectItem value="24">1 day</SelectItem>
+                    <SelectItem value="72">3 days</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" className="" disabled={isLoading}>
+            {isLoading ? "Loading..." : "Complete Listing"}
           </Button>
         </form>
       </Form>
-      {!!response && (
-        <div className="mt-4">response: {response?.toString()}</div>
-      )}
     </div>
   );
 };

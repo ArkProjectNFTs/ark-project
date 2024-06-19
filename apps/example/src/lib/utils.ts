@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { num } from "starknet";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -17,16 +18,19 @@ export function truncateString(str: string, num: number): string {
   return str.slice(0, num);
 }
 
-export function areAddressesEqual(addr1: string, addr2: string): boolean {
-  const normalizeAddress = (address: string) => {
-    address =
-      address.startsWith("0x") || address.startsWith("0X")
-        ? address.substring(2)
-        : address;
-    return address.padStart(64, "0").toLowerCase();
-  };
+export function areAddressesEqual(
+  addr1: string | undefined,
+  addr2: string | undefined
+): boolean {
+  if (!addr1 || !addr2) {
+    return false;
+  }
 
-  return normalizeAddress(addr1) === normalizeAddress(addr2);
+  return num.cleanHex(addr1) === num.cleanHex(addr2);
+}
+
+export function shortAddress(address: string): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 export function timeSince(timestamp: number): string {

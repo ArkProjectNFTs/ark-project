@@ -4,10 +4,11 @@ import React from "react";
 
 import { TokenMarketData } from "@/types";
 import { useAccount } from "@starknet-react/core";
-import { Web3 } from "web3";
+import { SiEthereum } from "react-icons/si";
+import { formatEther } from "viem";
 
 import { Token } from "@/types/schema";
-import { areAddressesEqual, truncateString } from "@/lib/utils";
+import { areAddressesEqual, shortAddress } from "@/lib/utils";
 import { TableCell, TableHead } from "@/components/ui/table";
 
 interface AssetInfosProps {
@@ -17,10 +18,10 @@ interface AssetInfosProps {
 
 const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
   const { address } = useAccount();
-  const owner =
-    address && areAddressesEqual(token.owner, address)
-      ? "You"
-      : truncateString(token.owner, 8);
+  const owner = areAddressesEqual(token.owner, address)
+    ? "You"
+    : shortAddress(token.owner);
+
   return (
     <div className="border rounded-md p-3">
       <table className="table-auto w-full">
@@ -37,28 +38,23 @@ const AssetInfos: React.FC<AssetInfosProps> = ({ token, tokenMarketData }) => {
         <tbody>
           <tr className="text-sm">
             <TableCell className="font-medium">
-              {tokenMarketData && tokenMarketData.start_amount
-                ? `${Web3.utils.fromWei(
-                    tokenMarketData.start_amount,
-                    "ether"
-                  )}  ETH`
-                : "-"}
+              {tokenMarketData && tokenMarketData.start_amount ? (
+                <div className="flex space-x-2 items-center">
+                  {formatEther(BigInt(tokenMarketData?.start_amount))}
+                  <SiEthereum />
+                </div>
+              ) : (
+                "-"
+              )}
             </TableCell>
             <TableCell>
-              {" "}
               {tokenMarketData && tokenMarketData.last_price
-                ? `${Web3.utils.fromWei(
-                    tokenMarketData.last_price,
-                    "ether"
-                  )}  ETH`
+                ? `${formatEther(BigInt(tokenMarketData.last_price))}  ETH`
                 : "-"}
             </TableCell>
             <TableCell>
               {tokenMarketData?.top_bid?.amount
-                ? `${Web3.utils.fromWei(
-                    tokenMarketData?.top_bid?.amount,
-                    "ether"
-                  )}  ETH`
+                ? `${formatEther(BigInt(tokenMarketData?.top_bid?.amount))}  ETH`
                 : "-"}
             </TableCell>
             <TableCell>-</TableCell>

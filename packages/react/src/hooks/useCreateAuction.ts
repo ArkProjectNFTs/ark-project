@@ -4,57 +4,58 @@ import { useState } from "react";
 
 import { AccountInterface } from "starknet";
 
-import {
-  Config,
-  createListing as createListingCore,
-  ListingV1
-} from "@ark-project/core";
+import { AuctionV1, Config, createAuction } from "@ark-project/core";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-export type CreateListingParameters = {
+export type CreateAuctionParameters = {
   starknetAccount: AccountInterface;
-} & ListingV1;
+} & AuctionV1;
 
-function useCreateListing() {
+export default function useCreateAuction() {
   const [status, setStatus] = useState<Status>("idle");
   const [response, setResponse] = useState<bigint | undefined>();
   const config = useConfig();
 
-  async function createListing(parameters: CreateListingParameters) {
+  async function create(parameters: CreateAuctionParameters) {
+    if (!config) {
+      throw new Error("config not loaded");
+    }
+
     setStatus("loading");
 
     try {
-      setStatus("loading");
-      const orderHash = await createListingCore(config as Config, {
+      const orderHash = await createAuction(config as Config, {
         starknetAccount: parameters.starknetAccount,
         order: {
           startAmount: parameters.startAmount,
+          endAmount: parameters.endAmount,
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId,
           currencyAddress:
-            parameters.currencyAddress || config?.starknetCurrencyContract,
+            parameters.currencyAddress || config.starknetCurrencyContract,
           currencyChainId:
-            parameters.currencyChainId || config?.starknetProvider.getChainId(),
+            parameters.currencyChainId || config.starknetProvider.getChainId(),
           brokerId: parameters.brokerId,
           startDate: parameters.startDate,
           endDate: parameters.endDate
-        } as ListingV1,
+        } as AuctionV1,
         approveInfo: {
           tokenAddress: parameters.tokenAddress,
           tokenId: parameters.tokenId
         }
       });
+
       setResponse(orderHash);
       setStatus("success");
     } catch (error) {
-      console.error(error);
+      console.error("error: failed to create auction", error);
       setStatus("error");
     }
   }
 
-  return { createListing, status, response };
+  return { create, status, response };
 }
 
-export { useCreateListing };
+export { useCreateAuction };

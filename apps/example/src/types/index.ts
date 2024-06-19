@@ -5,11 +5,11 @@ export type TokenMarketData = {
   listed_timestamp: number;
   updated_timestamp: number;
   current_owner: string;
-  last_price: number | null;
+  last_price: bigint | null;
   quantity: string;
   order_hash: string;
-  start_amount: string;
-  end_amount: string;
+  start_amount: bigint;
+  end_amount: bigint;
   start_date: number;
   end_date: number;
   broker_id: string;
@@ -17,7 +17,7 @@ export type TokenMarketData = {
   has_offer: boolean;
   status: string;
   top_bid: {
-    amount: string;
+    amount: bigint;
     order_hash: string;
   };
 };

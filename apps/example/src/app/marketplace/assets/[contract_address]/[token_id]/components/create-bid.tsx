@@ -39,7 +39,7 @@ interface CreateOfferProps {
   tokenMarketData: TokenMarketData;
 }
 
-export default function CreateOffer({
+export default function CreateBid({
   token,
   tokenMarketData
 }: CreateOfferProps) {
@@ -51,11 +51,10 @@ export default function CreateOffer({
   const formSchema = z.object({
     startAmount: z.string()
   });
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startAmount: ""
+      startAmount: formatEther(BigInt(tokenMarketData.start_amount))
     }
   });
 
@@ -70,13 +69,20 @@ export default function CreateOffer({
   }, [response]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!account) {
+    if (!account || !config) {
+      return;
+    }
+
+    const tokenIdNumber = parseInt(token.token_id, 10);
+
+    if (isNaN(tokenIdNumber)) {
+      console.error("Invalid token ID");
       return;
     }
 
     const processedValues = {
       brokerId: env.NEXT_PUBLIC_BROKER_ID,
-      currencyAddress: config?.starknetCurrencyContract,
+      currencyAddress: config.starknetCurrencyContract,
       tokenAddress: token.contract_address,
       tokenId: BigInt(token.token_id),
       startAmount: parseEther(values.startAmount)
@@ -93,15 +99,17 @@ export default function CreateOffer({
   }
 
   const isDisabled = form.formState.isSubmitting || status === "loading";
+  const price = formatEther(BigInt(tokenMarketData.start_amount));
+  const reservePrice = formatEther(BigInt(tokenMarketData.end_amount));
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full">Make offer</Button>
+        <Button className="w-full">Place a bid</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Make offer</DialogTitle>
+          <DialogTitle>Place a bid</DialogTitle>
         </DialogHeader>
         <div className="flex space-x-4 items-center">
           <div className="w-16 rounded overflow-hidden">
@@ -113,11 +121,9 @@ export default function CreateOffer({
           </div>
           <div className="grow" />
           <div className="">
-            <div className="font-bold text-right">
-              {tokenMarketData?.is_listed
-                ? formatEther(BigInt(tokenMarketData.start_amount))
-                : "-"}{" "}
-              ETH
+            <div className="font-bold text-right">{price} ETH</div>
+            <div className="text-muted-foreground text-right">
+              Reserve {reservePrice} ETH
             </div>
           </div>
         </div>
@@ -142,12 +148,23 @@ export default function CreateOffer({
               {status === "loading" ? (
                 <ReloadIcon className="animate-spin" />
               ) : (
-                "Create Offer"
+                "Place a bid"
               )}
             </Button>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
+
+    //   <div className="mt-4">
+    //     {status === "loading" && "Transaction in progress..."}
+    //     {status === "error" && "Error"}
+    //     {status === "success" && "Transaction successful"}
+    //     <br />
+    //     {!!response && status === "success" && (
+    //       <p>order_hash: {response?.toString()}</p>
+    //     )}
+    //   </div>
+    // </div>
   );
 }
