@@ -52,11 +52,10 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
   const [owner, setOwner] = useState<string | undefined>(undefined);
   const { provider: starknetProvider } = useProvider();
   const { chain: starknetChain } = useNetwork();
-
   const [config, setConfig] = useState<Config>(
     createConfig({
       starknetProvider: starknetProvider,
-      starknetNetwork: starknetChain.network as Network,
+      starknetNetwork: baseConfig.starknetNetwork as Network,
       arkchainNetwork: baseConfig.arkchainNetwork as Network
     })
   );
@@ -64,7 +63,7 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
   useEffect(() => {
     const newConfig = createConfig({
       starknetProvider: starknetProvider,
-      starknetNetwork: starknetChain.network as Network,
+      starknetNetwork: baseConfig.starknetNetwork as Network,
       arkchainNetwork: baseConfig.arkchainNetwork as Network
     });
     setConfig(newConfig);
@@ -89,7 +88,8 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
     };
     fetchOwner();
   }, [address, config.starknetProvider, connector]);
-  if (starknetChain.network !== "mainnet") {
+
+  if (starknetChain.network !== config.starknetNetwork) {
     return (
       <div className="flex flex-col items-center justify-center w-full min-h-screen space-y-4">
         <div className="flex items-center justify-center rounded-full p-3 bg-red-50">
@@ -97,7 +97,8 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
         </div>
         <h1 className="text-3xl font-bold tracking-tighter">Wrong Network</h1>
         <p className="mx-auto max-w-[600px] text-center text-gray-500 md:text-xl/relaxed dark:text-gray-400">
-          Please switch to the <b>mainnet</b> network in your connected wallet.
+          Please switch to the <b>{config.starknetNetwork}</b> network in your
+          connected wallet.
         </p>
       </div>
     );

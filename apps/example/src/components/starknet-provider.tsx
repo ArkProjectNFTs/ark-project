@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import * as React from "react";
 
-import { mainnet } from "@starknet-react/chains";
+import { mainnet, sepolia } from "@starknet-react/chains";
 import {
   argent,
   braavos,
@@ -15,7 +15,7 @@ import {
 
 function rpc() {
   return {
-    nodeUrl: `https://starknet-mainnet.public.blastapi.io/rpc/v0.5`
+    nodeUrl: `https://starknet-mainnet.public.blastapi.io/rpc/v0_6`
   };
 }
 
@@ -32,7 +32,7 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
 
   return (
     <StarknetConfig
-      chains={[mainnet]}
+      chains={[mainnet, sepolia]}
       provider={provider}
       connectors={connectors}
       explorer={voyager}
