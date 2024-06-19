@@ -1,5 +1,17 @@
 # @ark-project/react
 
+## 1.1.0
+
+### Minor Changes
+
+- ca2d829: Added SDK React auction
+
+### Patch Changes
+
+- f0f672f: Remove wrong network message from provider
+- Updated dependencies [ca2d829]
+  - @ark-project/core@2.1.0
+
 ## 1.0.3
 
 ### Patch Changes
