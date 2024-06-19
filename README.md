@@ -111,6 +111,12 @@ Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](http
 
 ## Quick Start for Local Development
 
+0. **Setup env vars**
+
+   ```bash
+   cp .env.example .env
+   ```
+
 1. **Install the latest Dojo version** (currently 0.0.7-alpha.1)
 
    - Follow the guide: https://book.dojoengine.org/getting-started
