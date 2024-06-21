@@ -50,7 +50,8 @@ pub struct TokenWithoutMetadata {
     pub contract_address: String,
     pub token_id: String,
     pub chain_id: String,
-    pub is_verified: String,
+    pub is_verified: bool,
+    pub save_images: bool,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
