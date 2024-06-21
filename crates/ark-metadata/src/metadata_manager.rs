@@ -29,12 +29,6 @@ pub struct MetadataMedia {
     pub media_key: Option<String>,
 }
 
-#[derive(Copy, Clone)]
-pub enum ImageCacheOption {
-    Save,
-    DoNotSave,
-}
-
 /// Represents possible errors that can arise while working with metadata in the manager.
 #[derive(Debug, thiserror::Error)]
 pub enum MetadataError {
@@ -84,7 +78,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         contract_address: &str,
         token_id: &str,
         chain_id: &str,
-        cache: ImageCacheOption,
+        save_images_to_s3: bool,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
@@ -118,7 +112,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             if let Ok(metadata_image) = self
                 .fetch_metadata_media(
                     image_uri.as_str(),
-                    cache,
+                    save_images_to_s3,
                     token_id,
                     image_timeout,
                     ipfs_gateway_uri,
@@ -153,7 +147,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                         if let Ok(metadata_animation) = self
                             .fetch_metadata_media(
                                 animation_uri.as_str(),
-                                cache,
+                                save_images_to_s3,
                                 token_id,
                                 image_timeout,
                                 ipfs_gateway_uri,
@@ -194,23 +188,23 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         &mut self,
         contract_address: String,
         chain_id: String,
-        cache: ImageCacheOption,
+        save_images_enabled: bool,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
     ) -> Result<(), MetadataError> {
-        let results = self
+        let tokens = self
             .storage
             .find_token_ids_without_metadata(Some((contract_address, chain_id)))
             .await
             .map_err(MetadataError::DatabaseError)?;
 
-        for (contract_address, token_id, chain_id) in results {
+        for token in tokens {
             self.refresh_token_metadata(
-                &contract_address,
-                &token_id,
-                &chain_id,
-                cache,
+                &token.contract_address,
+                &token.token_id,
+                &token.chain_id,
+                token.is_verified && save_images_enabled,
                 ipfs_gateway_uri,
                 image_timeout,
                 request_referrer,
@@ -239,7 +233,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
     pub async fn fetch_metadata_media(
         &mut self,
         raw_url: &str,
-        cache: ImageCacheOption,
+        save_images_to_s3: bool,
         token_id: &str,
         timeout: Duration,
         ipfs_url: &str,
@@ -248,8 +242,8 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 
         let url = raw_url.replace("ipfs://", ipfs_url);
 
-        match cache {
-            ImageCacheOption::DoNotSave => {
+        match save_images_to_s3 {
+            false => {
                 let response = self.request_client.head(url).send().await?;
                 let (content_type, content_length) =
                     extract_metadata_from_headers(response.headers())?;
@@ -261,7 +255,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     media_key: None,
                 })
             }
-            ImageCacheOption::Save => {
+            true => {
                 let response = self.request_client.get(url).timeout(timeout).send().await?;
 
                 let headers = response.headers().clone();
@@ -419,7 +413,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 mod tests {
     use super::*;
 
-    use crate::{file_manager::MockFileManager, storage::MockStorage};
+    use crate::{file_manager::MockFileManager, storage::MockStorage, types::TokenWithoutMetadata};
     use ark_starknet::client::MockStarknetClient;
     use mockall::predicate::*;
     use reqwest::header::HeaderMap;
@@ -497,11 +491,12 @@ mod tests {
             .times(1)
             .with(eq(Some(filter)))
             .returning(|_| {
-                Ok(vec![(
-                    contract_address.to_string(),
-                    "1".to_string(),
-                    "0x534e5f4d41494e".to_string(),
-                )])
+                Ok(vec![TokenWithoutMetadata {
+                    contract_address: contract_address.to_string(),
+                    token_id: "1".to_string(),
+                    chain_id: "0x534e5f4d41494e".to_string(),
+                    is_verified: true,
+                }])
             }); // Close the square bracket here
 
         mock_client
@@ -531,7 +526,7 @@ mod tests {
             .refresh_collection_token_metadata(
                 contract_address.to_string(),
                 chain_id.to_string(),
-                ImageCacheOption::DoNotSave,
+                false,
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
                 request_referrer,

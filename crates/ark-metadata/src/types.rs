@@ -70,6 +70,13 @@ pub struct TokenMetadata {
     pub metadata_updated_at: Option<i64>,
 }
 
+pub struct TokenWithoutMetadata {
+    pub contract_address: String,
+    pub token_id: String,
+    pub chain_id: String,
+    pub is_verified: bool,
+}
+
 #[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct NormalizedMetadata {
     pub image_mime_type: Option<String>,
