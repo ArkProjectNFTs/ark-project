@@ -24,7 +24,7 @@ pub struct MetadataManager<'a, T: Storage, C: StarknetClient, F: FileManager> {
 
 pub struct MetadataMedia {
     pub file_type: String,
-    pub content_length: u64,
+    pub content_length: Option<u64>,
     pub is_cache_updated: bool,
     pub media_key: Option<String>,
 }
@@ -257,20 +257,19 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
             }
             true => {
                 let response = self.request_client.get(url).timeout(timeout).send().await?;
-
                 let headers = response.headers().clone();
                 let bytes = response.bytes().await?;
                 let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
 
                 info!(
-                    "Image: Content-Type={}, Content-Length={}",
+                    "Image: Content-Type={}, Content-Length={:?}",
                     content_type, content_length
                 );
 
                 let file_ext = file_extension_from_mime_type(content_type.as_str());
 
                 debug!(
-                    "Image: Content-Type={}, Content-Length={}, File-Ext={}",
+                    "Image: Content-Type={}, Content-Length={:?}, File-Ext={}",
                     content_type, content_length, file_ext
                 );
 
@@ -435,7 +434,7 @@ mod tests {
         let (content_type, content_length) = data.unwrap();
 
         assert_eq!(content_type, "image/png");
-        assert_eq!(content_length, 12345u64);
+        assert_eq!(content_length, Some(12345u64));
     }
 
     #[tokio::test]

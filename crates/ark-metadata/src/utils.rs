@@ -264,28 +264,24 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
     }
 }
 
-pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, u64)> {
+pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, Option<u64>)> {
     debug!("Extracting metadata from headers...");
 
     let content_type = headers
         .get(CONTENT_TYPE)
         .and_then(|value| value.to_str().ok())
         .ok_or_else(|| {
-            debug!("Failed to extract content type.");
+            error!("Failed to extract content type.");
             anyhow!("Failed to extract content type")
         })?;
 
     let content_length = headers
         .get(CONTENT_LENGTH)
         .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.parse::<u64>().ok())
-        .ok_or_else(|| {
-            debug!("Failed to extract or parse content length.");
-            anyhow!("Failed to extract or parse content length")
-        })?;
+        .and_then(|value| value.parse::<u64>().ok());
 
     debug!(
-        "Successfully extracted content type: {} and content length: {}",
+        "Successfully extracted content type: {} and content length: {:?}",
         content_type, content_length
     );
     Ok((content_type.to_string(), content_length))
@@ -367,7 +363,7 @@ mod tests {
         headers.insert(CONTENT_LENGTH, HeaderValue::from_static("42"));
 
         let metadata = extract_metadata_from_headers(&headers).unwrap();
-        assert_eq!(metadata, ("text/plain".to_string(), 42));
+        assert_eq!(metadata, ("text/plain".to_string(), Some(42)));
     }
 
     #[test]
