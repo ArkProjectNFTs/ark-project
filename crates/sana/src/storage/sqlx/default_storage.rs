@@ -183,37 +183,18 @@ impl Storage for MarketplaceSqlxStorage {
             block_timestamp
         );
 
-        if (self
-            .get_token_by_id(&token.contract_address, &token.token_id, &token.chain_id)
-            .await?)
-            .is_some()
-        {
-            let q =
-                "UPDATE token SET block_timestamp = $1, updated_timestamp = EXTRACT(epoch FROM now())::bigint WHERE contract_address = $2 and token_id = $3";
+        let q = "INSERT INTO token (contract_address, chain_id, token_id, token_id_hex, current_owner, block_timestamp) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (contract_address, chain_id, token_id) DO NOTHING";
+        let _r = sqlx::query(q)
+            .bind(token.contract_address.clone())
+            .bind(token.chain_id.clone())
+            .bind(token.token_id.clone())
+            .bind(token.token_id_hex.clone())
+            .bind(token.owner.clone())
+            .bind(block_timestamp as i64)
+            .execute(&self.pool)
+            .await?;
 
-            sqlx::query(q)
-                .bind(block_timestamp as i64)
-                .bind(token.contract_address.clone())
-                .bind(token.token_id.clone())
-                .execute(&self.pool)
-                .await?;
-
-            Ok(())
-        } else {
-            let q = "INSERT INTO token (contract_address, chain_id, token_id, token_id_hex, current_owner, block_timestamp) VALUES ($1, $2, $3, $4, $5, $6)";
-
-            let _r = sqlx::query(q)
-                .bind(token.contract_address.clone())
-                .bind(token.chain_id.clone())
-                .bind(token.token_id.clone())
-                .bind(token.token_id_hex.clone())
-                .bind(token.owner.clone())
-                .bind(block_timestamp as i64)
-                .execute(&self.pool)
-                .await?;
-
-            Ok(())
-        }
+        Ok(())
     }
 
     async fn register_sale_event(
