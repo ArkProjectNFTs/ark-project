@@ -299,10 +299,9 @@ impl Storage for MarketplaceSqlxStorage {
                         let last_transfer_timestamp: i64 = r.get(0);
                         let last_transfer_timestamp_u64 = last_transfer_timestamp as u64;
                         if event.block_timestamp > last_transfer_timestamp_u64 {
-                            let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND chain_id = $4 AND token_id = $5";
+                            let update_q = "UPDATE token SET current_owner = $1 WHERE contract_address = $2 AND chain_id = $3 AND token_id = $4";
                             let _r = sqlx::query(update_q)
                                 .bind(event.to_address.clone())
-                                .bind(event.block_timestamp as i64)
                                 .bind(event.contract_address.clone())
                                 .bind(event.chain_id.clone())
                                 .bind(event.token_id.clone())
