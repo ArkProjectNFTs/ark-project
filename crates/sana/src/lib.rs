@@ -459,7 +459,6 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
                 }
                 _ => {
                     warn!("Unknown marketplace event: {:?}", event.keys);
-                    ()
                 }
             }
         }
