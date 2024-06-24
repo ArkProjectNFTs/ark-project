@@ -188,7 +188,6 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         &mut self,
         contract_address: String,
         chain_id: String,
-        save_images_enabled: bool,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
@@ -204,7 +203,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 &token.contract_address,
                 &token.token_id,
                 &token.chain_id,
-                token.is_verified && save_images_enabled,
+                token.save_images,
                 ipfs_gateway_uri,
                 image_timeout,
                 request_referrer,
@@ -495,6 +494,7 @@ mod tests {
                     token_id: "1".to_string(),
                     chain_id: "0x534e5f4d41494e".to_string(),
                     is_verified: true,
+                    save_images: false,
                 }])
             }); // Close the square bracket here
 
@@ -525,7 +525,6 @@ mod tests {
             .refresh_collection_token_metadata(
                 contract_address.to_string(),
                 chain_id.to_string(),
-                false,
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
                 request_referrer,
