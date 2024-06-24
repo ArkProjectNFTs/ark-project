@@ -366,9 +366,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             }
         };
 
-        if contract_type == ContractType::Other {
+        if contract_type != ContractType::ERC721 {
             debug!(
-                "Contract identified as OTHER: {}",
+                "Contract is not an ERC271 NFT: {}",
                 token_sale_event.nft_contract_address
             );
             return Ok(());
@@ -420,9 +420,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             }
         };
 
-        if contract_type == ContractType::Other {
+        if contract_type != ContractType::ERC721 {
             debug!(
-                "Contract identified as OTHER: {}",
+                "Contract is not an ERC271 NFT: {}",
                 token_sale_event.nft_contract_address
             );
             return Ok(());
@@ -488,8 +488,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
                 e
             })?;
 
-        if contract_type == ContractType::Other {
-            debug!("Contract identified as OTHER: {}", contract_address_hex);
+        if contract_type != ContractType::ERC721 {
+            debug!("Contract is not an ERC271 NFT: {}", contract_address_hex);
             return Ok(());
         }
 
