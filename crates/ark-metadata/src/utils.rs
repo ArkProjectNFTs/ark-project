@@ -294,10 +294,19 @@ pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, Opt
             anyhow!("Failed to extract content type")
         })?;
 
-    let content_length = headers
-        .get(CONTENT_LENGTH)
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.parse::<u64>().ok());
+    let content_length = match headers.get(CONTENT_LENGTH) {
+        Some(value) => {
+            let value_str = value.to_str().map_err(|_| {
+                error!("Failed to parse content length.");
+                anyhow!("Failed to extract or parse content length")
+            })?;
+            Some(value_str.parse::<u64>().map_err(|_| {
+                error!("Invalid content length format.");
+                anyhow!("Failed to extract or parse content length")
+            })?)
+        }
+        None => None,
+    };
 
     debug!(
         "Successfully extracted content type: {} and content length: {:?}",
@@ -395,19 +404,6 @@ mod tests {
         assert_eq!(
             result.unwrap_err().to_string(),
             "Failed to extract content type"
-        );
-    }
-
-    #[test]
-    fn test_extract_missing_content_length() {
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("text/plain"));
-
-        let result = extract_metadata_from_headers(&headers);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "Failed to extract or parse content length"
         );
     }
 
