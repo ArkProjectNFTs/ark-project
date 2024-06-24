@@ -1,12 +1,10 @@
-use async_trait::async_trait;
-
-use sqlx::{any::AnyPoolOptions, AnyPool, Error as SqlxError, FromRow};
-use std::str::FromStr;
-use tracing::{error, trace};
-
 use super::types::*;
 use crate::storage::types::*;
 use crate::Storage;
+use async_trait::async_trait;
+use sqlx::{any::AnyPoolOptions, AnyPool, Error as SqlxError, FromRow, Row};
+use std::str::FromStr;
+use tracing::{error, trace};
 
 impl From<SqlxError> for StorageError {
     fn from(e: SqlxError) -> Self {
@@ -190,15 +188,15 @@ impl Storage for MarketplaceSqlxStorage {
             .await?)
             .is_some()
         {
-            // let q =
-            //     "UPDATE token SET block_timestamp = $1, updated_timestamp = EXTRACT(epoch FROM now())::bigint WHERE contract_address = $2 and token_id = $3";
+            let q =
+                "UPDATE token SET block_timestamp = $1, updated_timestamp = EXTRACT(epoch FROM now())::bigint WHERE contract_address = $2 and token_id = $3";
 
-            // sqlx::query(q)
-            //     .bind(block_timestamp as i64)
-            //     .bind(token.contract_address.clone())
-            //     .bind(token.token_id.clone())
-            //     .execute(&self.pool)
-            //     .await?;
+            sqlx::query(q)
+                .bind(block_timestamp as i64)
+                .bind(token.contract_address.clone())
+                .bind(token.token_id.clone())
+                .execute(&self.pool)
+                .await?;
 
             Ok(())
         } else {
@@ -255,17 +253,6 @@ impl Storage for MarketplaceSqlxStorage {
             .execute(&self.pool)
             .await?;
 
-        // Update the owner of the token
-        let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND chain_id = $4 AND token_id = $5";
-        let _r = sqlx::query(update_q)
-            .bind(event.to_address.clone())
-            .bind(event.block_timestamp as i64)
-            .bind(event.nft_contract_address.clone())
-            .bind(event.chain_id.clone())
-            .bind(event.token_id.clone())
-            .execute(&self.pool)
-            .await?;
-
         Ok(())
     }
 
@@ -273,15 +260,11 @@ impl Storage for MarketplaceSqlxStorage {
         &self,
         event: &TokenTransferEvent,
     ) -> Result<(), StorageError> {
+        trace!("Registering transfer event {:?}", event.token_event_id);
         let existing_transfer_event =
             (self.get_event_by_id(&event.token_event_id).await?).is_some();
 
         if existing_transfer_event {
-            trace!(
-                "Updating existing transfer event {:?}",
-                event.token_event_id
-            );
-
             let q = "UPDATE token_event SET block_timestamp = $1 WHERE token_event_id = $2";
             sqlx::query(q)
                 .bind(event.block_timestamp as i64)
@@ -291,8 +274,6 @@ impl Storage for MarketplaceSqlxStorage {
 
             Ok(())
         } else {
-            trace!("Inserting new transfer event {:?}", event.token_event_id);
-
             let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
 
@@ -318,16 +299,41 @@ impl Storage for MarketplaceSqlxStorage {
                 .execute(&self.pool)
                 .await?;
 
-            // Update the owner of the token
-            let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND chain_id = $4 AND token_id = $5";
-            let _r = sqlx::query(update_q)
-                .bind(event.to_address.clone())
-                .bind(event.block_timestamp as i64)
+            let last_transfer_query = r#"SELECT block_timestamp 
+            FROM token_event 
+            WHERE contract_address = $1 AND chain_id = $2 
+            AND token_id = $3 
+            AND event_type = 'Transfer' 
+            ORDER BY block_timestamp DESC LIMIT 1"#;
+
+            match sqlx::query(last_transfer_query)
                 .bind(event.contract_address.clone())
                 .bind(event.chain_id.clone())
                 .bind(event.token_id.clone())
-                .execute(&self.pool)
-                .await?;
+                .fetch_optional(&self.pool)
+                .await
+            {
+                Ok(row) => {
+                    if let Some(r) = row {
+                        let last_transfer_timestamp: i64 = r.get(0);
+                        let last_transfer_timestamp_u64 = last_transfer_timestamp as u64;
+                        if event.block_timestamp > last_transfer_timestamp_u64 {
+                            let update_q = "UPDATE token SET current_owner = $1, held_timestamp = $2 WHERE contract_address = $3 AND chain_id = $4 AND token_id = $5";
+                            let _r = sqlx::query(update_q)
+                                .bind(event.to_address.clone())
+                                .bind(event.block_timestamp as i64)
+                                .bind(event.contract_address.clone())
+                                .bind(event.chain_id.clone())
+                                .bind(event.token_id.clone())
+                                .execute(&self.pool)
+                                .await?;
+                        }
+                    }
+                }
+                Err(e) => {
+                    error!("Database error: {:?}", e);
+                }
+            }
 
             Ok(())
         }
@@ -483,37 +489,22 @@ impl Storage for MarketplaceSqlxStorage {
     async fn clean_block(
         &self,
         block_timestamp: u64,
-        block_number: Option<u64>,
+        _block_number: Option<u64>,
     ) -> Result<(), StorageError> {
-        trace!(
-            "Cleaning block #{:?} [ts: {}]",
-            block_number,
-            block_timestamp.to_string()
-        );
-
-        let q = "DELETE FROM block WHERE block_timestamp = $1";
+        trace!("Cleaning block [ts: {}]", block_timestamp.to_string());
+        let q = "DELETE FROM block WHERE block_timestamp = $1::bigint";
         sqlx::query(q)
             .bind(block_timestamp.to_string())
             .fetch_all(&self.pool)
             .await?;
 
-        let q = "DELETE FROM contract WHERE updated_timestamp = $1";
+        let q = "DELETE FROM token_event WHERE block_timestamp = $1::bigint";
         sqlx::query(q)
             .bind(block_timestamp.to_string())
             .fetch_all(&self.pool)
             .await?;
 
-        let q = "DELETE FROM token WHERE updated_timestamp = $1";
-        sqlx::query(q)
-            .bind(block_timestamp.to_string())
-            .fetch_all(&self.pool)
-            .await?;
-
-        let q = "DELETE FROM token_event WHERE block_timestamp = $1";
-        sqlx::query(q)
-            .bind(block_timestamp.to_string())
-            .fetch_all(&self.pool)
-            .await?;
+        trace!("Block {} cleaned", block_timestamp.to_string());
 
         Ok(())
     }

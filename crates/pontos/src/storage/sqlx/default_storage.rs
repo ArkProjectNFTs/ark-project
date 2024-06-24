@@ -377,26 +377,13 @@ impl Storage for DefaultSqlxStorage {
             block_number,
             block_timestamp.to_string()
         );
-
-        let q = "DELETE FROM block WHERE block_timestamp = $1";
+        let q = "DELETE FROM block WHERE block_timestamp = $1::bigint";
         sqlx::query(q)
             .bind(block_timestamp.to_string())
             .fetch_all(&self.pool)
             .await?;
 
-        let q = "DELETE FROM contract WHERE block_timestamp = $1";
-        sqlx::query(q)
-            .bind(block_timestamp.to_string())
-            .fetch_all(&self.pool)
-            .await?;
-
-        let q = "DELETE FROM token WHERE block_timestamp = $1";
-        sqlx::query(q)
-            .bind(block_timestamp.to_string())
-            .fetch_all(&self.pool)
-            .await?;
-
-        let q = "DELETE FROM event WHERE block_timestamp = $1";
+        let q = "DELETE FROM token_event WHERE block_timestamp = $1::bigint";
         sqlx::query(q)
             .bind(block_timestamp.to_string())
             .fetch_all(&self.pool)

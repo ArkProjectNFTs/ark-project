@@ -2,7 +2,7 @@ use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use crate::storage::Storage;
 use starknet::core::types::FieldElement;
 use std::sync::Arc;
-use tracing::{debug, trace};
+use tracing::{debug, error, trace};
 use version_compare::{compare, Cmp};
 
 #[derive(Debug)]
@@ -44,7 +44,10 @@ impl<S: Storage> BlockManager<S> {
                 .await
             {
                 Ok(()) => Ok(false),
-                Err(_) => Ok(true),
+                Err(err) => {
+                    error!("Error cleaning block: {:?}", err);
+                    Ok(true)
+                }
             }
         } else {
             match self.storage.get_block_info(block_number).await {
