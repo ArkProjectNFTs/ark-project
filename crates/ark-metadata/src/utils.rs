@@ -143,6 +143,25 @@ pub fn file_extension_from_mime_type(mime_type: &str) -> &str {
     }
 }
 
+pub fn get_content_type_from_extension(extension: &str) -> &str {
+    match extension {
+        "glb" => "text/html",
+        "png" => "image/png",
+        "jpg" => "image/jpeg",
+        "gif" => "image/gif",
+        "bmp" => "image/bmp",
+        "webp" => "image/webp",
+        "svg" => "image/svg+xml",
+        "mp4" => "video/mp4",
+        "mov" => "video/quicktime",
+        "avi" => "video/x-msvideo",
+        "mkv" => "video/x-matroska",
+        "ogv" => "video/ogg",
+        "webm" => "video/webm",
+        _ => "application/octet-stream",
+    }
+}
+
 fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
     // Try to split from the comma as it is the standard with on chain metadata
     let url_encoded = urlencoding::decode(uri).map(|s| String::from(s.as_ref()));

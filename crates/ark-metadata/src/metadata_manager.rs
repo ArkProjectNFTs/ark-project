@@ -2,7 +2,10 @@ use crate::{
     file_manager::{FileInfo, FileManager},
     storage::Storage,
     types::StorageError,
-    utils::{extract_metadata_from_headers, file_extension_from_mime_type, get_token_metadata},
+    utils::{
+        extract_metadata_from_headers, file_extension_from_mime_type,
+        get_content_type_from_extension, get_token_metadata,
+    },
 };
 use anyhow::{anyhow, Result};
 use ark_starknet::{cairo_string_parser::parse_cairo_string, client::StarknetClient, CairoU256};
@@ -11,7 +14,7 @@ use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use std::{str::FromStr, time::Duration};
-use tracing::{debug, error, info, trace};
+use tracing::{error, info, trace};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -243,7 +246,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 
         match save_images_to_s3 {
             false => {
-                let response = self.request_client.head(url).send().await?;
+                let response = self.request_client.head(url.clone()).send().await?;
                 let (content_type, content_length) =
                     extract_metadata_from_headers(response.headers())?;
 
@@ -255,17 +258,33 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 })
             }
             true => {
-                let response = self.request_client.get(url).timeout(timeout).send().await?;
+                let response = self
+                    .request_client
+                    .get(url.clone())
+                    .timeout(timeout)
+                    .send()
+                    .await?;
                 let headers = response.headers().clone();
                 let bytes = response.bytes().await?;
-                let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
+                let (content_type_from_headers, content_length) =
+                    extract_metadata_from_headers(&headers)?;
+
+                let (file_ext, content_type): (&str, &str) = match url.split('.').last() {
+                    Some(fe) => {
+                        let content_type = get_content_type_from_extension(fe);
+                        (fe, content_type)
+                    }
+                    None => {
+                        let file_extension =
+                            file_extension_from_mime_type(content_type_from_headers.as_str());
+                        (file_extension, content_type_from_headers.as_str())
+                    }
+                };
 
                 info!(
                     "Image: Content-Type={}, Content-Length={:?}",
                     content_type, content_length
                 );
-
-                let file_ext = file_extension_from_mime_type(content_type.as_str());
 
                 debug!(
                     "Image: Content-Type={}, Content-Length={:?}, File-Ext={}",
@@ -282,7 +301,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     .await?;
 
                 Ok(MetadataMedia {
-                    file_type: content_type,
+                    file_type: content_type.to_string(),
                     content_length,
                     is_cache_updated: true,
                     media_key: Some(media_key),
