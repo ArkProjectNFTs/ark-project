@@ -5,6 +5,7 @@ version = 1
 name = "ark_common"
 version = "0.1.0"
 dependencies = [
+ "openzeppelin",
  "snforge_std",
 ]
 
