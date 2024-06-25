@@ -24,6 +24,15 @@ trait IExecutor<T> {
     fn get_broker_fees(self: @T, broker_address: ContractAddress) -> FeesRatio;
     fn set_ark_fees(ref self: T, fees_ratio: FeesRatio);
     fn get_ark_fees(self: @T) -> FeesRatio;
+
+    fn get_default_creator_fees(self: @T) -> (ContractAddress, FeesRatio);
+    fn set_default_creator_fees(ref self: T, receiver: ContractAddress, fees_ratio: FeesRatio);
+    fn get_collection_creator_fees(
+        self: @T, nft_address: ContractAddress
+    ) -> (ContractAddress, FeesRatio);
+    fn set_collection_creator_fees(
+        ref self: T, nft_address: ContractAddress, receiver: ContractAddress, fees_ratio: FeesRatio
+    );
 }
 
 #[starknet::interface]
