@@ -13,7 +13,7 @@ pub trait IERC2981<TState> {
 
 
 #[starknet::interface]
-trait IERC2981Setup<TState> {
+pub trait IERC2981Setup<TState> {
     fn default_royalty(self: @TState) -> (ContractAddress, FeesRatio);
     fn set_default_royalty(ref self: TState, receiver: ContractAddress, fees_ratio: FeesRatio);
 

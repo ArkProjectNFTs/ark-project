@@ -73,7 +73,7 @@ mod executor {
 
     use ark_oz::erc2981::interface::IERC2981_ID;
     use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
-    use ark_oz::erc2981::{FeesRatio, FeesRatioDefault};
+    use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
 
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
 
@@ -101,6 +101,10 @@ mod executor {
         ark_fees: FeesRatio,
         // order hash -> OrderInfo
         orders: LegacyMap<felt252, OrderInfo>,
+        // fallback when collection doesn't implement ERC2981
+        default_receiver: ContractAddress,
+        default_fees: FeesRatio,
+        creator_fees: LegacyMap<ContractAddress, (ContractAddress, FeesRatio)>,
     }
 
     #[event]
@@ -132,7 +136,10 @@ mod executor {
         self.chain_id.write(chain_id);
         self.ark_fees.write(Default::default());
         self.arkchain_fee.write(Default::default());
+        self.default_receiver.write(admin_address);
+        self.default_fees.write(Default::default());
     }
+
 
     #[abi(embed_v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
@@ -165,6 +172,47 @@ mod executor {
 
         fn get_ark_fees(self: @ContractState) -> FeesRatio {
             self.ark_fees.read()
+        }
+
+        fn get_default_creator_fees(self: @ContractState) -> (ContractAddress, FeesRatio) {
+            (self.default_receiver.read(), self.default_fees.read())
+        }
+
+        fn set_default_creator_fees(
+            ref self: ContractState, receiver: ContractAddress, fees_ratio: FeesRatio
+        ) {
+            assert(
+                starknet::get_caller_address() == self.admin_address.read(),
+                'Unauthorized admin address'
+            );
+            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            self.default_receiver.write(receiver);
+            self.default_fees.write(fees_ratio);
+        }
+
+        fn get_collection_creator_fees(
+            self: @ContractState, nft_address: ContractAddress
+        ) -> (ContractAddress, FeesRatio) {
+            let (receiver, fees_ratio) = self.creator_fees.read(nft_address);
+            if fees_ratio.denominator.is_zero() {
+                self.get_default_creator_fees()
+            } else {
+                (receiver, fees_ratio)
+            }
+        }
+
+        fn set_collection_creator_fees(
+            ref self: ContractState,
+            nft_address: ContractAddress,
+            receiver: ContractAddress,
+            fees_ratio: FeesRatio
+        ) {
+            assert(
+                starknet::get_caller_address() == self.admin_address.read(),
+                'Unauthorized admin address'
+            );
+            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            self.creator_fees.write(nft_address, (receiver, fees_ratio));
         }
 
         fn get_messaging_address(self: @ContractState) -> ContractAddress {
@@ -314,19 +362,17 @@ mod executor {
             let listing_broker_fees = self.get_broker_fees(execution_info.listing_broker_address);
             let ark_fees = self.ark_fees.read();
 
-            let fulfill_broker_fees_amount = _compute_fees_amount(
-                execution_info.payment_amount, @fulfill_broker_fees
-            );
-            let listing_broker_fees_amount = _compute_fees_amount(
-                execution_info.payment_amount, @listing_broker_fees
-            );
+            let fulfill_broker_fees_amount = fulfill_broker_fees
+                .compute_amount(execution_info.payment_amount);
+            let listing_broker_fees_amount = listing_broker_fees
+                .compute_amount(execution_info.payment_amount);
             let (creator_address, creator_fees_amount) = _compute_creator_fees_amount(
                 @self,
                 @execution_info.nft_address,
                 execution_info.payment_amount,
                 execution_info.nft_token_id
             );
-            let ark_fees_amount = _compute_fees_amount(execution_info.payment_amount, @ark_fees);
+            let ark_fees_amount = ark_fees.compute_amount(execution_info.payment_amount);
 
             assert!(
                 execution_info
@@ -697,18 +743,19 @@ mod executor {
             IERC2981Dispatcher { contract_address: *nft_address }
                 .royalty_info(token_id, payment_amount)
         } else {
-            // TODO: default behavior ?
-            let fees_ratio = FeesRatio { numerator: 0, denominator: 100 };
-            let amount = _compute_fees_amount(payment_amount, @fees_ratio);
-            (self.admin_address.read(), amount)
+            _fallback_compute_creator_fees_amount(self, nft_address, payment_amount)
         }
+    }
+
+    fn _fallback_compute_creator_fees_amount(
+        self: @ContractState, nft_address: @ContractAddress, payment_amount: u256
+    ) -> (ContractAddress, u256) {
+        let (receiver, fees_ratio) = self.get_collection_creator_fees(*nft_address);
+        let amount = fees_ratio.compute_amount(payment_amount);
+        (receiver, amount)
     }
 
     fn _fees_ratio_is_valid(fees_ratio: @FeesRatio) -> bool {
         *fees_ratio.denominator != 0 && *fees_ratio.numerator < *fees_ratio.denominator
-    }
-
-    fn _compute_fees_amount(amount: u256, fees_ratio: @FeesRatio) -> u256 {
-        (amount / *fees_ratio.denominator) * *fees_ratio.numerator
     }
 }

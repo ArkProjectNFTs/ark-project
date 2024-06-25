@@ -373,6 +373,177 @@ fn test_execute_order_erc2981_token_royalty_check_fees_ok() {
 }
 
 #[test]
+fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
+    let fulfiller = contract_address_const::<'fulfiller'>();
+    let listing_broker = contract_address_const::<'listing_broker'>();
+    let fulfill_broker = contract_address_const::<'fulfill_broker'>();
+    let admin_address = contract_address_const::<'admin'>();
+    let offerer = contract_address_const::<'offerer'>();
+    let creator = contract_address_const::<'creator'>();
+
+    let fake_nft_address = contract_address_const::<'fake_nft_address'>();
+
+    let start_amount = 10_000_000;
+    let (executor_address, erc20_address, _, execution_info) = setup_execute_order(
+        admin_address, offerer, fulfiller, listing_broker, fulfill_broker, start_amount, false
+    );
+
+    let erc20 = IERC20Dispatcher { contract_address: erc20_address };
+    let executor = IExecutorDispatcher { contract_address: executor_address };
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
+
+    let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
+
+    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
+    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    assert_eq!(
+        executor.get_broker_fees(fulfill_broker),
+        fulfill_fees_ratio,
+        "Fulfill broker fees not updated"
+    );
+    assert_eq!(
+        executor.get_broker_fees(listing_broker),
+        listing_fees_ratio,
+        "Listing broker fees not updated"
+    );
+
+    let fulfill_broker_balance = erc20.balance_of(fulfill_broker);
+    let listing_broker_balance = erc20.balance_of(listing_broker);
+    let creator_balance = erc20.balance_of(creator);
+    let offerer_balance = erc20.balance_of(offerer);
+    let fulfiller_balance = erc20.balance_of(fulfiller);
+
+    let fulfill_broker_delta = 1_000_000; // 10%
+    let listing_broker_delta = 500_000; // 5%
+    let creator_delta = 200_000; // 2%
+    let offerer_delta = start_amount;
+    let fulfiller_delta = start_amount
+        - fulfill_broker_delta
+        - listing_broker_delta
+        - creator_delta;
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    executor.set_default_creator_fees(creator, FeesRatio { numerator: 2, denominator: 100 });
+    executor
+        .set_collection_creator_fees(
+            fake_nft_address, creator, FeesRatio { numerator: 4, denominator: 1000 }
+        );
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
+    assert_eq!(
+        erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
+        fulfill_broker_delta,
+        "Fulfill broker balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(listing_broker) - listing_broker_balance,
+        listing_broker_delta,
+        "Listing broker balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(creator) - creator_balance, creator_delta, "Creator balance not correct"
+    );
+    assert_eq!(
+        offerer_balance - erc20.balance_of(offerer), offerer_delta, "Offerer balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(fulfiller) - fulfiller_balance,
+        fulfiller_delta,
+        "Fulfiller balance not correct"
+    );
+}
+
+#[test]
+fn test_execute_order_non_erc2981_collection_royalty_check_fees_ok() {
+    let fulfiller = contract_address_const::<'fulfiller'>();
+    let listing_broker = contract_address_const::<'listing_broker'>();
+    let fulfill_broker = contract_address_const::<'fulfill_broker'>();
+    let admin_address = contract_address_const::<'admin'>();
+    let offerer = contract_address_const::<'offerer'>();
+    let creator = contract_address_const::<'creator'>();
+    let other_creator = contract_address_const::<'other_creator'>();
+
+    let start_amount = 10_000_000;
+    let (executor_address, erc20_address, nft_address, execution_info) = setup_execute_order(
+        admin_address, offerer, fulfiller, listing_broker, fulfill_broker, start_amount, false
+    );
+
+    let erc20 = IERC20Dispatcher { contract_address: erc20_address };
+    let executor = IExecutorDispatcher { contract_address: executor_address };
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
+
+    let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
+
+    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
+    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    assert_eq!(
+        executor.get_broker_fees(fulfill_broker),
+        fulfill_fees_ratio,
+        "Fulfill broker fees not updated"
+    );
+    assert_eq!(
+        executor.get_broker_fees(listing_broker),
+        listing_fees_ratio,
+        "Listing broker fees not updated"
+    );
+
+    let fulfill_broker_balance = erc20.balance_of(fulfill_broker);
+    let listing_broker_balance = erc20.balance_of(listing_broker);
+    let creator_balance = erc20.balance_of(creator);
+    let offerer_balance = erc20.balance_of(offerer);
+    let fulfiller_balance = erc20.balance_of(fulfiller);
+
+    let fulfill_broker_delta = 1_000_000; // 10%
+    let listing_broker_delta = 500_000; // 5%
+    let creator_delta = 200_000; // 2%
+    let offerer_delta = start_amount;
+    let fulfiller_delta = start_amount
+        - fulfill_broker_delta
+        - listing_broker_delta
+        - creator_delta;
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    executor.set_default_creator_fees(other_creator, FeesRatio { numerator: 4, denominator: 100 });
+    executor
+        .set_collection_creator_fees(
+            nft_address, creator, FeesRatio { numerator: 2, denominator: 100 }
+        );
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
+    assert_eq!(
+        erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
+        fulfill_broker_delta,
+        "Fulfill broker balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(listing_broker) - listing_broker_balance,
+        listing_broker_delta,
+        "Listing broker balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(creator) - creator_balance, creator_delta, "Creator balance not correct"
+    );
+    assert_eq!(
+        offerer_balance - erc20.balance_of(offerer), offerer_delta, "Offerer balance not correct"
+    );
+    assert_eq!(
+        erc20.balance_of(fulfiller) - fulfiller_balance,
+        fulfiller_delta,
+        "Fulfiller balance not correct"
+    );
+}
+
+#[test]
 #[should_panic(expected: ("Fees exceed payment amount",))]
 fn test_execute_order_check_fee_too_much_fees() {
     let fulfiller = contract_address_const::<'fulfiller'>();
