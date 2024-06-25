@@ -18,8 +18,8 @@ mod FreeMintNFTRoyalty {
     use openzeppelin::token::erc721::ERC721Component;
     use openzeppelin::access::ownable::OwnableComponent;
 
-    use ark_common::oz::erc2981::ERC2981Component;
-    use ark_common::oz::erc2981::fees::FeesRatioDefault;
+    use ark_oz::erc2981::ERC2981Component;
+    use ark_oz::erc2981::FeesRatioDefault;
 
     use super::IFreeMint;
 

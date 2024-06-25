@@ -5,8 +5,7 @@ mod MockERC2981 {
     use openzeppelin::introspection::src5::SRC5Component;
     use openzeppelin::access::ownable::OwnableComponent;
 
-    use ark_common::oz::erc2981::ERC2981Component;
-    use ark_common::oz::erc2981::interface::FeesRatio;
+    use ark_oz::erc2981::{ERC2981Component, FeesRatio};
 
     component!(path: ERC2981Component, storage: erc2981, event: ERC2981Event);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);

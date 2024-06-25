@@ -70,11 +70,10 @@ mod executor {
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-    use ark_common::oz::erc2981::interface::{
-        IERC2981_ID, IERC2981, IERC2981Dispatcher, IERC2981DispatcherTrait
-    };
-    use ark_common::oz::erc2981::interface::FeesRatio;
-    use ark_common::oz::erc2981::fees::FeesRatioDefault;
+
+    use ark_oz::erc2981::interface::IERC2981_ID;
+    use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
+    use ark_oz::erc2981::{FeesRatio, FeesRatioDefault};
 
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
 
