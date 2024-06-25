@@ -5,7 +5,7 @@ use openzeppelin::token::erc721::interface::{IERC721Dispatcher, IERC721Dispatche
 use ark_common::protocol::order_v1::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, ExecutionInfo, OrderTrait, RouteType};
 
-use ark_common::oz::erc2981::interface::{IERC2981SetupDispatcher, IERC2981SetupDispatcherTrait};
+use ark_oz::erc2981::{IERC2981SetupDispatcher, IERC2981SetupDispatcherTrait};
 
 use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait, FeesRatio};
 

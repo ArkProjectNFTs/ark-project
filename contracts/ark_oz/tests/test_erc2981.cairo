@@ -3,12 +3,11 @@ use starknet::{ContractAddress, contract_address_const};
 
 use openzeppelin::introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 
-use ark_common::oz::erc2981::interface::IERC2981_ID;
-use ark_common::oz::erc2981::interface::{FeesRatio};
-use ark_common::oz::erc2981::interface::{IERC2981Dispatcher, IERC2981DispatcherTrait};
-use ark_common::oz::erc2981::interface::{IERC2981SetupDispatcher, IERC2981SetupDispatcherTrait};
+use ark_oz::erc2981::interface::IERC2981_ID;
+use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
+use ark_oz::erc2981::{IERC2981SetupDispatcher, IERC2981SetupDispatcherTrait};
 
-use ark_common::oz::erc2981::fees::{FeesImpl, FeesRatioDefault};
+use ark_oz::erc2981::{FeesRatio, FeesImpl, FeesRatioDefault};
 
 use snforge_std::{ContractClass, ContractClassTrait, declare};
 use snforge_std::{start_prank, stop_prank, CheatTarget};
