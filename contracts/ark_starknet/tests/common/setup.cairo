@@ -30,8 +30,8 @@ fn deploy_nft(royalty: bool) -> ContractAddress {
     symbol.serialize(ref calldata);
     base_uri.serialize(ref calldata);
     if royalty {
-        let creator = contract_address_const::<'creator'>();
-        calldata.append(creator.into());
+        let owner = contract_address_const::<'nft_owner'>();
+        calldata.append(owner.into());
         let contract = declare('FreeMintNFTRoyalty');
         contract.deploy(@calldata).unwrap()
     } else {
