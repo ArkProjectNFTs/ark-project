@@ -70,16 +70,17 @@ mod executor {
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-    use ark_common::oz::erc2981::{
+    use ark_common::oz::erc2981::interface::{
         IERC2981_ID, IERC2981, IERC2981Dispatcher, IERC2981DispatcherTrait
     };
+    use ark_common::oz::erc2981::interface::FeesRatio;
+    use ark_common::oz::erc2981::fees::FeesRatioDefault;
 
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
 
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
     };
-    use ark_starknet::fees_ratio::{FeesRatio, FeesRatioDefault};
 
     use openzeppelin::token::{
         erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},

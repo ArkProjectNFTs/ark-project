@@ -8,38 +8,37 @@ trait IFreeMint<T> {
 
 #[starknet::contract]
 mod FreeMintNFTRoyalty {
-    use openzeppelin::introspection::src5::SRC5Component;
-    use openzeppelin::token::erc721::ERC721Component;
     use starknet::ContractAddress;
     use core::traits::Into;
     use core::serde::Serde;
     use core::traits::TryInto;
-    use super::IFreeMint;
     use core::array::ArrayTrait;
 
-    use ark_common::oz::erc2981::{IERC2981_ID, IERC2981};
+    use openzeppelin::introspection::src5::SRC5Component;
+    use openzeppelin::token::erc721::ERC721Component;
+    use openzeppelin::access::ownable::OwnableComponent;
+
+    use ark_common::oz::erc2981::ERC2981Component;
+    use ark_common::oz::erc2981::fees::FeesRatioDefault;
+
+    use super::IFreeMint;
 
     component!(path: ERC721Component, storage: erc721, event: ERC721Event);
+    component!(path: ERC2981Component, storage: erc2981, event: ERC2981Event);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
-
-    // ERC721 Mixin
-    #[abi(embed_v0)]
-    impl ERC721MixinImpl = ERC721Component::ERC721MixinImpl<ContractState>;
-    impl ERC721InternalImpl = ERC721Component::InternalImpl<ContractState>;
-    impl ERC721MetadataImpl = ERC721Component::ERC721MetadataImpl<ContractState>;
-    impl ERC721CamelOnly = ERC721Component::ERC721CamelOnlyImpl<ContractState>;
-    impl ERC721MetadataCamelOnly = ERC721Component::ERC721MetadataCamelOnlyImpl<ContractState>;
-    impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
-    impl InternalImpl = SRC5Component::InternalImpl<ContractState>;
+    component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
 
     #[storage]
     struct Storage {
         #[substorage(v0)]
         erc721: ERC721Component::Storage,
         #[substorage(v0)]
+        erc2981: ERC2981Component::Storage,
+        #[substorage(v0)]
         src5: SRC5Component::Storage,
+        #[substorage(v0)]
+        ownable: OwnableComponent::Storage,
         latest_token_id: u256,
-        creator: ContractAddress,
     }
 
     #[event]
@@ -48,8 +47,29 @@ mod FreeMintNFTRoyalty {
         #[flat]
         ERC721Event: ERC721Component::Event,
         #[flat]
+        ERC2981Event: ERC2981Component::Event,
+        #[flat]
         SRC5Event: SRC5Component::Event,
+        #[flat]
+        OwnableEvent: OwnableComponent::Event,
     }
+
+    // ERC721 Mixin
+    #[abi(embed_v0)]
+    impl ERC721MixinImpl = ERC721Component::ERC721MixinImpl<ContractState>;
+    impl ERC721InternalImpl = ERC721Component::InternalImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl ERC2981 = ERC2981Component::ERC2981Impl<ContractState>;
+    impl ERC2981InternalImpl = ERC2981Component::InternalImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl ERC2981Setup = ERC2981Component::ERC2981SetupImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl OwnableMixin = OwnableComponent::OwnableMixinImpl<ContractState>;
+    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
+
 
     #[constructor]
     fn constructor(
@@ -57,12 +77,12 @@ mod FreeMintNFTRoyalty {
         name: core::byte_array::ByteArray,
         symbol: core::byte_array::ByteArray,
         base_uri: core::byte_array::ByteArray,
-        creator: ContractAddress,
+        owner: ContractAddress,
     ) {
         self.erc721.initializer(name, symbol, base_uri);
-        self.src5.register_interface(IERC2981_ID);
+        self.erc2981.initializer(owner, Default::default());
+        self.ownable.initializer(owner);
         self.latest_token_id.write(0);
-        self.creator.write(creator);
     }
 
     #[abi(embed_v0)]
@@ -75,19 +95,6 @@ mod FreeMintNFTRoyalty {
             let token_id = self.latest_token_id.read();
             self.erc721._mint(recipient, token_id);
             self.latest_token_id.write(token_id + 1);
-        }
-    }
-
-    #[abi(embed_v0)]
-    impl ImplERC2981 of IERC2981<ContractState> {
-        fn royalty_info(
-            self: @ContractState, token_id: u256, sale_price: u256
-        ) -> (ContractAddress, u256) {
-            // same fees for every token
-            let num = 2;
-            let denom = 100;
-            let fees_amount = (sale_price * num) / denom;
-            (self.creator.read(), fees_amount)
         }
     }
 }

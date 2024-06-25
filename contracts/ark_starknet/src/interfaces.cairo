@@ -3,8 +3,8 @@ use starknet::{ClassHash, ContractAddress};
 use ark_common::protocol::order_types::ExecutionInfo;
 use ark_common::protocol::order_types::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
+use ark_common::oz::erc2981::interface::FeesRatio;
 
-use super::fees_ratio::FeesRatio;
 
 #[starknet::interface]
 trait IExecutor<T> {
