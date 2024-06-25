@@ -3,8 +3,7 @@ use starknet::ContractAddress;
 use ark_oz::erc2981::FeesRatio;
 
 
-// TODO: compute interface ID
-const IERC2981_ID: felt252 = 0x020c8d7f792d748c72d5a4bd64e1d352ef0a9f32a2cb0f281fe929c2c127ded4;
+const IERC2981_ID: felt252 = 0x2d3414e45a8700c29f119a54b9f11dca0e29e06ddcb214018fc37340e165ed6;
 
 #[starknet::interface]
 pub trait IERC2981<TState> {
