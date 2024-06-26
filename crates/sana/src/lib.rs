@@ -335,6 +335,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         block_timestamp: u64,
         chain_id: &str,
     ) -> Result<()> {
+        trace!("Processing Element sale event...");
         let mut token_sale_event = self
             .event_manager
             .format_element_sale_event(&event, block_timestamp, chain_id)
@@ -365,9 +366,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             }
         };
 
-        if contract_type == ContractType::Other {
+        if contract_type != ContractType::ERC721 {
             debug!(
-                "Contract identified as OTHER: {}",
+                "Contract is not an ERC271 NFT: {}",
                 token_sale_event.nft_contract_address
             );
             return Ok(());
@@ -387,7 +388,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         block_timestamp: u64,
         chain_id: &str,
     ) -> Result<()> {
-        info!("=> Processing Ventory sale event...");
+        trace!("Processing Ventory sale event...");
 
         let mut token_sale_event = self
             .event_manager
@@ -419,9 +420,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             }
         };
 
-        if contract_type == ContractType::Other {
+        if contract_type != ContractType::ERC721 {
             debug!(
-                "Contract identified as OTHER: {}",
+                "Contract is not an ERC271 NFT: {}",
                 token_sale_event.nft_contract_address
             );
             return Ok(());
@@ -456,7 +457,9 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
                     self.process_ventory_sale(event, block_timestamp, chain_id)
                         .await?
                 }
-                _ => (),
+                _ => {
+                    warn!("Unknown marketplace event: {:?}", event.keys);
+                }
             }
         }
 
@@ -485,8 +488,8 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
                 e
             })?;
 
-        if contract_type == ContractType::Other {
-            debug!("Contract identified as OTHER: {}", contract_address_hex);
+        if contract_type != ContractType::ERC721 {
+            debug!("Contract is not an ERC271 NFT: {}", contract_address_hex);
             return Ok(());
         }
 
@@ -546,14 +549,16 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             let is_marketplace_event = marketplace_contracts.contains(&contract_address);
 
             if is_marketplace_event {
-                if let Err(e) = self
-                    .process_marketplace_event(e, block_timestamp, chain_id)
+                if let Err(err) = self
+                    .process_marketplace_event(e.clone(), block_timestamp, chain_id)
                     .await
                 {
-                    error!("Error while processing marketplace event: {:?}", e);
+                    error!("Error while processing marketplace event: {:?}", err);
                 }
-            } else if let Err(e) = self
-                .process_nft_transfers(e, block_timestamp, contract_address, chain_id)
+            }
+
+            if let Err(e) = self
+                .process_nft_transfers(e.clone(), block_timestamp, contract_address, chain_id)
                 .await
             {
                 error!("Error while processing NFT transfers: {:?}", e);

@@ -143,6 +143,25 @@ pub fn file_extension_from_mime_type(mime_type: &str) -> &str {
     }
 }
 
+pub fn get_content_type_from_extension(extension: &str) -> &str {
+    match extension {
+        "glb" => "text/html",
+        "png" => "image/png",
+        "jpg" => "image/jpeg",
+        "gif" => "image/gif",
+        "bmp" => "image/bmp",
+        "webp" => "image/webp",
+        "svg" => "image/svg+xml",
+        "mp4" => "video/mp4",
+        "mov" => "video/quicktime",
+        "avi" => "video/x-msvideo",
+        "mkv" => "video/x-matroska",
+        "ogv" => "video/ogg",
+        "webm" => "video/webm",
+        _ => "application/octet-stream",
+    }
+}
+
 fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
     // Try to split from the comma as it is the standard with on chain metadata
     let url_encoded = urlencoding::decode(uri).map(|s| String::from(s.as_ref()));
@@ -275,10 +294,19 @@ pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, Opt
             anyhow!("Failed to extract content type")
         })?;
 
-    let content_length = headers
-        .get(CONTENT_LENGTH)
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.parse::<u64>().ok());
+    let content_length = match headers.get(CONTENT_LENGTH) {
+        Some(value) => {
+            let value_str = value.to_str().map_err(|_| {
+                error!("Failed to parse content length.");
+                anyhow!("Failed to extract or parse content length")
+            })?;
+            Some(value_str.parse::<u64>().map_err(|_| {
+                error!("Invalid content length format.");
+                anyhow!("Failed to extract or parse content length")
+            })?)
+        }
+        None => None,
+    };
 
     debug!(
         "Successfully extracted content type: {} and content length: {:?}",
@@ -376,19 +404,6 @@ mod tests {
         assert_eq!(
             result.unwrap_err().to_string(),
             "Failed to extract content type"
-        );
-    }
-
-    #[test]
-    fn test_extract_missing_content_length() {
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("text/plain"));
-
-        let result = extract_metadata_from_headers(&headers);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "Failed to extract or parse content length"
         );
     }
 

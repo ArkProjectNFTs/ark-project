@@ -2,7 +2,10 @@ use crate::{
     file_manager::{FileInfo, FileManager},
     storage::Storage,
     types::StorageError,
-    utils::{extract_metadata_from_headers, file_extension_from_mime_type, get_token_metadata},
+    utils::{
+        extract_metadata_from_headers, file_extension_from_mime_type,
+        get_content_type_from_extension, get_token_metadata,
+    },
 };
 use anyhow::{anyhow, Result};
 use ark_starknet::{cairo_string_parser::parse_cairo_string, client::StarknetClient, CairoU256};
@@ -188,7 +191,6 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         &mut self,
         contract_address: String,
         chain_id: String,
-        save_images_enabled: bool,
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
@@ -204,7 +206,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 &token.contract_address,
                 &token.token_id,
                 &token.chain_id,
-                token.is_verified && save_images_enabled,
+                token.save_images,
                 ipfs_gateway_uri,
                 image_timeout,
                 request_referrer,
@@ -244,7 +246,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
 
         match save_images_to_s3 {
             false => {
-                let response = self.request_client.head(url).send().await?;
+                let response = self.request_client.head(url.clone()).send().await?;
                 let (content_type, content_length) =
                     extract_metadata_from_headers(response.headers())?;
 
@@ -256,17 +258,33 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                 })
             }
             true => {
-                let response = self.request_client.get(url).timeout(timeout).send().await?;
+                let response = self
+                    .request_client
+                    .get(url.clone())
+                    .timeout(timeout)
+                    .send()
+                    .await?;
                 let headers = response.headers().clone();
                 let bytes = response.bytes().await?;
-                let (content_type, content_length) = extract_metadata_from_headers(&headers)?;
+                let (content_type_from_headers, content_length) =
+                    extract_metadata_from_headers(&headers)?;
+
+                let (file_ext, content_type): (&str, &str) = match url.split('.').last() {
+                    Some(fe) => {
+                        let content_type = get_content_type_from_extension(fe);
+                        (fe, content_type)
+                    }
+                    None => {
+                        let file_extension =
+                            file_extension_from_mime_type(content_type_from_headers.as_str());
+                        (file_extension, content_type_from_headers.as_str())
+                    }
+                };
 
                 info!(
                     "Image: Content-Type={}, Content-Length={:?}",
                     content_type, content_length
                 );
-
-                let file_ext = file_extension_from_mime_type(content_type.as_str());
 
                 debug!(
                     "Image: Content-Type={}, Content-Length={:?}, File-Ext={}",
@@ -283,7 +301,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                     .await?;
 
                 Ok(MetadataMedia {
-                    file_type: content_type,
+                    file_type: content_type.to_string(),
                     content_length,
                     is_cache_updated: true,
                     media_key: Some(media_key),
@@ -495,6 +513,7 @@ mod tests {
                     token_id: "1".to_string(),
                     chain_id: "0x534e5f4d41494e".to_string(),
                     is_verified: true,
+                    save_images: false,
                 }])
             }); // Close the square bracket here
 
@@ -525,7 +544,6 @@ mod tests {
             .refresh_collection_token_metadata(
                 contract_address.to_string(),
                 chain_id.to_string(),
-                false,
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
                 request_referrer,
