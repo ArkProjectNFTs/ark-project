@@ -87,7 +87,6 @@ impl<S: Storage> BlockManager<S> {
     ) -> Result<(), StorageError> {
         self.storage
             .set_block_info(
-                block_number,
                 block_timestamp,
                 BlockInfo {
                     indexer_version,

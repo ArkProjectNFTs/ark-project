@@ -2,7 +2,7 @@ use super::types::*;
 use crate::storage::types::*;
 use crate::Storage;
 use async_trait::async_trait;
-use sqlx::{any::AnyPoolOptions, AnyPool, Error as SqlxError, FromRow, Row};
+use sqlx::{postgres::PgPoolOptions, Error as SqlxError, FromRow, PgPool, Row};
 use std::str::FromStr;
 use tracing::{error, trace};
 
@@ -12,20 +12,20 @@ impl From<SqlxError> for StorageError {
     }
 }
 
-pub struct MarketplaceSqlxStorage {
-    pool: AnyPool,
+pub struct PostgresStorage {
+    pool: PgPool,
 }
 
-impl MarketplaceSqlxStorage {
-    pub fn get_pool_ref(&self) -> &AnyPool {
+impl PostgresStorage {
+    pub fn get_pool_ref(&self) -> &PgPool {
         &self.pool
     }
 
-    pub async fn new_any(db_url: &str) -> Result<Self, StorageError> {
+    pub async fn new(db_url: &str) -> Result<Self, StorageError> {
         sqlx::any::install_default_drivers();
 
         Ok(Self {
-            pool: AnyPoolOptions::new()
+            pool: PgPoolOptions::new()
                 .max_connections(1)
                 .connect(db_url)
                 .await?,
@@ -43,7 +43,7 @@ impl MarketplaceSqlxStorage {
         Ok(())
     }
 
-    async fn get_token_by_id(
+    async fn _get_token_by_id(
         &self,
         contract_address: &str,
         token_id: &str,
@@ -141,10 +141,63 @@ impl MarketplaceSqlxStorage {
             Err(e) => Err(StorageError::DatabaseError(e.to_string())),
         }
     }
+
+    pub async fn update_indexer_progression(
+        &self,
+        indexer_identifier: &str,
+        indexer_version: &str,
+        progression: f64,
+        current_block_number: i64,
+        force_mode: bool,
+        start_block_number: i64,
+        end_block_number: i64,
+    ) -> Result<(), StorageError> {
+        let status = if progression == 100.0 {
+            "COMPLETED"
+        } else {
+            "RUNNING"
+        };
+
+        let query = r#"
+            INSERT INTO public.indexer (
+                indexer_identifier, indexer_status, last_updated_timestamp, indexation_progress_percentage,
+                current_block_number, is_force_mode_enabled, start_block_number, end_block_number, indexer_version
+            ) VALUES (
+                $1, $2, EXTRACT(epoch FROM now())::bigint, $3, $4, $5, $6, $7, $8
+            ) ON CONFLICT (indexer_identifier) DO UPDATE
+            SET
+                indexer_status = EXCLUDED.indexer_status,
+                last_updated_timestamp = EXTRACT(epoch FROM now())::bigint,
+                indexation_progress_percentage = EXCLUDED.indexation_progress_percentage,
+                current_block_number = EXCLUDED.current_block_number,
+                is_force_mode_enabled = EXCLUDED.is_force_mode_enabled,
+                start_block_number = EXCLUDED.start_block_number,
+                end_block_number = EXCLUDED.end_block_number,
+                indexer_version = EXCLUDED.indexer_version
+        "#;
+
+        sqlx::query(query)
+            .bind(indexer_identifier)
+            .bind(status)
+            .bind(progression)
+            .bind(current_block_number)
+            .bind(force_mode)
+            .bind(start_block_number)
+            .bind(end_block_number)
+            .bind(indexer_version)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| {
+                error!("Failed to update indexer progress: {}", e);
+                StorageError::DatabaseError(e.to_string())
+            })?;
+
+        Ok(())
+    }
 }
 
 #[async_trait]
-impl Storage for MarketplaceSqlxStorage {
+impl Storage for PostgresStorage {
     async fn register_mint(
         &self,
         contract_address: &str,
@@ -384,7 +437,6 @@ impl Storage for MarketplaceSqlxStorage {
 
     async fn set_block_info(
         &self,
-        block_number: u64,
         block_timestamp: u64,
         info: BlockInfo,
     ) -> Result<(), StorageError> {
@@ -395,14 +447,15 @@ impl Storage for MarketplaceSqlxStorage {
             .is_some();
 
         if !exists {
-            let q = "INSERT INTO indexer (indexer_identifier, indexer_version) VALUES ($1, $2)";
+            let q = "INSERT INTO indexer (indexer_identifier, indexer_version, indexer_status, current_block_number) VALUES ($1, $2, $3, $4)";
             sqlx::query(q)
                 .bind(info.indexer_identifier.clone())
                 .bind(info.indexer_version.clone())
+                .bind(info.block_status.to_string())
+                .bind(info.block_number as i64)
                 .execute(&self.pool)
                 .await?;
         }
-
         let _r = if (self.get_block_by_timestamp(block_timestamp).await?).is_some() {
             let q = r#"
                 UPDATE block 
@@ -410,7 +463,7 @@ impl Storage for MarketplaceSqlxStorage {
                 WHERE block_timestamp = $4;
             "#;
             sqlx::query(q)
-                .bind(block_number as i64)
+                .bind(info.block_number as i64)
                 .bind(info.block_status.to_string())
                 .bind(info.indexer_identifier.clone())
                 .bind(block_timestamp as i64)
@@ -418,10 +471,9 @@ impl Storage for MarketplaceSqlxStorage {
                 .await?
         } else {
             let q = "INSERT INTO block (block_timestamp, block_number, block_status, indexer_identifier) VALUES ($1, $2, $3, $4) ON CONFLICT (block_number) DO NOTHING";
-
             sqlx::query(q)
                 .bind(block_timestamp as i64)
-                .bind(block_number as i64)
+                .bind(info.block_number as i64)
                 .bind(info.block_status.to_string())
                 .bind(info.indexer_identifier.clone())
                 .execute(&self.pool)

@@ -13,7 +13,15 @@ use async_trait::async_trait;
 #[allow(unused)]
 pub trait EventHandler {
     /// Sana has normally terminated the indexation of the given blocks.
-    async fn on_block_processed(&self, block_number: u64, indexation_progress: f64) {}
+    async fn on_block_processed(
+        &self,
+        block_number: u64,
+        indexation_progress: f64,
+        force_mode: bool,
+        start_block_number: u64,
+        end_block_number: u64,
+    ) {
+    }
 
     /// Block is processing by Sana.
     async fn on_block_processing(&self, block_timestamp: u64, block_number: Option<u64>) {}

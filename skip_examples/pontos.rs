@@ -175,11 +175,14 @@ impl Storage for DefaultStorage {
 
     async fn set_block_info(
         &self,
-        block_number: u64,
         _block_timestamp: u64,
-        info: BlockInfo,
+        block_info: BlockInfo,
     ) -> Result<(), StorageError> {
-        log::trace!("Setting block info {:?} for block #{}", info, block_number);
+        log::trace!(
+            "Setting block info {:?} for block #{}",
+            block_info,
+            block_info.block_number
+        );
         Ok(())
     }
 

@@ -4,6 +4,6 @@
 //! implementation for examples and testing.
 //! No optimization was made at database level.
 pub mod default_storage;
-pub use default_storage::MarketplaceSqlxStorage;
+pub use default_storage::PostgresStorage;
 
 pub mod types;
