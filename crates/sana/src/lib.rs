@@ -169,7 +169,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
         &self,
         from_block: BlockId,
         to_block: BlockId,
-        do_force: bool,
+        force_mode: bool,
         chain_id: &str,
     ) -> IndexerResult<()> {
         let mut current_u64 = self.client.block_id_to_u64(&from_block).await?;
@@ -224,7 +224,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
                     current_u64,
                     block_ts,
                     self.config.indexer_version.clone(),
-                    do_force,
+                    force_mode,
                 )
                 .await?
             {
@@ -295,7 +295,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
             };
 
             self.event_handler
-                .on_block_processed(current_u64, progress)
+                .on_block_processed(current_u64, progress, force_mode, from_u64, to_u64)
                 .await;
 
             current_u64 += 1;

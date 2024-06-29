@@ -11,7 +11,7 @@ use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
 #[cfg(feature = "sqlxdb")]
-pub use sqlx::MarketplaceSqlxStorage;
+pub use sqlx::PostgresStorage;
 
 #[async_trait]
 #[cfg_attr(test, automock)]
@@ -54,7 +54,6 @@ pub trait Storage {
     /// A block info is only set if the block has a number and a timestamp.
     async fn set_block_info(
         &self,
-        block_number: u64,
         block_timestamp: u64,
         info: BlockInfo,
     ) -> Result<(), StorageError>;

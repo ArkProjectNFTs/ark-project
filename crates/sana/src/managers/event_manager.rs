@@ -332,19 +332,25 @@ impl<S: Storage> EventManager<S> {
     fn get_event_info_from_felts(
         felts: &[FieldElement],
     ) -> Option<(FieldElement, FieldElement, CairoU256)> {
-        if felts.len() < 4 {
-            return None;
+        match felts.len() {
+            4 | 5 => {
+                let from_index = if felts.len() == 4 { 0 } else { 1 };
+                let to_index = from_index + 1;
+                let low_index = to_index + 1;
+                let high_index = low_index + 1;
+
+                let from = felts[from_index];
+                let to = felts[to_index];
+
+                let low = felts[low_index].try_into().ok()?;
+                let high = felts[high_index].try_into().ok()?;
+
+                let token_id = CairoU256 { low, high };
+
+                Some((from, to, token_id))
+            }
+            _ => None,
         }
-        let from = felts[0];
-        let to = felts[1];
-
-        // Safe to unwrap, as emitted events follow cairo sequencer specification.
-        let token_id = CairoU256 {
-            low: felts[2].try_into().unwrap(),
-            high: felts[3].try_into().unwrap(),
-        };
-
-        Some((from, to, token_id))
     }
 }
 
