@@ -20,8 +20,7 @@ fn deploy_erc20() -> ContractAddress {
     erc20_address
 }
 
-fn deploy_nft() -> ContractAddress {
-    let contract = declare('FreeMintNFT');
+fn deploy_nft(royalty: bool) -> ContractAddress {
     let name: ByteArray = "DummyNFT";
     let symbol: ByteArray = "DUMNFT";
     let base_uri: ByteArray = "";
@@ -30,7 +29,15 @@ fn deploy_nft() -> ContractAddress {
     name.serialize(ref calldata);
     symbol.serialize(ref calldata);
     base_uri.serialize(ref calldata);
-    contract.deploy(@calldata).unwrap()
+    if royalty {
+        let owner = contract_address_const::<'nft_owner'>();
+        calldata.append(owner.into());
+        let contract = declare('FreeMintNFTRoyalty');
+        contract.deploy(@calldata).unwrap()
+    } else {
+        let contract = declare('FreeMintNFT');
+        contract.deploy(@calldata).unwrap()
+    }
 }
 
 fn deploy_executor() -> ContractAddress {
@@ -56,7 +63,14 @@ fn deploy_executor() -> ContractAddress {
 
 fn setup() -> (ContractAddress, ContractAddress, ContractAddress) {
     let erc20_address = deploy_erc20();
-    let nft_address = deploy_nft();
+    let nft_address = deploy_nft(false);
+    let executor_address = deploy_executor();
+    (executor_address, erc20_address, nft_address)
+}
+
+fn setup_royalty() -> (ContractAddress, ContractAddress, ContractAddress) {
+    let erc20_address = deploy_erc20();
+    let nft_address = deploy_nft(true);
     let executor_address = deploy_executor();
     (executor_address, erc20_address, nft_address)
 }
