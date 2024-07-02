@@ -18,10 +18,10 @@ pub trait Storage {
     async fn find_tokens_without_metadata(
         &self,
         filter: Option<(String, String)>,
-        metadata_status: Option<String>,
+        refresh_collection: bool,
     ) -> Result<Vec<TokenWithoutMetadata>, StorageError>;
 
-    async fn update_all_token_metadata_status(
+    async fn update_tokens_metadata_status(
         &self,
         contract_address: &str,
         chain_id: &str,
@@ -37,6 +37,13 @@ pub trait Storage {
     ) -> Result<(), StorageError>;
 
     async fn set_contract_refreshing_status(
+        &self,
+        contract_address: &str,
+        chain_id: &str,
+        is_refreshing: bool,
+    ) -> Result<(), StorageError>;
+
+    async fn update_contract_is_refreshing(
         &self,
         contract_address: &str,
         chain_id: &str,
