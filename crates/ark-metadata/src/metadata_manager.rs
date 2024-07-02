@@ -86,13 +86,6 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         image_timeout: Duration,
         request_referrer: &str,
     ) -> Result<(), MetadataError> {
-        trace!(
-            "refresh_token_metadata(contract_address={}, token_id={}, chain_id={})",
-            contract_address,
-            token_id,
-            chain_id
-        );
-
         let token_uri = self
             .get_token_uri(contract_address, token_id)
             .await
@@ -194,10 +187,14 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
+        target_metadata_status: Option<String>,
     ) -> Result<(), MetadataError> {
         let tokens = self
             .storage
-            .find_token_ids_without_metadata(Some((contract_address, chain_id)))
+            .find_token_ids_without_metadata(
+                Some((contract_address, chain_id)),
+                target_metadata_status,
+            )
             .await
             .map_err(MetadataError::DatabaseError)?;
 
@@ -240,7 +237,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         timeout: Duration,
         ipfs_url: &str,
     ) -> Result<MetadataMedia> {
-        info!("Fetching media... {}", raw_url);
+        trace!("Fetching media... {}", raw_url);
 
         let url = raw_url.replace("ipfs://", ipfs_url);
 
@@ -280,11 +277,6 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                         (file_extension, content_type_from_headers.as_str())
                     }
                 };
-
-                info!(
-                    "Image: Content-Type={}, Content-Length={:?}",
-                    content_type, content_length
-                );
 
                 debug!(
                     "Image: Content-Type={}, Content-Length={:?}, File-Ext={}",
@@ -547,6 +539,7 @@ mod tests {
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
                 request_referrer,
+                None,
             )
             .await;
 
