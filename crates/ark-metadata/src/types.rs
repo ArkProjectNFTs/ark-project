@@ -22,6 +22,9 @@ pub enum StorageError {
 
     #[error("Provided mint data is invalid: {0}")]
     InvalidMintData(String),
+
+    #[error("Invalid token id")]
+    InvalidTokenId(),
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -70,6 +73,7 @@ pub struct TokenMetadata {
     pub metadata_updated_at: Option<i64>,
 }
 
+#[derive(Debug)]
 pub struct TokenWithoutMetadata {
     pub contract_address: String,
     pub token_id: String,

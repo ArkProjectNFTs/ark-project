@@ -14,7 +14,7 @@ use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use std::{str::FromStr, time::Duration};
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, trace};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -86,13 +86,6 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         image_timeout: Duration,
         request_referrer: &str,
     ) -> Result<(), MetadataError> {
-        trace!(
-            "refresh_token_metadata(contract_address={}, token_id={}, chain_id={})",
-            contract_address,
-            token_id,
-            chain_id
-        );
-
         let token_uri = self
             .get_token_uri(contract_address, token_id)
             .await
@@ -194,10 +187,14 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
+        target_metadata_status: Option<String>,
     ) -> Result<(), MetadataError> {
         let tokens = self
             .storage
-            .find_token_ids_without_metadata(Some((contract_address, chain_id)))
+            .find_tokens_without_metadata(
+                Some((contract_address, chain_id)),
+                target_metadata_status,
+            )
             .await
             .map_err(MetadataError::DatabaseError)?;
 
@@ -240,7 +237,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         timeout: Duration,
         ipfs_url: &str,
     ) -> Result<MetadataMedia> {
-        info!("Fetching media... {}", raw_url);
+        trace!("Fetching media... {}", raw_url);
 
         let url = raw_url.replace("ipfs://", ipfs_url);
 
@@ -280,11 +277,6 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
                         (file_extension, content_type_from_headers.as_str())
                     }
                 };
-
-                info!(
-                    "Image: Content-Type={}, Content-Length={:?}",
-                    content_type, content_length
-                );
 
                 debug!(
                     "Image: Content-Type={}, Content-Length={:?}, File-Ext={}",
@@ -501,13 +493,18 @@ mod tests {
         let chain_id = "0x534e5f4d41494e";
 
         let filter = (contract_address.to_string(), chain_id.to_string());
+        let filter_clone = filter.clone();
 
-        // Mocking expected behaviors
         mock_storage
-            .expect_find_token_ids_without_metadata()
+            .expect_find_tokens_without_metadata()
             .times(1)
-            .with(eq(Some(filter)))
-            .returning(|_| {
+            .withf(
+                move |arg_filter: &Option<(String, String)>,
+                      arg_metadata_status: &Option<String>| {
+                    *arg_filter == Some(filter_clone.clone()) && *arg_metadata_status == None
+                },
+            )
+            .returning(|_, _| {
                 Ok(vec![TokenWithoutMetadata {
                     contract_address: contract_address.to_string(),
                     token_id: "1".to_string(),
@@ -515,7 +512,7 @@ mod tests {
                     is_verified: true,
                     save_images: false,
                 }])
-            }); // Close the square bracket here
+            });
 
         mock_client
             .expect_call_contract()
@@ -547,6 +544,7 @@ mod tests {
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
                 request_referrer,
+                None,
             )
             .await;
 

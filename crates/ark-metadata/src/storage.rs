@@ -12,19 +12,34 @@ pub trait Storage {
         contract_address: &str,
         token_id: &str,
         chain_id: &str,
-        token_metadata: TokenMetadata,
+        metadata: TokenMetadata,
     ) -> Result<(), StorageError>;
 
-    async fn find_token_ids_without_metadata(
+    async fn find_tokens_without_metadata(
         &self,
         filter: Option<(String, String)>,
+        metadata_status: Option<String>,
     ) -> Result<Vec<TokenWithoutMetadata>, StorageError>;
+
+    async fn update_all_token_metadata_status(
+        &self,
+        contract_address: &str,
+        chain_id: &str,
+        metadata_status: &str,
+    ) -> Result<(), StorageError>;
 
     async fn update_token_metadata_status(
         &self,
         contract_address: &str,
         token_id: &str,
         chain_id: &str,
-        metadata_status: &str,
+        status: &str,
+    ) -> Result<(), StorageError>;
+
+    async fn set_contract_refreshing_status(
+        &self,
+        contract_address: &str,
+        chain_id: &str,
+        is_refreshing: bool,
     ) -> Result<(), StorageError>;
 }
