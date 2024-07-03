@@ -684,9 +684,6 @@ mod orderbook {
                     orderbook_errors::ORDER_HASH_DOES_NOT_MATCH
                 );
             } else {
-                assert(
-                    related_order.start_date < block_timestamp, orderbook_errors::ORDER_NOT_STARTED
-                );
                 assert(related_order.end_date > block_timestamp, orderbook_errors::ORDER_EXPIRED);
             }
             let related_order_token_hash = related_order.compute_token_hash();
@@ -741,7 +738,7 @@ mod orderbook {
         ///
         /// # Arguments
         /// * `fulfill_info` - The execution info of the order.
-        /// * `order_type` - The type of the order.
+        /// * `order` - The order.
         ///
         fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
             if order.token_id.is_some() {
@@ -753,7 +750,6 @@ mod orderbook {
             assert(fulfill_info.token_id.is_some(), orderbook_errors::ORDER_TOKEN_ID_IS_MISSING);
 
             let current_date = starknet::get_block_timestamp();
-            // assert(current_date > order.start_date, orderbook_errors::OFFER_NOT_STARTED);
             assert(order.end_date > current_date, orderbook_errors::ORDER_EXPIRED);
 
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
@@ -804,7 +800,6 @@ mod orderbook {
         fn _fulfill_listing_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
-            // assert(starknet::get_block_timestamp() > order.start_date, orderbook_errors::OFFER_NOT_STARTED);
             assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
             assert(
                 order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED

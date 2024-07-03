@@ -45,8 +45,6 @@ impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
 /// to have details on what's wrong with the order.
 #[derive(Serde, Drop, PartialEq)]
 enum OrderValidationError {
-    StartDateAfterEndDate,
-    StartDateInThePast,
     EndDateInThePast,
     EndDateTooFar,
     AdditionalDataTooLong,
@@ -58,8 +56,6 @@ enum OrderValidationError {
 impl OrderValidationErrorIntoFelt252 of Into<OrderValidationError, felt252> {
     fn into(self: OrderValidationError) -> felt252 {
         match self {
-            OrderValidationError::StartDateAfterEndDate => 'START_DATE_AFTER_END_DATE',
-            OrderValidationError::StartDateInThePast => 'START_DATE_IN_THE_PAST',
             OrderValidationError::EndDateInThePast => 'END_DATE_IN_THE_PAST',
             OrderValidationError::EndDateTooFar => 'END_DATE_TOO_FAR',
             OrderValidationError::AdditionalDataTooLong => 'ADDITIONAL_DATA_TOO_LONG',
@@ -72,11 +68,7 @@ impl OrderValidationErrorIntoFelt252 of Into<OrderValidationError, felt252> {
 
 impl Felt252TryIntoOrderValidationError of TryInto<felt252, OrderValidationError> {
     fn try_into(self: felt252) -> Option<OrderValidationError> {
-        if self == 'START_DATE_AFTER_END_DATE' {
-            Option::Some(OrderValidationError::StartDateAfterEndDate)
-        } else if self == 'START_DATE_IN_THE_PAST' {
-            Option::Some(OrderValidationError::StartDateInThePast)
-        } else if self == 'END_DATE_IN_THE_PAST' {
+        if self == 'END_DATE_IN_THE_PAST' {
             Option::Some(OrderValidationError::EndDateInThePast)
         } else if self == 'END_DATE_TOO_FAR' {
             Option::Some(OrderValidationError::EndDateTooFar)
@@ -239,20 +231,6 @@ struct ExecutionInfo {
     payment_currency_chain_id: felt252,
     listing_broker_address: ContractAddress,
     fulfill_broker_address: ContractAddress
-// route: RouteType,
-// order_hash: felt252,
-// token_address: ContractAddress,
-// token_id: u256,
-// quantity: u256,
-// offerer_address: ContractAddress,
-// fulfiller_address: ContractAddress,
-// price: u256,
-// creator_address: ContractAddress,
-// creator_fee: u256,
-// create_broker_address: ContractAddress,
-// create_broker_fee: u256,
-// fulfill_broker_address: ContractAddress,
-// fulfill_broker_fee: u256
 }
 
 #[derive(Serde, Copy, Drop)]

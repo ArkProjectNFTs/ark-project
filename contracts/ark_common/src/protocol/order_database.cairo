@@ -105,7 +105,7 @@ fn order_write<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>>(
     )
         .unwrap_syscall();
 
-    // At offset 1, we always have the length.
+    // At offset 2, we always have the length.
     let mut buf = array![];
     order.serialize(ref buf);
 
