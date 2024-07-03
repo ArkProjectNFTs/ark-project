@@ -402,7 +402,7 @@ mod executor {
             if ark_fees_amount > 0 {
                 currency_contract
                     .transfer_from(
-                        execution_info.payment_from, get_contract_address(), ark_fees_amount
+                        execution_info.payment_from, self.admin_address.read(), ark_fees_amount
                     );
             }
             // finally transfer to the seller

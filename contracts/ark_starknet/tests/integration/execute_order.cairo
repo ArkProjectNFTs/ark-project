@@ -217,15 +217,13 @@ fn test_execute_order_check_ark_fees_ok() {
     executor.set_ark_fees(ark_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    let executor_balance = erc20.balance_of(executor_address);
-    let executor_delta = 50_000; // 0.5%
+    let admin_balance = erc20.balance_of(admin_address);
+    let admin_delta = 50_000; // 0.5%
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
     assert_eq!(erc20.balance_of(fulfill_broker), 1_000_000, "Fulfill broker balance not correct");
     assert_eq!(erc20.balance_of(listing_broker), 500_000, "Listing broker balance not correct");
     assert_eq!(
-        erc20.balance_of(executor_address) - executor_balance,
-        executor_delta,
-        "Executor balance not correct"
+        erc20.balance_of(admin_address) - admin_balance, admin_delta, "Admin balance not correct"
     );
 }
 
