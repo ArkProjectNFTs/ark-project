@@ -95,7 +95,6 @@ mod executor {
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
-        arkchain_fee: FeesRatio,
         chain_id: felt252,
         broker_fees: LegacyMap<ContractAddress, FeesRatio>,
         ark_fees: FeesRatio,
@@ -135,7 +134,6 @@ mod executor {
         self.messaging_address.write(messaging_address);
         self.chain_id.write(chain_id);
         self.ark_fees.write(Default::default());
-        self.arkchain_fee.write(Default::default());
         self.default_receiver.write(admin_address);
         self.default_fees.write(Default::default());
     }
@@ -259,16 +257,6 @@ mod executor {
             );
 
             self.arkchain_orderbook_address.write(orderbook_address);
-        }
-
-        fn update_arkchain_fee(ref self: ContractState, fees_ratio: FeesRatio) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
-
-            self.arkchain_fee.write(fees_ratio);
         }
 
         fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
@@ -408,6 +396,13 @@ mod executor {
                 currency_contract
                     .transfer_from(
                         execution_info.payment_from, creator_address, creator_fees_amount
+                    );
+            }
+
+            if ark_fees_amount > 0 {
+                currency_contract
+                    .transfer_from(
+                        execution_info.payment_from, get_contract_address(), ark_fees_amount
                     );
             }
             // finally transfer to the seller

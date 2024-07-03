@@ -191,6 +191,45 @@ fn test_execute_order_check_brokers_fees_ok() {
 }
 
 #[test]
+fn test_execute_order_check_ark_fees_ok() {
+    let fulfiller = contract_address_const::<'fulfiller'>();
+    let listing_broker = contract_address_const::<'listing_broker'>();
+    let fulfill_broker = contract_address_const::<'fulfill_broker'>();
+    let admin_address = contract_address_const::<'admin'>();
+    let offerer = contract_address_const::<'offerer'>();
+
+    let start_amount = 10_000_000;
+    let (executor_address, erc20_address, _, execution_info) = setup_execute_order(
+        admin_address, offerer, fulfiller, listing_broker, fulfill_broker, start_amount, false
+    );
+
+    let erc20 = IERC20Dispatcher { contract_address: erc20_address };
+    let executor = IExecutorDispatcher { contract_address: executor_address };
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    let ark_fees_ratio = FeesRatio { numerator: 5, denominator: 1000 };
+    let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
+
+    let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
+
+    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
+    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    executor.set_ark_fees(ark_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    let executor_balance = erc20.balance_of(executor_address);
+    let executor_delta = 50_000; // 0.5%
+    IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
+    assert_eq!(erc20.balance_of(fulfill_broker), 1_000_000, "Fulfill broker balance not correct");
+    assert_eq!(erc20.balance_of(listing_broker), 500_000, "Listing broker balance not correct");
+    assert_eq!(
+        erc20.balance_of(executor_address) - executor_balance,
+        executor_delta,
+        "Executor balance not correct"
+    );
+}
+
+#[test]
 fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
     let fulfiller = contract_address_const::<'fulfiller'>();
     let listing_broker = contract_address_const::<'listing_broker'>();
