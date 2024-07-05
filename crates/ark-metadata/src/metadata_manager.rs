@@ -187,14 +187,11 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         ipfs_gateway_uri: &str,
         image_timeout: Duration,
         request_referrer: &str,
-        target_metadata_status: Option<String>,
+        refresh_collection: bool,
     ) -> Result<(), MetadataError> {
         let tokens = self
             .storage
-            .find_tokens_without_metadata(
-                Some((contract_address, chain_id)),
-                target_metadata_status,
-            )
+            .find_tokens_without_metadata(Some((contract_address, chain_id)), refresh_collection)
             .await
             .map_err(MetadataError::DatabaseError)?;
 

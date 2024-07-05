@@ -18,7 +18,7 @@ pub trait Storage {
     async fn find_tokens_without_metadata(
         &self,
         filter: Option<(String, String)>,
-        metadata_status: Option<String>,
+        refresh_collection: bool,
     ) -> Result<Vec<TokenWithoutMetadata>, StorageError>;
 
     async fn update_all_token_metadata_status(
