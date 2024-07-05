@@ -67,6 +67,6 @@ fn test_accept_auction_after_expiration() {
         start_date + 1000, start_date + 3000, Option::None, Option::None
     );
 
-    start_warp(CheatTarget::One(contract_address), start_date );
+    start_warp(CheatTarget::One(contract_address), start_date);
     dispatcher.create_order(order: auction_offer, signer: signer);
 }
