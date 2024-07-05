@@ -21,7 +21,7 @@ use snforge_std::{
 #[test]
 #[should_panic(expected: ('OB: order already exists',))]
 fn test_create_existing_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (order_listing, signer, _order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
@@ -41,7 +41,7 @@ fn test_create_existing_order() {
 #[test]
 #[should_panic(expected: ('INVALID_BROKER',))]
 fn test_create_order_not_whitelisted() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (order_listing, signer, _order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
@@ -58,7 +58,7 @@ fn test_create_order_not_whitelisted() {
 
 #[test]
 fn test_create_listing_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (order_listing, signer, _order_hash, token_hash) = setup_listing(
         start_date, end_date, Option::Some(10)
@@ -112,7 +112,7 @@ fn test_create_listing_order() {
 
 #[test]
 fn test_auction_order_with_extended_time_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, auction_listing_signer, order_hash, _) = setup_auction_order(

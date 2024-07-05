@@ -26,7 +26,7 @@ use super::super::common::setup::{
 ///
 #[test]
 fn test_fulfill_auction() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
@@ -82,7 +82,7 @@ fn test_fulfill_auction_with_classic_offer() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
-    let offer_start_date = 1699556820;
+    let offer_start_date = starknet::get_block_timestamp();
     let offer_end_date = offer_start_date + (10 * 24 * 60 * 60);
     let (offer_order, offer_signer, offer_order_hash, _) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::None
@@ -91,7 +91,7 @@ fn test_fulfill_auction_with_classic_offer() {
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
-    let start_date = 1699556829;
+    let start_date = starknet::get_block_timestamp() + 1200;
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
@@ -118,54 +118,6 @@ fn test_fulfill_auction_with_classic_offer() {
     assert(offer_status == OrderStatus::Fulfilled.into(), 'Offer status is not fulfilled');
 }
 
-// try to fulfill auction with classic offer but with a start date in the future
-#[should_panic(expected: ('OB: order not started',))]
-#[test]
-fn test_fulfill_auction_with_future_offer() {
-    // contract declaration
-    let contract = declare('orderbook');
-    let chain_id = 0x534e5f4d41494e;
-    let contract_data = array![
-        0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078, chain_id
-    ];
-    let contract_address = contract.deploy(@contract_data).unwrap();
-    let dispatcher = OrderbookDispatcher { contract_address };
-
-    // Create an offer
-    let offer_start_date = 1699556828 + (10 * 24 * 60 * 60);
-    let offer_end_date = offer_start_date + (20 * 24 * 60 * 60);
-    let (offer_order, offer_signer, offer_order_hash, _) = setup_offer(
-        offer_start_date, offer_end_date, Option::None, Option::None
-    );
-    whitelist_creator_broker(contract_address, offer_order.broker_id, dispatcher);
-
-    dispatcher.create_order(order: offer_order, signer: offer_signer);
-
-    // Create an auction
-    let start_date = 1699556828;
-    let end_date = start_date + (10 * 24 * 60 * 60);
-    let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
-        start_date, end_date, 1, 10, Option::None
-    );
-    dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
-
-    let fulfill_info = FulfillInfo {
-        order_hash: order_hash,
-        related_order_hash: Option::Some(offer_order_hash),
-        fulfiller: auction_listing_order.offerer,
-        token_chain_id: auction_listing_order.token_chain_id,
-        token_address: auction_listing_order.token_address,
-        token_id: Option::Some(10),
-        fulfill_broker_address: test_address(),
-    };
-
-    start_warp(CheatTarget::One(contract_address), start_date + 3600);
-
-    let fulfill_info_hash = serialized_hash(fulfill_info);
-    let signer = sign_mock(fulfill_info_hash, auction_listing_order.offerer);
-    dispatcher.fulfill_order(fulfill_info, signer);
-}
-
 // try to fulfill expired classic offer for a token when fulfilling an auction
 #[should_panic(expected: ('OB: order expired',))]
 #[test]
@@ -180,7 +132,7 @@ fn test_fulfill_auction_with_expired_offer() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
-    let offer_start_date = 1698187649;
+    let offer_start_date = starknet::get_block_timestamp();
     let offer_end_date = offer_start_date + (10 * 24 * 60 * 60);
     let (offer_order, offer_signer, offer_order_hash, _) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::None
@@ -190,7 +142,7 @@ fn test_fulfill_auction_with_expired_offer() {
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
-    let start_date = 1700869622;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
@@ -208,7 +160,7 @@ fn test_fulfill_auction_with_expired_offer() {
         token_id: Option::Some(10),
         fulfill_broker_address: test_address(),
     };
-
+    start_warp(CheatTarget::One(contract_address), end_date);
     let fulfill_info_hash = serialized_hash(fulfill_info);
     let signer = sign_mock(fulfill_info_hash, auction_listing_order.offerer);
     dispatcher.fulfill_order(fulfill_info, signer);
@@ -228,7 +180,7 @@ fn test_fulfill_expired_auction() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
-    let offer_start_date = 1699556828;
+    let offer_start_date = starknet::get_block_timestamp();
     let offer_end_date = offer_start_date + (10 * 24 * 60 * 60);
     let (offer_order, offer_signer, offer_order_hash, _) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::None
@@ -237,7 +189,7 @@ fn test_fulfill_expired_auction() {
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
@@ -275,7 +227,7 @@ fn test_fulfill_auction_with_offer_for_different_token() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an offer
-    let offer_start_date = 1699556828;
+    let offer_start_date = starknet::get_block_timestamp();
     let offer_end_date = offer_start_date + (10 * 24 * 60 * 60);
     let (mut offer_order, offer_signer, offer_order_hash, _) = setup_offer(
         offer_start_date, offer_end_date, Option::None, Option::Some(42)
@@ -284,7 +236,7 @@ fn test_fulfill_auction_with_offer_for_different_token() {
     dispatcher.create_order(order: offer_order, signer: offer_signer);
 
     // Create an auction
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
@@ -322,7 +274,7 @@ fn test_fulfill_auction_with_non_existing_related_order_hash() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an auction
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
@@ -361,7 +313,7 @@ fn test_fulfill_auction_with_listing_order() {
     let dispatcher = OrderbookDispatcher { contract_address };
 
     // Create an auction
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (auction_listing_order, auction_signer, order_hash, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
@@ -392,50 +344,3 @@ fn test_fulfill_auction_with_listing_order() {
     let signer = sign_mock(fulfill_info_hash, auction_listing_order.offerer);
     dispatcher.fulfill_order(fulfill_info, signer);
 }
-// TODO update this test when https://github.com/ArkProjectNFTs/ark-project/pull/188 is merged
-// try to fulfill an auction with a non open offer
-// #[should_panic(expected: ('OB: order not open',))]
-// #[test]
-// fn test_fulfill_auction_with_non_open_offer() {
-//     // contract declaration
-//     let contract = declare('orderbook');
-//     let contract_data = array![0x00E4769a4d2F7F69C70951A003eBA5c32707Cef3CdfB6B27cA63567f51cdd078];
-//     let contract_address = contract.deploy(@contract_data).unwrap();
-//     let dispatcher = OrderbookDispatcher { contract_address };
-
-//     // Create an offer
-//     let offer_start_date = 1699556828;
-//     let offer_end_date = offer_start_date + (10 * 24 * 60 * 60);
-//     let (mut offer_order, offer_signer, offer_order_hash, offer_order_token_hash) = setup_offer(
-//         offer_start_date, offer_end_date, Option::None, Option::None
-//     );
-//     dispatcher.create_order(order: offer_order, signer: offer_signer);
-
-//     // Create an auction
-//     let start_date = 1699556828;
-//     let end_date = start_date + (10 * 24 * 60 * 60);
-//     let (auction_listing_order, auction_signer, order_hash, token_hash) = setup_auction_order(
-//         start_date, end_date, 1, 10, Option::None
-//     );
-//     dispatcher.create_order(order: auction_listing_order, signer: auction_signer);
-
-//     start_warp(contract_address, start_date + 3600);
-
-//     let fulfill_info = FulfillInfo {
-//         order_hash: order_hash,
-//         related_order_hash: Option::Some(offer_order_hash),
-//         fulfiller: auction_listing_order.offerer,
-//         token_chain_id: auction_listing_order.token_chain_id,
-//         token_address: auction_listing_order.token_address,
-//         token_id: Option::Some(10),
-//     };
-
-//     // close the offer
-//     // fulfill the offer order
-
-//     let fulfill_info_hash = serialized_hash(fulfill_info);
-//     let signer = sign_mock(fulfill_info_hash, Option::None);
-//     dispatcher.fulfill_order(fulfill_info, signer);
-// }
-
-

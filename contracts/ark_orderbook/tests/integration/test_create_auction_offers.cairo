@@ -20,7 +20,7 @@ use super::super::common::setup::{
 
 #[test]
 fn test_create_valid_auction_offer() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, _, _) = setup_auction_order(
@@ -40,12 +40,13 @@ fn test_create_valid_auction_offer() {
     let (auction_offer, signer, _, _) = setup_offer(
         start_date + 10, start_date + 50, Option::None, Option::None
     );
+    start_warp(CheatTarget::One(contract_address), start_date);
     dispatcher.create_order(order: auction_offer, signer: signer);
 }
 
 #[test]
 fn test_accept_auction_after_expiration() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, _, _) = setup_auction_order(
@@ -66,8 +67,6 @@ fn test_accept_auction_after_expiration() {
         start_date + 1000, start_date + 3000, Option::None, Option::None
     );
 
-    start_warp(CheatTarget::One(contract_address), start_date + 1000);
+    start_warp(CheatTarget::One(contract_address), start_date );
     dispatcher.create_order(order: auction_offer, signer: signer);
-
-    start_warp(CheatTarget::One(contract_address), end_date + 3600); // +1 hour
 }
