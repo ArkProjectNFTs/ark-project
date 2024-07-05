@@ -42,11 +42,4 @@ pub trait Storage {
         chain_id: &str,
         is_refreshing: bool,
     ) -> Result<(), StorageError>;
-
-    async fn update_contract_is_refreshing(
-        &self,
-        contract_address: &str,
-        chain_id: &str,
-        is_refreshing: bool,
-    ) -> Result<(), StorageError>;
 }
