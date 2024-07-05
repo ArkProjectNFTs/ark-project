@@ -21,7 +21,7 @@ pub trait Storage {
         refresh_collection: bool,
     ) -> Result<Vec<TokenWithoutMetadata>, StorageError>;
 
-    async fn update_tokens_metadata_status(
+    async fn update_all_token_metadata_status(
         &self,
         contract_address: &str,
         chain_id: &str,
