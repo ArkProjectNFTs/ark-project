@@ -144,7 +144,7 @@ mod executor {
         fn set_broker_fees(
             ref self: ContractState, broker_address: ContractAddress, fees_ratio: FeesRatio
         ) {
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
             self.broker_fees.write(broker_address, fees_ratio);
         }
 
@@ -163,7 +163,7 @@ mod executor {
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
 
             self.ark_fees.write(fees_ratio);
         }
@@ -183,7 +183,7 @@ mod executor {
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
             self.default_receiver.write(receiver);
             self.default_fees.write(fees_ratio);
         }
@@ -209,7 +209,7 @@ mod executor {
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
             self.creator_fees.write(nft_address, (receiver, fees_ratio));
         }
 
@@ -748,9 +748,5 @@ mod executor {
         let (receiver, fees_ratio) = self.get_collection_creator_fees(*nft_address);
         let amount = fees_ratio.compute_amount(payment_amount);
         (receiver, amount)
-    }
-
-    fn _fees_ratio_is_valid(fees_ratio: @FeesRatio) -> bool {
-        *fees_ratio.denominator != 0 && *fees_ratio.numerator < *fees_ratio.denominator
     }
 }
