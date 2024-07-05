@@ -40,6 +40,10 @@ pub mod ERC2981Component {
         receiver: ContractAddress,
     }
 
+    pub mod Errors {
+        pub const NOT_VALID_FEES_RATIO: felt252 = 'Fees ratio is not valid';
+    }
+
     #[embeddable_as(ERC2981Impl)]
     impl ERC2981<
         TContractState, +HasComponent<TContractState>
@@ -75,16 +79,11 @@ pub mod ERC2981Component {
         ) {
             let ownable_component = get_dep_component!(@self, Ownable);
             ownable_component.assert_only_owner();
+            assert(fees_ratio.is_valid(), Errors::NOT_VALID_FEES_RATIO);
 
             self.default_receiver.write(receiver);
-            let new_fees_ratio = if fees_ratio.denominator.is_zero() {
-                Default::default()
-            } else {
-                fees_ratio
-            };
-
-            self.default_fees.write(new_fees_ratio);
-            self.emit(DefaultRoyaltyUpdated { fees_ratio: new_fees_ratio, receiver: receiver, });
+            self.default_fees.write(fees_ratio);
+            self.emit(DefaultRoyaltyUpdated { fees_ratio: fees_ratio, receiver: receiver, });
         }
 
         fn token_royalty(
@@ -106,19 +105,15 @@ pub mod ERC2981Component {
         ) {
             let ownable_component = get_dep_component!(@self, Ownable);
             ownable_component.assert_only_owner();
+            assert(fees_ratio.is_valid(), Errors::NOT_VALID_FEES_RATIO);
 
             self.token_receiver.write(token_id, receiver);
-            let new_fees_ratio = if fees_ratio.denominator.is_zero() {
-                Default::default()
-            } else {
-                fees_ratio
-            };
 
-            self.token_fees.write(token_id, new_fees_ratio);
+            self.token_fees.write(token_id, fees_ratio);
             self
                 .emit(
                     TokenRoyaltyUpdated {
-                        token_id: token_id, fees_ratio: new_fees_ratio, receiver: receiver,
+                        token_id: token_id, fees_ratio: fees_ratio, receiver: receiver,
                     }
                 );
         }
