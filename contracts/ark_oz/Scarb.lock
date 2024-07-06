@@ -2,44 +2,9 @@
 version = 1
 
 [[package]]
-name = "ark_common"
-version = "0.1.0"
-dependencies = [
- "snforge_std",
-]
-
-[[package]]
-name = "ark_orderbook"
-version = "0.1.0"
-dependencies = [
- "ark_common",
- "snforge_std",
-]
-
-[[package]]
 name = "ark_oz"
 version = "0.1.0"
 dependencies = [
- "openzeppelin",
- "snforge_std",
-]
-
-[[package]]
-name = "ark_starknet"
-version = "0.1.0"
-dependencies = [
- "ark_common",
- "ark_oz",
- "ark_tokens",
- "openzeppelin",
- "snforge_std",
-]
-
-[[package]]
-name = "ark_tokens"
-version = "0.1.0"
-dependencies = [
- "ark_oz",
  "openzeppelin",
  "snforge_std",
 ]
@@ -53,7 +18,3 @@ source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.10.0#d7
 name = "snforge_std"
 version = "0.18.0"
 source = "git+https://github.com/foundry-rs/starknet-foundry.git?tag=v0.18.0#48f909a56b08cbdc5ca6a21a836b0fbc6c36d55b"
-
-[[package]]
-name = "solis"
-version = "0.1.0"

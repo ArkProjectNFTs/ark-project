@@ -8,6 +8,7 @@ openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", ta
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.18.0" }
 ark_common = { path = "../ark_common" }
 ark_tokens = { path = "../ark_tokens" }
+ark_oz = { path = "../ark_oz" }
 
 [[target.starknet-contract]]
 sierra = true
@@ -16,4 +17,5 @@ allowed-libfuncs-list.name = "experimental"
 build-external-contracts = [
     "ark_tokens::erc20::FreeMintERC20",
     "ark_tokens::erc721::FreeMintNFT",
+    "ark_tokens::erc721_royalty::FreeMintNFTRoyalty",
 ]

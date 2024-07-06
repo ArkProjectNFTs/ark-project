@@ -8,4 +8,5 @@ mod unit {
 mod integration {
     mod create_order;
     mod fulfill_order;
+    mod execute_order;
 }
