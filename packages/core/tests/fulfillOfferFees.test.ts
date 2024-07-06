@@ -52,7 +52,14 @@ describe("fulfillOffer", () => {
     const initialSellerBalance = await getBalance({ account: sellerAccount });
     const brokerFee = 1;
     const arkFee = 1;
-    await setFees({ config, adminAccount: starknetAdminAccount, executorAddress: config.starknetExecutorContract, brokerId, brokerFee, arkFee });
+    await setFees({
+      config,
+      adminAccount: starknetAdminAccount,
+      executorAddress: config.starknetExecutorContract,
+      brokerId,
+      brokerFee,
+      arkFee
+    });
 
     const offer: OfferV1 = {
       brokerId,
@@ -91,11 +98,12 @@ describe("fulfillOffer", () => {
     });
     const sellerBalance = await getBalance({ account: sellerAccount });
     // multiply by 2: same broker is listing and fulfill
-    const fees = (BigInt(offer.startAmount) * (BigInt(brokerFee * 2) + BigInt(arkFee))) / BigInt(100);
+    const fees =
+      (BigInt(offer.startAmount) * (BigInt(brokerFee * 2) + BigInt(arkFee))) /
+      BigInt(100);
     const amount = BigInt(offer.startAmount) - fees;
 
     expect(orderStatusFulfilled).toBe("Executed");
     expect(sellerBalance).toEqual(initialSellerBalance + amount);
   }, 50_000);
-
 });
