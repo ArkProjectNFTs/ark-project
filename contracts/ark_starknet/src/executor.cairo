@@ -141,11 +141,9 @@ mod executor {
 
     #[abi(embed_v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
-        fn set_broker_fees(
-            ref self: ContractState, broker_address: ContractAddress, fees_ratio: FeesRatio
-        ) {
+        fn set_broker_fees(ref self: ContractState, fees_ratio: FeesRatio) {
             assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
-            self.broker_fees.write(broker_address, fees_ratio);
+            self.broker_fees.write(starknet::get_caller_address(), fees_ratio);
         }
 
         fn get_broker_fees(self: @ContractState, broker_address: ContractAddress) -> FeesRatio {

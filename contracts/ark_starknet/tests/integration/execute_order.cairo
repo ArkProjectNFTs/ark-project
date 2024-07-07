@@ -160,13 +160,15 @@ fn test_execute_order_check_brokers_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
-
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -206,14 +208,20 @@ fn test_execute_order_check_ark_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let ark_fees_ratio = FeesRatio { numerator: 5, denominator: 1000 };
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     executor.set_ark_fees(ark_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
@@ -247,13 +255,16 @@ fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -332,13 +343,16 @@ fn test_execute_order_erc2981_token_royalty_check_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -428,13 +442,15 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -513,13 +529,15 @@ fn test_execute_order_non_erc2981_collection_royalty_check_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -597,13 +615,15 @@ fn test_execute_order_check_fee_too_much_fees() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 60, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 60, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);

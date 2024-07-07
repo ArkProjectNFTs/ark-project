@@ -19,7 +19,7 @@ trait IExecutor<T> {
     fn get_messaging_address(self: @T) -> ContractAddress;
     fn get_orderbook_address(self: @T) -> ContractAddress;
     fn update_arkchain_orderbook_address(ref self: T, orderbook_address: ContractAddress);
-    fn set_broker_fees(ref self: T, broker_address: ContractAddress, fees_ratio: FeesRatio);
+    fn set_broker_fees(ref self: T, fees_ratio: FeesRatio);
     fn get_broker_fees(self: @T, broker_address: ContractAddress) -> FeesRatio;
     fn set_ark_fees(ref self: T, fees_ratio: FeesRatio);
     fn get_ark_fees(self: @T) -> FeesRatio;
