@@ -50,30 +50,32 @@ impl<S: Storage> BlockManager<S> {
                 }
             }
         } else {
-            match self.storage.get_block_info(block_number).await {
-                Ok(info) => {
-                    trace!("Block {} already indexed", block_number);
-                    debug!(
-                        "Checking indexation version: current={:?}, last={:?}",
-                        indexer_version,
-                        info.indexer_version.clone()
-                    );
+            // match self.storage.get_block_info(block_number).await {
+            //     Ok(info) => {
+            //         trace!("Block {} already indexed", block_number);
+            //         debug!(
+            //             "Checking indexation version: current={:?}, last={:?}",
+            //             indexer_version,
+            //             info.indexer_version.clone()
+            //         );
 
-                    // Compare the indexer versions.
-                    match compare(indexer_version.clone(), info.indexer_version.clone()) {
-                        // if the current version is greater, clean the block & return false we index the block
-                        Ok(Cmp::Gt) => self
-                            .storage
-                            .clean_block(block_timestamp, Some(block_number))
-                            .await
-                            .map(|_| false),
-                        // if the current version is equal, return false we skip the block indexation
-                        _ => Ok(true),
-                    }
-                }
-                Err(StorageError::NotFound(_s)) => Ok(false),
-                Err(e) => Err(e),
-            }
+            //         // Compare the indexer versions.
+            //         match compare(indexer_version.clone(), info.indexer_version.clone()) {
+            //             // if the current version is greater, clean the block & return false we index the block
+            //             Ok(Cmp::Gt) => self
+            //                 .storage
+            //                 .clean_block(block_timestamp, Some(block_number))
+            //                 .await
+            //                 .map(|_| false),
+            //             // if the current version is equal, return false we skip the block indexation
+            //             _ => Ok(true),
+            //         }
+            //     }
+            //     Err(StorageError::NotFound(_s)) => Ok(false),
+            //     Err(e) => Err(e),
+            // }
+
+            Ok(false)
         }
     }
 
