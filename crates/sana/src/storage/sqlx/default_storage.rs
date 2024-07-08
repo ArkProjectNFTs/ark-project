@@ -308,14 +308,13 @@ impl Storage for PostgresStorage {
 
             Ok(())
         } else {
-
             let last_transfer_query = r#"SELECT block_timestamp
             FROM token_event 
             WHERE contract_address = $1 AND chain_id = $2 
             AND token_id = $3 
             AND event_type IN ('Transfer', 'Burn', 'Mint')
             ORDER BY block_timestamp DESC LIMIT 1"#;
-            
+
             match sqlx::query(last_transfer_query)
                 .bind(event.contract_address.clone())
                 .bind(event.chain_id.clone())
@@ -344,7 +343,6 @@ impl Storage for PostgresStorage {
                 }
             }
 
-
             let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
 
@@ -369,8 +367,6 @@ impl Storage for PostgresStorage {
                 .bind(event.from_address.clone())
                 .execute(&self.pool)
                 .await?;
-
-           
 
             Ok(())
         }
