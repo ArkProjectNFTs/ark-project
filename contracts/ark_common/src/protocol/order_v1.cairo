@@ -63,15 +63,6 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
     fn validate_common_data(
         self: @OrderV1, block_timestamp: u64
     ) -> Result<(), OrderValidationError> {
-        // If start_date is in the past, it's not a problem. The order
-        // is valid once it's inserted in the storage.
-
-        if (*self.start_date).is_non_zero() {
-            if *self.start_date >= *self.end_date {
-                return Result::Err(OrderValidationError::StartDateAfterEndDate);
-            }
-        }
-
         // Salt must be non-zero.
         if (*self.salt).is_zero() {
             return Result::Err(OrderValidationError::InvalidSalt);
@@ -83,13 +74,13 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             return Result::Err(OrderValidationError::EndDateInThePast);
         }
 
-        // End date -> start_date + 30 days.
-        let max_end_date = *self.start_date + (30 * 24 * 60 * 60);
+        // End date -> block_timestamp + 30 days.
+        let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
         if end_date > max_end_date {
             return Result::Err(OrderValidationError::EndDateTooFar);
         }
 
-        // TODO: define a real value here. 10 is an example and
+        // TODO: define a real value here. 20 is an example and
         // totally arbitrary.
         // The only consideration is that, the total order serialized
         // data must not be greater than 256 felts.

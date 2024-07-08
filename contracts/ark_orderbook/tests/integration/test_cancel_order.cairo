@@ -22,7 +22,7 @@ use super::super::common::setup::{
 
 #[test]
 fn test_cancel_auction() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, order_hash, _) = setup_auction_order(
@@ -56,7 +56,7 @@ fn test_cancel_auction() {
 #[test]
 #[should_panic(expected: ('OB: order not found',))]
 fn test_cancel_non_existing_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (auction_listing_order, _, _, _) = setup_auction_order(
         start_date, end_date, 1, 10, Option::None
@@ -89,7 +89,7 @@ fn test_cancel_non_existing_order() {
 #[test]
 #[should_panic(expected: ('OB: auction is expired',))]
 fn test_invalid_cancel_auction_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, signer, order_hash, _) = setup_auction_order(
@@ -127,7 +127,7 @@ fn test_invalid_cancel_auction_order() {
 
 #[test]
 fn test_cancel_auction_during_the_extended_time() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
 
     let (auction_listing_order, auction_listing_signer, order_hash, _) = setup_auction_order(

@@ -22,7 +22,7 @@ use super::super::common::setup::{
 #[should_panic(expected: ('OB: order not found',))]
 #[test]
 fn test_create_listing_order_and_fulfill_non_existing_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (_, _, _order_hash, _) = setup_listing(start_date, end_date, Option::Some(123));
     let contract = declare('orderbook');
@@ -59,7 +59,7 @@ fn test_create_listing_order_and_fulfill_non_existing_order() {
 // create and order & fulfill it
 #[test]
 fn test_create_listing_order_and_fulfill() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
@@ -102,7 +102,7 @@ fn test_create_listing_order_and_fulfill() {
 #[should_panic(expected: ('OB: order has same offerer',))]
 #[test]
 fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
@@ -138,7 +138,7 @@ fn test_create_listing_order_and_fulfill_with_same_fulfiller() {
 #[should_panic(expected: ('OB: order not fulfillable',))]
 #[test]
 fn test_fulfill_already_fulfilled_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)
@@ -176,7 +176,7 @@ fn test_fulfill_already_fulfilled_order() {
 #[should_panic(expected: ('OB: order expired',))]
 #[test]
 fn test_fulfill_expired_order() {
-    let start_date = 1699556828;
+    let start_date = starknet::get_block_timestamp();
     let end_date = start_date + (10 * 24 * 60 * 60);
     let (order_listing, signer, order_hash, _) = setup_listing(
         start_date, end_date, Option::Some(123)

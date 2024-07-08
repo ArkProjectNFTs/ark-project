@@ -43,7 +43,7 @@ const createAuction = async (
   const { starknetAccount, order: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 30);
-  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
+  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
   const chainId = await config.starknetProvider.getChainId();
 

@@ -111,7 +111,6 @@ mod orderbook_errors {
     const ORDER_FULFILLED: felt252 = 'OB: order fulfilled';
     const ORDER_NOT_CANCELLABLE: felt252 = 'OB: order not cancellable';
     const ORDER_EXPIRED: felt252 = 'OB: order expired';
-    const ORDER_NOT_STARTED: felt252 = 'OB: order not started';
     const ORDER_SAME_OFFERER: felt252 = 'OB: order has same offerer';
     const ORDER_NOT_SAME_OFFERER: felt252 = 'OB: fulfiller is not offerer';
     const OFFER_ALREADY_EXISTS: felt252 = 'OB: offer already exists';
@@ -684,9 +683,6 @@ mod orderbook {
                     orderbook_errors::ORDER_HASH_DOES_NOT_MATCH
                 );
             } else {
-                assert(
-                    related_order.start_date < block_timestamp, orderbook_errors::ORDER_NOT_STARTED
-                );
                 assert(related_order.end_date > block_timestamp, orderbook_errors::ORDER_EXPIRED);
             }
             let related_order_token_hash = related_order.compute_token_hash();
@@ -741,7 +737,7 @@ mod orderbook {
         ///
         /// # Arguments
         /// * `fulfill_info` - The execution info of the order.
-        /// * `order_type` - The type of the order.
+        /// * `order` - The order.
         ///
         fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
             if order.token_id.is_some() {
@@ -753,7 +749,6 @@ mod orderbook {
             assert(fulfill_info.token_id.is_some(), orderbook_errors::ORDER_TOKEN_ID_IS_MISSING);
 
             let current_date = starknet::get_block_timestamp();
-            // assert(current_date > order.start_date, orderbook_errors::OFFER_NOT_STARTED);
             assert(order.end_date > current_date, orderbook_errors::ORDER_EXPIRED);
 
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
@@ -804,7 +799,6 @@ mod orderbook {
         fn _fulfill_listing_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
-            // assert(starknet::get_block_timestamp() > order.start_date, orderbook_errors::OFFER_NOT_STARTED);
             assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
             assert(
                 order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
@@ -884,7 +878,7 @@ mod orderbook {
                 );
             }
             if (previous_auction_orderhash.is_non_zero()) {
-                previous_orderhash = previous_listing_orderhash;
+                previous_orderhash = previous_auction_orderhash;
                 let current_order: Option<OrderV1> = order_read(previous_orderhash);
                 assert(current_order.is_some(), 'Order must exist');
                 let current_order = current_order.unwrap();
@@ -944,14 +938,16 @@ mod orderbook {
             let current_order: Option<OrderV1> = order_read(current_order_hash);
             if (current_order.is_some()) {
                 let current_order = current_order.unwrap();
-                // check expiration if order is expired continue
+                // check if same offerer
                 if (current_order.offerer == order.offerer) {
+                    // check expiration if order is expired continue
                     assert(
                         current_order.end_date <= starknet::get_block_timestamp(),
                         orderbook_errors::ORDER_ALREADY_EXISTS
                     );
                 }
             }
+
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
             order_write(order_hash, order_type, order);
             self.token_listings.write(token_hash, order_hash);

@@ -47,8 +47,8 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 0,
-        start_date: 1699556828,
-        end_date: 1702148828,
+        start_date: starknet::get_block_timestamp(),
+        end_date: starknet::get_block_timestamp() + (30 * 24 * 60 * 60),
         broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
@@ -93,8 +93,8 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 600000000000000000,
-        start_date: 1696874828,
-        end_date: 1699556828,
+        start_date: starknet::get_block_timestamp(),
+        end_date: starknet::get_block_timestamp() + (30 * 24 * 60 * 60),
         broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
@@ -117,8 +117,8 @@ fn setup_orders() -> (OrderV1, OrderV1, OrderV1, OrderV1,) {
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 0,
-        start_date: 1699525884797,
-        end_date: 1702117884797,
+        start_date: starknet::get_block_timestamp(),
+        end_date: starknet::get_block_timestamp() + (30 * 24 * 60 * 60),
         broker_id: 0x123.try_into().unwrap(),
         additional_data: data_span,
     };
@@ -366,8 +366,8 @@ fn get_offer_order() -> OrderV1 {
         quantity: 1,
         start_amount: 600000000000000000,
         end_amount: 0,
-        start_date: 1699525884797,
-        end_date: 1702117884797,
+        start_date: starknet::get_block_timestamp(),
+        end_date: starknet::get_block_timestamp() + (30 * 24 * 60 * 60),
         broker_id: test_address(),
         additional_data: data_span,
     }
