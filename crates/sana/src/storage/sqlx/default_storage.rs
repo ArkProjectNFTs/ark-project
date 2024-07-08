@@ -308,30 +308,6 @@ impl Storage for PostgresStorage {
 
             Ok(())
         } else {
-            let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
-
-            let event_type = match &event.event_type {
-                Some(e) => {
-                    let res = self.to_title_case(&e.to_string().to_lowercase());
-                    Some(res)
-                }
-                _ => None,
-            };
-
-            let _r = sqlx::query(q)
-                .bind(event.token_event_id.clone())
-                .bind(event.contract_address.clone())
-                .bind(event.chain_id.clone())
-                .bind(event.token_id.clone())
-                .bind(event.token_id_hex.clone())
-                .bind(event_type)
-                .bind(event.block_timestamp as i64)
-                .bind(event.transaction_hash.clone())
-                .bind(event.to_address.clone())
-                .bind(event.from_address.clone())
-                .execute(&self.pool)
-                .await?;
 
             let last_transfer_query = r#"SELECT block_timestamp
             FROM token_event 
@@ -339,7 +315,7 @@ impl Storage for PostgresStorage {
             AND token_id = $3 
             AND event_type IN ('Transfer', 'Burn', 'Mint')
             ORDER BY block_timestamp DESC LIMIT 1"#;
-
+            
             match sqlx::query(last_transfer_query)
                 .bind(event.contract_address.clone())
                 .bind(event.chain_id.clone())
@@ -367,6 +343,34 @@ impl Storage for PostgresStorage {
                     error!("Database error: {:?}", e);
                 }
             }
+
+
+            let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
+
+            let event_type = match &event.event_type {
+                Some(e) => {
+                    let res = self.to_title_case(&e.to_string().to_lowercase());
+                    Some(res)
+                }
+                _ => None,
+            };
+
+            let _r = sqlx::query(q)
+                .bind(event.token_event_id.clone())
+                .bind(event.contract_address.clone())
+                .bind(event.chain_id.clone())
+                .bind(event.token_id.clone())
+                .bind(event.token_id_hex.clone())
+                .bind(event_type)
+                .bind(event.block_timestamp as i64)
+                .bind(event.transaction_hash.clone())
+                .bind(event.to_address.clone())
+                .bind(event.from_address.clone())
+                .execute(&self.pool)
+                .await?;
+
+           
 
             Ok(())
         }
