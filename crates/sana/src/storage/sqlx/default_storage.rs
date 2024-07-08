@@ -333,11 +333,11 @@ impl Storage for PostgresStorage {
                 .execute(&self.pool)
                 .await?;
 
-            let last_transfer_query = r#"SELECT block_timestamp 
+            let last_transfer_query = r#"SELECT block_timestamp
             FROM token_event 
             WHERE contract_address = $1 AND chain_id = $2 
             AND token_id = $3 
-            AND event_type = 'Transfer' 
+            AND event_type IN ('Transfer', 'Burn', 'Mint')
             ORDER BY block_timestamp DESC LIMIT 1"#;
 
             match sqlx::query(last_transfer_query)
