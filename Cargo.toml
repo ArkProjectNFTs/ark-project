@@ -23,6 +23,10 @@ members = [
   "crates/sana",
 ]
 
+[[bin]]
+name = "sana_pending"
+path = "skip_examples/sana_pending.rs"
+
 [workspace.dependencies]
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
@@ -75,4 +79,3 @@ alloy-transport = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d
 [dev-dependencies]
 mockall = "0.12.1"
 url = "2.3.1"
-starknet = "0.7.0"
