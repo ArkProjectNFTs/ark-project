@@ -2,8 +2,7 @@ use crate::storage::types::{BlockIndexingStatus, BlockInfo, StorageError};
 use crate::storage::Storage;
 use starknet::core::types::FieldElement;
 use std::sync::Arc;
-use tracing::{debug, error, trace};
-use version_compare::{compare, Cmp};
+use tracing::error;
 
 #[derive(Debug)]
 pub struct BlockManager<S: Storage> {

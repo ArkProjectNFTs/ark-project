@@ -4,7 +4,7 @@ use crate::Storage;
 use async_trait::async_trait;
 use sqlx::{postgres::PgPoolOptions, Error as SqlxError, FromRow, PgPool, Row};
 use std::str::FromStr;
-use tracing::{error, trace};
+use tracing::{error, trace, info};
 
 impl From<SqlxError> for StorageError {
     fn from(e: SqlxError) -> Self {
