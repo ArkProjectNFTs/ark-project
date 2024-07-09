@@ -331,7 +331,10 @@ impl Storage for PostgresStorage {
                         info!("Current transfer timestamp: {}", event.block_timestamp);
 
                         if event.block_timestamp > last_transfer_timestamp_u64 {
-                            info!("Update token owner: {} -> {}", event.from_address, event.to_address);
+                            info!(
+                                "Update token owner: {} -> {}",
+                                event.from_address, event.to_address
+                            );
 
                             let update_q = "UPDATE token SET current_owner = $1 WHERE contract_address = $2 AND chain_id = $3 AND token_id = $4";
                             let _r = sqlx::query(update_q)
