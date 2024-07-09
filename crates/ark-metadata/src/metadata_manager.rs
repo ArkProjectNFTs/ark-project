@@ -493,22 +493,22 @@ mod tests {
         let filter_clone = filter.clone();
 
         mock_storage
-        .expect_find_tokens_without_metadata()
-        .times(1)
-        .withf(
-            move |arg_filter: &Option<(String, String)>, arg_refresh_collection: &bool| {
-                *arg_filter == Some(filter_clone.clone()) && *arg_refresh_collection == false
-            },
-        )
-        .returning(|_, _| {
-            Ok(vec![TokenWithoutMetadata {
-                contract_address: contract_address.to_string(),
-                token_id: "1".to_string(),
-                chain_id: "0x534e5f4d41494e".to_string(),
-                is_verified: true,
-                save_images: false,
-            }])
-        });
+            .expect_find_tokens_without_metadata()
+            .times(1)
+            .withf(
+                move |arg_filter: &Option<(String, String)>, arg_refresh_collection: &bool| {
+                    *arg_filter == Some(filter_clone.clone()) && *arg_refresh_collection == false
+                },
+            )
+            .returning(|_, _| {
+                Ok(vec![TokenWithoutMetadata {
+                    contract_address: contract_address.to_string(),
+                    token_id: "1".to_string(),
+                    chain_id: "0x534e5f4d41494e".to_string(),
+                    is_verified: true,
+                    save_images: false,
+                }])
+            });
 
         mock_client
             .expect_call_contract()
@@ -540,7 +540,7 @@ mod tests {
                 ipfs_gateway_uri,
                 Duration::from_secs(5),
                 request_referrer,
-                false
+                false,
             )
             .await;
 
