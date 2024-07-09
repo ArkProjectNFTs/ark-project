@@ -294,7 +294,7 @@ impl Storage for PostgresStorage {
         &self,
         event: &TokenTransferEvent,
     ) -> Result<(), StorageError> {
-        trace!("Registering transfer event {:?}", event.token_event_id);
+        info!("Registering transfer event {:?}", event.token_event_id);
         let existing_transfer_event =
             (self.get_event_by_id(&event.token_event_id).await?).is_some();
 
@@ -326,7 +326,16 @@ impl Storage for PostgresStorage {
                     if let Some(r) = row {
                         let last_transfer_timestamp: i64 = r.get(0);
                         let last_transfer_timestamp_u64 = last_transfer_timestamp as u64;
+
+                        info!("Last transfer timestamp: {}", last_transfer_timestamp_u64);
+                        info!("Current transfer timestamp: {}", event.block_timestamp);
+
                         if event.block_timestamp > last_transfer_timestamp_u64 {
+                            info!(
+                                "Update token owner: {} -> {}",
+                                event.from_address, event.to_address
+                            );
+
                             let update_q = "UPDATE token SET current_owner = $1 WHERE contract_address = $2 AND chain_id = $3 AND token_id = $4";
                             let _r = sqlx::query(update_q)
                                 .bind(event.to_address.clone())
@@ -343,7 +352,7 @@ impl Storage for PostgresStorage {
                 }
             }
 
-            let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
+            let insert_query = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
 
             let event_type = match &event.event_type {
@@ -354,7 +363,9 @@ impl Storage for PostgresStorage {
                 _ => None,
             };
 
-            let _r = sqlx::query(q)
+            info!("inserting transfer event... {:?}", event_type);
+
+            let _r = sqlx::query(insert_query)
                 .bind(event.token_event_id.clone())
                 .bind(event.contract_address.clone())
                 .bind(event.chain_id.clone())
