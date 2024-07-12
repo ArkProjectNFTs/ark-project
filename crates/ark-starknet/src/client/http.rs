@@ -8,7 +8,6 @@ use starknet::{
     providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError},
 };
 use std::collections::HashMap;
-use tracing::info;
 use url::Url;
 
 const INPUT_TOO_SHORT: &str = "0x496e70757420746f6f2073686f727420666f7220617267756d656e7473";
@@ -325,8 +324,6 @@ impl StarknetClient for StarknetClientHttp {
                 break;
             }
         }
-
-        info!("Pending block events: {:?}", events);
 
         Ok(events)
     }
