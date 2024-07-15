@@ -1,15 +1,9 @@
-/**
- * Demonstrates how to use the Starknet SDK for creating a offer on the arkchain.
- * This example shows the process of initializing a provider, creating an account,
- * submitting a offer order
- * checking the order status
- */
-
 import "dotenv/config";
 
-import { stark } from "starknet";
+import * as sn from "starknet";
 
 import {
+  Config,
   createBroker,
   createOffer,
   fetchOrCreateAccount,
@@ -18,73 +12,63 @@ import {
 } from "@ark-project/core";
 
 import { config, nftContract } from "./config/index.js";
-import { mintERC20 } from "./utils/mintERC20.js";
-import { whitelistBroker } from "./utils/whitelistBroker.js";
+import { Accounts } from "./types/accounts.js";
+import { logger } from "./utils/logger.js";
+import { mintTokens } from "./utils/mintTokens.js";
+import { setupAccounts } from "./utils/setupAccounts.js";
 
-/**
- * Creates a offer on the blockchain using provided order details.
- */
-(async () => {
-  console.log(`=> Getting config...`);
-  const { starknetProvider } = config;
-
-  const brokerId = stark.randomAddress();
-  await createBroker(config, { brokerID: brokerId });
-
-  console.log(`=> Creating account`);
-  // Create a new account for the offer using the provider
-  const solisAdminAccount = await fetchOrCreateAccount(
-    config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS_DEV,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
-  );
-
-  console.log(`=> Whitelisting broker ${brokerId}`);
-  await whitelistBroker(config, solisAdminAccount, brokerId);
-
-  console.log(
-    `=> Fetching or creating offerer starknet account, for test purpose only`
-  );
-  const starknetOffererAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
-
-  console.log(`=> Creating order`);
-  // Define the offer details
-  const offer: OfferV1 = {
-    brokerId, // The broker ID
-    tokenAddress: nftContract, // The token address
-    tokenId: BigInt(20), // The ID of the token
-    startAmount: BigInt(100000000000000000), // The starting amount for the order
-    currencyAddress: config.starknetCurrencyContract // The ERC20 address
-  };
-
-  if (process.env.STARKNET_NETWORK_ID === "dev") {
-    console.log("=> Minting ERC20...");
-    await mintERC20(
-      starknetProvider,
-      starknetOffererAccount,
-      offer.startAmount
-    );
-  }
-
-  console.log("=> Creating Offer...");
-  // Create the offer on the arkchain using the order details
+async function createOfferAndCheckStatus(
+  config: Config,
+  accounts: Accounts,
+  offer: OfferV1
+): Promise<bigint> {
+  logger.info("Creating offer...");
   const orderHash = await createOffer(config, {
-    starknetAccount: starknetOffererAccount,
+    starknetAccount: accounts.offerer,
     offer,
     approveInfo: {
       currencyAddress: config.starknetCurrencyContract,
       amount: offer.startAmount
     }
   });
+  logger.info("Order hash:", orderHash);
 
-  console.log("=> Fetching order status...");
-  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
-    orderHash
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  logger.info("Fetching order status...");
+  const { orderStatus } = await getOrderStatus(config, { orderHash });
+  logger.info("Order status:", orderStatus);
+
+  return orderHash;
+}
+
+async function main(): Promise<void> {
+  logger.info("Starting the offer creation and status check process...");
+
+  const accounts = await setupAccounts(config);
+
+  const brokerId = sn.stark.randomAddress();
+  await createBroker(config, {
+    brokenAccount: accounts.broker,
+    numerator: 1,
+    denominator: 100
   });
 
-  console.log("orderStatus", orderStatusAfter);
-})();
+  logger.info("Minting tokens...");
+  const { orderAmount } = await mintTokens(config, accounts, nftContract, true);
+
+  const offer: OfferV1 = {
+    brokerId: accounts.broker.address,
+    tokenAddress: nftContract,
+    tokenId: BigInt(20), // Note: This is hardcoded, you might want to generate this dynamically
+    startAmount: orderAmount,
+    currencyAddress: config.starknetCurrencyContract
+  };
+
+  await createOfferAndCheckStatus(config, accounts, offer);
+}
+
+main().catch((error) => {
+  logger.error("An error occurred:", error);
+  process.exit(1);
+});

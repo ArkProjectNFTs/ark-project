@@ -3,10 +3,11 @@ import * as sn from "starknet";
 
 import { Config } from "@ark-project/core";
 
-export const setArkFees = async (
+export const setDefaultCreatorFees = async (
   config: Config,
   deployerAccount: sn.Account,
   starknetAddress: string,
+  brokerAddress: string,
   fees: number
 ) => {
   const { abi } = await config.starknetProvider.getClassAt(starknetAddress);
@@ -16,12 +17,11 @@ export const setArkFees = async (
 
   const executorContract = new sn.Contract(
     abi,
-    config.starknetExecutorContract,
+    starknetAddress,
     config.starknetProvider
   );
-
   executorContract.connect(deployerAccount);
-  const response = await executorContract.set_ark_fees({
+  const response = await executorContract.set_broker_fees(brokerAddress, {
     numerator: cairo.uint256(fees),
     denominator: cairo.uint256(100)
   });

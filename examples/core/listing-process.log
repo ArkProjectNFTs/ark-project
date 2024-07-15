@@ -1,0 +1,541 @@
+2024-07-15T17:32:23.594Z [INFO]: Starting the listing process...
+2024-07-15T17:32:23.595Z [INFO]: Setting up accounts...
+2024-07-15T17:32:23.596Z [INFO]: Accounts setup complete.
+2024-07-15T17:32:23.596Z [INFO]: Setting up fees...
+2024-07-15T17:32:53.907Z [INFO]: Fees setup complete.
+2024-07-15T17:32:53.908Z [INFO]: Minting and approving tokens...
+2024-07-15T17:32:55.997Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T17:32:56.026Z [INFO]: Token minted with tokenId:
+2024-07-15T17:32:56.027Z [INFO]: Minting ERC20...
+2024-07-15T17:32:58.099Z [INFO]: Token minting complete.
+2024-07-15T17:32:58.100Z [INFO]: Displaying balances before sale:
+2024-07-15T17:32:58.117Z [INFO]: arkReceiver balance: 0
+2024-07-15T17:32:58.129Z [INFO]: admin balance: 892000000000000000
+2024-07-15T17:32:58.138Z [INFO]: broker balance: 8000000000000000
+2024-07-15T17:32:58.147Z [INFO]: offerer balance: 892000000000000000
+2024-07-15T17:32:58.154Z [INFO]: fulfiller balance: 100000000000000000
+2024-07-15T17:32:58.155Z [INFO]: Creating listing...
+2024-07-15T17:33:00.269Z [INFO]: Fulfilling listing...
+2024-07-15T17:33:02.365Z [INFO]: Listing created and fulfilled.
+2024-07-15T17:33:07.472Z [INFO]: Order status after fulfillment:
+2024-07-15T17:33:07.472Z [INFO]: Displaying balances after sale:
+2024-07-15T17:33:07.479Z [INFO]: arkReceiver balance: 1000000000000000
+2024-07-15T17:33:07.485Z [INFO]: admin balance: 989000000000000000
+2024-07-15T17:33:07.492Z [INFO]: broker balance: 10000000000000000
+2024-07-15T17:33:07.501Z [INFO]: offerer balance: 989000000000000000
+2024-07-15T17:33:07.507Z [INFO]: fulfiller balance: 0
+2024-07-15T17:36:33.846Z [INFO]: Starting the listing process...
+2024-07-15T17:36:33.848Z [INFO]: Setting up accounts...
+2024-07-15T17:36:33.848Z [INFO]: Accounts setup complete.
+2024-07-15T17:36:33.848Z [INFO]: Setting up fees...
+2024-07-15T17:37:04.168Z [INFO]: Fees setup complete.
+2024-07-15T17:37:04.170Z [INFO]: Minting tokens...
+2024-07-15T17:37:06.289Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T17:37:06.319Z [INFO]: Token minted with tokenId:
+2024-07-15T17:37:06.320Z [INFO]: Minting ERC20...
+2024-07-15T17:37:08.389Z [INFO]: Token minting complete.
+2024-07-15T17:37:08.390Z [INFO]: Displaying balances before sale:
+2024-07-15T17:37:08.405Z [INFO]: arkReceiver balance: 1000000000000000
+2024-07-15T17:37:08.414Z [INFO]: admin balance: 989000000000000000
+2024-07-15T17:37:08.421Z [INFO]: broker balance: 10000000000000000
+2024-07-15T17:37:08.428Z [INFO]: offerer balance: 989000000000000000
+2024-07-15T17:37:08.437Z [INFO]: fulfiller balance: 100000000000000000
+2024-07-15T17:37:08.437Z [INFO]: Creating listing...
+2024-07-15T17:37:10.557Z [INFO]: Fulfilling listing...
+2024-07-15T17:37:12.653Z [INFO]: Listing created and fulfilled.
+2024-07-15T17:37:17.761Z [INFO]: Order status after fulfillment:
+2024-07-15T17:37:17.761Z [INFO]: Displaying balances after sale:
+2024-07-15T17:37:17.769Z [INFO]: arkReceiver balance: 2000000000000000
+2024-07-15T17:37:17.776Z [INFO]: admin balance: 1086000000000000000
+2024-07-15T17:37:17.783Z [INFO]: broker balance: 12000000000000000
+2024-07-15T17:37:17.791Z [INFO]: offerer balance: 1086000000000000000
+2024-07-15T17:37:17.798Z [INFO]: fulfiller balance: 0
+2024-07-15T17:39:41.274Z [INFO]: Starting the listing process...
+2024-07-15T17:39:41.274Z [INFO]: Setting up accounts...
+2024-07-15T17:39:41.275Z [INFO]: Accounts setup complete.
+2024-07-15T17:39:41.275Z [INFO]: Setting up fees...
+2024-07-15T17:40:11.573Z [INFO]: Fees setup complete.
+2024-07-15T17:40:11.582Z [INFO]: Minting tokens...
+2024-07-15T17:40:13.660Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T17:40:13.689Z [INFO]: Token minted with tokenId:
+2024-07-15T17:40:13.689Z [INFO]: Minting ERC20...
+2024-07-15T17:40:15.751Z [INFO]: Token minting complete.
+2024-07-15T17:40:15.751Z [INFO]: Displaying balances before sale:
+2024-07-15T17:40:15.773Z [INFO]: arkReceiver balance: 2000000000000000
+2024-07-15T17:40:15.781Z [INFO]: admin balance: 1086000000000000000
+2024-07-15T17:40:15.788Z [INFO]: broker balance: 12000000000000000
+2024-07-15T17:40:15.797Z [INFO]: offerer balance: 1086000000000000000
+2024-07-15T17:40:15.803Z [INFO]: fulfiller balance: 100000000000000000
+2024-07-15T17:40:15.804Z [INFO]: Creating listing...
+2024-07-15T17:40:17.916Z [INFO]: Fulfilling listing...
+2024-07-15T17:40:20.002Z [INFO]: Listing created and fulfilled.
+2024-07-15T17:40:25.119Z [INFO]: Order status after fulfillment:
+2024-07-15T17:40:25.120Z [INFO]: Displaying balances after sale:
+2024-07-15T17:40:25.130Z [INFO]: arkReceiver balance: 3000000000000000
+2024-07-15T17:40:25.136Z [INFO]: admin balance: 1183000000000000000
+2024-07-15T17:40:25.145Z [INFO]: broker balance: 14000000000000000
+2024-07-15T17:40:25.151Z [INFO]: offerer balance: 1183000000000000000
+2024-07-15T17:40:25.158Z [INFO]: fulfiller balance: 0
+2024-07-15T17:44:45.321Z [INFO]: Starting the offer creation and fulfillment process...
+2024-07-15T17:44:45.322Z [INFO]: Setting up accounts...
+2024-07-15T17:44:45.322Z [INFO]: Accounts setup complete.
+2024-07-15T17:44:45.322Z [INFO]: Setting up fees...
+2024-07-15T17:45:15.636Z [INFO]: Fees setup complete.
+2024-07-15T17:45:15.638Z [INFO]: Minting tokens...
+2024-07-15T17:45:17.722Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T17:45:17.752Z [INFO]: Token minted with tokenId:
+2024-07-15T17:45:17.752Z [INFO]: Minting ERC20...
+2024-07-15T17:45:19.820Z [INFO]: Token minting complete.
+2024-07-15T17:45:19.828Z [INFO]: Displaying balances before offer creation and fulfillment:
+2024-07-15T17:45:19.837Z [INFO]: arkReceiver balance: 3000000000000000
+2024-07-15T17:45:19.845Z [INFO]: admin balance: 1183000000000000000
+2024-07-15T17:45:19.856Z [INFO]: broker balance: 14000000000000000
+2024-07-15T17:45:19.865Z [INFO]: offerer balance: 1183000000000000000
+2024-07-15T17:45:19.877Z [INFO]: fulfiller balance: 100000000000000000
+2024-07-15T17:45:19.877Z [INFO]: Creating offer...
+2024-07-15T17:45:21.990Z [INFO]: Fulfilling offer...
+2024-07-15T17:45:22.005Z [ERROR]: An error occurred: RPC: starknet_estimateFee with params {
+  "request": [
+    {
+      "type": "INVOKE",
+      "sender_address": "0xe29882a1fcba1e7e10cad46212257fea5c752a4f9b1b1ec683c503a2cf5c8a",
+      "calldata": [
+        "0x2",
+        "0x51e083b43a7c2f784ec8fb9bdfeef919c583d498f121fd8f2a78103465c066f",
+        "0x219209e083275171774dab1df80982e9df2096516f06319c5c6d71ae0a8480c",
+        "0x3",
+        "0x62b12cef40d34a7a2be89ee6dfd5c23b4ba2f0c69146aa33ad23dcc2b68b569",
+        "0xe",
+        "0x0",
+        "0x62b12cef40d34a7a2be89ee6dfd5c23b4ba2f0c69146aa33ad23dcc2b68b569",
+        "0x2d99282b26beeb0e75a3144ef2019a076c60e140c325804ab7f5fa28d6ec5e5",
+        "0x9",
+        "0x2f1112b92d8c48fcee45f193c95c5572136e6bbd286cc2a4d248c542b671a15",
+        "0x1",
+        "0xe29882a1fcba1e7e10cad46212257fea5c752a4f9b1b1ec683c503a2cf5c8a",
+        "0x4b4154414e41",
+        "0x51e083b43a7c2f784ec8fb9bdfeef919c583d498f121fd8f2a78103465c066f",
+        "0x0",
+        "0xe",
+        "0x0",
+        "0x56c155b624fdf6bfc94f7b37cf1dbebb5e186ef2e4ab2762367cd07c8f892a1"
+      ],
+      "version": "0x100000000000000000000000000000001",
+      "signature": [],
+      "nonce": "0x19",
+      "max_fee": "0x0"
+    }
+  ],
+  "block_id": "pending",
+  "simulation_flags": [
+    "SKIP_VALIDATE"
+  ]
+}
+ 
+        41: Transaction execution error: {"transaction_index":0,"execution_error":"transaction reverted: Error in the called contract (0x00e29882a1fcba1e7e10cad46212257fea5c752a4f9b1b1ec683c503a2cf5c8a):\nError at pc=0:4573:\nGot an exception while executing a hint: Hint Error: Execution failed. Failure reason: 0x4552433732313a20756e617574686f72697a65642063616c6c6572 ('ERC721: unauthorized caller').\nCairo traceback (most recent call last):\nUnknown location (pc=0:67)\nUnknown location (pc=0:1835)\nUnknown location (pc=0:2478)\nUnknown location (pc=0:3255)\nUnknown location (pc=0:3795)\n\nError in the called contract (0x051e083b43a7c2f784ec8fb9bdfeef919c583d498f121fd8f2a78103465c066f):\nExecution failed. Failure reason: 0x4552433732313a20756e617574686f72697a65642063616c6c6572 ('ERC721: unauthorized caller').\n"}
+2024-07-15T17:53:17.538Z [INFO]: Starting the listing process...
+2024-07-15T17:53:17.539Z [INFO]: Setting up accounts...
+2024-07-15T17:53:17.539Z [INFO]: Accounts setup complete.
+2024-07-15T17:53:17.539Z [INFO]: Setting up fees...
+2024-07-15T17:53:47.873Z [INFO]: Fees setup complete.
+2024-07-15T17:53:47.874Z [INFO]: Minting tokens...
+2024-07-15T17:53:49.966Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T17:53:49.966Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T17:53:52.074Z [INFO]: Token minted with tokenId:
+2024-07-15T17:53:52.074Z [INFO]: Token minting complete.
+2024-07-15T17:53:52.075Z [INFO]: Displaying balances before sale:
+2024-07-15T17:53:52.082Z [INFO]: arkReceiver balance: 3000000000000000
+2024-07-15T17:53:52.091Z [INFO]: admin balance: 1183000000000000000
+2024-07-15T17:53:52.098Z [INFO]: broker balance: 14000000000000000
+2024-07-15T17:53:52.105Z [INFO]: offerer balance: 1183000000000000000
+2024-07-15T17:53:52.117Z [INFO]: fulfiller balance: 200000000000000000
+2024-07-15T17:53:52.117Z [INFO]: Creating listing...
+2024-07-15T17:53:54.239Z [INFO]: Fulfilling listing...
+2024-07-15T17:53:56.359Z [INFO]: Listing created and fulfilled.
+2024-07-15T17:54:01.483Z [INFO]: Order status after fulfillment:
+2024-07-15T17:54:01.483Z [INFO]: Displaying balances after sale:
+2024-07-15T17:54:01.499Z [INFO]: arkReceiver balance: 4000000000000000
+2024-07-15T17:54:01.506Z [INFO]: admin balance: 1280000000000000000
+2024-07-15T17:54:01.528Z [INFO]: broker balance: 16000000000000000
+2024-07-15T17:54:01.555Z [INFO]: offerer balance: 1280000000000000000
+2024-07-15T17:54:01.563Z [INFO]: fulfiller balance: 100000000000000000
+2024-07-15T17:56:11.114Z [INFO]: Starting the offer creation and fulfillment process...
+2024-07-15T17:56:11.115Z [INFO]: Setting up accounts...
+2024-07-15T17:56:11.115Z [INFO]: Accounts setup complete.
+2024-07-15T17:56:11.115Z [INFO]: Setting up fees...
+2024-07-15T17:56:41.426Z [INFO]: Fees setup complete.
+2024-07-15T17:56:41.427Z [INFO]: Minting tokens...
+2024-07-15T17:56:41.429Z [INFO]: Minting ERC20 for the offerer...
+2024-07-15T17:56:43.518Z [INFO]: Minting ERC721 for the fulfiller...
+2024-07-15T17:56:45.602Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T17:56:45.629Z [INFO]: Token minted with tokenId:
+2024-07-15T17:56:45.629Z [INFO]: Token minting complete.
+2024-07-15T17:56:45.629Z [INFO]: Displaying balances before offer creation and fulfillment:
+2024-07-15T17:56:45.639Z [INFO]: arkReceiver balance: 4000000000000000
+2024-07-15T17:56:45.649Z [INFO]: admin balance: 1380000000000000000
+2024-07-15T17:56:45.656Z [INFO]: broker balance: 16000000000000000
+2024-07-15T17:56:45.665Z [INFO]: offerer balance: 1380000000000000000
+2024-07-15T17:56:45.672Z [INFO]: fulfiller balance: 100000000000000000
+2024-07-15T17:56:45.672Z [INFO]: Creating offer...
+2024-07-15T17:56:47.791Z [INFO]: Fulfilling offer...
+2024-07-15T17:56:49.895Z [INFO]: Offer created and fulfilled.
+2024-07-15T17:56:55.006Z [INFO]: Order status after fulfillment:
+2024-07-15T17:56:55.007Z [INFO]: Displaying balances after offer creation and fulfillment:
+2024-07-15T17:56:55.015Z [INFO]: arkReceiver balance: 5000000000000000
+2024-07-15T17:56:55.021Z [INFO]: admin balance: 1281000000000000000
+2024-07-15T17:56:55.029Z [INFO]: broker balance: 18000000000000000
+2024-07-15T17:56:55.036Z [INFO]: offerer balance: 1281000000000000000
+2024-07-15T17:56:55.042Z [INFO]: fulfiller balance: 196000000000000000
+2024-07-15T18:03:24.634Z [INFO]: Starting the listing creation and cancellation process...
+2024-07-15T18:03:24.634Z [INFO]: Setting up accounts...
+2024-07-15T18:03:24.635Z [INFO]: Accounts setup complete.
+2024-07-15T18:03:24.635Z [INFO]: Setting up fees...
+2024-07-15T18:03:54.954Z [INFO]: Fees setup complete.
+2024-07-15T18:03:54.955Z [INFO]: Minting tokens...
+2024-07-15T18:03:57.042Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:03:57.042Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:03:59.149Z [INFO]: Token minted with tokenId:
+2024-07-15T18:03:59.149Z [INFO]: Token minting complete.
+2024-07-15T18:03:59.150Z [INFO]: Displaying balances before listing creation:
+2024-07-15T18:03:59.160Z [INFO]: arkReceiver balance: 5000000000000000
+2024-07-15T18:03:59.171Z [INFO]: admin balance: 1281000000000000000
+2024-07-15T18:03:59.183Z [INFO]: broker balance: 18000000000000000
+2024-07-15T18:03:59.193Z [INFO]: offerer balance: 1281000000000000000
+2024-07-15T18:03:59.203Z [INFO]: fulfiller balance: 296000000000000000
+2024-07-15T18:03:59.203Z [INFO]: Creating listing...
+2024-07-15T18:04:06.333Z [INFO]: Fetching order status after creation...
+2024-07-15T18:04:06.461Z [INFO]: Order status before cancellation:
+2024-07-15T18:04:06.461Z [INFO]: Cancelling listing order...
+2024-07-15T18:04:10.556Z [INFO]: Fetching order status after cancellation...
+2024-07-15T18:04:10.678Z [INFO]: Order status after cancellation:
+2024-07-15T18:04:10.678Z [INFO]: Displaying balances after listing cancellation:
+2024-07-15T18:04:10.686Z [INFO]: arkReceiver balance: 5000000000000000
+2024-07-15T18:04:10.693Z [INFO]: admin balance: 1281000000000000000
+2024-07-15T18:04:10.699Z [INFO]: broker balance: 18000000000000000
+2024-07-15T18:04:10.707Z [INFO]: offerer balance: 1281000000000000000
+2024-07-15T18:04:10.713Z [INFO]: fulfiller balance: 296000000000000000
+2024-07-15T18:04:30.027Z [INFO]: Starting the listing creation and cancellation process...
+2024-07-15T18:04:30.028Z [INFO]: Setting up accounts...
+2024-07-15T18:04:30.028Z [INFO]: Accounts setup complete.
+2024-07-15T18:04:30.028Z [INFO]: Setting up fees...
+2024-07-15T18:05:00.332Z [INFO]: Fees setup complete.
+2024-07-15T18:05:00.336Z [INFO]: Minting tokens...
+2024-07-15T18:05:02.415Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:05:02.415Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:05:04.495Z [INFO]: Token minted with tokenId:
+2024-07-15T18:05:04.495Z [INFO]: Token minting complete.
+2024-07-15T18:05:04.495Z [INFO]: Creating listing...
+2024-07-15T18:05:11.619Z [INFO]: Fetching order status after creation...
+2024-07-15T18:05:11.719Z [INFO]: Order status before cancellation:
+2024-07-15T18:05:11.719Z [INFO]: Cancelling listing order...
+2024-07-15T18:05:15.790Z [INFO]: Fetching order status after cancellation...
+2024-07-15T18:05:15.884Z [INFO]: Order status after cancellation:
+2024-07-15T18:08:26.088Z [INFO]: Starting the listing creation and status check process...
+2024-07-15T18:08:26.089Z [INFO]: Setting up accounts...
+2024-07-15T18:08:26.089Z [INFO]: Accounts setup complete.
+2024-07-15T18:08:38.375Z [INFO]: Whitelisting broker 0x56c155b624fdf6bfc94f7b37cf1dbebb5e186ef2e4ab2762367cd07c8f892a1
+2024-07-15T18:08:38.496Z [ERROR]: An error occurred: RPC: starknet_estimateFee with params {
+  "request": [
+    {
+      "type": "INVOKE",
+      "sender_address": "0x3d0ceeb06a16dc38dbde8def8bcc83dc3c014cc7a3717c42b3ab04fa691938f",
+      "calldata": [
+        "0x1",
+        "0x60d908e5d7a8f450e78a621e0cc2e0e498ed5550716546a189dfd1e1db5ead1",
+        "0x8e4d0c9faab4180c0b7c32e7bb19d2f597721941871a63db5d21feff1e3cca",
+        "0x1",
+        "0x56c155b624fdf6bfc94f7b37cf1dbebb5e186ef2e4ab2762367cd07c8f892a1"
+      ],
+      "version": "0x100000000000000000000000000000001",
+      "signature": [],
+      "nonce": "0x1",
+      "max_fee": "0x0"
+    }
+  ],
+  "block_id": "pending",
+  "simulation_flags": [
+    "SKIP_VALIDATE"
+  ]
+}
+ 
+        41: Transaction execution error: {"execution_error":"transaction reverted: Error in the called contract (0x03d0ceeb06a16dc38dbde8def8bcc83dc3c014cc7a3717c42b3ab04fa691938f):\nError at pc=0:4573:\nGot an exception while executing a hint: Entry point EntryPointSelector(StarkFelt(\"0x008e4d0c9faab4180c0b7c32e7bb19d2f597721941871a63db5d21feff1e3cca\")) not found in contract.\nCairo traceback (most recent call last):\nUnknown location (pc=0:67)\nUnknown location (pc=0:1835)\nUnknown location (pc=0:2478)\nUnknown location (pc=0:3255)\nUnknown location (pc=0:3795)\n\nError in the called contract (0x060d908e5d7a8f450e78a621e0cc2e0e498ed5550716546a189dfd1e1db5ead1):\nEntry point EntryPointSelector(StarkFelt(\"0x008e4d0c9faab4180c0b7c32e7bb19d2f597721941871a63db5d21feff1e3cca\")) not found in contract.\n","transaction_index":0}
+2024-07-15T18:10:04.321Z [INFO]: Starting the listing creation and status check process...
+2024-07-15T18:10:04.322Z [INFO]: Setting up accounts...
+2024-07-15T18:10:04.322Z [INFO]: Accounts setup complete.
+2024-07-15T18:10:14.457Z [INFO]: Minting tokens...
+2024-07-15T18:10:16.564Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:10:16.565Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:10:18.681Z [INFO]: Token minted with tokenId:
+2024-07-15T18:10:18.681Z [INFO]: Token minting complete.
+2024-07-15T18:10:18.696Z [INFO]: Owner of tokenId 19 is 0x00b3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca
+2024-07-15T18:10:18.696Z [INFO]: Creating listing...
+2024-07-15T18:10:20.806Z [INFO]: Order hash:
+2024-07-15T18:10:20.806Z [INFO]: Fetching order status...
+2024-07-15T18:10:20.893Z [INFO]: Order status:
+2024-07-15T18:10:43.215Z [INFO]: Starting the listing creation and cancellation process...
+2024-07-15T18:10:43.216Z [INFO]: Setting up accounts...
+2024-07-15T18:10:43.216Z [INFO]: Accounts setup complete.
+2024-07-15T18:10:53.330Z [INFO]: Minting tokens...
+2024-07-15T18:10:55.427Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:10:55.427Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:10:57.541Z [INFO]: Token minted with tokenId:
+2024-07-15T18:10:57.541Z [INFO]: Token minting complete.
+2024-07-15T18:10:57.541Z [INFO]: Creating listing...
+2024-07-15T18:11:04.667Z [INFO]: Fetching order status after creation...
+2024-07-15T18:11:04.766Z [INFO]: Order status before cancellation:
+2024-07-15T18:11:04.766Z [INFO]: Cancelling listing order...
+2024-07-15T18:11:08.838Z [INFO]: Fetching order status after cancellation...
+2024-07-15T18:11:08.937Z [INFO]: Order status after cancellation:
+2024-07-15T18:12:36.744Z [INFO]: Starting the listing creation and status check process...
+2024-07-15T18:12:36.745Z [INFO]: Setting up accounts...
+2024-07-15T18:12:36.745Z [INFO]: Accounts setup complete.
+2024-07-15T18:12:46.864Z [INFO]: Minting tokens...
+2024-07-15T18:12:48.963Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:12:48.964Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:12:51.086Z [INFO]: Token minted with tokenId:
+2024-07-15T18:12:51.087Z [INFO]: Token minting complete.
+2024-07-15T18:12:51.103Z [INFO]: Owner of tokenId 21 is 0x00b3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca
+2024-07-15T18:12:51.104Z [INFO]: Creating listing...
+2024-07-15T18:12:53.226Z [INFO]: Order hash:
+2024-07-15T18:12:53.227Z [INFO]: Fetching order status...
+2024-07-15T18:12:53.345Z [INFO]: Order status:
+2024-07-15T18:12:58.814Z [INFO]: Starting the listing creation and status check process...
+2024-07-15T18:12:58.815Z [INFO]: Setting up accounts...
+2024-07-15T18:12:58.815Z [INFO]: Accounts setup complete.
+2024-07-15T18:13:08.929Z [INFO]: Minting tokens...
+2024-07-15T18:13:11.022Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:13:11.022Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:13:13.112Z [INFO]: Token minted with tokenId:
+2024-07-15T18:13:13.113Z [INFO]: Token minting complete.
+2024-07-15T18:13:13.134Z [INFO]: Owner of tokenId 22 is 0x00b3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca
+2024-07-15T18:13:13.135Z [INFO]: Creating listing...
+2024-07-15T18:13:15.283Z [INFO]: Order hash:
+2024-07-15T18:13:20.285Z [INFO]: Fetching order status...
+2024-07-15T18:13:20.397Z [INFO]: Order status:
+2024-07-15T18:14:01.436Z [INFO]: Starting the listing creation and status check process...
+2024-07-15T18:14:01.437Z [INFO]: Setting up accounts...
+2024-07-15T18:14:01.437Z [INFO]: Accounts setup complete.
+2024-07-15T18:14:11.555Z [INFO]: Minting tokens...
+2024-07-15T18:14:13.667Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:14:13.667Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:14:15.795Z [INFO]: Token minted with tokenId:
+2024-07-15T18:14:15.795Z [INFO]: Token minting complete.
+2024-07-15T18:14:15.815Z [INFO]: Owner of tokenId 23 is 0x00b3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca
+2024-07-15T18:14:15.815Z [INFO]: Creating listing...
+2024-07-15T18:14:17.946Z [INFO]: Order hash:
+2024-07-15T18:14:22.947Z [INFO]: Fetching order status...
+2024-07-15T18:14:23.065Z [INFO]: Order status:
+2024-07-15T18:17:16.449Z [INFO]: Starting the listing process...
+2024-07-15T18:17:16.449Z [INFO]: Setting up accounts...
+2024-07-15T18:17:16.449Z [INFO]: Accounts setup complete.
+2024-07-15T18:17:16.450Z [INFO]: Setting up fees...
+2024-07-15T18:17:46.764Z [INFO]: Fees setup complete.
+2024-07-15T18:17:46.768Z [INFO]: Minting tokens...
+2024-07-15T18:17:48.854Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:17:48.854Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:17:50.948Z [INFO]: Token minted with tokenId:
+2024-07-15T18:17:50.948Z [INFO]: Token minting complete.
+2024-07-15T18:17:50.948Z [INFO]: Displaying balances before sale:
+2024-07-15T18:17:50.960Z [INFO]: arkReceiver balance: 5000000000000000
+2024-07-15T18:17:50.968Z [INFO]: admin balance: 1281000000000000000
+2024-07-15T18:17:50.983Z [INFO]: broker balance: 18000000000000000
+2024-07-15T18:17:50.996Z [INFO]: offerer balance: 1281000000000000000
+2024-07-15T18:17:51.004Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:17:51.004Z [INFO]: Creating listing...
+2024-07-15T18:17:53.118Z [INFO]: Fulfilling listing...
+2024-07-15T18:17:55.226Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:18:00.339Z [INFO]: Order status after fulfillment:
+2024-07-15T18:18:00.339Z [INFO]: Displaying balances after sale:
+2024-07-15T18:18:00.347Z [INFO]: arkReceiver balance: 6000000000000000
+2024-07-15T18:18:00.354Z [INFO]: admin balance: 1378000000000000000
+2024-07-15T18:18:00.360Z [INFO]: broker balance: 20000000000000000
+2024-07-15T18:18:00.368Z [INFO]: offerer balance: 1378000000000000000
+2024-07-15T18:18:00.374Z [INFO]: fulfiller balance: 896000000000000000
+2024-07-15T18:21:45.067Z [INFO]: Starting the listing process...
+2024-07-15T18:21:45.068Z [INFO]: Setting up accounts...
+2024-07-15T18:21:45.069Z [INFO]: Accounts setup complete.
+2024-07-15T18:21:45.069Z [INFO]: Setting up fees...
+2024-07-15T18:22:15.370Z [INFO]: Fees setup complete.
+2024-07-15T18:22:15.371Z [INFO]: Minting tokens...
+2024-07-15T18:22:17.448Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:22:17.449Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:22:19.553Z [INFO]: Token minted with tokenId:
+2024-07-15T18:22:19.553Z [INFO]: Token minting complete.
+2024-07-15T18:22:19.553Z [INFO]: Displaying balances before sale:
+2024-07-15T18:22:19.566Z [INFO]: arkReceiver balance: 6000000000000000
+2024-07-15T18:22:19.577Z [INFO]: admin balance: 1378000000000000000
+2024-07-15T18:22:19.584Z [INFO]: broker balance: 20000000000000000
+2024-07-15T18:22:19.590Z [INFO]: offerer balance: 1378000000000000000
+2024-07-15T18:22:19.598Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:22:19.598Z [INFO]: Creating listing...
+2024-07-15T18:22:21.703Z [INFO]: Fulfilling listing...
+2024-07-15T18:22:23.798Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:22:28.905Z [INFO]: Order status after fulfillment:
+2024-07-15T18:22:28.905Z [INFO]: Displaying balances after sale:
+2024-07-15T18:22:28.913Z [INFO]: arkReceiver balance: 7000000000000000
+2024-07-15T18:22:28.919Z [INFO]: admin balance: 1475000000000000000
+2024-07-15T18:22:28.926Z [INFO]: broker balance: 22000000000000000
+2024-07-15T18:22:28.934Z [INFO]: offerer balance: 1475000000000000000
+2024-07-15T18:22:28.940Z [INFO]: fulfiller balance: 896000000000000000
+2024-07-15T18:26:28.349Z [INFO]: Starting the listing process...
+2024-07-15T18:26:28.349Z [INFO]: Setting up accounts...
+2024-07-15T18:26:28.350Z [INFO]: Accounts setup complete.
+2024-07-15T18:26:28.350Z [INFO]: Setting up fees...
+2024-07-15T18:26:58.680Z [INFO]: Fees setup complete.
+2024-07-15T18:26:58.680Z [INFO]: Minting tokens...
+2024-07-15T18:27:00.758Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:27:00.758Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:27:02.859Z [INFO]: Token minted with tokenId:
+2024-07-15T18:27:02.859Z [INFO]: Token minting complete.
+2024-07-15T18:27:02.859Z [INFO]: Displaying balances before sale:
+2024-07-15T18:27:02.873Z [INFO]: arkReceiver balance: 7000000000000000
+2024-07-15T18:27:02.881Z [INFO]: admin balance: 1475000000000000000
+2024-07-15T18:27:02.890Z [INFO]: broker balance: 22000000000000000
+2024-07-15T18:27:02.897Z [INFO]: offerer balance: 1475000000000000000
+2024-07-15T18:27:02.906Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:27:02.906Z [INFO]: Creating listing...
+2024-07-15T18:27:05.053Z [INFO]: Order hash:
+2024-07-15T18:27:05.053Z [INFO]: Fulfilling listing...
+2024-07-15T18:27:07.160Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:27:12.265Z [INFO]: Order status after fulfillment:
+2024-07-15T18:27:12.265Z [INFO]: Displaying balances after sale:
+2024-07-15T18:27:12.272Z [INFO]: arkReceiver balance: 8000000000000000
+2024-07-15T18:27:12.278Z [INFO]: admin balance: 1572000000000000000
+2024-07-15T18:27:12.284Z [INFO]: broker balance: 24000000000000000
+2024-07-15T18:27:12.295Z [INFO]: offerer balance: 1572000000000000000
+2024-07-15T18:27:12.301Z [INFO]: fulfiller balance: 896000000000000000
+2024-07-15T18:27:40.966Z [INFO]: Starting the listing process...
+2024-07-15T18:27:40.966Z [INFO]: Setting up accounts...
+2024-07-15T18:27:40.966Z [INFO]: Accounts setup complete.
+2024-07-15T18:27:40.967Z [INFO]: Setting up fees...
+2024-07-15T18:28:11.293Z [INFO]: Fees setup complete.
+2024-07-15T18:28:11.296Z [INFO]: Minting tokens...
+2024-07-15T18:28:13.359Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:28:13.359Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:28:15.462Z [INFO]: Token minted with tokenId:
+2024-07-15T18:28:15.462Z [INFO]: Token minting complete.
+2024-07-15T18:28:15.462Z [INFO]: Displaying balances before sale:
+2024-07-15T18:28:15.471Z [INFO]: arkReceiver balance: 8000000000000000
+2024-07-15T18:28:15.480Z [INFO]: admin balance: 1572000000000000000
+2024-07-15T18:28:15.488Z [INFO]: broker balance: 24000000000000000
+2024-07-15T18:28:15.496Z [INFO]: offerer balance: 1572000000000000000
+2024-07-15T18:28:15.505Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:28:15.505Z [INFO]: Creating listing...
+2024-07-15T18:28:22.625Z [INFO]: Order hash:
+2024-07-15T18:28:22.625Z [INFO]: Fulfilling listing...
+2024-07-15T18:28:24.737Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:28:29.856Z [INFO]: Order status after fulfillment:
+2024-07-15T18:28:29.856Z [INFO]: Displaying balances after sale:
+2024-07-15T18:28:29.866Z [INFO]: arkReceiver balance: 9000000000000000
+2024-07-15T18:28:29.873Z [INFO]: admin balance: 1669000000000000000
+2024-07-15T18:28:29.881Z [INFO]: broker balance: 26000000000000000
+2024-07-15T18:28:29.887Z [INFO]: offerer balance: 1669000000000000000
+2024-07-15T18:28:29.893Z [INFO]: fulfiller balance: 896000000000000000
+2024-07-15T18:28:34.312Z [INFO]: Starting the listing process...
+2024-07-15T18:28:34.312Z [INFO]: Setting up accounts...
+2024-07-15T18:28:34.313Z [INFO]: Accounts setup complete.
+2024-07-15T18:28:34.313Z [INFO]: Setting up fees...
+2024-07-15T18:29:04.602Z [INFO]: Fees setup complete.
+2024-07-15T18:29:04.604Z [INFO]: Minting tokens...
+2024-07-15T18:29:06.679Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:29:06.680Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:29:08.769Z [INFO]: Token minted with tokenId:
+2024-07-15T18:29:08.770Z [INFO]: Token minting complete.
+2024-07-15T18:29:08.770Z [INFO]: Displaying balances before sale:
+2024-07-15T18:29:08.780Z [INFO]: arkReceiver balance: 9000000000000000
+2024-07-15T18:29:08.789Z [INFO]: admin balance: 1669000000000000000
+2024-07-15T18:29:08.798Z [INFO]: broker balance: 26000000000000000
+2024-07-15T18:29:08.805Z [INFO]: offerer balance: 1669000000000000000
+2024-07-15T18:29:08.818Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:29:08.819Z [INFO]: Creating listing...
+2024-07-15T18:29:15.923Z [INFO]: Order hash:
+2024-07-15T18:29:15.924Z [INFO]: Fulfilling listing...
+2024-07-15T18:29:18.032Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:29:23.137Z [INFO]: Order status after fulfillment:
+2024-07-15T18:29:23.137Z [INFO]: Displaying balances after sale:
+2024-07-15T18:29:23.145Z [INFO]: arkReceiver balance: 10000000000000000
+2024-07-15T18:29:23.152Z [INFO]: admin balance: 1766000000000000000
+2024-07-15T18:29:23.158Z [INFO]: broker balance: 28000000000000000
+2024-07-15T18:29:23.166Z [INFO]: offerer balance: 1766000000000000000
+2024-07-15T18:29:23.173Z [INFO]: fulfiller balance: 896000000000000000
+2024-07-15T18:31:30.674Z [INFO]: Starting the listing process...
+2024-07-15T18:31:30.675Z [INFO]: Setting up accounts...
+2024-07-15T18:31:30.675Z [INFO]: Accounts setup complete.
+2024-07-15T18:31:30.675Z [INFO]: Setting up fees...
+2024-07-15T18:32:00.980Z [INFO]: Fees setup complete.
+2024-07-15T18:32:00.982Z [INFO]: Minting tokens...
+2024-07-15T18:32:03.075Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:32:03.076Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:32:05.178Z [INFO]: Token minted with tokenId:
+2024-07-15T18:32:05.179Z [INFO]: Token minting complete.
+2024-07-15T18:32:05.179Z [INFO]: Displaying balances before sale:
+2024-07-15T18:32:05.189Z [INFO]: arkReceiver balance: 10000000000000000
+2024-07-15T18:32:05.199Z [INFO]: admin balance: 1766000000000000000
+2024-07-15T18:32:05.207Z [INFO]: broker balance: 28000000000000000
+2024-07-15T18:32:05.216Z [INFO]: offerer balance: 1766000000000000000
+2024-07-15T18:32:05.224Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:32:05.224Z [INFO]: Creating listing...
+2024-07-15T18:32:12.336Z [INFO]: Order hash:
+2024-07-15T18:32:12.337Z [INFO]: Fulfilling listing...
+2024-07-15T18:32:14.444Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:32:19.553Z [INFO]: Order status after fulfillment:
+2024-07-15T18:32:19.553Z [INFO]: Displaying balances after sale:
+2024-07-15T18:32:19.561Z [INFO]: arkReceiver balance: 11000000000000000
+2024-07-15T18:32:19.567Z [INFO]: admin balance: 1863000000000000000
+2024-07-15T18:32:19.573Z [INFO]: broker balance: 30000000000000000
+2024-07-15T18:32:19.581Z [INFO]: offerer balance: 1863000000000000000
+2024-07-15T18:32:19.588Z [INFO]: fulfiller balance: 896000000000000000
+2024-07-15T18:38:24.282Z [INFO]: Starting the listing process...
+2024-07-15T18:38:24.283Z [INFO]: Setting up accounts...
+2024-07-15T18:38:24.283Z [INFO]: Accounts setup complete.
+2024-07-15T18:38:24.283Z [INFO]: Setting up fees...
+2024-07-15T18:38:54.595Z [INFO]: Fees setup complete.
+2024-07-15T18:38:54.596Z [INFO]: Minting tokens...
+2024-07-15T18:38:56.669Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:38:56.669Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:38:58.762Z [INFO]: Token minted with tokenId:
+2024-07-15T18:38:58.762Z [INFO]: Token minting complete.
+2024-07-15T18:38:58.763Z [INFO]: Displaying balances before sale:
+2024-07-15T18:38:58.775Z [INFO]: arkReceiver balance: 11000000000000000
+2024-07-15T18:38:58.783Z [INFO]: admin balance: 1863000000000000000
+2024-07-15T18:38:58.793Z [INFO]: broker balance: 30000000000000000
+2024-07-15T18:38:58.800Z [INFO]: offerer balance: 1863000000000000000
+2024-07-15T18:38:58.807Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:38:58.808Z [INFO]: Creating listing...
+2024-07-15T18:39:05.922Z [INFO]: Order hash:
+2024-07-15T18:39:05.923Z [INFO]: Fulfilling listing...
+2024-07-15T18:39:08.033Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:39:13.141Z [INFO]: Order status after fulfillment:
+2024-07-15T18:39:13.141Z [INFO]: Displaying balances after sale:
+2024-07-15T18:39:13.149Z [INFO]: arkReceiver balance: 12000000000000000
+2024-07-15T18:39:13.155Z [INFO]: admin balance: 1960000000000000000
+2024-07-15T18:39:13.161Z [INFO]: broker balance: 32000000000000000
+2024-07-15T18:39:13.169Z [INFO]: offerer balance: 1960000000000000000
+2024-07-15T18:39:13.177Z [INFO]: fulfiller balance: 896000000000000000
+2024-07-15T18:40:03.204Z [INFO]: Starting the listing process...
+2024-07-15T18:40:03.205Z [INFO]: Setting up accounts...
+2024-07-15T18:40:03.205Z [INFO]: Accounts setup complete.
+2024-07-15T18:40:03.205Z [INFO]: Setting up fees...
+2024-07-15T18:40:33.587Z [INFO]: Fees setup complete.
+2024-07-15T18:40:33.589Z [INFO]: Minting tokens...
+2024-07-15T18:40:35.671Z [INFO]: ERC721 minting transaction hash:
+2024-07-15T18:40:35.671Z [INFO]: Minting ERC20 for the fulfiller...
+2024-07-15T18:40:37.775Z [INFO]: Token minted with tokenId:
+2024-07-15T18:40:37.775Z [INFO]: Token minting complete.
+2024-07-15T18:40:37.776Z [INFO]: Displaying balances before sale:
+2024-07-15T18:40:37.787Z [INFO]: arkReceiver balance: 12000000000000000
+2024-07-15T18:40:37.798Z [INFO]: admin balance: 1960000000000000000
+2024-07-15T18:40:37.806Z [INFO]: broker balance: 32000000000000000
+2024-07-15T18:40:37.816Z [INFO]: offerer balance: 1960000000000000000
+2024-07-15T18:40:37.823Z [INFO]: fulfiller balance: 996000000000000000
+2024-07-15T18:40:37.823Z [INFO]: Creating listing...
+2024-07-15T18:40:44.943Z [INFO]: Order hash:
+2024-07-15T18:40:44.944Z [INFO]: Fulfilling listing...
+2024-07-15T18:40:47.053Z [INFO]: Listing created and fulfilled.
+2024-07-15T18:40:52.184Z [INFO]: Order status after fulfillment:
+2024-07-15T18:40:52.184Z [INFO]: Displaying balances after sale:
+2024-07-15T18:40:52.194Z [INFO]: arkReceiver balance: 13000000000000000
+2024-07-15T18:40:52.203Z [INFO]: admin balance: 2057000000000000000
+2024-07-15T18:40:52.217Z [INFO]: broker balance: 34000000000000000
+2024-07-15T18:40:52.228Z [INFO]: offerer balance: 2057000000000000000
+2024-07-15T18:40:52.235Z [INFO]: fulfiller balance: 896000000000000000

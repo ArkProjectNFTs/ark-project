@@ -1,30 +1,30 @@
-import { Account, CallData } from "starknet";
+import { Account, cairo, CallData } from "starknet";
 
 import { Config } from "../../createConfig.js";
 
 interface Params {
-  brokerID: string;
+  brokenAccount: Account;
+  numerator: number;
+  denominator: number;
 }
 
 export const createBroker = async (config: Config, params: Params) => {
-  const address = process.env.SOLIS_ADMIN_ADDRESS as string;
-  const privateKey = process.env.SOLIS_ADMIN_PRIVATE_KEY as string;
-  const account = new Account(config.arkProvider, address, privateKey, "1");
-
   const whitelist_broker_calldata = CallData.compile({
-    broker_id: params.brokerID
+    fees_ratio: {
+      numerator: cairo.uint256(params.numerator),
+      denominator: cairo.uint256(params.denominator)
+    }
   });
 
-  const result = await account.execute({
-    contractAddress: config.arkchainOrderbookContract,
-    entrypoint: "whitelist_broker",
+  const result = await params.brokenAccount.execute({
+    contractAddress: config.starknetExecutorContract,
+    entrypoint: "set_broker_fees",
     calldata: whitelist_broker_calldata
   });
 
-  await config.arkProvider.waitForTransaction(result.transaction_hash);
+  await config.starknetProvider.waitForTransaction(result.transaction_hash);
 
   return {
-    brokerID: params.brokerID,
     transactionHash: result.transaction_hash
   };
 };
