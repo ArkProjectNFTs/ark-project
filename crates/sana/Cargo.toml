@@ -13,6 +13,7 @@ serde_json = "1.0"
 thiserror = "1.0.32"
 version-compare = "0.2.0"
 tracing = "0.1"
+url = { version = "2.4.0", features = ["serde"] }
 sqlx = { version = "0.7", optional = true, features = [
     "postgres",
     "runtime-tokio",
@@ -25,6 +26,7 @@ ark-starknet.workspace = true
 ark-metadata.workspace = true
 starknet.workspace = true
 async-trait.workspace = true
+
 
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }

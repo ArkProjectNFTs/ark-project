@@ -9,3 +9,6 @@ pub use token_manager::TokenManager;
 
 pub mod block_manager;
 pub use block_manager::{BlockManager, PendingBlockData};
+
+pub mod pending_block_manager;
+pub use pending_block_manager::FetchPendingEvents;
