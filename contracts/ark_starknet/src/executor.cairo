@@ -110,6 +110,7 @@ mod executor {
     #[derive(Drop, starknet::Event)]
     enum Event {
         OrderExecuted: OrderExecuted,
+        CollectionFallbackFees: CollectionFallbackFees,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -119,6 +120,16 @@ mod executor {
         #[key]
         transaction_hash: felt252,
         block_timestamp: u64
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct CollectionFallbackFees {
+        #[key]
+        collection: ContractAddress,
+        #[key]
+        amount: u256,
+        currency_contract: ContractAddress,
+        receiver: ContractAddress,
     }
 
     #[constructor]
@@ -391,6 +402,18 @@ mod executor {
                 );
 
             if creator_fees_amount > 0 {
+                let (default_receiver_creator, _) = self.get_default_creator_fees();
+                if creator_address == default_receiver_creator {
+                    self
+                        .emit(
+                            CollectionFallbackFees {
+                                collection: execution_info.nft_address,
+                                amount: creator_fees_amount,
+                                currency_contract: currency_contract.contract_address,
+                                receiver: default_receiver_creator,
+                            }
+                        )
+                }
                 currency_contract
                     .transfer_from(
                         execution_info.payment_from, creator_address, creator_fees_amount
