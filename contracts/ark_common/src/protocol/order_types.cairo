@@ -50,7 +50,6 @@ enum OrderValidationError {
     AdditionalDataTooLong,
     InvalidContent,
     InvalidSalt,
-    InvalidBroker,
 }
 
 impl OrderValidationErrorIntoFelt252 of Into<OrderValidationError, felt252> {
@@ -61,7 +60,6 @@ impl OrderValidationErrorIntoFelt252 of Into<OrderValidationError, felt252> {
             OrderValidationError::AdditionalDataTooLong => 'ADDITIONAL_DATA_TOO_LONG',
             OrderValidationError::InvalidContent => 'INVALID_CONTENT',
             OrderValidationError::InvalidSalt => 'INVALID_SALT',
-            OrderValidationError::InvalidBroker => 'INVALID_BROKER',
         }
     }
 }
@@ -78,8 +76,6 @@ impl Felt252TryIntoOrderValidationError of TryInto<felt252, OrderValidationError
             Option::Some(OrderValidationError::InvalidContent)
         } else if self == 'INVALID_SALT' {
             Option::Some(OrderValidationError::InvalidSalt)
-        } else if self == 'INVALID_BROKER' {
-            Option::Some(OrderValidationError::InvalidBroker)
         } else {
             Option::None
         }

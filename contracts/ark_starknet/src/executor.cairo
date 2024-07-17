@@ -110,6 +110,7 @@ mod executor {
     #[derive(Drop, starknet::Event)]
     enum Event {
         OrderExecuted: OrderExecuted,
+        CollectionFallbackFees: CollectionFallbackFees,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -119,6 +120,16 @@ mod executor {
         #[key]
         transaction_hash: felt252,
         block_timestamp: u64
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct CollectionFallbackFees {
+        #[key]
+        collection: ContractAddress,
+        #[key]
+        amount: u256,
+        currency_contract: ContractAddress,
+        receiver: ContractAddress,
     }
 
     #[constructor]
@@ -141,11 +152,9 @@ mod executor {
 
     #[abi(embed_v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
-        fn set_broker_fees(
-            ref self: ContractState, broker_address: ContractAddress, fees_ratio: FeesRatio
-        ) {
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
-            self.broker_fees.write(broker_address, fees_ratio);
+        fn set_broker_fees(ref self: ContractState, fees_ratio: FeesRatio) {
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
+            self.broker_fees.write(starknet::get_caller_address(), fees_ratio);
         }
 
         fn get_broker_fees(self: @ContractState, broker_address: ContractAddress) -> FeesRatio {
@@ -163,7 +172,7 @@ mod executor {
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
 
             self.ark_fees.write(fees_ratio);
         }
@@ -183,7 +192,7 @@ mod executor {
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
             self.default_receiver.write(receiver);
             self.default_fees.write(fees_ratio);
         }
@@ -209,7 +218,7 @@ mod executor {
                 starknet::get_caller_address() == self.admin_address.read(),
                 'Unauthorized admin address'
             );
-            assert(_fees_ratio_is_valid(@fees_ratio), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
             self.creator_fees.write(nft_address, (receiver, fees_ratio));
         }
 
@@ -393,6 +402,18 @@ mod executor {
                 );
 
             if creator_fees_amount > 0 {
+                let (default_receiver_creator, _) = self.get_default_creator_fees();
+                if creator_address == default_receiver_creator {
+                    self
+                        .emit(
+                            CollectionFallbackFees {
+                                collection: execution_info.nft_address,
+                                amount: creator_fees_amount,
+                                currency_contract: currency_contract.contract_address,
+                                receiver: default_receiver_creator,
+                            }
+                        )
+                }
                 currency_contract
                     .transfer_from(
                         execution_info.payment_from, creator_address, creator_fees_amount
@@ -748,9 +769,5 @@ mod executor {
         let (receiver, fees_ratio) = self.get_collection_creator_fees(*nft_address);
         let amount = fees_ratio.compute_amount(payment_amount);
         (receiver, amount)
-    }
-
-    fn _fees_ratio_is_valid(fees_ratio: @FeesRatio) -> bool {
-        *fees_ratio.denominator != 0 && *fees_ratio.numerator < *fees_ratio.denominator
     }
 }

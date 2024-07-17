@@ -12,6 +12,7 @@ import loading from "loading-cli";
 import { ARTIFACTS_PATH } from "./constants";
 import { deployExecutor, upgradeExecutor } from "./contracts/executor";
 import { deployMessaging, upgradeMessaging } from "./contracts/messaging";
+import { setArkFees, setDefaultCreatorFees } from "./contracts/setFees";
 import { getFeeAddress, getStarknetProvider } from "./providers";
 import {
   getContractsFilePath,
@@ -128,6 +129,23 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   await fs.writeFile(
     contractsFilePath,
     JSON.stringify(contractsContent, null, 2)
+  );
+
+  // Set Ark Fees
+  await await setArkFees(
+    executorContract.address,
+    starknetProvider,
+    starknetAdminAccount,
+    25
+  );
+
+  // Set default creator Fees
+  await setDefaultCreatorFees(
+    executorContract.address,
+    starknetProvider,
+    starknetAdminAccount,
+    "0x06bC109475810df11c7f046Ad72A5a52aAd8658123CC529309910d00bD4904C8",
+    50
   );
 
   starknetSpinner.stop();

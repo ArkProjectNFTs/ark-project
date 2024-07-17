@@ -1,7 +1,11 @@
 import { createBroker } from "@ark-project/core";
 
 import { config } from "./config/index.js";
+import { setupAccounts } from "./utils/setupAccounts.js";
 
-const brokerID = process.env.BROKER_ID as string;
-console.log("Creating broker with ID: " + brokerID);
-createBroker(config, { brokerID });
+const accounts = await setupAccounts(config);
+await createBroker(config, {
+  brokenAccount: accounts.broker,
+  numerator: 1,
+  denominator: 100
+});

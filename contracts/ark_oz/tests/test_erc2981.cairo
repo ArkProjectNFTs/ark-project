@@ -27,6 +27,21 @@ fn setup_contract() -> (ContractAddress, ContractAddress, ContractAddress, FeesR
 }
 
 #[test]
+fn test_fees_ratio_invalid() {
+    assert!(!FeesRatio { numerator: 0, denominator: 0, }.is_valid(), "Shall be invalid");
+
+    assert!(!FeesRatio { numerator: 30, denominator: 30, }.is_valid(), "Shall be invalid");
+
+    assert!(!FeesRatio { numerator: 40, denominator: 30, }.is_valid(), "Shall be invalid");
+
+    assert!(!FeesRatio { numerator: 5, denominator: 10000, }.is_valid(), "Shall be invalid");
+
+    assert!(!FeesRatio { numerator: 0, denominator: 0 }.is_valid(), "Shall be invalid");
+
+    assert!(FeesRatio { numerator: 0, denominator: 1, }.is_valid(), "Shall be valid");
+}
+
+#[test]
 fn test_default_royalty() {
     let (contract_address, _, default_receiver, default_fees) = setup_contract();
     let token = IERC2981SetupDispatcher { contract_address: contract_address };

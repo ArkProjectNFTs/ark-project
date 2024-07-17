@@ -1,13 +1,13 @@
 import "dotenv/config";
 
-import { stark } from "starknet";
+import * as sn from "starknet";
 
 import {
   AuctionV1,
+  Config,
   createAuction,
   createBroker,
   createOffer,
-  fetchOrCreateAccount,
   fulfillAuction,
   FulfillAuctionInfo,
   getOrderStatus,
@@ -15,41 +15,20 @@ import {
 } from "@ark-project/core";
 
 import { config, nftContract } from "./config/index.js";
-import { getCurrentTokenId } from "./utils/getCurrentTokenId.js";
-import { mintERC721 } from "./utils/mintERC721.js";
-import { whitelistBroker } from "./utils/whitelistBroker.js";
+import { Accounts } from "./types/accounts.js";
+import { logger } from "./utils/logger.js";
+import { mintTokens } from "./utils/mintTokens.js";
+import { setupAccounts } from "./utils/setupAccounts.js";
 
-(async () => {
-  // Create test accounts
-  const adminAccount = await fetchOrCreateAccount(
-    config.arkProvider,
-    process.env.SOLIS_ADMIN_ADDRESS,
-    process.env.SOLIS_ADMIN_PRIVATE_KEY
-  );
-
-  const sellerAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT1_ADDRESS,
-    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-  );
-
-  const buyerAccount = await fetchOrCreateAccount(
-    config.starknetProvider,
-    process.env.STARKNET_ACCOUNT2_ADDRESS,
-    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
-  );
-
-  // Create and whitelist broker
-  const brokerId = stark.randomAddress();
-  await createBroker(config, { brokerID: brokerId });
-  await whitelistBroker(config, adminAccount, brokerId);
-
-  // Mint and approve seller NFT
-  await mintERC721(config.starknetProvider, sellerAccount);
-  const tokenId = await getCurrentTokenId(config, nftContract);
+async function createAndFulfillAuction(
+  config: Config,
+  accounts: Accounts,
+  tokenId: bigint
+): Promise<void> {
+  const brokerId = accounts.broker.address;
 
   // Create auction
-  const order: AuctionV1 = {
+  const auction: AuctionV1 = {
     brokerId,
     tokenAddress: nftContract,
     tokenId,
@@ -57,10 +36,10 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     endAmount: BigInt(10)
   };
 
-  console.log("Creating auction...");
-  const orderHash = await createAuction(config, {
-    starknetAccount: sellerAccount,
-    order,
+  logger.info("Creating auction...");
+  const auctionOrderHash = await createAuction(config, {
+    starknetAccount: accounts.fulfiller,
+    order: auction,
     approveInfo: {
       tokenAddress: nftContract,
       tokenId
@@ -77,9 +56,9 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
     startAmount: BigInt(1)
   };
 
-  console.log("Creating offer...");
+  logger.info("Creating offer...");
   const offerOrderHash = await createOffer(config, {
-    starknetAccount: buyerAccount,
+    starknetAccount: accounts.offerer,
     offer,
     approveInfo: {
       currencyAddress: config.starknetCurrencyContract,
@@ -91,24 +70,47 @@ import { whitelistBroker } from "./utils/whitelistBroker.js";
 
   // Fulfill auction
   const fulfillAuctionInfo: FulfillAuctionInfo = {
-    orderHash,
+    orderHash: auctionOrderHash,
     relatedOrderHash: offerOrderHash,
-    tokenAddress: order.tokenAddress,
+    tokenAddress: auction.tokenAddress,
     tokenId,
     brokerId
   };
 
-  console.log("Fulfilling auction...");
+  logger.info("Fulfilling auction...");
   await fulfillAuction(config, {
-    starknetAccount: sellerAccount,
+    starknetAccount: accounts.fulfiller,
     fulfillAuctionInfo
   });
 
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  const { orderStatus: orderStatus } = await getOrderStatus(config, {
-    orderHash
+  const { orderStatus } = await getOrderStatus(config, {
+    orderHash: auctionOrderHash
+  });
+  logger.info("Auction order status:", orderStatus);
+}
+
+async function main(): Promise<void> {
+  logger.info(
+    "Starting the auction creation, offer, and fulfillment process..."
+  );
+
+  const accounts = await setupAccounts(config);
+
+  await createBroker(config, {
+    brokenAccount: accounts.broker,
+    numerator: 1,
+    denominator: 100
   });
 
-  console.log("Auction order status: ", orderStatus);
-})();
+  logger.info("Minting tokens...");
+  const { tokenId } = await mintTokens(config, accounts, nftContract, true);
+
+  await createAndFulfillAuction(config, accounts, tokenId);
+}
+
+main().catch((error) => {
+  logger.error("An error occurred:", error);
+  process.exit(1);
+});

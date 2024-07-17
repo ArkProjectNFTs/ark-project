@@ -14,7 +14,8 @@ use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
 use snforge_std as snf;
-use snf::{ContractClass, ContractClassTrait, CheatTarget};
+use snf::{cheatcodes::{events::EventFetcher, events::EventAssertions,}, event_name_hash,};
+use snf::{ContractClass, ContractClassTrait, CheatTarget, spy_events, SpyOn};
 
 use super::super::common::setup::{setup, setup_order, setup_royalty};
 
@@ -160,13 +161,15 @@ fn test_execute_order_check_brokers_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
-
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -186,6 +189,7 @@ fn test_execute_order_check_brokers_fees_ok() {
     assert_eq!(listing_broker_balance, 0, "Wrong initial balance for listing broker");
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
+
     assert_eq!(erc20.balance_of(fulfill_broker), 1_000_000, "Fulfill broker balance not correct");
     assert_eq!(erc20.balance_of(listing_broker), 500_000, "Listing broker balance not correct");
 }
@@ -206,14 +210,20 @@ fn test_execute_order_check_ark_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let ark_fees_ratio = FeesRatio { numerator: 5, denominator: 1000 };
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     executor.set_ark_fees(ark_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
@@ -247,13 +257,16 @@ fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -287,7 +300,10 @@ fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
         .set_default_royalty(creator, FeesRatio { numerator: 2, denominator: 100 });
     snf::stop_prank(CheatTarget::One(nft_address));
 
+    let mut spy = spy_events(SpyOn::One(executor_address));
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
+    spy.fetch_events();
+
     assert_eq!(
         erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
         fulfill_broker_delta,
@@ -309,6 +325,11 @@ fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
         fulfiller_delta,
         "Fulfiller balance not correct"
     );
+
+    assert_eq!(spy.events.len(), 1, "Expected 1 events");
+    let (_, event) = spy.events.at(0);
+    assert_eq!(event.keys.len(), 3, "There should be 3 keys");
+    assert!(event.keys.at(0) == @event_name_hash('OrderExecuted'), "Wrong event name");
 }
 
 #[test]
@@ -332,13 +353,16 @@ fn test_execute_order_erc2981_token_royalty_check_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -421,20 +445,22 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
     let fake_nft_address = contract_address_const::<'fake_nft_address'>();
 
     let start_amount = 10_000_000;
-    let (executor_address, erc20_address, _, execution_info) = setup_execute_order(
+    let (executor_address, erc20_address, nft_address, execution_info) = setup_execute_order(
         admin_address, offerer, fulfiller, listing_broker, fulfill_broker, start_amount, false
     );
 
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -471,7 +497,10 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
         );
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
+    let mut spy = spy_events(SpyOn::One(executor_address));
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
+    spy.fetch_events();
+
     assert_eq!(
         erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
         fulfill_broker_delta,
@@ -493,6 +522,17 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
         fulfiller_delta,
         "Fulfiller balance not correct"
     );
+
+    assert_eq!(spy.events.len(), 2, "Expected 2 events");
+    let (_, event) = spy.events.at(0);
+    assert_eq!(event.keys.len(), 4, "There should be 4 keys");
+    assert_eq!(@event_name_hash('CollectionFallbackFees'), event.keys.at(0), "Wrong event name");
+    assert_eq!(nft_address, (*event.keys.at(1)).try_into().unwrap(), "Wrong collection address");
+    assert_eq!(creator_delta.low, (*event.keys.at(2)).try_into().unwrap(), "Wrong low amount");
+    assert_eq!(creator_delta.high, (*event.keys.at(3)).try_into().unwrap(), "Wrong high amount");
+    let (_, event) = spy.events.at(1);
+    assert_eq!(event.keys.len(), 3, "There should be 3 keys");
+    assert_eq!(@event_name_hash('OrderExecuted'), event.keys.at(0), "Wrong event name");
 }
 
 #[test]
@@ -513,13 +553,15 @@ fn test_execute_order_non_erc2981_collection_royalty_check_fees_ok() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
@@ -597,13 +639,15 @@ fn test_execute_order_check_fee_too_much_fees() {
     let erc20 = IERC20Dispatcher { contract_address: erc20_address };
     let executor = IExecutorDispatcher { contract_address: executor_address };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
     let fulfill_fees_ratio = FeesRatio { numerator: 60, denominator: 100 };
 
     let listing_fees_ratio = FeesRatio { numerator: 60, denominator: 100 };
 
-    executor.set_broker_fees(fulfill_broker, fulfill_fees_ratio);
-    executor.set_broker_fees(listing_broker, listing_fees_ratio);
+    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    executor.set_broker_fees(fulfill_fees_ratio);
+    snf::stop_prank(CheatTarget::One(executor.contract_address));
+    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    executor.set_broker_fees(listing_fees_ratio);
     snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);

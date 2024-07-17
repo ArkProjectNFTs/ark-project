@@ -1,3 +1,5 @@
+const max_denominator: u256 = 10000;
+
 #[derive(Serde, Drop, PartialEq, Copy, Debug, starknet::Store)]
 pub struct FeesRatio {
     numerator: u256,
@@ -5,7 +7,8 @@ pub struct FeesRatio {
 }
 
 pub trait IFees<T> {
-    fn compute_amount(self: T, sale_price: u256) -> u256;
+    fn compute_amount(self: @T, sale_price: u256) -> u256;
+    fn is_valid(self: @T) -> bool;
 }
 
 
@@ -16,7 +19,13 @@ pub impl FeesRatioDefault of Default<FeesRatio> {
 }
 
 pub impl FeesImpl of IFees<FeesRatio> {
-    fn compute_amount(self: FeesRatio, sale_price: u256) -> u256 {
-        (sale_price * self.numerator) / self.denominator
+    fn compute_amount(self: @FeesRatio, sale_price: u256) -> u256 {
+        (sale_price * *self.numerator) / *self.denominator
+    }
+
+    fn is_valid(self: @FeesRatio) -> bool {
+        (*self.numerator < *self.denominator)
+            && (*self).denominator.is_non_zero()
+            && (*self.denominator <= max_denominator)
     }
 }

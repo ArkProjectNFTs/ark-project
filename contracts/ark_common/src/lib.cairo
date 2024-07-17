@@ -2,7 +2,6 @@ mod protocol {
     mod order_types;
     mod order_v1;
     mod order_database;
-    mod broker;
 }
 
 mod crypto {
