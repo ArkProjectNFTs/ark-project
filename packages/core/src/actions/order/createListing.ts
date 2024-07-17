@@ -67,12 +67,7 @@ const createListing = async (
     brokerId: baseOrder.brokerId,
     additionalData: []
   };
-  console.log(order);
-  console.log(
-    CallData.compile({
-      order: order
-    })
-  );
+
   const result = await starknetAccount.execute([
     {
       contractAddress: approveInfo.tokenAddress as string,
