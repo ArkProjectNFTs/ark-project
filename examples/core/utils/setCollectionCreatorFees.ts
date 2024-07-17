@@ -6,7 +6,7 @@ import { Config } from "@ark-project/core";
 export const setCollectionCreatorFees = async (
   config: Config,
   adminAccount: sn.Account,
-  arkReceiver: string,
+  arkCollectionReceiver: string,
   fees: number,
   nftAddress: string
 ) => {
@@ -25,10 +25,10 @@ export const setCollectionCreatorFees = async (
   executorContract.connect(adminAccount);
   const response = await executorContract.set_collection_creator_fees(
     nftAddress,
-    arkReceiver,
+    arkCollectionReceiver,
     {
       numerator: cairo.uint256(fees),
-      denominator: cairo.uint256(100)
+      denominator: cairo.uint256(10000)
     }
   );
   await config.starknetProvider.waitForTransaction(response.transaction_hash);

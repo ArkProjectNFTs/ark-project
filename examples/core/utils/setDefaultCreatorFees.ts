@@ -6,24 +6,28 @@ import { Config } from "@ark-project/core";
 export const setDefaultCreatorFees = async (
   config: Config,
   deployerAccount: sn.Account,
-  starknetAddress: string,
-  brokerAddress: string,
+  arkReceiver: string,
   fees: number
 ) => {
-  const { abi } = await config.starknetProvider.getClassAt(starknetAddress);
+  const { abi } = await config.starknetProvider.getClassAt(
+    config.starknetExecutorContract
+  );
   if (abi === undefined) {
     throw new Error("no abi.");
   }
 
   const executorContract = new sn.Contract(
     abi,
-    starknetAddress,
+    config.starknetExecutorContract,
     config.starknetProvider
   );
   executorContract.connect(deployerAccount);
-  const response = await executorContract.set_broker_fees(brokerAddress, {
-    numerator: cairo.uint256(fees),
-    denominator: cairo.uint256(100)
-  });
+  const response = await executorContract.set_default_creator_fees(
+    arkReceiver,
+    {
+      numerator: cairo.uint256(fees),
+      denominator: cairo.uint256(10000)
+    }
+  );
   await config.starknetProvider.waitForTransaction(response.transaction_hash);
 };

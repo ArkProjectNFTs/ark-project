@@ -1,9 +1,12 @@
 import * as sn from "starknet";
 
 export interface Accounts {
-  arkReceiver: sn.Account;
+  arkDefaultFeesReceiver: sn.Account;
   admin: sn.Account;
-  broker: sn.Account;
+  broker_listing: sn.Account;
+  broker_sale: sn.Account;
   offerer: sn.Account;
   fulfiller: sn.Account;
+  arkSetbyAdminCollectionReceiver: sn.Account;
+  arkCollection2981Receiver: sn.Account;
 }

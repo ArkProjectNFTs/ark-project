@@ -6,10 +6,22 @@ import { logger } from "./logger.js";
 export async function setupAccounts(config: Config): Promise<Accounts> {
   logger.info("Setting up accounts...");
 
-  const arkReceiver = await fetchOrCreateAccount(
+  const arkDefaultFeesReceiver = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_ARK_RECEIVER_ADDRESS!,
     process.env.STARKNET_ARK_RECEIVER_PRIVATE_KEY!
+  );
+
+  const arkSetbyAdminCollectionReceiver = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ARK_COLLECTION_RECEIVER_ADDRESS!,
+    process.env.STARKNET_ARK_COLLECTION_RECEIVER_PRIVATE_KEY!
+  );
+
+  const arkCollection2981Receiver = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ARK_COLLECTION_2981_RECEIVER_ADDRESS!,
+    process.env.STARKNET_ARK_COLLECTION_2981_RECEIVER_PRIVATE_KEY!
   );
 
   const admin = await fetchOrCreateAccount(
@@ -18,10 +30,16 @@ export async function setupAccounts(config: Config): Promise<Accounts> {
     process.env.STARKNET_ADMIN_PRIVATE_KEY!
   );
 
-  const broker = await fetchOrCreateAccount(
+  const broker_listing = await fetchOrCreateAccount(
     config.starknetProvider,
     process.env.STARKNET_LISTING_BROKER_ACCOUNT_ADDRESS!,
     process.env.STARKNET_LISTING_BROKER_ACCOUNT_PRIVATE_KEY!
+  );
+
+  const broker_sale = await fetchOrCreateAccount(
+    config.starknetProvider,
+    process.env.STARKNET_SALE_BROKER_ACCOUNT_ADDRESS!,
+    process.env.STARKNET_SALE_BROKER_ACCOUNT_PRIVATE_KEY!
   );
 
   const offerer = await fetchOrCreateAccount(
@@ -38,5 +56,14 @@ export async function setupAccounts(config: Config): Promise<Accounts> {
 
   logger.info("Accounts setup complete.");
 
-  return { arkReceiver, admin, broker, offerer, fulfiller };
+  return {
+    arkDefaultFeesReceiver,
+    admin,
+    broker_listing,
+    broker_sale,
+    offerer,
+    fulfiller,
+    arkSetbyAdminCollectionReceiver,
+    arkCollection2981Receiver
+  };
 }

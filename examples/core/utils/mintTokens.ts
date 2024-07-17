@@ -25,14 +25,16 @@ export async function mintTokens(
     logger.info("Minting ERC721 for the fulfiller...");
     const transaction_hash = await mintERC721(
       config.starknetProvider,
-      accounts.fulfiller
+      accounts.fulfiller,
+      nftContract
     );
     logger.info("ERC721 minting transaction hash:", transaction_hash);
   } else {
     // For listings, mint ERC721 for offerer and ERC20 for fulfiller (if in dev)
     const transaction_hash = await mintERC721(
       config.starknetProvider,
-      accounts.offerer
+      accounts.offerer,
+      nftContract
     );
     logger.info("ERC721 minting transaction hash:", transaction_hash);
 

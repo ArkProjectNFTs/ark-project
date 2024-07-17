@@ -23,7 +23,7 @@ export const setArkFees = async (
   executorContract.connect(deployerAccount);
   const response = await executorContract.set_ark_fees({
     numerator: cairo.uint256(fees),
-    denominator: cairo.uint256(100)
+    denominator: cairo.uint256(10000)
   });
   await config.starknetProvider.waitForTransaction(response.transaction_hash);
 };

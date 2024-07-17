@@ -8,7 +8,7 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { config, nftContract } from "./config/index.js";
+import { config, contracts, isDev } from "./config/index.js";
 import { Accounts } from "./types/accounts.js";
 import { displayBalances } from "./utils/displayBalances.js";
 import { logger } from "./utils/logger.js";
@@ -38,7 +38,7 @@ async function createAndFulfillListing(
     orderHash: orderHash,
     tokenAddress: order.tokenAddress,
     tokenId: order.tokenId,
-    brokerId: order.brokerId
+    brokerId: accounts.broker_sale.address
   };
 
   await fulfillListing(config, {
@@ -55,6 +55,10 @@ async function createAndFulfillListing(
 }
 
 async function main(): Promise<void> {
+  if (!isDev || !("nftContract" in contracts)) {
+    throw new Error("NFT contract is not available in this environment");
+  }
+
   logger.info("Starting the listing process...");
 
   const accounts = await setupAccounts(config);
@@ -63,12 +67,12 @@ async function main(): Promise<void> {
   const { tokenId, orderAmount } = await mintTokens(
     config,
     accounts,
-    nftContract
+    contracts.nftContractRoyalties
   );
 
   const order: ListingV1 = {
-    brokerId: accounts.broker.address,
-    tokenAddress: nftContract,
+    brokerId: accounts.broker_listing.address,
+    tokenAddress: contracts.nftContractRoyalties,
     tokenId: tokenId,
     startAmount: BigInt(orderAmount)
   };
