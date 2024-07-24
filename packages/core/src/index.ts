@@ -6,12 +6,6 @@ export {
 } from "./actions/account/index.js";
 
 export {
-  approveERC20,
-  approveERC721,
-  increaseERC20
-} from "./actions/contract/index.js";
-
-export {
   createAuction,
   createListing,
   createOffer,
@@ -28,7 +22,8 @@ export {
   getOrder,
   getOrderStatus,
   getOrderSigner,
-  getOrderType
+  getOrderType,
+  getAllowance
 } from "./actions/read/index.js";
 
 export type {

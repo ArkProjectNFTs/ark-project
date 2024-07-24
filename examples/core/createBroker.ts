@@ -5,7 +5,7 @@ import { setupAccounts } from "./utils/setupAccounts.js";
 
 const accounts = await setupAccounts(config);
 await createBroker(config, {
-  brokenAccount: accounts.broker,
+  brokenAccount: accounts.broker_listing,
   numerator: 1,
   denominator: 100
 });

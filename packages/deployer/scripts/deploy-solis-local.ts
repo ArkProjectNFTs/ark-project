@@ -73,6 +73,7 @@ async function run() {
     orderbookContract.address
   );
 
+  console.log("Orderbook contract deployed");
   await setSolisAddresses(
     orderbookContract.address,
     contracts.executor,

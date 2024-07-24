@@ -47,19 +47,17 @@ async function main(): Promise<void> {
 
   const accounts = await setupAccounts(config);
 
-  const brokerId = sn.stark.randomAddress();
-  await createBroker(config, {
-    brokenAccount: accounts.broker,
-    numerator: 1,
-    denominator: 100
-  });
-
   logger.info("Minting tokens...");
-  const { orderAmount } = await mintTokens(config, accounts, nftContract, true);
+  const { orderAmount } = await mintTokens(
+    config,
+    accounts,
+    nftContract as string,
+    true
+  );
 
   const offer: OfferV1 = {
-    brokerId: accounts.broker.address,
-    tokenAddress: nftContract,
+    brokerId: accounts.broker_listing.address,
+    tokenAddress: nftContract as string,
     tokenId: BigInt(20), // Note: This is hardcoded, you might want to generate this dynamically
     startAmount: orderAmount,
     currencyAddress: config.starknetCurrencyContract

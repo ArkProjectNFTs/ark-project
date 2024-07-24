@@ -25,12 +25,12 @@ async function createAndFulfillAuction(
   accounts: Accounts,
   tokenId: bigint
 ): Promise<void> {
-  const brokerId = accounts.broker.address;
+  const brokerId = accounts.broker_listing.address;
 
   // Create auction
   const auction: AuctionV1 = {
     brokerId,
-    tokenAddress: nftContract,
+    tokenAddress: nftContract as string,
     tokenId,
     startAmount: BigInt(1),
     endAmount: BigInt(10)
@@ -41,7 +41,7 @@ async function createAndFulfillAuction(
     starknetAccount: accounts.fulfiller,
     order: auction,
     approveInfo: {
-      tokenAddress: nftContract,
+      tokenAddress: nftContract as string,
       tokenId
     }
   });
@@ -51,7 +51,7 @@ async function createAndFulfillAuction(
   // Create offer
   const offer: OfferV1 = {
     brokerId,
-    tokenAddress: nftContract,
+    tokenAddress: nftContract as string,
     tokenId,
     startAmount: BigInt(1)
   };
@@ -99,13 +99,18 @@ async function main(): Promise<void> {
   const accounts = await setupAccounts(config);
 
   await createBroker(config, {
-    brokenAccount: accounts.broker,
+    brokenAccount: accounts.broker_listing,
     numerator: 1,
     denominator: 100
   });
 
   logger.info("Minting tokens...");
-  const { tokenId } = await mintTokens(config, accounts, nftContract, true);
+  const { tokenId } = await mintTokens(
+    config,
+    accounts,
+    nftContract as string,
+    true
+  );
 
   await createAndFulfillAuction(config, accounts, tokenId);
 }

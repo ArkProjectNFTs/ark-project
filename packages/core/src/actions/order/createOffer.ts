@@ -15,8 +15,9 @@ import {
   RouteType
 } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
+import { getAllowance } from "../read/getAllowance.js";
 
-interface CreateListingParameters {
+interface CreateOfferParameters {
   starknetAccount: AccountInterface;
   offer: OfferV1;
   approveInfo: ApproveErc20Info;
@@ -38,7 +39,7 @@ interface CreateListingParameters {
  */
 const createOffer = async (
   config: Config,
-  parameters: CreateListingParameters
+  parameters: CreateOfferParameters
 ) => {
   const { starknetAccount, offer: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
@@ -46,7 +47,12 @@ const createOffer = async (
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
   const chainId = await config.starknetProvider.getChainId();
-
+  const currentAllowance = await getAllowance(
+    config,
+    approveInfo.currencyAddress,
+    starknetAccount.address
+  );
+  const allowance = currentAllowance + approveInfo.amount;
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
     currencyAddress: config.starknetCurrencyContract,
@@ -74,7 +80,7 @@ const createOffer = async (
       entrypoint: "approve",
       calldata: CallData.compile({
         spender: config.starknetExecutorContract,
-        amount: cairo.uint256(approveInfo.amount)
+        amount: cairo.uint256(allowance)
       })
     },
     {
