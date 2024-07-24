@@ -21,7 +21,6 @@ name = "ark_oz"
 version = "0.1.0"
 dependencies = [
  "openzeppelin",
- "snforge_std",
 ]
 
 [[package]]
