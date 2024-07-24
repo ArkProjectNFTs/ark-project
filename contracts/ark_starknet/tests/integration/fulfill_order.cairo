@@ -503,3 +503,43 @@ fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
     snf::stop_prank(CheatTarget::One(executor_address));
 }
+
+#[test]
+#[should_panic(expected: ("Order already fulfilled",))]
+fn test_fulfill_offer_order_already_fulfilled_order() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let fulfillerA = contract_address_const::<'fulfillerA'>();
+    let fulfillerB = contract_address_const::<'fulfillerB'>();
+    let start_amount = 10_000_000;
+
+    let (order_hash, offerer, token_id) = create_listing_order(
+        executor_address, erc20_address, nft_address, start_amount
+    );
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfillerA, start_amount);
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfillerB, start_amount);
+
+    snf::start_prank(CheatTarget::One(nft_address), offerer);
+    IERC721Dispatcher { contract_address: nft_address }
+        .set_approval_for_all(executor_address, true);
+    snf::stop_prank(CheatTarget::One(nft_address));
+
+    let fulfill_infoA = create_fulfill_info(order_hash, fulfillerA, nft_address, token_id);
+    let fulfill_infoB = create_fulfill_info(order_hash, fulfillerB, nft_address, token_id);
+
+    snf::start_prank(CheatTarget::One(erc20_address), fulfillerA);
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+    snf::stop_prank(CheatTarget::One(erc20_address));
+
+    snf::start_prank(CheatTarget::One(erc20_address), fulfillerB);
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+    snf::stop_prank(CheatTarget::One(erc20_address));
+
+    snf::start_prank(CheatTarget::One(executor_address), fulfillerA);
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_infoA);
+    snf::stop_prank(CheatTarget::One(executor_address));
+
+    snf::start_prank(CheatTarget::One(executor_address), fulfillerB);
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_infoB);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}

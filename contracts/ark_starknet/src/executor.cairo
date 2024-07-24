@@ -100,6 +100,7 @@ mod executor {
         ark_fees: FeesRatio,
         // order hash -> OrderInfo
         orders: LegacyMap<felt252, OrderInfo>,
+        fulfilled_orders: LegacyMap<felt252, bool>,
         // fallback when collection doesn't implement ERC2981
         default_receiver: ContractAddress,
         default_fees: FeesRatio,
@@ -322,10 +323,12 @@ mod executor {
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
+            assert!(!self.fulfilled_orders.read(fulfillInfo.order_hash), "Order already fulfilled");
 
             let vinfo = FulfillOrderInfo { fulfillInfo: fulfillInfo.clone() };
 
             _verify_fulfill_order(@self, @vinfo);
+            self.fulfilled_orders.write(fulfillInfo.order_hash, true);
 
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
