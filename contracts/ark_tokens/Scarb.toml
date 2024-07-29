@@ -5,9 +5,11 @@ version = "0.1.0"
 
 [dependencies]
 starknet = "2.5.4"
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.18.0" }
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.10.0" }
 ark_oz = { path = "../ark_oz" }
+
+[dev-dependencies]
+snforge_std.workspace = true
 
 [lib]
 
