@@ -1,3 +1,6 @@
 [workspace]
 
 members = ["ark_common", "ark_orderbook", "ark_starknet", "ark_tokens", "solis"]
+
+[workspace.dependencies]
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.18.0" }
