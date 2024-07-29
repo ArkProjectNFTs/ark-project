@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 2.1.1
+
+### Patch Changes
+
+- 698bc6f: Updated sdk approve calculation
+
 ## 2.1.0
 
 ### Minor Changes
