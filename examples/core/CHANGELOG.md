@@ -1,5 +1,13 @@
 # @ark-project/core-examples
 
+## 0.0.5
+
+### Patch Changes
+
+- 698bc6f: Updated sdk approve calculation
+- Updated dependencies [698bc6f]
+  - @ark-project/core@2.1.1
+
 ## 0.0.4
 
 ### Patch Changes
