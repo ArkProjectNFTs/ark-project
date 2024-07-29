@@ -66,7 +66,7 @@ async function main(): Promise<void> {
 
   const accounts = await setupAccounts(config);
   await createBroker(config, {
-    brokenAccount: accounts.broker,
+    brokenAccount: accounts.broker_listing,
     numerator: 1,
     denominator: 100
   });
@@ -78,7 +78,7 @@ async function main(): Promise<void> {
   );
 
   const order: ListingV1 = {
-    brokerId: accounts.broker.address,
+    brokerId: accounts.broker_listing.address,
     tokenAddress: nftContract,
     tokenId: tokenId,
     startAmount: BigInt(orderAmount)

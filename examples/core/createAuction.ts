@@ -37,11 +37,13 @@ async function createAuctionAndCheckStatus(
 
 async function main(): Promise<void> {
   logger.info("Starting the auction creation process...");
-
+  if (nftContract === undefined) {
+    throw new Error("NFT contract address is not defined");
+  }
   const accounts = await setupAccounts(config);
 
   await createBroker(config, {
-    brokenAccount: accounts.broker,
+    brokenAccount: accounts.broker_listing,
     numerator: 1,
     denominator: 100
   });
@@ -55,7 +57,7 @@ async function main(): Promise<void> {
   );
 
   const auction: AuctionV1 = {
-    brokerId: accounts.broker.address,
+    brokerId: accounts.broker_listing.address,
     tokenAddress: nftContract,
     tokenId,
     startAmount: BigInt(orderAmount),

@@ -47,7 +47,7 @@ async function createAndFulfillCollectionOffer(
     starknetAccount: accounts.fulfiller,
     fulfillOfferInfo,
     approveInfo: {
-      tokenAddress: nftContract,
+      tokenAddress: nftContract as string,
       tokenId: offer.tokenId
     }
   });
@@ -67,13 +67,13 @@ async function main(): Promise<void> {
   const { tokenId, orderAmount } = await mintTokens(
     config,
     accounts,
-    nftContract,
+    nftContract as string,
     true
   );
 
   const offer: OfferV1 = {
-    brokerId: accounts.broker.address,
-    tokenAddress: nftContract,
+    brokerId: accounts.broker_listing.address,
+    tokenAddress: nftContract as string,
     tokenId: tokenId,
     startAmount: orderAmount
   };

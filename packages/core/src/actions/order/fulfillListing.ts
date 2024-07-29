@@ -13,6 +13,7 @@ import {
   FulfillInfo,
   FulfillListingInfo
 } from "../../types/index.js";
+import { getAllowance } from "../read/getAllowance.js";
 
 /**
  * Fulfill a listing on the Arkchain.
@@ -34,6 +35,13 @@ const fulfillListing = async (
 ) => {
   const { starknetAccount, fulfillListingInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
+  const currentAllowance = await getAllowance(
+    config,
+    approveInfo.currencyAddress,
+    starknetAccount.address
+  );
+  const allowance = currentAllowance + approveInfo.amount;
+
   const fulfillInfo: FulfillInfo = {
     orderHash: fulfillListingInfo.orderHash,
     relatedOrderHash: new CairoOption<bigint>(CairoOptionVariant.None),
@@ -53,7 +61,7 @@ const fulfillListing = async (
       entrypoint: "approve",
       calldata: CallData.compile({
         spender: config.starknetExecutorContract,
-        amount: cairo.uint256(approveInfo.amount)
+        amount: cairo.uint256(allowance)
       })
     },
     {

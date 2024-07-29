@@ -34,6 +34,17 @@ function isDevContracts(
   );
 }
 
+// Verification function
+function verifyContractAddress(
+  address: string | undefined,
+  name: string
+): string {
+  if (typeof address !== "string" || address.trim() === "") {
+    throw new Error(`${name} contract address must be a non-empty string`);
+  }
+  return address;
+}
+
 // Assert the types of imported contracts
 const typedContractsDev = contractsDev as DevContracts;
 const typedContractsDeployed = contractsDeployed as DeployedContracts;
@@ -61,22 +72,30 @@ function getContractConfig(network: Network): BaseContracts | DevContracts {
 // Get the contract configuration
 export const contracts = getContractConfig(network);
 
-// Export specific contract addresses
-export const starknetExecutorContract = contracts.executor;
-export const arkchainOrderbookContract = contracts.orderbook;
-export const starknetCurrencyContract =
-  isDev && isDevContracts(contracts) ? contracts.eth : starknetEthContract;
+// Export verified specific contract addresses
+export const starknetExecutorContract = verifyContractAddress(
+  contracts.executor,
+  "Executor"
+);
+export const arkchainOrderbookContract = verifyContractAddress(
+  contracts.orderbook,
+  "Orderbook"
+);
+export const starknetCurrencyContract = verifyContractAddress(
+  isDev && isDevContracts(contracts) ? contracts.eth : starknetEthContract,
+  "Currency"
+);
 
-// Export NFT contract addresses only if they exist
+// Export verified NFT contract addresses only if they exist or use environment variables
 export const nftContract = isDevContracts(contracts)
-  ? contracts.nftContract
-  : undefined;
+  ? verifyContractAddress(contracts.nftContract, "NFT")
+  : (process.env.NFT_CONTRACT_ADDRESS as string);
 export const nftContractFixedFees = isDevContracts(contracts)
-  ? contracts.nftContractFixedFees
-  : undefined;
+  ? verifyContractAddress(contracts.nftContractFixedFees, "NFT Fixed Fees")
+  : (process.env.NFT_CONTRACT_FIXED_FEES_ADDRESS as string);
 export const nftContractRoyalties = isDevContracts(contracts)
-  ? contracts.nftContractRoyalties
-  : undefined;
+  ? verifyContractAddress(contracts.nftContractRoyalties, "NFT Royalties")
+  : process.env.NFT_CONTRACT_ROYALTIES_ADDRESS;
 
 export const config = createConfig({
   starknetNetwork: network,

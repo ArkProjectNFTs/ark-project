@@ -31,7 +31,7 @@ async function createAndFulfillListing(
     }
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   logger.info("Fulfilling listing...");
   const fulfillListingInfo = {
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
 
   const orderHash = await createAndFulfillListing(config, accounts, order);
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash
