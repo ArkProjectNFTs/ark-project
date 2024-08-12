@@ -1211,11 +1211,11 @@ checksum = "3a4f925191b4367301851c6d99b09890311d74b0d43f274c0b34c86d308a3663"
 [[package]]
 name = "cainome"
 version = "0.1.5"
-source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.7#2d4b52b2e79796f76fba9e3a1b1027e8e63292b8"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.8#e79deabeb989f73100c0b2e6a1fe5427858e40a8"
 dependencies = [
- "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
- "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
- "cainome-rs 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.8)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.8)",
+ "cainome-rs 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.8)",
 ]
 
 [[package]]
@@ -1245,7 +1245,7 @@ dependencies = [
 [[package]]
 name = "cainome-cairo-serde"
 version = "0.1.0"
-source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.7#2d4b52b2e79796f76fba9e3a1b1027e8e63292b8"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.8#e79deabeb989f73100c0b2e6a1fe5427858e40a8"
 dependencies = [
  "starknet 0.8.0",
  "thiserror",
@@ -1263,7 +1263,7 @@ dependencies = [
 [[package]]
 name = "cainome-parser"
 version = "0.1.0"
-source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.7#2d4b52b2e79796f76fba9e3a1b1027e8e63292b8"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.8#e79deabeb989f73100c0b2e6a1fe5427858e40a8"
 dependencies = [
  "quote",
  "serde_json",
@@ -1288,11 +1288,11 @@ dependencies = [
 [[package]]
 name = "cainome-rs"
 version = "0.1.0"
-source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.7#2d4b52b2e79796f76fba9e3a1b1027e8e63292b8"
+source = "git+https://github.com/cartridge-gg/cainome?tag=v0.1.8#e79deabeb989f73100c0b2e6a1fe5427858e40a8"
 dependencies = [
  "anyhow",
- "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
- "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.7)",
+ "cainome-cairo-serde 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.8)",
+ "cainome-parser 0.1.0 (git+https://github.com/cartridge-gg/cainome?tag=v0.1.8)",
  "proc-macro2",
  "quote",
  "serde_json",
