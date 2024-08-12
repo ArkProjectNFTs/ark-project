@@ -457,6 +457,8 @@ mod executor {
                 order_hash: execution_info.order_hash,
                 transaction_hash,
                 starknet_block_timestamp: block_timestamp,
+                from: execution_info.nft_from,
+                to: execution_info.nft_to,
             };
 
             let mut vinfo_buf = array![];

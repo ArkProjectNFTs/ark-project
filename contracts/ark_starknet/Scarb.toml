@@ -10,6 +10,9 @@ ark_common = { path = "../ark_common" }
 ark_tokens = { path = "../ark_tokens" }
 ark_oz = { path = "../ark_oz" }
 
+[scripts]
+test.workspace = true
+
 [[target.starknet-contract]]
 sierra = true
 casm = true
