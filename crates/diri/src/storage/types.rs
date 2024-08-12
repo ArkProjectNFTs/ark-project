@@ -107,13 +107,30 @@ impl From<OrderFulfilled> for FulfilledData {
 
 #[derive(Debug, Clone)]
 pub struct ExecutedData {
+    pub version: u8,
     pub order_hash: String,
+    pub transaction_hash: Option<String>,
+    pub from: Option<String>,
+    pub to: Option<String>,
 }
 
 impl From<OrderExecuted> for ExecutedData {
     fn from(value: OrderExecuted) -> Self {
-        Self {
-            order_hash: to_hex_str(&value.order_hash),
+        match value {
+            OrderExecuted::V0(v) => Self {
+                version: 0,
+                order_hash: to_hex_str(&v.order_hash),
+                transaction_hash: None,
+                from: None,
+                to: None,
+            },
+            OrderExecuted::V1(v) => Self {
+                version: 1,
+                order_hash: to_hex_str(&v.order_hash),
+                transaction_hash: Some(to_hex_str(&FieldElement::from(v.transaction_hash))),
+                from: Some(to_hex_str(&FieldElement::from(v.from))),
+                to: Some(to_hex_str(&FieldElement::from(v.to))),
+            },
         }
     }
 }
