@@ -24,3 +24,6 @@ num-bigint = "0.4.4"
 [dev-dependencies]
 ark-starknet = { path = "../ark-starknet", features = ["mock"] }
 mockall = "0.12.1"
+
+[features]
+mock = []
