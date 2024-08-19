@@ -1,60 +1,36 @@
-import { stark } from "starknet";
-
+import { cancelOrder, createOffer, getOrderStatus } from "../src/index.js";
 import {
-  cancelOrder,
-  createBroker,
-  createOffer,
-  fetchOrCreateAccount,
-  getOrderStatus,
-  OfferV1
-} from "../src/index.js";
-import {
+  accounts,
   config,
+  mintERC20,
   mintERC721,
-  STARKNET_NFT_ADDRESS,
-  whitelistBroker
+  STARKNET_NFT_ADDRESS
 } from "./utils/index.js";
 
 describe("cancelOffer", () => {
   it("default", async () => {
-    const adminAccount = await fetchOrCreateAccount(
-      config.arkProvider,
-      process.env.SOLIS_ADMIN_ADDRESS,
-      process.env.SOLIS_ADMIN_PRIVATE_KEY
-    );
-
-    const sellerAccount = await fetchOrCreateAccount(
-      config.starknetProvider,
-      process.env.STARKNET_ACCOUNT1_ADDRESS,
-      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-    );
-
-    const brokerId = stark.randomAddress();
-    await createBroker(config, { brokerID: brokerId });
-    await whitelistBroker(config, adminAccount, brokerId);
-
-    const tokenId = await mintERC721({ account: sellerAccount });
-
-    const offer: OfferV1 = {
-      brokerId,
-      tokenAddress: STARKNET_NFT_ADDRESS,
-      tokenId,
-      startAmount: BigInt(1)
-    };
+    const { seller, buyer, listingBroker } = accounts;
+    const tokenId = await mintERC721({ account: seller });
+    await mintERC20({ account: buyer, amount: 1000 });
 
     const orderHash = await createOffer(config, {
-      starknetAccount: sellerAccount,
-      offer,
+      starknetAccount: buyer,
+      offer: {
+        brokerId: listingBroker.address,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId,
+        startAmount: BigInt(10)
+      },
       approveInfo: {
         currencyAddress: config.starknetCurrencyContract,
-        amount: offer.startAmount
+        amount: BigInt(10)
       }
     });
 
     await new Promise((resolve) => setTimeout(resolve, 5_000));
 
     await cancelOrder(config, {
-      starknetAccount: sellerAccount,
+      starknetAccount: buyer,
       cancelInfo: {
         orderHash,
         tokenAddress: STARKNET_NFT_ADDRESS,
