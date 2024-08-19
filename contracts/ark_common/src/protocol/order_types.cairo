@@ -251,6 +251,8 @@ struct ExecutionValidationInfo {
     order_hash: felt252,
     transaction_hash: felt252,
     starknet_block_timestamp: u64,
+    from: ContractAddress,
+    to: ContractAddress,
 }
 
 /// Type of an route, that may be defined from

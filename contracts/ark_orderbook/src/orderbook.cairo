@@ -165,6 +165,8 @@ mod orderbook {
         order: OrderV1,
     }
 
+    // must be increased when `OrderExecuted` content change
+    const ORDER_EXECUTED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is executed.
     #[derive(Drop, starknet::Event)]
     struct OrderExecuted {
@@ -172,7 +174,10 @@ mod orderbook {
         order_hash: felt252,
         #[key]
         order_status: OrderStatus,
-    // info: ExecutionInfo,
+        version: u8,
+        transaction_hash: felt252,
+        from: ContractAddress,
+        to: ContractAddress,
     }
 
     /// Event for when an order is cancelled.
@@ -235,7 +240,17 @@ mod orderbook {
         // TODO: anyway, it can be useful to have an extra check here.
         order_status_write(info.order_hash, OrderStatus::Executed);
         let order_status = order_status_read(info.order_hash).unwrap();
-        self.emit(OrderExecuted { order_hash: info.order_hash, order_status: order_status });
+        self
+            .emit(
+                OrderExecuted {
+                    order_hash: info.order_hash,
+                    order_status: order_status,
+                    transaction_hash: info.transaction_hash,
+                    from: info.from,
+                    to: info.to,
+                    version: ORDER_EXECUTED_EVENT_VERSION,
+                }
+            );
     }
 
     /// Update status : only from solis.

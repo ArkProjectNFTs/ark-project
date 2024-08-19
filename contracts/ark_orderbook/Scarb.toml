@@ -7,6 +7,9 @@ ark_common = { path = "../ark_common" }
 starknet = "2.5.4"
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.18.0" }
 
+[scripts]
+test.workspace = true
+
 [[target.starknet-contract]]
 sierra = true
 casm = true
