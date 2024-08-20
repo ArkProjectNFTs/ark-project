@@ -26,11 +26,13 @@ interface FulfillOfferParameters {
   starknetAccount: AccountInterface;
   fulfillOfferInfo: FulfillOfferInfo;
   approveInfo: ApproveErc721Info;
+  waitForTransaction?: boolean;
 }
 
 const fulfillOffer = async (
   config: Config,
-  parameters: FulfillOfferParameters
+  parameters: FulfillOfferParameters,
+  waitForTransaction = true
 ) => {
   const { starknetAccount, fulfillOfferInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
@@ -65,10 +67,15 @@ const fulfillOffer = async (
     }
   ]);
 
-  // Wait for the transaction to be processed
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
+
+  return {
+    transactionHash: result.transaction_hash
+  };
 };
 
 export { fulfillOffer };

@@ -20,6 +20,7 @@ interface CreateAuctionParameters {
   starknetAccount: AccountInterface;
   order: AuctionV1;
   approveInfo: ApproveErc721Info;
+  waitForTransaction?: boolean;
 }
 
 /**
@@ -38,7 +39,8 @@ interface CreateAuctionParameters {
  */
 const createAuction = async (
   config: Config,
-  parameters: CreateAuctionParameters
+  parameters: CreateAuctionParameters,
+  waitForTransaction = true
 ) => {
   const { starknetAccount, order: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
@@ -105,13 +107,18 @@ const createAuction = async (
     }
   ]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
   const orderHash = getOrderHashFromOrderV1(order);
 
-  return orderHash;
+  return {
+    orderHash,
+    transactionHash: result.transaction_hash
+  };
 };
 
 export { createAuction };

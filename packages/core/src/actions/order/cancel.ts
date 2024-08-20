@@ -32,11 +32,13 @@ import { CancelInfo, FullCancelInfo } from "../../types/index.js";
 interface cancelOrderParameters {
   starknetAccount: AccountInterface;
   cancelInfo: CancelInfo;
+  waitForTransaction?: boolean;
 }
 
 const cancelOrder = async (
   config: Config,
-  parameters: cancelOrderParameters
+  parameters: cancelOrderParameters,
+  waitForTransaction = true
 ) => {
   const { starknetAccount, cancelInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
@@ -51,7 +53,6 @@ const cancelOrder = async (
     )
   };
 
-  // Execute the transaction
   const result = await starknetAccount.execute({
     contractAddress: config.starknetExecutorContract,
     entrypoint: "cancel_order",
@@ -60,10 +61,15 @@ const cancelOrder = async (
     })
   });
 
-  // Wait for the transaction to be processed
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
+
+  return {
+    transactionHash: result.transaction_hash
+  };
 };
 
 export { cancelOrder };

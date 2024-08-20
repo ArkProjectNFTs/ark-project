@@ -21,11 +21,13 @@ import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
 interface FulfillAuctionParameters {
   starknetAccount: AccountInterface;
   fulfillAuctionInfo: FulfillAuctionInfo;
+  waitForTransaction?: boolean;
 }
 
 const fulfillAuction = async (
   config: Config,
-  parameters: FulfillAuctionParameters
+  parameters: FulfillAuctionParameters,
+  waitForTransaction = true
 ) => {
   const { starknetAccount, fulfillAuctionInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
@@ -56,9 +58,15 @@ const fulfillAuction = async (
     }
   ]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
+
+  return {
+    transactionHash: result.transaction_hash
+  };
 };
 
 export { fulfillAuction };

@@ -20,6 +20,7 @@ interface CreateListingParameters {
   starknetAccount: AccountInterface;
   order: ListingV1;
   approveInfo: ApproveErc721Info;
+  waitForTransaction?: boolean;
 }
 
 /**
@@ -38,7 +39,8 @@ interface CreateListingParameters {
  */
 const createListing = async (
   config: Config,
-  parameters: CreateListingParameters
+  parameters: CreateListingParameters,
+  waitForTransaction = true
 ) => {
   const { starknetAccount, order: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
@@ -89,13 +91,18 @@ const createListing = async (
     }
   ]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
   const orderHash = getOrderHashFromOrderV1(order);
 
-  return orderHash;
+  return {
+    orderHash,
+    transactionHash: result.transaction_hash
+  };
 };
 
 export { createListing };

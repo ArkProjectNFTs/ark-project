@@ -27,11 +27,13 @@ interface FulfillListingParameters {
   starknetAccount: AccountInterface;
   fulfillListingInfo: FulfillListingInfo;
   approveInfo: ApproveErc20Info;
+  waitForTransaction?: boolean;
 }
 
 const fulfillListing = async (
   config: Config,
-  parameters: FulfillListingParameters
+  parameters: FulfillListingParameters,
+  waitForTransaction = true
 ) => {
   const { starknetAccount, fulfillListingInfo, approveInfo } = parameters;
   const chainId = await config.starknetProvider.getChainId();
@@ -73,10 +75,15 @@ const fulfillListing = async (
     }
   ]);
 
-  // Wait for the transaction to be processed
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
+
+  return {
+    transactionHash: result.transaction_hash
+  };
 };
 
 export { fulfillListing };
