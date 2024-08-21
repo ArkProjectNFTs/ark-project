@@ -1,57 +1,29 @@
-import { stark } from "starknet";
-
+import { createOffer, getOrderStatus } from "../src/index.js";
 import {
-  createBroker,
-  createOffer,
-  fetchOrCreateAccount,
-  getOrderStatus,
-  OfferV1
-} from "../src/index.js";
-import {
+  accounts,
   config,
+  mintERC20,
   mintERC721,
-  STARKNET_NFT_ADDRESS,
-  whitelistBroker
+  STARKNET_NFT_ADDRESS
 } from "./utils/index.js";
 
 describe("createOffer", () => {
   it("default", async () => {
-    const adminAccount = await fetchOrCreateAccount(
-      config.arkProvider,
-      process.env.SOLIS_ADMIN_ADDRESS,
-      process.env.SOLIS_ADMIN_PRIVATE_KEY
-    );
-    const buyerAccount = await fetchOrCreateAccount(
-      config.starknetProvider,
-      process.env.STARKNET_ACCOUNT1_ADDRESS,
-      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-    );
-
-    const brokerId = stark.randomAddress();
-
-    await createBroker(config, { brokerID: brokerId });
-    await whitelistBroker(config, adminAccount, brokerId);
-
-    const tokenId = await mintERC721({ account: buyerAccount });
-
-    const offer: OfferV1 = {
-      brokerId,
-      tokenAddress: STARKNET_NFT_ADDRESS,
-      tokenId,
-      startAmount: BigInt(1)
-    };
+    const { seller, buyer } = accounts;
+    const tokenId = await mintERC721({ account: seller });
+    await mintERC20({ account: buyer, amount: 1 });
 
     const orderHash = await createOffer(config, {
-      starknetAccount: buyerAccount,
+      starknetAccount: seller,
       offer: {
-        brokerId,
+        brokerId: accounts.listingBroker.address,
         tokenAddress: STARKNET_NFT_ADDRESS,
         tokenId,
-        startAmount: BigInt(1)
+        startAmount: BigInt(10)
       },
       approveInfo: {
         currencyAddress: config.starknetCurrencyContract,
-        amount: offer.startAmount
+        amount: BigInt(10)
       }
     });
 

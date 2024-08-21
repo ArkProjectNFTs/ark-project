@@ -1,61 +1,34 @@
-import { stark } from "starknet";
-
 import {
-  createBroker,
   createOffer,
-  fetchOrCreateAccount,
   fulfillOffer,
   getOrderStatus,
   OfferV1
 } from "../src/index.js";
 import {
+  accounts,
   config,
   getBalance,
   mintERC20,
   mintERC721,
-  STARKNET_NFT_ADDRESS,
-  whitelistBroker
+  STARKNET_NFT_ADDRESS
 } from "./utils/index.js";
 
 describe("fulfillOffer", () => {
   it("default", async function () {
-    const adminAccount = await fetchOrCreateAccount(
-      config.arkProvider,
-      process.env.SOLIS_ADMIN_ADDRESS_DEV,
-      process.env.SOLIS_ADMIN_PRIVATE_KEY_DEV
-    );
-    const sellerAccount = await fetchOrCreateAccount(
-      config.starknetProvider,
-      process.env.STARKNET_ACCOUNT1_ADDRESS,
-      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-    );
-    const buyerAccount = await fetchOrCreateAccount(
-      config.starknetProvider,
-      process.env.STARKNET_ACCOUNT2_ADDRESS,
-      process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
-    );
-
-    const brokerId = stark.randomAddress();
-    await createBroker(config, { brokerID: brokerId });
-    await whitelistBroker(config, adminAccount, brokerId);
-
-    const tokenId = await mintERC721({ account: sellerAccount });
-    const startAmount = 100000000000000000;
-    await mintERC20({ account: buyerAccount, amount: startAmount });
-
-    return;
-
-    const initialSellerBalance = await getBalance({ account: sellerAccount });
+    const { seller, buyer, listingBroker, saleBroker } = accounts;
+    await mintERC20({ account: buyer, amount: 100000 });
+    const tokenId = await mintERC721({ account: seller });
+    const initialSellerBalance = await getBalance({ account: seller });
 
     const offer: OfferV1 = {
-      brokerId,
+      brokerId: listingBroker.address,
       tokenAddress: STARKNET_NFT_ADDRESS,
       tokenId,
-      startAmount: BigInt(1000000000)
+      startAmount: BigInt(10)
     };
 
     const orderHash = await createOffer(config, {
-      starknetAccount: buyerAccount,
+      starknetAccount: buyer,
       offer,
       approveInfo: {
         currencyAddress: config.starknetCurrencyContract,
@@ -64,12 +37,12 @@ describe("fulfillOffer", () => {
     });
 
     await fulfillOffer(config, {
-      starknetAccount: sellerAccount,
+      starknetAccount: seller,
       fulfillOfferInfo: {
         orderHash,
         tokenAddress: offer.tokenAddress,
         tokenId: offer.tokenId,
-        brokerId
+        brokerId: saleBroker.address
       },
       approveInfo: {
         tokenAddress: offer.tokenAddress,
@@ -77,19 +50,74 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
+    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash
     });
-    const sellerBalance = await getBalance({ account: sellerAccount });
-    const fees = (BigInt(offer.startAmount) * BigInt(1)) / BigInt(100);
-    const amount = BigInt(offer.startAmount) - fees;
+
+    const balance = await getBalance({ account: seller });
+    const fees =
+      (BigInt(offer.startAmount) *
+        (BigInt(100) + BigInt(100) + BigInt(100) + BigInt(100))) /
+      BigInt(10000);
+    const profit = BigInt(offer.startAmount) - fees;
 
     expect(orderStatusFulfilled).toBe("Executed");
-    expect(sellerBalance).toEqual(initialSellerBalance + amount);
+    expect(balance).toEqual(initialSellerBalance + profit);
   }, 50_000);
 
-  // it("error: owner of token changed", async function () {
-  // }, 50000);
+  it("default: with custom fees", async function () {
+    const { seller, buyer, listingBroker, saleBroker } = accounts;
+
+    await mintERC20({ account: buyer, amount: 100000 });
+    const tokenId = await mintERC721({ account: seller });
+    const initialSellerBalance = await getBalance({ account: seller });
+
+    const offer: OfferV1 = {
+      brokerId: listingBroker.address,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenId,
+      startAmount: BigInt(10)
+    };
+
+    const orderHash = await createOffer(config, {
+      starknetAccount: buyer,
+      offer,
+      approveInfo: {
+        currencyAddress: config.starknetCurrencyContract,
+        amount: offer.startAmount
+      }
+    });
+
+    await fulfillOffer(config, {
+      starknetAccount: seller,
+      fulfillOfferInfo: {
+        orderHash,
+        tokenAddress: offer.tokenAddress,
+        tokenId: offer.tokenId,
+        brokerId: saleBroker.address
+      },
+      approveInfo: {
+        tokenAddress: offer.tokenAddress,
+        tokenId: offer.tokenId
+      }
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 4_000));
+
+    const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
+      orderHash
+    });
+
+    const balance = await getBalance({ account: seller });
+    const fees =
+      (BigInt(offer.startAmount) *
+        (BigInt(100) + BigInt(100) + BigInt(100) + BigInt(100))) /
+      BigInt(10000);
+    const profit = BigInt(offer.startAmount) - fees;
+
+    expect(orderStatusFulfilled).toBe("Executed");
+    expect(balance).toEqual(initialSellerBalance + profit);
+  }, 50_000);
 });

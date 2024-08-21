@@ -4,11 +4,13 @@ import {
   CairoCustomEnum,
   Call,
   CallData,
-  Contract
+  Contract,
+  ProviderInterface
 } from "starknet";
 
 import contracts from "../../../../contracts.dev.json";
 import { Config, createConfig } from "../../src/createConfig.js";
+import { createBroker } from "../../src/index.js";
 
 type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
 
@@ -75,7 +77,7 @@ export const whitelistBroker = async (
 
 export const mintERC20 = async ({
   account,
-  amount
+  amount = 1000
 }: {
   account: Account;
   amount: number;
@@ -178,42 +180,14 @@ export const getBalance = async ({ account }: { account: Account }) => {
   return balance;
 };
 
-export const setBrokerFees = async (
-  config: Config,
-  deployerAccount: Account,
-  starknetAddress: string,
-  brokerAddress: string,
-  fees: number
-) => {
-  const { abi } = await config.starknetProvider.getClassAt(starknetAddress);
-
-  if (!abi) {
-    throw new Error("no abi.");
-  }
-
-  const executorContract = new Contract(
-    abi,
-    starknetAddress,
-    config.starknetProvider
-  );
-
-  executorContract.connect(deployerAccount);
-
-  const response = await executorContract.set_broker_fees(brokerAddress, {
-    numerator: cairo.uint256(fees),
-    denominator: cairo.uint256(100)
-  });
-
-  await config.starknetProvider.waitForTransaction(response.transaction_hash);
-};
-
 export const setArkFees = async (
   config: Config,
   deployerAccount: Account,
-  starknetAddress: string,
   fees: number
 ) => {
-  const { abi } = await config.starknetProvider.getClassAt(starknetAddress);
+  const { abi } = await config.starknetProvider.getClassAt(
+    config.starknetExecutorContract
+  );
 
   if (!abi) {
     throw new Error("no abi.");
@@ -221,7 +195,7 @@ export const setArkFees = async (
 
   const executorContract = new Contract(
     abi,
-    starknetAddress,
+    config.starknetExecutorContract,
     config.starknetProvider
   );
 
@@ -229,33 +203,180 @@ export const setArkFees = async (
 
   const response = await executorContract.set_ark_fees({
     numerator: cairo.uint256(fees),
-    denominator: cairo.uint256(100)
+    denominator: cairo.uint256(10000)
   });
 
   await config.starknetProvider.waitForTransaction(response.transaction_hash);
 };
 
-export const setFees = async ({
-  config,
-  adminAccount,
-  executorAddress,
-  brokerId,
-  brokerFee,
-  arkFee
-}: {
-  config: Config;
-  adminAccount: Account;
-  executorAddress: string;
-  brokerId: string;
-  brokerFee: number;
-  arkFee: number;
-}) => {
-  await setBrokerFees(
-    config,
-    adminAccount,
-    contracts.executor,
-    brokerId,
-    brokerFee
-  );
-  await setArkFees(config, adminAccount, executorAddress, arkFee);
+export const setBrokerFees = async (
+  config: Config,
+  brokerAccount: Account,
+  fees: number
+) => {
+  await createBroker(config, {
+    brokenAccount: brokerAccount,
+    numerator: fees,
+    denominator: 10000
+  });
 };
+
+function fetchAccount(
+  provider: ProviderInterface,
+  address: string,
+  privateKey: string
+): Account {
+  return new Account(provider, address, privateKey);
+}
+
+export const accounts = {
+  arkDefaultFeesReceiver: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ARK_RECEIVER_ADDRESS!,
+    process.env.STARKNET_ARK_RECEIVER_PRIVATE_KEY!
+  ),
+  arkSetbyAdminCollectionReceiver: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ARK_COLLECTION_RECEIVER_ADDRESS!,
+    process.env.STARKNET_ARK_COLLECTION_RECEIVER_PRIVATE_KEY!
+  ),
+  arkCollection2981Receiver: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ARK_COLLECTION_2981_RECEIVER_ADDRESS!,
+    process.env.STARKNET_ARK_COLLECTION_2981_RECEIVER_PRIVATE_KEY!
+  ),
+  admin: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ADMIN_ADDRESS_DEV!,
+    process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV!
+  ),
+  listingBroker: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_LISTING_BROKER_ACCOUNT_ADDRESS!,
+    process.env.STARKNET_LISTING_BROKER_ACCOUNT_PRIVATE_KEY!
+  ),
+  saleBroker: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_SALE_BROKER_ACCOUNT_ADDRESS!,
+    process.env.STARKNET_SALE_BROKER_ACCOUNT_PRIVATE_KEY!
+  ),
+  offerer: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS!,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY!
+  ),
+  fulfiller: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT2_ADDRESS!,
+    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY!
+  ),
+  seller: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT1_ADDRESS!,
+    process.env.STARKNET_ACCOUNT1_PRIVATE_KEY!
+  ),
+  buyer: fetchAccount(
+    config.starknetProvider,
+    process.env.STARKNET_ACCOUNT2_ADDRESS!,
+    process.env.STARKNET_ACCOUNT2_PRIVATE_KEY!
+  )
+};
+
+export const setCollectionCreatorFees = async (
+  config: Config,
+  adminAccount: Account,
+  arkCollectionReceiver: string,
+  fees: number,
+  nftAddress: string
+) => {
+  const { abi } = await config.starknetProvider.getClassAt(
+    config.starknetExecutorContract
+  );
+  if (abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const executorContract = new Contract(
+    abi,
+    config.starknetExecutorContract,
+    config.starknetProvider
+  );
+  executorContract.connect(adminAccount);
+  const response = await executorContract.set_collection_creator_fees(
+    nftAddress,
+    arkCollectionReceiver,
+    {
+      numerator: cairo.uint256(fees),
+      denominator: cairo.uint256(10000)
+    }
+  );
+  await config.starknetProvider.waitForTransaction(response.transaction_hash);
+};
+
+export const setDefaultCreatorFees = async (
+  config: Config,
+  deployerAccount: Account,
+  arkReceiver: string,
+  fees: number
+) => {
+  const { abi } = await config.starknetProvider.getClassAt(
+    config.starknetExecutorContract
+  );
+  if (abi === undefined) {
+    throw new Error("no abi.");
+  }
+
+  const executorContract = new Contract(
+    abi,
+    config.starknetExecutorContract,
+    config.starknetProvider
+  );
+  executorContract.connect(deployerAccount);
+  const response = await executorContract.set_default_creator_fees(
+    arkReceiver,
+    {
+      numerator: cairo.uint256(fees),
+      denominator: cairo.uint256(10000)
+    }
+  );
+
+  await config.starknetProvider.waitForTransaction(response.transaction_hash);
+};
+
+export async function setupFees(config: Config) {
+  await setArkFees(config, accounts.admin, 100);
+  await setBrokerFees(config, accounts.listingBroker, 100);
+  await setBrokerFees(config, accounts.saleBroker, 100);
+  await setDefaultCreatorFees(
+    config,
+    accounts.admin,
+    accounts.arkDefaultFeesReceiver.address,
+    100
+  );
+  await setCollectionCreatorFees(
+    config,
+    accounts.admin,
+    accounts.arkSetbyAdminCollectionReceiver.address,
+    100,
+    contracts.nftContractFixedFees
+  );
+}
+
+export async function resetFees(config: Config) {
+  await setArkFees(config, accounts.admin, 0);
+  await setBrokerFees(config, accounts.listingBroker, 0);
+  await setBrokerFees(config, accounts.saleBroker, 0);
+  await setDefaultCreatorFees(
+    config,
+    accounts.admin,
+    accounts.arkDefaultFeesReceiver.address,
+    0
+  );
+  await setCollectionCreatorFees(
+    config,
+    accounts.admin,
+    accounts.arkSetbyAdminCollectionReceiver.address,
+    0,
+    contracts.nftContractFixedFees
+  );
+}
