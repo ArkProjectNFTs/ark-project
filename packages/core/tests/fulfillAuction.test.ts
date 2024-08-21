@@ -32,8 +32,6 @@ describe("fulfillAuction", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-
     const offerAmount = BigInt(1000);
     const offerOrderHash = await createOffer(config, {
       starknetAccount: buyer,
@@ -49,8 +47,6 @@ describe("fulfillAuction", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-
     await fulfillAuction(config, {
       starknetAccount: seller,
       fulfillAuctionInfo: {
@@ -62,7 +58,7 @@ describe("fulfillAuction", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
+    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus } = await getOrderStatus(config, {
       orderHash

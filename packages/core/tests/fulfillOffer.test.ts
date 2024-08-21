@@ -50,7 +50,7 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
+    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash
@@ -104,7 +104,7 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
+    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash

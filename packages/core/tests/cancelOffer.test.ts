@@ -27,8 +27,6 @@ describe("cancelOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-
     await cancelOrder(config, {
       starknetAccount: buyer,
       cancelInfo: {
@@ -37,8 +35,6 @@ describe("cancelOffer", () => {
         tokenId
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
 
     const { orderStatus } = await getOrderStatus(config, { orderHash });
 

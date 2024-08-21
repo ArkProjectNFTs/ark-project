@@ -9,12 +9,12 @@ import {
 
 describe("createOffer", () => {
   it("default", async () => {
-    const { offerer, fulfiller } = accounts;
-    const tokenId = await mintERC721({ account: offerer });
-    await mintERC20({ account: fulfiller, amount: 1 });
+    const { seller, buyer } = accounts;
+    const tokenId = await mintERC721({ account: seller });
+    await mintERC20({ account: buyer, amount: 1 });
 
     const orderHash = await createOffer(config, {
-      starknetAccount: fulfiller,
+      starknetAccount: seller,
       offer: {
         brokerId: accounts.listingBroker.address,
         tokenAddress: STARKNET_NFT_ADDRESS,

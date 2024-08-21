@@ -9,11 +9,11 @@ import {
 
 describe("createListing", () => {
   it("default", async () => {
-    const { offerer } = accounts;
-    const tokenId = await mintERC721({ account: offerer });
+    const { seller } = accounts;
+    const tokenId = await mintERC721({ account: seller });
 
     const orderHash = await createListing(config, {
-      starknetAccount: offerer,
+      starknetAccount: seller,
       order: {
         brokerId: accounts.listingBroker.address,
         tokenAddress: STARKNET_NFT_ADDRESS,

@@ -35,8 +35,6 @@ describe("cancelListing", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-
     const { orderStatus } = await getOrderStatus(config, {
       orderHash
     });

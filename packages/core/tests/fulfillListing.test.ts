@@ -27,8 +27,6 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-
     await fulfillListing(config, {
       starknetAccount: buyer,
       fulfillListingInfo: {
@@ -43,7 +41,7 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
+    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus } = await getOrderStatus(config, {
       orderHash
