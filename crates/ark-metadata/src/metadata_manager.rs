@@ -443,7 +443,10 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
 mod tests {
     use super::*;
 
-    use crate::{file_manager::MockFileManager, storage::MockStorage, types::TokenWithoutMetadata, elasticsearch_manager::MockElasticsearchManager};
+    use crate::{
+        elasticsearch_manager::MockElasticsearchManager, file_manager::MockFileManager,
+        storage::MockStorage, types::TokenWithoutMetadata,
+    };
     use ark_starknet::client::MockStarknetClient;
     use mockall::predicate::*;
     use reqwest::header::HeaderMap;
@@ -489,7 +492,12 @@ mod tests {
                 ])
             });
 
-        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client, &mock_file, &mock_elasticsearch_manager);
+        let mut metadata_manager = MetadataManager::new(
+            &storage_manager,
+            &mock_client,
+            &mock_file,
+            &mock_elasticsearch_manager,
+        );
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
@@ -508,7 +516,7 @@ mod tests {
         let mut mock_client = MockStarknetClient::default();
         let mut mock_storage = MockStorage::default();
         let mock_file = MockFileManager::default();
-        let mock_elasticsearch_manager = MockElasticsearchManager::default();
+        let mut mock_elasticsearch_manager = MockElasticsearchManager::default();
 
         let contract_address = "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8";
         let ipfs_gateway_uri = "https://ipfs.example.com";
@@ -536,6 +544,18 @@ mod tests {
                 }])
             });
 
+        mock_elasticsearch_manager
+            .expect_upsert_token_metadata()
+            .times(1)
+            .withf(move |contract_addr, token_id, chain_id, metadata| {
+                contract_addr
+                    == "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8"
+                    && token_id == "1"
+                    && chain_id == "0x534e5f4d41494e"
+                    && metadata.normalized.name.is_none()
+            })
+            .returning(|_, _, _, _| Ok(()));
+
         mock_client
             .expect_call_contract()
             .times(1)
@@ -556,7 +576,12 @@ mod tests {
             .with(always(), always(), always(), always())
             .returning(|_, _, _, _| Ok(()));
 
-        let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file, &mock_elasticsearch_manager);
+        let mut metadata_manager = MetadataManager::new(
+            &mock_storage,
+            &mock_client,
+            &mock_file,
+            &mock_elasticsearch_manager,
+        );
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
@@ -604,7 +629,12 @@ mod tests {
             });
 
         let storage_manager = MockStorage::default();
-        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client, &mock_file, &mock_elasticsearch_manager);
+        let mut metadata_manager = MetadataManager::new(
+            &storage_manager,
+            &mock_client,
+            &mock_file,
+            &mock_elasticsearch_manager,
+        );
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
