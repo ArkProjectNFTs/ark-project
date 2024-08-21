@@ -1,4 +1,5 @@
 use crate::{
+    elasticsearch_manager::ElasticsearchManager,
     file_manager::{FileInfo, FileManager},
     storage::Storage,
     types::StorageError,
@@ -18,11 +19,18 @@ use tracing::{debug, error, trace};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
-pub struct MetadataManager<'a, T: Storage, C: StarknetClient, F: FileManager> {
+pub struct MetadataManager<
+    'a,
+    T: Storage,
+    C: StarknetClient,
+    F: FileManager,
+    E: ElasticsearchManager,
+> {
     storage: &'a T,
     starknet_client: &'a C,
     request_client: ReqwestClient,
     file_manager: &'a F,
+    elasticsearch_manager: &'a E,
 }
 
 pub struct MetadataMedia {
@@ -38,6 +46,9 @@ pub enum MetadataError {
     #[error("Database operation failed: {0}")]
     DatabaseError(StorageError),
 
+    #[error("ElasticSearch operation failed: {0}")]
+    ElasticSearchError(String),
+
     #[error("Failed to parse data: {0}")]
     ParsingError(String),
 
@@ -51,14 +62,22 @@ pub enum MetadataError {
     EnvVarMissingError(String),
 }
 
-impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C, F> {
+impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
+    MetadataManager<'a, T, C, F, E>
+{
     /// Creates a new instance of `MetadataManager` with the given storage, Starknet client, and a new request client.
-    pub fn new(storage: &'a T, starknet_client: &'a C, file_manager: &'a F) -> Self {
+    pub fn new(
+        storage: &'a T,
+        starknet_client: &'a C,
+        file_manager: &'a F,
+        elasticsearch_manager: &'a E,
+    ) -> Self {
         MetadataManager {
             storage,
             starknet_client,
             request_client: ReqwestClient::new(),
             file_manager,
+            elasticsearch_manager,
         }
     }
 
@@ -162,9 +181,14 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager> MetadataManager<'a, T, C
         }
 
         self.storage
-            .register_token_metadata(contract_address, token_id, chain_id, token_metadata)
+            .register_token_metadata(contract_address, token_id, chain_id, token_metadata.clone())
             .await
             .map_err(MetadataError::DatabaseError)?;
+
+        self.elasticsearch_manager
+            .upsert_token_metadata(contract_address, token_id, chain_id, token_metadata)
+            .await
+            .map_err(|e| MetadataError::ElasticSearchError(e.to_string()))?;
 
         Ok(())
     }
