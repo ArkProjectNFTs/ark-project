@@ -443,7 +443,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
 mod tests {
     use super::*;
 
-    use crate::{file_manager::MockFileManager, storage::MockStorage, types::TokenWithoutMetadata};
+    use crate::{file_manager::MockFileManager, storage::MockStorage, types::TokenWithoutMetadata, elasticsearch_manager::MockElasticsearchManager};
     use ark_starknet::client::MockStarknetClient;
     use mockall::predicate::*;
     use reqwest::header::HeaderMap;
@@ -474,6 +474,7 @@ mod tests {
         let mut mock_client = MockStarknetClient::default();
         let storage_manager = MockStorage::default();
         let mock_file = MockFileManager::default();
+        let mock_elasticsearch_manager = MockElasticsearchManager::default();
 
         mock_client
             .expect_call_contract()
@@ -488,7 +489,7 @@ mod tests {
                 ])
             });
 
-        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client, &mock_file);
+        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client, &mock_file, &mock_elasticsearch_manager);
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
@@ -507,6 +508,7 @@ mod tests {
         let mut mock_client = MockStarknetClient::default();
         let mut mock_storage = MockStorage::default();
         let mock_file = MockFileManager::default();
+        let mock_elasticsearch_manager = MockElasticsearchManager::default();
 
         let contract_address = "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8";
         let ipfs_gateway_uri = "https://ipfs.example.com";
@@ -554,7 +556,7 @@ mod tests {
             .with(always(), always(), always(), always())
             .returning(|_, _, _, _| Ok(()));
 
-        let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file);
+        let mut metadata_manager = MetadataManager::new(&mock_storage, &mock_client, &mock_file, &mock_elasticsearch_manager);
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
@@ -576,6 +578,7 @@ mod tests {
         // SETUP: Mocking and Initializing
         let mut mock_client = MockStarknetClient::default();
         let mock_file = MockFileManager::default();
+        let mock_elasticsearch_manager = MockElasticsearchManager::default();
 
         let contract_address = FieldElement::ONE;
         let selector_name = selector!("tokenURI");
@@ -601,7 +604,7 @@ mod tests {
             });
 
         let storage_manager = MockStorage::default();
-        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client, &mock_file);
+        let mut metadata_manager = MetadataManager::new(&storage_manager, &mock_client, &mock_file, &mock_elasticsearch_manager);
 
         // EXECUTION: Call the function under test
         let result = metadata_manager
