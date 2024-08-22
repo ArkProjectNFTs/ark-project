@@ -120,3 +120,15 @@ pub struct MetadataProperty {
     property_type: String,
     description: String,
 }
+
+#[derive(Debug, thiserror::Error)]
+pub enum RequestError {
+    #[error("Request error: {0}")]
+    Reqwest(String),
+}
+
+impl From<reqwest::Error> for RequestError {
+    fn from(error: reqwest::Error) -> Self {
+        RequestError::Reqwest(error.to_string())
+    }
+}
