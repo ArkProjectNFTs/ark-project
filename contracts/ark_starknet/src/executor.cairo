@@ -75,7 +75,7 @@ mod executor {
     use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
     use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
 
-    use ark_starknet::interfaces::{IExecutor, IUpgradable};
+    use ark_starknet::interfaces::{IExecutor, IUpgradable, IMaintenance};
     use ark_starknet::interfaces::FeesAmount;
 
     use ark_starknet::appchain_messaging::{
@@ -105,6 +105,8 @@ mod executor {
         default_receiver: ContractAddress,
         default_fees: FeesRatio,
         creator_fees: LegacyMap<ContractAddress, (ContractAddress, FeesRatio)>,
+        // maintenance mode
+        enabled: bool,
     }
 
     #[event]
@@ -112,6 +114,7 @@ mod executor {
     enum Event {
         OrderExecuted: OrderExecuted,
         CollectionFallbackFees: CollectionFallbackFees,
+        ExecutorEnabled: ExecutorEnabled,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -133,6 +136,17 @@ mod executor {
         receiver: ContractAddress,
     }
 
+    #[derive(Drop, starknet::Event)]
+    struct ExecutorEnabled {
+        enable: bool
+    }
+
+    mod Errors {
+        const NOT_ENABLED: felt252 = 'Executor not enabled';
+        const UNAUTHORIZED_ADMIN: felt252 = 'Unauthorized admin address';
+        const FEES_RATIO_INVALID: felt252 = 'Fees ratio is invalid';
+    }
+
     #[constructor]
     fn constructor(
         ref self: ContractState,
@@ -148,13 +162,14 @@ mod executor {
         self.ark_fees.write(Default::default());
         self.default_receiver.write(admin_address);
         self.default_fees.write(Default::default());
+        self.enabled.write(true); // enabled by default 
     }
 
 
     #[abi(embed_v0)]
     impl ExecutorImpl of IExecutor<ContractState> {
         fn set_broker_fees(ref self: ContractState, fees_ratio: FeesRatio) {
-            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
+            assert(fees_ratio.is_valid(), Errors::FEES_RATIO_INVALID);
             self.broker_fees.write(starknet::get_caller_address(), fees_ratio);
         }
 
@@ -169,11 +184,8 @@ mod executor {
         }
 
         fn set_ark_fees(ref self: ContractState, fees_ratio: FeesRatio) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
-            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
+            _ensure_admin(@self);
+            assert(fees_ratio.is_valid(), Errors::FEES_RATIO_INVALID);
 
             self.ark_fees.write(fees_ratio);
         }
@@ -189,11 +201,8 @@ mod executor {
         fn set_default_creator_fees(
             ref self: ContractState, receiver: ContractAddress, fees_ratio: FeesRatio
         ) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
-            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
+            _ensure_admin(@self);
+            assert(fees_ratio.is_valid(), Errors::FEES_RATIO_INVALID);
             self.default_receiver.write(receiver);
             self.default_fees.write(fees_ratio);
         }
@@ -215,11 +224,8 @@ mod executor {
             receiver: ContractAddress,
             fees_ratio: FeesRatio
         ) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
-            assert(fees_ratio.is_valid(), 'Fees ratio is invalid');
+            _ensure_admin(@self);
+            assert(fees_ratio.is_valid(), Errors::FEES_RATIO_INVALID);
             self.creator_fees.write(nft_address, (receiver, fees_ratio));
         }
 
@@ -260,51 +266,37 @@ mod executor {
         fn update_arkchain_orderbook_address(
             ref self: ContractState, orderbook_address: ContractAddress
         ) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
+            _ensure_admin(@self);
 
             self.arkchain_orderbook_address.write(orderbook_address);
         }
 
         fn update_messaging_address(ref self: ContractState, msger_address: ContractAddress) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
+            _ensure_admin(@self);
 
             self.messaging_address.write(msger_address);
         }
 
         fn update_eth_address(ref self: ContractState, eth_address: ContractAddress) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
+            _ensure_admin(@self);
 
             self.eth_contract_address.write(eth_address);
         }
 
         fn update_orderbook_address(ref self: ContractState, orderbook_address: ContractAddress) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
+            _ensure_admin(@self);
 
             self.arkchain_orderbook_address.write(orderbook_address);
         }
 
         fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized admin address'
-            );
+            _ensure_admin(@self);
 
             self.admin_address.write(admin_address);
         }
 
         fn cancel_order(ref self: ContractState, cancelInfo: CancelInfo) {
+            _ensure_is_enabled(@self);
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
@@ -323,6 +315,7 @@ mod executor {
         }
 
         fn create_order(ref self: ContractState, order: OrderV1) {
+            _ensure_is_enabled(@self);
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
@@ -346,6 +339,7 @@ mod executor {
         }
 
         fn fulfill_order(ref self: ContractState, fulfillInfo: FulfillInfo) {
+            _ensure_is_enabled(@self);
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
@@ -372,7 +366,7 @@ mod executor {
             // );
 
             // Check if execution_info.currency_contract_address is whitelisted
-
+            _ensure_is_enabled(@self);
             assert(
                 execution_info.payment_currency_chain_id == self.chain_id.read(),
                 'Chain ID is not SN_MAIN'
@@ -502,15 +496,25 @@ mod executor {
     #[abi(embed_v0)]
     impl ExecutorUpgradeImpl of IUpgradable<ContractState> {
         fn upgrade(ref self: ContractState, class_hash: ClassHash) {
-            assert(
-                starknet::get_caller_address() == self.admin_address.read(),
-                'Unauthorized replace class'
-            );
+            _ensure_admin(@self);
 
             match starknet::replace_class_syscall(class_hash) {
                 Result::Ok(_) => (), // emit event
                 Result::Err(revert_reason) => panic(revert_reason),
             };
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl ExecutorMaintenanceImpl of IMaintenance<ContractState> {
+        fn is_enabled(self: @ContractState) -> bool {
+            self.enabled.read()
+        }
+
+        fn enable(ref self: ContractState, enable: bool) {
+            _ensure_admin(@self);
+            self.enabled.write(enable);
+            self.emit(ExecutorEnabled { enable })
         }
     }
 
@@ -797,6 +801,16 @@ mod executor {
         let (receiver, fees_ratio) = self.get_collection_creator_fees(*nft_address);
         let amount = fees_ratio.compute_amount(payment_amount);
         (receiver, amount)
+    }
+
+    fn _ensure_admin(self: @ContractState) {
+        assert(
+            starknet::get_caller_address() == self.admin_address.read(), Errors::UNAUTHORIZED_ADMIN
+        );
+    }
+
+    fn _ensure_is_enabled(self: @ContractState) {
+        assert(self.enabled.read(), Errors::NOT_ENABLED)
     }
 
     fn _compute_fees_amount(

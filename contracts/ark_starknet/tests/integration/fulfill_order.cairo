@@ -6,7 +6,10 @@ use ark_common::protocol::order_v1::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, OrderTrait, RouteType};
 
 
-use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait,};
+use ark_starknet::interfaces::{
+    IExecutorDispatcher, IExecutorDispatcherTrait, IMaintenanceDispatcher,
+    IMaintenanceDispatcherTrait
+};
 
 use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
@@ -498,6 +501,41 @@ fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
     snf::start_prank(CheatTarget::One(erc20_address), buyer);
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
     snf::stop_prank(CheatTarget::One(erc20_address));
+
+    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}
+
+#[test]
+#[should_panic(expected: ('Executor not enabled',))]
+fn test_fulfill_order_not_enabled() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let admin = contract_address_const::<'admin'>();
+    let fulfiller = contract_address_const::<'fulfiller'>();
+
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(fulfiller, 'base_uri');
+    let (order_hash, offerer, start_amount) = create_offer_order(
+        executor_address, erc20_address, nft_address, token_id
+    );
+
+    snf::start_prank(CheatTarget::One(erc20_address), offerer);
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+    snf::stop_prank(CheatTarget::One(erc20_address));
+
+    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+
+    snf::start_prank(CheatTarget::One(nft_address), fulfiller);
+    IERC721Dispatcher { contract_address: nft_address }
+        .set_approval_for_all(executor_address, true);
+    snf::stop_prank(CheatTarget::One(nft_address));
+
+    snf::start_prank(CheatTarget::One(executor_address), admin);
+    IMaintenanceDispatcher { contract_address: executor_address }.enable(false);
+    snf::stop_prank(CheatTarget::One(executor_address));
 
     snf::start_prank(CheatTarget::One(executor_address), fulfiller);
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
