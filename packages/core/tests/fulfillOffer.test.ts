@@ -26,7 +26,7 @@ describe("fulfillOffer", () => {
       startAmount: BigInt(10)
     };
 
-    const orderHash = await createOffer(config, {
+    const { orderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer,
       approveInfo: {
@@ -80,7 +80,7 @@ describe("fulfillOffer", () => {
       startAmount: BigInt(10)
     };
 
-    const orderHash = await createOffer(config, {
+    const { orderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer,
       approveInfo: {

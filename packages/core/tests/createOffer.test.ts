@@ -7,7 +7,7 @@ describe("createOffer", () => {
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     await mintERC20({ account: buyer, amount: 1 });
 
-    const orderHash = await createOffer(config, {
+    const { orderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer: {
         brokerId: accounts.listingBroker.address,

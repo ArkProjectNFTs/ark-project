@@ -1,4 +1,4 @@
-import { AuctionV1, createAuction, getOrderType } from "../src/index.js";
+import { createAuction, getOrderType } from "../src/index.js";
 import {
   accounts,
   config,
@@ -11,7 +11,7 @@ describe("createAuction", () => {
     const { seller, listingBroker } = accounts;
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
-    const orderHash = await createAuction(config, {
+    const { orderHash } = await createAuction(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,
@@ -65,19 +65,17 @@ describe("createAuction", () => {
 
     const invalidStartDate = Math.floor(Date.now() / 1000 - 30);
 
-    const order: AuctionV1 = {
-      brokerId: listingBroker.address,
-      tokenAddress,
-      tokenId,
-      startDate: invalidStartDate,
-      startAmount: BigInt(1),
-      endAmount: BigInt(10)
-    };
-
     await expect(
       createAuction(config, {
         starknetAccount: seller,
-        order,
+        order: {
+          brokerId: listingBroker.address,
+          tokenAddress,
+          tokenId,
+          startDate: invalidStartDate,
+          startAmount: BigInt(1),
+          endAmount: BigInt(10)
+        },
         approveInfo: {
           tokenAddress,
           tokenId
@@ -92,15 +90,6 @@ describe("createAuction", () => {
 
     const invalidEndDate = Math.floor(Date.now() / 1000) - 30;
 
-    const order: AuctionV1 = {
-      brokerId: listingBroker.address,
-      tokenAddress,
-      tokenId,
-      endDate: invalidEndDate,
-      startAmount: BigInt(1),
-      endAmount: BigInt(10)
-    };
-
     await expect(
       createAuction(config, {
         starknetAccount: seller,
@@ -108,7 +97,14 @@ describe("createAuction", () => {
           tokenAddress,
           tokenId
         },
-        order
+        order: {
+          brokerId: listingBroker.address,
+          tokenAddress,
+          tokenId,
+          endDate: invalidEndDate,
+          startAmount: BigInt(1),
+          endAmount: BigInt(10)
+        }
       })
     ).rejects.toThrow();
   }, 50_000);
@@ -117,14 +113,6 @@ describe("createAuction", () => {
     const { seller, listingBroker } = accounts;
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
-    const order: AuctionV1 = {
-      brokerId: listingBroker.address,
-      tokenAddress,
-      tokenId,
-      startAmount: BigInt(1),
-      endAmount: BigInt(0)
-    };
-
     await expect(
       createAuction(config, {
         starknetAccount: seller,
@@ -132,7 +120,13 @@ describe("createAuction", () => {
           tokenAddress,
           tokenId
         },
-        order
+        order: {
+          brokerId: listingBroker.address,
+          tokenAddress,
+          tokenId,
+          startAmount: BigInt(1),
+          endAmount: BigInt(0)
+        }
       })
     ).rejects.toThrow();
   }, 50_000);
