@@ -1,3 +1,4 @@
+use crate::elasticsearch_manager::NoOpElasticsearchManager;
 use crate::{
     elasticsearch_manager::ElasticsearchManager,
     file_manager::{FileInfo, FileManager},
@@ -24,13 +25,13 @@ pub struct MetadataManager<
     T: Storage,
     C: StarknetClient,
     F: FileManager,
-    E: ElasticsearchManager,
+    E: ElasticsearchManager = NoOpElasticsearchManager,
 > {
     storage: &'a T,
     starknet_client: &'a C,
     request_client: ReqwestClient,
     file_manager: &'a F,
-    elasticsearch_manager: &'a E,
+    elasticsearch_manager: Option<&'a E>,
 }
 
 pub struct MetadataMedia {
@@ -70,7 +71,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
         storage: &'a T,
         starknet_client: &'a C,
         file_manager: &'a F,
-        elasticsearch_manager: &'a E,
+        elasticsearch_manager: Option<&'a E>,
     ) -> Self {
         MetadataManager {
             storage,
@@ -185,10 +186,12 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
             .await
             .map_err(MetadataError::DatabaseError)?;
 
-        self.elasticsearch_manager
-            .upsert_token_metadata(contract_address, token_id, chain_id, token_metadata)
-            .await
-            .map_err(|e| MetadataError::ElasticSearchError(e.to_string()))?;
+        if let Some(elasticsearch_manager) = self.elasticsearch_manager {
+            elasticsearch_manager
+                .upsert_token_metadata(contract_address, token_id, chain_id, token_metadata)
+                .await
+                .map_err(|e| MetadataError::ElasticSearchError(e.to_string()))?;
+        }
 
         Ok(())
     }
@@ -496,7 +499,7 @@ mod tests {
             &storage_manager,
             &mock_client,
             &mock_file,
-            &mock_elasticsearch_manager,
+            Some(&mock_elasticsearch_manager),
         );
 
         // EXECUTION: Call the function under test
@@ -580,7 +583,7 @@ mod tests {
             &mock_storage,
             &mock_client,
             &mock_file,
-            &mock_elasticsearch_manager,
+            Some(&mock_elasticsearch_manager),
         );
 
         // EXECUTION: Call the function under test
@@ -633,7 +636,7 @@ mod tests {
             &storage_manager,
             &mock_client,
             &mock_file,
-            &mock_elasticsearch_manager,
+            Some(&mock_elasticsearch_manager),
         );
 
         // EXECUTION: Call the function under test
