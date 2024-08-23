@@ -499,7 +499,7 @@ mod tests {
             &storage_manager,
             &mock_client,
             &mock_file,
-            &mock_elasticsearch_manager,
+            Some(&mock_elasticsearch_manager),
         );
 
         // EXECUTION: Call the function under test
@@ -583,7 +583,7 @@ mod tests {
             &mock_storage,
             &mock_client,
             &mock_file,
-            &mock_elasticsearch_manager,
+            Some(&mock_elasticsearch_manager),
         );
 
         // EXECUTION: Call the function under test
@@ -636,7 +636,7 @@ mod tests {
             &storage_manager,
             &mock_client,
             &mock_file,
-            &mock_elasticsearch_manager,
+            Some(&mock_elasticsearch_manager),
         );
 
         // EXECUTION: Call the function under test
