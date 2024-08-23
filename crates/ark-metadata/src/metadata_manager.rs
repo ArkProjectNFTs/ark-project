@@ -16,6 +16,7 @@ use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use std::{str::FromStr, time::Duration};
 use tracing::{debug, error, trace};
+use crate::elasticsearch_manager::NoOpElasticsearchManager;
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -24,13 +25,13 @@ pub struct MetadataManager<
     T: Storage,
     C: StarknetClient,
     F: FileManager,
-    E: ElasticsearchManager,
+    E: ElasticsearchManager = NoOpElasticsearchManager,
 > {
     storage: &'a T,
     starknet_client: &'a C,
     request_client: ReqwestClient,
     file_manager: &'a F,
-    elasticsearch_manager: &'a E,
+    elasticsearch_manager: Option<&'a E>,
 }
 
 pub struct MetadataMedia {
@@ -70,7 +71,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
         storage: &'a T,
         starknet_client: &'a C,
         file_manager: &'a F,
-        elasticsearch_manager: &'a E,
+        elasticsearch_manager: Option<&'a E>,
     ) -> Self {
         MetadataManager {
             storage,
@@ -185,10 +186,13 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
             .await
             .map_err(MetadataError::DatabaseError)?;
 
-        self.elasticsearch_manager
-            .upsert_token_metadata(contract_address, token_id, chain_id, token_metadata)
-            .await
-            .map_err(|e| MetadataError::ElasticSearchError(e.to_string()))?;
+
+        if let Some(elasticsearch_manager) = self.elasticsearch_manager {
+                    elasticsearch_manager
+                        .upsert_token_metadata(contract_address, token_id, chain_id, token_metadata)
+                        .await
+                        .map_err(|e| MetadataError::ElasticSearchError(e.to_string()))?;
+                }
 
         Ok(())
     }
