@@ -1,3 +1,4 @@
+use crate::elasticsearch_manager::NoOpElasticsearchManager;
 use crate::{
     elasticsearch_manager::ElasticsearchManager,
     file_manager::{FileInfo, FileManager},
@@ -16,7 +17,6 @@ use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use std::{str::FromStr, time::Duration};
 use tracing::{debug, error, trace};
-use crate::elasticsearch_manager::NoOpElasticsearchManager;
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -186,13 +186,12 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
             .await
             .map_err(MetadataError::DatabaseError)?;
 
-
         if let Some(elasticsearch_manager) = self.elasticsearch_manager {
-                    elasticsearch_manager
-                        .upsert_token_metadata(contract_address, token_id, chain_id, token_metadata)
-                        .await
-                        .map_err(|e| MetadataError::ElasticSearchError(e.to_string()))?;
-                }
+            elasticsearch_manager
+                .upsert_token_metadata(contract_address, token_id, chain_id, token_metadata)
+                .await
+                .map_err(|e| MetadataError::ElasticSearchError(e.to_string()))?;
+        }
 
         Ok(())
     }

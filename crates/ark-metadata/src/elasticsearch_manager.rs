@@ -2,7 +2,6 @@ use crate::types::{RequestError, TokenMetadata};
 use async_trait::async_trait;
 pub struct NoOpElasticsearchManager;
 
-
 #[cfg(any(test, feature = "mock"))]
 use mockall::automock;
 
@@ -17,7 +16,6 @@ pub trait ElasticsearchManager {
         metadata: TokenMetadata,
     ) -> Result<(), RequestError>;
 }
-
 
 #[async_trait]
 impl ElasticsearchManager for NoOpElasticsearchManager {
