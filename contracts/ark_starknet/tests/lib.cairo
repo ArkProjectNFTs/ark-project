@@ -7,6 +7,7 @@ mod unit {
 }
 mod integration {
     mod create_order;
+    mod fees_amount;
     mod fulfill_order;
     mod execute_order;
 }
