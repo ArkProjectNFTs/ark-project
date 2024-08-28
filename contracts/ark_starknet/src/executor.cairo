@@ -76,6 +76,7 @@ mod executor {
     use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
 
     use ark_starknet::interfaces::{IExecutor, IUpgradable};
+    use ark_starknet::interfaces::FeesAmount;
 
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
@@ -222,6 +223,32 @@ mod executor {
             self.creator_fees.write(nft_address, (receiver, fees_ratio));
         }
 
+        fn get_fees_amount(
+            self: @ContractState,
+            fulfill_broker: ContractAddress,
+            listing_broker: ContractAddress,
+            nft_address: ContractAddress,
+            nft_token_id: u256,
+            payment_amount: u256
+        ) -> FeesAmount {
+            let (
+                fulfill_broker_fees_amount,
+                listing_broker_fees_amount,
+                ark_fees_amount,
+                creator_fees_amount
+            ) =
+                _compute_fees_amount(
+                self, fulfill_broker, listing_broker, nft_address, nft_token_id, payment_amount
+            );
+
+            FeesAmount {
+                fulfill_broker: fulfill_broker_fees_amount,
+                listing_broker: listing_broker_fees_amount,
+                ark: ark_fees_amount,
+                creator: creator_fees_amount,
+            }
+        }
+
         fn get_messaging_address(self: @ContractState) -> ContractAddress {
             self.messaging_address.read()
         }
@@ -355,22 +382,21 @@ mod executor {
                 contract_address: execution_info.payment_currency_address.try_into().unwrap()
             };
 
-            let fulfill_broker_fees = self.get_broker_fees(execution_info.fulfill_broker_address);
-            let listing_broker_fees = self.get_broker_fees(execution_info.listing_broker_address);
-            let ark_fees = self.ark_fees.read();
-
-            let fulfill_broker_fees_amount = fulfill_broker_fees
-                .compute_amount(execution_info.payment_amount);
-            let listing_broker_fees_amount = listing_broker_fees
-                .compute_amount(execution_info.payment_amount);
             let (creator_address, creator_fees_amount) = _compute_creator_fees_amount(
                 @self,
                 @execution_info.nft_address,
                 execution_info.payment_amount,
                 execution_info.nft_token_id
             );
-            let ark_fees_amount = ark_fees.compute_amount(execution_info.payment_amount);
-
+            let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
+                _compute_fees_amount(
+                @self,
+                execution_info.fulfill_broker_address,
+                execution_info.listing_broker_address,
+                execution_info.nft_address,
+                execution_info.nft_token_id,
+                execution_info.payment_amount
+            );
             assert!(
                 execution_info
                     .payment_amount > (fulfill_broker_fees_amount
@@ -771,5 +797,31 @@ mod executor {
         let (receiver, fees_ratio) = self.get_collection_creator_fees(*nft_address);
         let amount = fees_ratio.compute_amount(payment_amount);
         (receiver, amount)
+    }
+
+    fn _compute_fees_amount(
+        self: @ContractState,
+        fulfill_broker_address: ContractAddress,
+        listing_broker_address: ContractAddress,
+        nft_address: ContractAddress,
+        nft_token_id: u256,
+        payment_amount: u256
+    ) -> (u256, u256, u256, u256) {
+        let fulfill_broker_fees = self.get_broker_fees(fulfill_broker_address);
+        let listing_broker_fees = self.get_broker_fees(listing_broker_address);
+        let ark_fees = self.ark_fees.read();
+
+        let fulfill_broker_fees_amount = fulfill_broker_fees.compute_amount(payment_amount);
+        let listing_broker_fees_amount = listing_broker_fees.compute_amount(payment_amount);
+        let (_, creator_fees_amount) = _compute_creator_fees_amount(
+            self, @nft_address, payment_amount, nft_token_id
+        );
+        let ark_fees_amount = ark_fees.compute_amount(payment_amount);
+        (
+            fulfill_broker_fees_amount,
+            listing_broker_fees_amount,
+            ark_fees_amount,
+            creator_fees_amount,
+        )
     }
 }

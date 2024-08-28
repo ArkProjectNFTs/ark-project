@@ -5,6 +5,13 @@ use ark_common::protocol::order_types::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
 use ark_oz::erc2981::FeesRatio;
 
+#[derive(Serde, Drop)]
+struct FeesAmount {
+    fulfill_broker: u256,
+    listing_broker: u256,
+    ark: u256,
+    creator: u256,
+}
 
 #[starknet::interface]
 trait IExecutor<T> {
@@ -32,6 +39,15 @@ trait IExecutor<T> {
     fn set_collection_creator_fees(
         ref self: T, nft_address: ContractAddress, receiver: ContractAddress, fees_ratio: FeesRatio
     );
+
+    fn get_fees_amount(
+        self: @T,
+        fulfill_broker: ContractAddress,
+        listing_broker: ContractAddress,
+        nft_address: ContractAddress,
+        nft_token_id: u256,
+        payment_amount: u256
+    ) -> FeesAmount;
 }
 
 #[starknet::interface]
