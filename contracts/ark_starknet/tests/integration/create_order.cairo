@@ -129,7 +129,7 @@ fn test_create_order_erc20_to_erc721_disabled() {
     order.start_amount = start_amount;
 
     snf::start_prank(CheatTarget::One(executor_address), admin);
-    IMaintenanceDispatcher { contract_address: executor_address }.enable(false);
+    IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
     snf::stop_prank(CheatTarget::One(executor_address));
 
     snf::start_prank(CheatTarget::One(executor_address), offerer);
@@ -155,7 +155,7 @@ fn test_create_order_erc721_to_erc20_disabled() {
     order.token_id = Option::Some(token_id);
 
     snf::start_prank(CheatTarget::One(executor_address), admin);
-    IMaintenanceDispatcher { contract_address: executor_address }.enable(false);
+    IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
     snf::stop_prank(CheatTarget::One(executor_address));
 
     snf::start_prank(CheatTarget::One(executor_address), offerer);

@@ -106,7 +106,7 @@ mod executor {
         default_fees: FeesRatio,
         creator_fees: LegacyMap<ContractAddress, (ContractAddress, FeesRatio)>,
         // maintenance mode
-        enabled: bool,
+        in_maintenance: bool,
     }
 
     #[event]
@@ -114,7 +114,7 @@ mod executor {
     enum Event {
         OrderExecuted: OrderExecuted,
         CollectionFallbackFees: CollectionFallbackFees,
-        ExecutorEnabled: ExecutorEnabled,
+        ExecutorInMaintenance: ExecutorInMaintenance,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -137,12 +137,12 @@ mod executor {
     }
 
     #[derive(Drop, starknet::Event)]
-    struct ExecutorEnabled {
-        enable: bool
+    struct ExecutorInMaintenance {
+        on: bool
     }
 
     mod Errors {
-        const NOT_ENABLED: felt252 = 'Executor not enabled';
+        const IN_MAINTENANCE: felt252 = 'Executor not enabled';
         const UNAUTHORIZED_ADMIN: felt252 = 'Unauthorized admin address';
         const FEES_RATIO_INVALID: felt252 = 'Fees ratio is invalid';
     }
@@ -162,7 +162,7 @@ mod executor {
         self.ark_fees.write(Default::default());
         self.default_receiver.write(admin_address);
         self.default_fees.write(Default::default());
-        self.enabled.write(true); // enabled by default 
+        self.in_maintenance.write(false); // enabled by default 
     }
 
 
@@ -296,7 +296,7 @@ mod executor {
         }
 
         fn cancel_order(ref self: ContractState, cancelInfo: CancelInfo) {
-            _ensure_is_enabled(@self);
+            _ensure_is_not_in_maintenance(@self);
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
@@ -315,7 +315,7 @@ mod executor {
         }
 
         fn create_order(ref self: ContractState, order: OrderV1) {
-            _ensure_is_enabled(@self);
+            _ensure_is_not_in_maintenance(@self);
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
@@ -339,7 +339,7 @@ mod executor {
         }
 
         fn fulfill_order(ref self: ContractState, fulfillInfo: FulfillInfo) {
-            _ensure_is_enabled(@self);
+            _ensure_is_not_in_maintenance(@self);
             let messaging = IAppchainMessagingDispatcher {
                 contract_address: self.messaging_address.read()
             };
@@ -366,7 +366,7 @@ mod executor {
             // );
 
             // Check if execution_info.currency_contract_address is whitelisted
-            _ensure_is_enabled(@self);
+            _ensure_is_not_in_maintenance(@self);
             assert(
                 execution_info.payment_currency_chain_id == self.chain_id.read(),
                 'Chain ID is not SN_MAIN'
@@ -507,14 +507,14 @@ mod executor {
 
     #[abi(embed_v0)]
     impl ExecutorMaintenanceImpl of IMaintenance<ContractState> {
-        fn is_enabled(self: @ContractState) -> bool {
-            self.enabled.read()
+        fn is_in_maintenance(self: @ContractState) -> bool {
+            self.in_maintenance.read()
         }
 
-        fn enable(ref self: ContractState, enable: bool) {
+        fn set_maintenance_mode(ref self: ContractState, on: bool) {
             _ensure_admin(@self);
-            self.enabled.write(enable);
-            self.emit(ExecutorEnabled { enable })
+            self.in_maintenance.write(on);
+            self.emit(ExecutorInMaintenance { on })
         }
     }
 
@@ -809,8 +809,8 @@ mod executor {
         );
     }
 
-    fn _ensure_is_enabled(self: @ContractState) {
-        assert(self.enabled.read(), Errors::NOT_ENABLED)
+    fn _ensure_is_not_in_maintenance(self: @ContractState) {
+        assert(!self.in_maintenance.read(), Errors::IN_MAINTENANCE)
     }
 
     fn _compute_fees_amount(

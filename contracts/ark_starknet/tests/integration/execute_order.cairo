@@ -673,7 +673,7 @@ fn test_execute_order_disabled() {
     );
 
     snf::start_prank(CheatTarget::One(executor_address), admin_address);
-    IMaintenanceDispatcher { contract_address: executor_address }.enable(false);
+    IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
     snf::stop_prank(CheatTarget::One(executor_address));
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);

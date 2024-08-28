@@ -57,6 +57,6 @@ trait IUpgradable<T> {
 
 #[starknet::interface]
 trait IMaintenance<T> {
-    fn is_enabled(self: @T) -> bool;
-    fn enable(ref self: T, enable: bool);
+    fn is_in_maintenance(self: @T) -> bool;
+    fn set_maintenance_mode(ref self: T, on: bool);
 }
