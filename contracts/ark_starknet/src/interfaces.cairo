@@ -54,3 +54,9 @@ trait IExecutor<T> {
 trait IUpgradable<T> {
     fn upgrade(ref self: T, class_hash: ClassHash);
 }
+
+#[starknet::interface]
+trait IMaintenance<T> {
+    fn is_in_maintenance(self: @T) -> bool;
+    fn set_maintenance_mode(ref self: T, on: bool);
+}

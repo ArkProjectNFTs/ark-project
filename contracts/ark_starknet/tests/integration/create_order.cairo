@@ -4,7 +4,10 @@ use ark_common::protocol::order_v1::OrderV1;
 use ark_common::protocol::order_types::RouteType;
 
 
-use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait,};
+use ark_starknet::interfaces::{
+    IExecutorDispatcher, IExecutorDispatcherTrait, IMaintenanceDispatcher,
+    IMaintenanceDispatcherTrait
+};
 
 use ark_tokens::erc20::IFreeMintDispatcher as Erc20Dispatcher;
 use ark_tokens::erc20::IFreeMintDispatcherTrait as Erc20DispatcherTrait;
@@ -105,6 +108,55 @@ fn test_create_order_offerer_not_own_ec721_token() {
     order.route = RouteType::Erc721ToErc20.into();
     order.offerer = offerer;
     order.token_id = Option::Some(token_id);
+
+    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}
+
+#[test]
+#[should_panic(expected: ('Executor not enabled',))]
+fn test_create_order_erc20_to_erc721_disabled() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let admin = contract_address_const::<'admin'>();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let mut order = setup_order(erc20_address, nft_address);
+    order.offerer = offerer;
+    order.start_amount = start_amount;
+
+    snf::start_prank(CheatTarget::One(executor_address), admin);
+    IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
+    snf::stop_prank(CheatTarget::One(executor_address));
+
+    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}
+
+#[test]
+#[should_panic(expected: ('Executor not enabled',))]
+fn test_create_order_erc721_to_erc20_disabled() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let admin = contract_address_const::<'admin'>();
+    let offerer = contract_address_const::<'offerer'>();
+
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let mut order = setup_order(erc20_address, nft_address);
+    order.route = RouteType::Erc721ToErc20.into();
+    order.offerer = offerer;
+    order.token_id = Option::Some(token_id);
+
+    snf::start_prank(CheatTarget::One(executor_address), admin);
+    IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
+    snf::stop_prank(CheatTarget::One(executor_address));
 
     snf::start_prank(CheatTarget::One(executor_address), offerer);
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);

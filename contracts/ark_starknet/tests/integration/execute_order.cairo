@@ -7,7 +7,10 @@ use ark_common::protocol::order_types::{FulfillInfo, ExecutionInfo, OrderTrait, 
 
 use ark_oz::erc2981::{IERC2981SetupDispatcher, IERC2981SetupDispatcherTrait};
 
-use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait, FeesRatio};
+use ark_starknet::interfaces::{
+    IExecutorDispatcher, IExecutorDispatcherTrait, FeesRatio, IMaintenanceDispatcher,
+    IMaintenanceDispatcherTrait
+};
 
 use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
@@ -653,4 +656,25 @@ fn test_execute_order_check_fee_too_much_fees() {
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
     assert_eq!(erc20.balance_of(fulfill_broker), 1_000_000, "Fulfill broker balance not correct");
     assert_eq!(erc20.balance_of(listing_broker), 500_000, "Listing broker balance not correct");
+}
+
+#[test]
+#[should_panic(expected: ('Executor not enabled',))]
+fn test_execute_order_disabled() {
+    let fulfiller = contract_address_const::<'fulfiller'>();
+    let listing_broker = contract_address_const::<'listing_broker'>();
+    let fulfill_broker = contract_address_const::<'fulfill_broker'>();
+    let admin_address = contract_address_const::<'admin'>();
+    let offerer = contract_address_const::<'offerer'>();
+
+    let start_amount = 10_000_000;
+    let (executor_address, _erc20_address, _, execution_info) = setup_execute_order(
+        admin_address, offerer, fulfiller, listing_broker, fulfill_broker, start_amount, false
+    );
+
+    snf::start_prank(CheatTarget::One(executor_address), admin_address);
+    IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
+    snf::stop_prank(CheatTarget::One(executor_address));
+
+    IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
 }
