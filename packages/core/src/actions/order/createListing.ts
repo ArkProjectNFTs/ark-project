@@ -16,11 +16,16 @@ import {
 } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
-interface CreateListingParameters {
+export interface CreateListingParameters {
   starknetAccount: AccountInterface;
   order: ListingV1;
   approveInfo: ApproveErc721Info;
   waitForTransaction?: boolean;
+}
+
+export interface CreateListingResult {
+  orderHash: bigint;
+  transactionHash: string;
 }
 
 /**
@@ -37,12 +42,16 @@ interface CreateListingParameters {
  * @returns {Promise<string>} A promise that resolves with the hash of the created order.
  *
  */
-const createListing = async (
+export async function createListing(
   config: Config,
-  parameters: CreateListingParameters,
-  waitForTransaction = true
-) => {
-  const { starknetAccount, order: baseOrder, approveInfo } = parameters;
+  parameters: CreateListingParameters
+): Promise<CreateListingResult> {
+  const {
+    starknetAccount,
+    order: baseOrder,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate());
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
@@ -103,6 +112,4 @@ const createListing = async (
     orderHash,
     transactionHash: result.transaction_hash
   };
-};
-
-export { createListing };
+}

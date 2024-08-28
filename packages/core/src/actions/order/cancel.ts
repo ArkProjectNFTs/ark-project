@@ -10,6 +10,16 @@ import {
 import { Config } from "../../createConfig.js";
 import { CancelInfo, FullCancelInfo } from "../../types/index.js";
 
+export interface CancelOrderParameters {
+  starknetAccount: AccountInterface;
+  cancelInfo: CancelInfo;
+  waitForTransaction?: boolean;
+}
+
+export interface CancelOrderResult {
+  transactionHash: string;
+}
+
 /**
  * Executes a transaction to cancel an order on the Arkchain.
  *
@@ -19,7 +29,7 @@ import { CancelInfo, FullCancelInfo } from "../../types/index.js";
  * including data compilation, signing, and transaction execution.
  *
  * @param {Config} config - The core SDK configuration, including network and contract details.
- * @param {cancelOrderParameters} parameters - The parameters required to cancel an order, including:
+ * @param {CancelOrderParameters} parameters - The parameters required to cancel an order, including:
  *   - starknetAccount: The Starknet account used for signing the transaction.
  *   - arkAccount: The Arkchain account used to execute the cancellation transaction.
  *   - cancelInfo: Information about the order to be cancelled, including the order hash and token details.
@@ -29,18 +39,11 @@ import { CancelInfo, FullCancelInfo } from "../../types/index.js";
  *
  * @throws {Error} Throws an error if the contract ABI is not found or if the transaction fails.
  */
-interface cancelOrderParameters {
-  starknetAccount: AccountInterface;
-  cancelInfo: CancelInfo;
-  waitForTransaction?: boolean;
-}
-
-const cancelOrder = async (
+export async function cancelOrder(
   config: Config,
-  parameters: cancelOrderParameters,
-  waitForTransaction = true
-) => {
-  const { starknetAccount, cancelInfo } = parameters;
+  parameters: CancelOrderParameters
+): Promise<CancelOrderResult> {
+  const { starknetAccount, cancelInfo, waitForTransaction = true } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fullCancelInfo: FullCancelInfo = {
     orderHash: cancelInfo.orderHash,
@@ -70,6 +73,4 @@ const cancelOrder = async (
   return {
     transactionHash: result.transaction_hash
   };
-};
-
-export { cancelOrder };
+}

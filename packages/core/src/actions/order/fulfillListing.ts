@@ -15,27 +15,35 @@ import {
 } from "../../types/index.js";
 import { getAllowance } from "../read/getAllowance.js";
 
-/**
- * Fulfill a listing on the Arkchain.
- *
- * @param {Config} config - The core SDK configuration.
- * @param {FulfillListingParameters} parameters - Parameters for fulfilling the listing.
- *
- * @returns {Promise<void>} A promise that resolves when the transaction is completed.
- */
-interface FulfillListingParameters {
+export interface FulfillListingParameters {
   starknetAccount: AccountInterface;
   fulfillListingInfo: FulfillListingInfo;
   approveInfo: ApproveErc20Info;
   waitForTransaction?: boolean;
 }
 
-const fulfillListing = async (
+export type FulfillListingResult = {
+  transactionHash: string;
+};
+
+/**
+ * Fulfill a listing on the Arkchain.
+ *
+ * @param {Config} config - The core SDK configuration.
+ * @param {FulfillListingParameters} parameters - Parameters for fulfilling the listing.
+ *
+ * @returns {Promise<FulfillListingResult>} A promise that resolves when the transaction is completed.
+ */
+export async function fulfillListing(
   config: Config,
-  parameters: FulfillListingParameters,
-  waitForTransaction = true
-) => {
-  const { starknetAccount, fulfillListingInfo, approveInfo } = parameters;
+  parameters: FulfillListingParameters
+): Promise<FulfillListingResult> {
+  const {
+    starknetAccount,
+    fulfillListingInfo,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,
@@ -84,6 +92,4 @@ const fulfillListing = async (
   return {
     transactionHash: result.transaction_hash
   };
-};
-
-export { fulfillListing };
+}

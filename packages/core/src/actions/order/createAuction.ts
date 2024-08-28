@@ -16,11 +16,16 @@ import {
 } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
-interface CreateAuctionParameters {
+export interface CreateAuctionParameters {
   starknetAccount: AccountInterface;
   order: AuctionV1;
   approveInfo: ApproveErc721Info;
   waitForTransaction?: boolean;
+}
+
+export interface CreateAuctionResult {
+  orderHash: bigint;
+  transactionHash: string;
 }
 
 /**
@@ -37,12 +42,16 @@ interface CreateAuctionParameters {
  * @returns {Promise<string>} A promise that resolves with the hash of the created order.
  *
  */
-const createAuction = async (
+export async function createAuction(
   config: Config,
-  parameters: CreateAuctionParameters,
-  waitForTransaction = true
-) => {
-  const { starknetAccount, order: baseOrder, approveInfo } = parameters;
+  parameters: CreateAuctionParameters
+): Promise<CreateAuctionResult> {
+  const {
+    starknetAccount,
+    order: baseOrder,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate());
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
@@ -119,6 +128,4 @@ const createAuction = async (
     orderHash,
     transactionHash: result.transaction_hash
   };
-};
-
-export { createAuction };
+}

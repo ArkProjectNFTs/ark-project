@@ -14,6 +14,17 @@ import {
   FulfillOfferInfo
 } from "../../types/index.js";
 
+export interface FulfillOfferParameters {
+  starknetAccount: AccountInterface;
+  fulfillOfferInfo: FulfillOfferInfo;
+  approveInfo: ApproveErc721Info;
+  waitForTransaction?: boolean;
+}
+
+export interface FulfillOfferResult {
+  transactionHash: string;
+}
+
 /**
  * Fulfill an offer on the Arkchain.
  *
@@ -22,19 +33,16 @@ import {
  *
  * @returns {Promise<void>} A promise that resolves when the transaction is completed.
  */
-interface FulfillOfferParameters {
-  starknetAccount: AccountInterface;
-  fulfillOfferInfo: FulfillOfferInfo;
-  approveInfo: ApproveErc721Info;
-  waitForTransaction?: boolean;
-}
-
-const fulfillOffer = async (
+export async function fulfillOffer(
   config: Config,
-  parameters: FulfillOfferParameters,
-  waitForTransaction = true
-) => {
-  const { starknetAccount, fulfillOfferInfo, approveInfo } = parameters;
+  parameters: FulfillOfferParameters
+): Promise<FulfillOfferResult> {
+  const {
+    starknetAccount,
+    fulfillOfferInfo,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fulfillInfo: FulfillInfo = {
     orderHash: fulfillOfferInfo.orderHash,
@@ -76,6 +84,4 @@ const fulfillOffer = async (
   return {
     transactionHash: result.transaction_hash
   };
-};
-
-export { fulfillOffer };
+}
