@@ -2,20 +2,18 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
-
-import { fulfillAuction } from "@ark-project/core";
-import { FulfillAuctionInfo } from "@ark-project/core/src/types";
+import {
+  fulfillAuction,
+  FulfillAuctionParameters,
+  FulfillAuctionResult
+} from "@ark-project/core";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-export type FulfillAuctionParameters = FulfillAuctionInfo & {
-  starknetAccount: AccountInterface;
-};
-
 function useFulfillAuction() {
   const [status, setStatus] = useState<Status>("idle");
+  const [result, setResult] = useState<FulfillAuctionResult>();
   const config = useConfig();
 
   async function fulfill(parameters: FulfillAuctionParameters) {
@@ -26,25 +24,24 @@ function useFulfillAuction() {
     setStatus("loading");
 
     try {
-      await fulfillAuction(config, {
-        starknetAccount: parameters.starknetAccount,
-        fulfillAuctionInfo: {
-          orderHash: parameters.orderHash,
-          relatedOrderHash: parameters.relatedOrderHash,
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId,
-          brokerId: parameters.brokerId
-        }
-      });
+      const fulfillAuctionResult = await fulfillAuction(config, parameters);
 
       setStatus("success");
+      setResult(fulfillAuctionResult);
     } catch (error) {
       console.error(error);
       setStatus("error");
     }
   }
 
-  return { fulfill, status };
+  return {
+    fulfill,
+    isLoading: status === "loading",
+    isError: status === "error",
+    isSuccess: status === "success",
+    status,
+    result
+  };
 }
 
 export { useFulfillAuction };

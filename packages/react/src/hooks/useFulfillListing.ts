@@ -2,53 +2,46 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
-
 import {
-  Config,
-  fulfillListing as fulfillListingCore
+  fulfillListing as fulfillListingCore,
+  FulfillListingParameters,
+  FulfillListingResult
 } from "@ark-project/core";
-import { FulfillListingInfo } from "@ark-project/core/src/types";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-export type ApproveERC20Parameters = {
-  starknetAccount: AccountInterface;
-  startAmount: bigint;
-  currencyAddress?: string;
-};
-
-export type fulfillListingParameters = ApproveERC20Parameters &
-  FulfillListingInfo;
-
 function useFulfillListing() {
   const [status, setStatus] = useState<Status>("idle");
+  const [result, setResult] = useState<FulfillListingResult>();
   const config = useConfig();
 
-  async function fulfillListing(parameters: fulfillListingParameters) {
+  async function fulfillListing(parameters: FulfillListingParameters) {
+    if (!config) {
+      throw new Error("Invalid config.");
+    }
+
+    setStatus("loading");
+
     try {
-      setStatus("loading");
-      await fulfillListingCore(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        fulfillListingInfo: {
-          orderHash: parameters.orderHash,
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId,
-          brokerId: parameters.brokerId
-        } as FulfillListingInfo,
-        approveInfo: {
-          currencyAddress: (parameters.currencyAddress ||
-            config?.starknetCurrencyContract) as string,
-          amount: BigInt(parameters.startAmount)
-        }
-      });
+      const fulfillListingResult = await fulfillListingCore(config, parameters);
+
       setStatus("success");
+      setResult(fulfillListingResult);
     } catch (error) {
       console.error(error);
       setStatus("error");
     }
   }
-  return { fulfillListing, status };
+
+  return {
+    fulfillListing,
+    isLoading: status === "loading",
+    isError: status === "error",
+    isSuccess: status === "success",
+    status,
+    result
+  };
 }
+
 export { useFulfillListing };

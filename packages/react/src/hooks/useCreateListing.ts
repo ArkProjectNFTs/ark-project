@@ -2,51 +2,35 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
-
 import {
-  Config,
   createListing as createListingCore,
-  ListingV1
+  CreateListingParameters
 } from "@ark-project/core";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-export type CreateListingParameters = {
-  starknetAccount: AccountInterface;
-} & ListingV1;
+export type CreateListingResult = {
+  orderHash: bigint | undefined;
+  transactionHash: string;
+};
 
 function useCreateListing() {
   const [status, setStatus] = useState<Status>("idle");
-  const [response, setResponse] = useState<bigint | undefined>();
+  const [result, setResult] = useState<CreateListingResult>();
   const config = useConfig();
 
   async function createListing(parameters: CreateListingParameters) {
+    if (!config) {
+      throw new Error("config not loaded");
+    }
+
     setStatus("loading");
 
     try {
-      setStatus("loading");
-      const orderHash = await createListingCore(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        order: {
-          startAmount: parameters.startAmount,
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId,
-          currencyAddress:
-            parameters.currencyAddress || config?.starknetCurrencyContract,
-          currencyChainId:
-            parameters.currencyChainId || config?.starknetProvider.getChainId(),
-          brokerId: parameters.brokerId,
-          startDate: parameters.startDate,
-          endDate: parameters.endDate
-        } as ListingV1,
-        approveInfo: {
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId
-        }
-      });
-      setResponse(orderHash);
+      const createListingResult = await createListingCore(config, parameters);
+
+      setResult(createListingResult);
       setStatus("success");
     } catch (error) {
       console.error(error);
@@ -54,7 +38,14 @@ function useCreateListing() {
     }
   }
 
-  return { createListing, status, response };
+  return {
+    createListing,
+    isLoading: status === "loading",
+    isError: status === "error",
+    isSuccess: status === "success",
+    status,
+    result
+  };
 }
 
 export { useCreateListing };
