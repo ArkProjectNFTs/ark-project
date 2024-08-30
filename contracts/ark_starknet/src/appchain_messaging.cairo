@@ -95,6 +95,8 @@ trait IUpgradeable<T> {
 
 #[starknet::contract]
 mod appchain_messaging {
+    use starknet::{ContractAddress, ClassHash};
+    use starknet::storage::Map;
     use debug::PrintTrait;
     use starknet::storage::Map;
     use starknet::{ContractAddress, ClassHash};
