@@ -336,7 +336,43 @@ mod orderbook {
         }
 
         fn _manage_auction_offer(ref self: ContractState, order: OrderV1, order_hash: felt252) {
-            self.orderbook._manage_auction_offer(order, order_hash)
+            let token_hash = order.compute_token_hash();
+            let (auction_order_hash, auction_end_date, auction_offer_count) = self
+                .auctions
+                .read(token_hash);
+
+            let current_block_timestamp = starknet::get_block_timestamp();
+            // Determine if the auction end date has passed, indicating that the auction is still
+            // ongoing.
+            let auction_is_pending = current_block_timestamp < auction_end_date;
+
+            if auction_is_pending {
+                // If the auction is still pending, record the new offer by linking it to the
+                // auction order hash in the 'auction_offers' mapping.
+                self.auction_offers.write(order_hash, auction_order_hash);
+
+                if auction_end_date - current_block_timestamp < EXTENSION_TIME_IN_SECONDS {
+                    // Increment the number of offers for this auction and extend the auction
+                    // end date by the predefined extension time to allow for additional offers.
+                    self
+                        .auctions
+                        .write(
+                            token_hash,
+                            (
+                                auction_order_hash,
+                                auction_end_date + EXTENSION_TIME_IN_SECONDS,
+                                auction_offer_count + 1
+                            )
+                        );
+                } else {
+                    self
+                        .auctions
+                        .write(
+                            token_hash,
+                            (auction_order_hash, auction_end_date, auction_offer_count + 1)
+                        );
+                }
+            }
         }
 
         /// Creates an offer order.

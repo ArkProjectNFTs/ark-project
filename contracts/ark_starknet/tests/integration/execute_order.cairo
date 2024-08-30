@@ -12,7 +12,10 @@ use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
-use snforge_std::{ContractClass, ContractClassTrait, cheat_caller_address, CheatSpan, spy_events, EventSpyAssertionsTrait, EventSpyTrait, Event, EventsFilterTrait, };
+use snforge_std::{
+    ContractClass, ContractClassTrait, cheat_caller_address, CheatSpan, spy_events,
+    EventSpyAssertionsTrait, EventSpyTrait, Event, EventsFilterTrait,
+};
 use super::super::common::setup::{setup, setup_order, setup_royalty};
 
 fn create_fulfill_info(
@@ -439,7 +442,7 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
 
     cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    
+
     cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
 

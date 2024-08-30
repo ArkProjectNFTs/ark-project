@@ -8,8 +8,8 @@ use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
 use snforge_std::{
-    ContractClassTrait, spy_events, EventSpyAssertionsTrait, test_address,
-    cheat_block_timestamp, CheatSpan,
+    ContractClassTrait, spy_events, EventSpyAssertionsTrait, test_address, cheat_block_timestamp,
+    CheatSpan,
 };
 use array::ArrayTrait;
 use core::option::OptionTrait;
@@ -450,12 +450,18 @@ fn test_fulfill_expired_offer() {
     let mut state = orderbook::contract_state_for_testing();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     cheat_block_timestamp(
         contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)
     ); // +1 hour
 =======
     cheat_block_timestamp(contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)); // +1 hour
 >>>>>>> 2e7258f (contract: update `ark_common`, `ark_orderbook` and `ark_token` to cairo 2.7.1, OZ 0.15.1 and foundry 0.28.0)
+=======
+    cheat_block_timestamp(
+        contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)
+    ); // +1 hour
+>>>>>>> 11d0d92 (scarb fmt)
 
     let fulfill_info = FulfillInfo {
         order_hash: order_listing.compute_order_hash(),

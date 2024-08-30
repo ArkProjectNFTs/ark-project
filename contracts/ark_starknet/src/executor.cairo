@@ -66,7 +66,7 @@ mod executor {
 
     use starknet::{ContractAddress, ClassHash};
     use starknet::storage::Map;
-    
+
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
