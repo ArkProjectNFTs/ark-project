@@ -1,9 +1,9 @@
 //! # Orderbook Contract
 //!
 //! This module defines the structure and functionalities of an orderbook contract. It includes
-//! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external functions,
-//! and internal functions. The primary functionalities include broker whitelisting, order management
-//! (creation, cancellation, fulfillment), and order queries.
+//! trait definitions, error handling, contract storage, events, constructors, L1 handlers, external
+//! functions, and internal functions. The primary functionalities include broker whitelisting,
+//! order management (creation, cancellation, fulfillment), and order queries.
 
 use ark_common::protocol::order_types::{FulfillInfo, OrderType, CancelInfo, OrderStatus};
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
@@ -835,7 +835,8 @@ mod orderbook {
                 .read(token_hash);
 
             let current_block_timestamp = starknet::get_block_timestamp();
-            // Determine if the auction end date has passed, indicating that the auction is still ongoing.
+            // Determine if the auction end date has passed, indicating that the auction is still
+            // ongoing.
             let auction_is_pending = current_block_timestamp < auction_end_date;
 
             if auction_is_pending {
