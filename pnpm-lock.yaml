@@ -76,7 +76,7 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       starknet:
-        specifier: ^6.9.0
+        specifier: ^6.11.0
         version: 6.11.0
       viem:
         specifier: '>=0.3.35'
@@ -1555,7 +1555,6 @@ packages:
 
   bun@1.1.25:
     resolution: {integrity: sha512-N+KvGq6jcA88QgFVoOMSr2s4sZ9u+R7Tn6Hci25mdygZxa3jgaS91PMNxpEJKkyTBLOhH5E8erx+tqtRLyFbJA==}
-    cpu: [arm64, x64]
     os: [darwin, linux, win32]
     hasBin: true
 

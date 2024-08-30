@@ -4,3 +4,4 @@ export { getOrderStatus } from "./getOrderStatus.js";
 export { getOrderSigner } from "./getOrderSigner.js";
 export { getOrderType } from "./getOrderType.js";
 export { getAllowance } from "./getAllowance.js";
+export { getFeesAmount } from "./getFeesAmount.js";

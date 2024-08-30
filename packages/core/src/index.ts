@@ -23,7 +23,8 @@ export {
   getOrderStatus,
   getOrderSigner,
   getOrderType,
-  getAllowance
+  getAllowance,
+  getFeesAmount
 } from "./actions/read/index.js";
 
 export type {
