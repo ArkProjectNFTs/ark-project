@@ -4,7 +4,9 @@ use ark_starknet::interfaces::FeesRatio;
 use starknet::{ContractAddress};
 use starknet::testing;
 
-use snforge_std::{start_cheat_caller_address_global, stop_cheat_caller_address_global, test_address};
+use snforge_std::{
+    start_cheat_caller_address_global, stop_cheat_caller_address_global, test_address
+};
 
 #[test]
 fn test_add_broker() {

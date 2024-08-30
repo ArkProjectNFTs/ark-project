@@ -9,8 +9,8 @@ use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
 use snforge_std::{
-    ContractClassTrait, spy_events, EventSpyAssertionsTrait, test_address,
-    cheat_block_timestamp, CheatSpan,
+    ContractClassTrait, spy_events, EventSpyAssertionsTrait, test_address, cheat_block_timestamp,
+    CheatSpan,
 };
 use array::ArrayTrait;
 
@@ -101,8 +101,10 @@ fn test_recreate_listing_different_offerer_fulfilled() {
     // check is first order is fulfilled
 
     // assert(order_status.unwrap() == OrderStatus::Fulfilled, 'Order not fulfilled');
-    // create a second order over the first one same ressource hash different price, different owner but the previous order is only fulfilled, to cover the case of user who just bought a token to list it instantly but the order is not yet executed
-    // we cannot place & cancel a previous order if it's fulfilled
+    // create a second order over the first one same ressource hash different price, different owner
+    // but the previous order is only fulfilled, to cover the case of user who just bought a token
+    // to list it instantly but the order is not yet executed we cannot place & cancel a previous
+    // order if it's fulfilled
     let (mut order_listing_2, order_hash_2, _) = setup_listing_order(500000000000000000);
     order_listing_2
         .offerer = 0x2484a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
@@ -127,8 +129,10 @@ fn test_recreate_listing_same_offerer_fulfilled() {
     // check is first order is fulfilled
     let order_status = order_status_read(order_hash_1);
     assert(order_status.unwrap() == OrderStatus::Fulfilled, 'Order not fulfilled');
-    // create a second order over the first one same ressource hash different price, different owner but the previous order is only fulfilled, to cover the case of user who just bought a token to list it instantly but the order is not yet executed
-    // we cannot place & cancel a previous order if it's fulfilled
+    // create a second order over the first one same ressource hash different price, different owner
+    // but the previous order is only fulfilled, to cover the case of user who just bought a token
+    // to list it instantly but the order is not yet executed we cannot place & cancel a previous
+    // order if it's fulfilled
     let (mut order_listing_2, order_hash_2, _) = setup_listing_order(500000000000000000);
     let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_2, OrderType::Listing, order_hash_2
@@ -144,7 +148,8 @@ fn test_recreate_listing_new_owner() {
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
 
-    // create a second order over the first one same ressource hash different price, different owner it should work and cancel the previous one
+    // create a second order over the first one same ressource hash different price, different owner
+    // it should work and cancel the previous one
     let (mut order_listing_2, order_hash_2, _) = setup_listing_order(500000000000000000);
     order_listing_2
         .offerer = 0x2584a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a823
@@ -179,7 +184,8 @@ fn test_recreate_listing_same_owner_old_order_expired() {
     let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
     );
-    // create a second order over the first one same ressource hash different price, different owner it should work and cancel the previous one
+    // create a second order over the first one same ressource hash different price, different owner
+    // it should work and cancel the previous one
     let (order_listing_2, order_hash_2, _) = setup_listing_order(500000000000000000);
 
     let _ = orderbook::InternalFunctions::_create_listing_order(
@@ -429,7 +435,9 @@ fn test_fulfill_expired_offer() {
     let fulfill_broker_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
 
-    cheat_block_timestamp(contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)); // +1 hour
+    cheat_block_timestamp(
+        contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)
+    ); // +1 hour
 
     let fulfill_info = FulfillInfo {
         order_hash: order_listing.compute_order_hash(),
