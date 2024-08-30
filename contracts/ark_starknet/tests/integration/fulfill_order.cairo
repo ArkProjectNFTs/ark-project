@@ -15,8 +15,7 @@ use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
-use snforge_std as snf;
-use snf::{ContractClass, ContractClassTrait, CheatTarget};
+use snforge_std::{cheat_caller_address, CheatSpan};
 
 use super::super::common::setup::{setup, setup_order};
 
@@ -36,9 +35,8 @@ fn create_offer_order(
     order.start_amount = start_amount;
     order.token_id = Option::Some(token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
     (order.compute_order_hash(), offerer, start_amount)
 }
@@ -56,9 +54,8 @@ fn create_collection_offer_order(
     order.start_amount = start_amount;
     order.token_id = Option::None;
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
     (order.compute_order_hash(), offerer, start_amount)
 }
@@ -82,9 +79,8 @@ fn create_listing_order(
     order.token_id = Option::Some(token_id);
     order.start_amount = start_amount;
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
     (order.compute_order_hash(), offerer, token_id)
 }
@@ -110,9 +106,8 @@ fn create_auction_order(
     order.start_amount = start_amount;
     order.end_amount = end_amount;
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
     (order.compute_order_hash(), offerer, token_id)
 }
@@ -144,20 +139,17 @@ fn test_fulfill_offer_order_ok() {
         executor_address, erc20_address, nft_address, token_id
     );
 
-    snf::start_prank(CheatTarget::One(erc20_address), offerer);
+    cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(nft_address), fulfiller);
+    cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
@@ -172,24 +164,21 @@ fn test_fulfill_listing_order_ok() {
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfiller, start_amount);
 
-    snf::start_prank(CheatTarget::One(nft_address), offerer);
+    cheat_caller_address(nft_address, offerer, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(erc20_address), fulfiller);
+    cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Caller is not the fulfiller",))]
+#[should_panic(expected: "Caller is not the fulfiller")]
 fn test_fulfill_order_fulfiller_shall_be_caller() {
     let (executor_address, _erc20_address, nft_address) = setup();
     let caller = contract_address_const::<'caller'>();
@@ -197,13 +186,12 @@ fn test_fulfill_order_fulfiller_shall_be_caller() {
 
     let fulfill_info = create_fulfill_info(0x123, fulfiller, nft_address, 1);
 
-    snf::start_prank(CheatTarget::One(executor_address), caller);
+    cheat_caller_address(executor_address, caller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Fulfiller does not own enough ERC20 tokens",))]
+#[should_panic(expected: "Fulfiller does not own enough ERC20 tokens")]
 fn test_fulfill_listing_order_fulfiller_not_enough_erc20_token() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
@@ -217,13 +205,12 @@ fn test_fulfill_listing_order_fulfiller_not_enough_erc20_token() {
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Fulfiller does not own the specified ERC721 token",))]
+#[should_panic(expected: "Fulfiller does not own the specified ERC721 token")]
 fn test_fulfill_offer_order_fulfiller_not_owner() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
@@ -239,26 +226,24 @@ fn test_fulfill_offer_order_fulfiller_not_owner() {
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Order not found",))]
+#[should_panic(expected: "Order not found")]
 fn test_fulfill_order_not_found() {
     let (executor_address, _erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
 
     let fulfill_info = create_fulfill_info(0x1234, fulfiller, nft_address, 1);
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Offerer's allowance of executor is not enough",))]
+#[should_panic(expected: "Offerer's allowance of executor is not enough")]
 fn test_fulfill_offer_order_offerer_not_enough_allowance() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
@@ -271,25 +256,22 @@ fn test_fulfill_offer_order_offerer_not_enough_allowance() {
         executor_address, erc20_address, nft_address, token_id
     );
 
-    snf::start_prank(CheatTarget::One(erc20_address), offerer);
+    cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }
         .approve(executor_address, start_amount - 10);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(nft_address), fulfiller);
+    cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Fulfiller's allowance of executor is not enough",))]
+#[should_panic(expected: "Fulfiller's allowance of executor is not enough")]
 fn test_fulfill_listing_order_fulfiller_not_enough_allowance() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
@@ -301,25 +283,22 @@ fn test_fulfill_listing_order_fulfiller_not_enough_allowance() {
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfiller, start_amount);
 
-    snf::start_prank(CheatTarget::One(nft_address), offerer);
+    cheat_caller_address(nft_address, offerer, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(erc20_address), fulfiller);
+    cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }
         .approve(executor_address, start_amount - 10);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Executor not approved by offerer",))]
+#[should_panic(expected: "Executor not approved by offerer")]
 fn test_fulfill_listing_order_offerer_not_approved() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
@@ -333,17 +312,15 @@ fn test_fulfill_listing_order_offerer_not_approved() {
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(erc20_address), fulfiller);
+    cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Executor not approved by fulfiller",))]
+#[should_panic(expected: "Executor not approved by fulfiller")]
 fn test_fulfill_offer_order_fulfiller_not_approved() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
@@ -356,20 +333,18 @@ fn test_fulfill_offer_order_fulfiller_not_approved() {
         executor_address, erc20_address, nft_address, token_id
     );
 
-    snf::start_prank(CheatTarget::One(erc20_address), offerer);
+    cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 
 #[test]
-#[should_panic(expected: ("Offerer and fulfiller must be different",))]
+#[should_panic(expected: "Offerer and fulfiller must be different")]
 fn test_fulfill_offer_order_fulfiller_same_as_offerer() {
     let (executor_address, erc20_address, nft_address) = setup();
 
@@ -382,24 +357,21 @@ fn test_fulfill_offer_order_fulfiller_same_as_offerer() {
     let fulfiller = offerer;
     Erc721Dispatcher { contract_address: nft_address }.mint(fulfiller, 'base_uri');
 
-    snf::start_prank(CheatTarget::One(erc20_address), offerer);
+    cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(nft_address), fulfiller);
+    cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Offerer and fulfiller must be different",))]
+#[should_panic(expected: "Offerer and fulfiller must be different")]
 fn test_fulfill_listing_order_fulfiller_same_as_offerer() {
     let (executor_address, erc20_address, nft_address) = setup();
     let start_amount = 10_000_000;
@@ -411,20 +383,17 @@ fn test_fulfill_listing_order_fulfiller_same_as_offerer() {
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfiller, start_amount);
 
-    snf::start_prank(CheatTarget::One(nft_address), offerer);
+    cheat_caller_address(nft_address, offerer, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(erc20_address), fulfiller);
+    cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
@@ -446,25 +415,21 @@ fn test_fulfill_auction_order_ok() {
     buyer_order.start_amount = start_amount;
     buyer_order.token_id = Option::Some(token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), buyer);
+    cheat_caller_address(executor_address, buyer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
-    snf::start_prank(CheatTarget::One(nft_address), offerer);
+    cheat_caller_address(nft_address, offerer, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
     let mut fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
     fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
 
-    snf::start_prank(CheatTarget::One(erc20_address), buyer);
+    cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
@@ -486,29 +451,25 @@ fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
     buyer_order.start_amount = start_amount;
     buyer_order.token_id = Option::Some(token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), buyer);
+    cheat_caller_address(executor_address, buyer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
-    snf::start_prank(CheatTarget::One(nft_address), offerer);
+    cheat_caller_address(nft_address, offerer, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
     let mut fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
     fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
 
-    snf::start_prank(CheatTarget::One(erc20_address), buyer);
+    cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ('Executor not enabled',))]
+#[should_panic(expected: 'Executor not enabled')]
 fn test_fulfill_order_not_enabled() {
     let (executor_address, erc20_address, nft_address) = setup();
     let admin = contract_address_const::<'admin'>();
@@ -522,22 +483,18 @@ fn test_fulfill_order_not_enabled() {
         executor_address, erc20_address, nft_address, token_id
     );
 
-    snf::start_prank(CheatTarget::One(erc20_address), offerer);
+    cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(nft_address), fulfiller);
+    cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), admin);
+    cheat_caller_address(executor_address, admin, CheatSpan::TargetCalls(1));
     IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }

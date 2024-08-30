@@ -3,12 +3,15 @@ name = "ark_starknet"
 version = "0.1.0"
 
 [dependencies]
-starknet = "2.5.4"
-openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.10.0" }
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.18.0" }
+starknet.workspace = true
+openzeppelin.workspace = true
 ark_common = { path = "../ark_common" }
 ark_tokens = { path = "../ark_tokens" }
 ark_oz = { path = "../ark_oz" }
+
+[dev-dependencies]
+snforge_std.workspace = true
+assert_macros = "0.1.0"
 
 [scripts]
 test.workspace = true

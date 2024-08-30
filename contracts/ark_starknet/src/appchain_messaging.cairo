@@ -96,6 +96,7 @@ trait IUpgradeable<T> {
 #[starknet::contract]
 mod appchain_messaging {
     use starknet::{ContractAddress, ClassHash};
+    use starknet::storage::Map;
     use debug::PrintTrait;
 
     use super::{IAppchainMessaging, IUpgradeable};
@@ -110,10 +111,10 @@ mod appchain_messaging {
         // The nonce for messages sent from Starknet.
         sn_to_appc_nonce: felt252,
         // Ledger of messages hashes sent from Starknet to the appchain.
-        sn_to_appc_messages: LegacyMap::<felt252, felt252>,
+        sn_to_appc_messages: Map::<felt252, felt252>,
         // Ledger of messages hashes registered from the appchain and a refcount
         // associated to it.
-        appc_to_sn_messages: LegacyMap::<felt252, felt252>,
+        appc_to_sn_messages: Map::<felt252, felt252>,
     }
 
     #[event]
