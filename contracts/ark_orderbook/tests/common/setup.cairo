@@ -10,8 +10,8 @@ use snforge_std::signature::KeyPairTrait;
 use snforge_std::signature::stark_curve::{
     StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl
 };
+use snforge_std::test_address;
 
-use snforge_std::{start_prank, stop_prank, test_address, CheatTarget};
 use starknet::ContractAddress;
 
 /// Utility function to setup orders for test environment.

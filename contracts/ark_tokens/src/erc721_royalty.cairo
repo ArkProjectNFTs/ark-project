@@ -16,6 +16,7 @@ mod FreeMintNFTRoyalty {
 
     use openzeppelin::introspection::src5::SRC5Component;
     use openzeppelin::token::erc721::ERC721Component;
+    use openzeppelin::token::erc721::ERC721HooksEmptyImpl;
     use openzeppelin::access::ownable::OwnableComponent;
 
     use ark_oz::erc2981::ERC2981Component;
@@ -93,7 +94,7 @@ mod FreeMintNFTRoyalty {
 
         fn mint(ref self: ContractState, recipient: ContractAddress, token_uri: felt252) {
             let token_id = self.latest_token_id.read();
-            self.erc721._mint(recipient, token_id);
+            self.erc721.mint(recipient, token_id);
             self.latest_token_id.write(token_id + 1);
         }
     }
