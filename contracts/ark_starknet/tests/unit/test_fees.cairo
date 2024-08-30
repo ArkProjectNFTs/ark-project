@@ -4,7 +4,7 @@ use ark_starknet::interfaces::FeesRatio;
 use starknet::{ContractAddress};
 use starknet::testing;
 
-use snforge_std as snf;
+use snforge_std::{start_cheat_caller_address_global, stop_cheat_caller_address_global, test_address};
 
 #[test]
 fn test_add_broker() {
@@ -12,15 +12,16 @@ fn test_add_broker() {
 
     let fees_ratio = FeesRatio { numerator: 10, denominator: 100, };
 
-    let broker_address = snf::test_address();
+    let broker_address = test_address();
 
     // Call the add_broker method.
-    snf::start_prank(snf::CheatTarget::All, broker_address);
+    start_cheat_caller_address_global(broker_address);
     executor::ExecutorImpl::set_broker_fees(ref state, fees_ratio);
 
     let result = executor::ExecutorImpl::get_broker_fees(@state, broker_address);
 
     assert(result == fees_ratio, 'Fees are not equal');
+    stop_cheat_caller_address_global();
 }
 
 #[test]
@@ -43,9 +44,10 @@ fn test_fees_ratio_bigger_than_1_broker_fees() {
 
     let fees_ratio = FeesRatio { numerator: 500, denominator: 100, };
 
-    let broker_address = snf::test_address();
-    snf::start_prank(snf::CheatTarget::All, broker_address);
+    let broker_address = test_address();
+    start_cheat_caller_address_global(broker_address);
     executor::ExecutorImpl::set_broker_fees(ref state, fees_ratio);
+    stop_cheat_caller_address_global();
 }
 
 #[test]
@@ -65,9 +67,10 @@ fn test_fees_denominator_0_broker_fees() {
 
     let fees_ratio = FeesRatio { numerator: 10, denominator: 0, };
 
-    let broker_address = snf::test_address();
-    snf::start_prank(snf::CheatTarget::All, broker_address);
+    let broker_address = test_address();
+    start_cheat_caller_address_global(broker_address);
     executor::ExecutorImpl::set_broker_fees(ref state, fees_ratio);
+    stop_cheat_caller_address_global();
 }
 
 #[test]

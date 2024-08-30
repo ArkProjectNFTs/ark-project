@@ -65,6 +65,8 @@ mod executor {
     use core::option::OptionTrait;
 
     use starknet::{ContractAddress, ClassHash};
+    use starknet::storage::Map;
+    
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
@@ -97,14 +99,14 @@ mod executor {
         eth_contract_address: ContractAddress,
         messaging_address: ContractAddress,
         chain_id: felt252,
-        broker_fees: LegacyMap<ContractAddress, FeesRatio>,
+        broker_fees: Map<ContractAddress, FeesRatio>,
         ark_fees: FeesRatio,
         // order hash -> OrderInfo
-        orders: LegacyMap<felt252, OrderInfo>,
+        orders: Map<felt252, OrderInfo>,
         // fallback when collection doesn't implement ERC2981
         default_receiver: ContractAddress,
         default_fees: FeesRatio,
-        creator_fees: LegacyMap<ContractAddress, (ContractAddress, FeesRatio)>,
+        creator_fees: Map<ContractAddress, (ContractAddress, FeesRatio)>,
         // maintenance mode
         in_maintenance: bool,
     }

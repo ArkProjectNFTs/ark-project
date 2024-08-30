@@ -16,10 +16,7 @@ use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
-use snforge_std as snf;
-use snf::{cheatcodes::{events::EventFetcher, events::EventAssertions,}, event_name_hash,};
-use snf::{ContractClass, ContractClassTrait, CheatTarget, spy_events, SpyOn};
-
+use snforge_std::{ContractClass, ContractClassTrait, cheat_caller_address, CheatSpan, spy_events, EventSpyAssertionsTrait, EventSpyTrait, Event, EventsFilterTrait, };
 use super::super::common::setup::{setup, setup_order, setup_royalty};
 
 fn create_fulfill_info(
@@ -93,25 +90,21 @@ fn setup_execute_order(
     order.start_amount = start_amount;
     order.token_id = Option::Some(token_id);
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), offerer);
+    cheat_caller_address(executor.contract_address, offerer, CheatSpan::TargetCalls(1));
     executor.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
     let order_hash = order.compute_order_hash();
 
-    snf::start_prank(CheatTarget::One(erc20_address), offerer);
+    cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
-    snf::stop_prank(CheatTarget::One(erc20_address));
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
 
-    snf::start_prank(CheatTarget::One(nft_address), fulfiller);
+    cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
-    snf::stop_prank(CheatTarget::One(nft_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), fulfiller);
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     executor.fulfill_order(fulfill_info);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
     let execution_info = create_execution_info(
         order_hash,
@@ -167,13 +160,11 @@ fn test_execute_order_check_brokers_fees_ok() {
     let fulfill_fees_ratio = FeesRatio { numerator: 10, denominator: 100 };
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
         executor.get_broker_fees(fulfill_broker),
@@ -218,17 +209,14 @@ fn test_execute_order_check_ark_fees_ok() {
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    cheat_caller_address(executor.contract_address, admin_address, CheatSpan::TargetCalls(1));
     executor.set_ark_fees(ark_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     let admin_balance = erc20.balance_of(admin_address);
     let admin_delta = 50_000; // 0.5%
@@ -264,13 +252,11 @@ fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
         executor.get_broker_fees(fulfill_broker),
@@ -298,14 +284,13 @@ fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
         - listing_broker_delta
         - creator_delta;
 
-    snf::start_prank(CheatTarget::One(nft_address), nft_owner);
+    cheat_caller_address(nft_address, nft_owner, CheatSpan::TargetCalls(1));
     IERC2981SetupDispatcher { contract_address: nft_address }
         .set_default_royalty(creator, FeesRatio { numerator: 2, denominator: 100 });
-    snf::stop_prank(CheatTarget::One(nft_address));
 
-    let mut spy = spy_events(SpyOn::One(executor_address));
+    let mut spy = spy_events();
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
-    spy.fetch_events();
+    let events = spy.get_events().emitted_by(executor_address);
 
     assert_eq!(
         erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
@@ -329,10 +314,10 @@ fn test_execute_order_erc2981_default_royalty_check_fees_ok() {
         "Fulfiller balance not correct"
     );
 
-    assert_eq!(spy.events.len(), 1, "Expected 1 events");
-    let (_, event) = spy.events.at(0);
+    assert_eq!(events.events.len(), 1, "Expected 1 events");
+    let (_, event) = events.events.at(0);
     assert_eq!(event.keys.len(), 3, "There should be 3 keys");
-    assert!(event.keys.at(0) == @event_name_hash('OrderExecuted'), "Wrong event name");
+    assert_eq!(event.keys.at(0), @selector!("OrderExecuted"), "Wrong event name");
 }
 
 #[test]
@@ -360,13 +345,11 @@ fn test_execute_order_erc2981_token_royalty_check_fees_ok() {
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
         executor.get_broker_fees(fulfill_broker),
@@ -398,14 +381,13 @@ fn test_execute_order_erc2981_token_royalty_check_fees_ok() {
         - creator_delta
         - default_creator_delta;
 
-    snf::start_prank(CheatTarget::One(nft_address), nft_owner);
+    cheat_caller_address(nft_address, nft_owner, CheatSpan::TargetCalls(2));
     IERC2981SetupDispatcher { contract_address: nft_address }
         .set_token_royalty(
             execution_info.nft_token_id, creator, FeesRatio { numerator: 3, denominator: 100 }
         );
     IERC2981SetupDispatcher { contract_address: nft_address }
         .set_default_royalty(default_creator, FeesRatio { numerator: 2, denominator: 100 });
-    snf::stop_prank(CheatTarget::One(nft_address));
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
     assert_eq!(
@@ -459,12 +441,11 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
         executor.get_broker_fees(fulfill_broker),
@@ -492,17 +473,16 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
         - listing_broker_delta
         - creator_delta;
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    cheat_caller_address(executor.contract_address, admin_address, CheatSpan::TargetCalls(2));
     executor.set_default_creator_fees(creator, FeesRatio { numerator: 2, denominator: 100 });
     executor
         .set_collection_creator_fees(
             fake_nft_address, creator, FeesRatio { numerator: 4, denominator: 1000 }
         );
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    let mut spy = spy_events(SpyOn::One(executor_address));
+    let mut spy = spy_events();
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
-    spy.fetch_events();
+    let events = spy.get_events().emitted_by(executor_address);
 
     assert_eq!(
         erc20.balance_of(fulfill_broker) - fulfill_broker_balance,
@@ -526,16 +506,16 @@ fn test_execute_order_non_erc2981_default_royalty_check_fees_ok() {
         "Fulfiller balance not correct"
     );
 
-    assert_eq!(spy.events.len(), 2, "Expected 2 events");
-    let (_, event) = spy.events.at(0);
+    assert_eq!(events.events.len(), 2, "Expected 2 events");
+    let (_, event) = events.events.at(0);
     assert_eq!(event.keys.len(), 4, "There should be 4 keys");
-    assert_eq!(@event_name_hash('CollectionFallbackFees'), event.keys.at(0), "Wrong event name");
+    assert_eq!(@selector!("CollectionFallbackFees"), event.keys.at(0), "Wrong event name");
     assert_eq!(nft_address, (*event.keys.at(1)).try_into().unwrap(), "Wrong collection address");
     assert_eq!(creator_delta.low, (*event.keys.at(2)).try_into().unwrap(), "Wrong low amount");
     assert_eq!(creator_delta.high, (*event.keys.at(3)).try_into().unwrap(), "Wrong high amount");
-    let (_, event) = spy.events.at(1);
+    let (_, event) = events.events.at(1);
     assert_eq!(event.keys.len(), 3, "There should be 3 keys");
-    assert_eq!(@event_name_hash('OrderExecuted'), event.keys.at(0), "Wrong event name");
+    assert_eq!(@selector!("OrderExecuted"), event.keys.at(0), "Wrong event name");
 }
 
 #[test]
@@ -560,12 +540,11 @@ fn test_execute_order_non_erc2981_collection_royalty_check_fees_ok() {
 
     let listing_fees_ratio = FeesRatio { numerator: 5, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     assert_eq!(
         executor.get_broker_fees(fulfill_broker),
@@ -593,13 +572,12 @@ fn test_execute_order_non_erc2981_collection_royalty_check_fees_ok() {
         - listing_broker_delta
         - creator_delta;
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin_address);
+    cheat_caller_address(executor.contract_address, admin_address, CheatSpan::TargetCalls(2));
     executor.set_default_creator_fees(other_creator, FeesRatio { numerator: 4, denominator: 100 });
     executor
         .set_collection_creator_fees(
             nft_address, creator, FeesRatio { numerator: 2, denominator: 100 }
         );
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
     assert_eq!(
@@ -626,7 +604,7 @@ fn test_execute_order_non_erc2981_collection_royalty_check_fees_ok() {
 }
 
 #[test]
-#[should_panic(expected: ("Fees exceed payment amount",))]
+#[should_panic(expected: "Fees exceed payment amount")]
 fn test_execute_order_check_fee_too_much_fees() {
     let fulfiller = contract_address_const::<'fulfiller'>();
     let listing_broker = contract_address_const::<'listing_broker'>();
@@ -646,12 +624,11 @@ fn test_execute_order_check_fee_too_much_fees() {
 
     let listing_fees_ratio = FeesRatio { numerator: 60, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
     assert_eq!(erc20.balance_of(fulfill_broker), 1_000_000, "Fulfill broker balance not correct");
@@ -659,7 +636,7 @@ fn test_execute_order_check_fee_too_much_fees() {
 }
 
 #[test]
-#[should_panic(expected: ('Executor not enabled',))]
+#[should_panic(expected: 'Executor not enabled')]
 fn test_execute_order_disabled() {
     let fulfiller = contract_address_const::<'fulfiller'>();
     let listing_broker = contract_address_const::<'listing_broker'>();
@@ -672,9 +649,8 @@ fn test_execute_order_disabled() {
         admin_address, offerer, fulfiller, listing_broker, fulfill_broker, start_amount, false
     );
 
-    snf::start_prank(CheatTarget::One(executor_address), admin_address);
+    cheat_caller_address(executor_address, admin_address, CheatSpan::TargetCalls(1));
     IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
     IExecutorDispatcher { contract_address: executor_address }.execute_order(execution_info);
 }
