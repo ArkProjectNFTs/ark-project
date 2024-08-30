@@ -35,6 +35,16 @@ mod orderbook {
         OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo,
         ExecutionInfo, RouteType
     };
+    use ark_common::crypto::hash::{serialized_hash};
+    use core::traits::TryInto;
+    use core::result::ResultTrait;
+    use core::zeroable::Zeroable;
+    use core::option::OptionTrait;
+    use core::starknet::event::EventEmitter;
+    use core::traits::Into;
+    use super::{orderbook_errors, Orderbook};
+    use starknet::ContractAddress;
+    use starknet::storage::Map;
     use ark_common::protocol::order_v1::OrderV1;
     use ark_component::orderbook::OrderbookComponent;
     use ark_component::orderbook::{
@@ -66,6 +76,15 @@ mod orderbook {
         chain_id: felt252,
         /// Administrator address of the order book.
         admin: ContractAddress,
+        /// Mapping of broker addresses to their whitelisted status.
+        /// Represented as felt252, set to 1 if the broker is registered.
+        brokers: Map<felt252, felt252>,
+        /// Mapping of token_hash to order_hash.
+        token_listings: Map<felt252, felt252>,
+        /// Mapping of token_hash to auction details (order_hash and end_date, auction_offer_count).
+        auctions: Map<felt252, (felt252, u64, u256)>,
+        /// Mapping of auction offer order_hash to auction listing order_hash.
+        auction_offers: Map<felt252, felt252>,
         /// The address of the StarkNet executor contract.
         starknet_executor_address: ContractAddress,
         #[substorage(v0)]
