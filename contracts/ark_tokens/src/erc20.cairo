@@ -8,6 +8,7 @@ trait IFreeMint<T> {
 #[starknet::contract]
 mod FreeMintERC20 {
     use openzeppelin::token::erc20::ERC20Component;
+    use openzeppelin::token::erc20::ERC20HooksEmptyImpl;
     use starknet::ContractAddress;
     use super::IFreeMint;
 
@@ -47,7 +48,7 @@ mod FreeMintERC20 {
     #[abi(embed_v0)]
     impl ImplFreeMint of IFreeMint<ContractState> {
         fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
-            self.erc20._mint(recipient, amount);
+            self.erc20.mint(recipient, amount);
         }
     }
 }

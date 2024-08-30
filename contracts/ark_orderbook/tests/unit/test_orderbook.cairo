@@ -3,15 +3,14 @@ use ark_orderbook::orderbook::{orderbook, orderbook_errors};
 use ark_common::protocol::order_v1::OrderV1;
 use core::traits::Into;
 use core::traits::TryInto;
-use snforge_std::cheatcodes::CheatTarget;
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
 use ark_common::protocol::order_types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
 use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
 use snforge_std::{
-    start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
-    Event, SpyOn, test_address
+    ContractClassTrait, spy_events, EventSpyAssertionsTrait, test_address,
+    cheat_block_timestamp, CheatSpan,
 };
 use array::ArrayTrait;
 
@@ -24,7 +23,7 @@ fn test_create_listing() {
     let (order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
 
     let _ = orderbook::InternalFunctions::_create_listing_order(
         ref state, order_listing_1, OrderType::Listing, order_hash_1
@@ -211,7 +210,7 @@ fn test_create_offer() {
 
     let contract_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
 
     orderbook::InternalFunctions::_create_offer(
         ref state, offer_order, OrderType::Offer, order_hash
@@ -244,7 +243,7 @@ fn test_create_offer() {
 #[test]
 fn test_create_collection_offer() {
     let contract_address = test_address();
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
 
     let mut offer_order = get_offer_order();
     offer_order.token_id = Option::None;
@@ -346,10 +345,10 @@ fn test_fulfill_classic_token_offer() {
     let fulfill_broker_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
 
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
     let order_hash = order_listing.compute_order_hash();
 
-    start_warp(CheatTarget::One(contract_address), order_listing.start_date);
+    cheat_block_timestamp(contract_address, order_listing.start_date, CheatSpan::TargetCalls(1));
 
     let fulfill_info = FulfillInfo {
         order_hash,
@@ -384,14 +383,14 @@ fn test_fulfill_classic_token_offer() {
 fn test_fulfill_classic_collection_offer() {
     let (order_listing, mut order_offer, _, _) = setup_orders();
     let contract_address = test_address();
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
     let mut state = orderbook::contract_state_for_testing();
 
     order_offer.token_id = Option::None;
     order_offer.start_date = order_listing.start_date + 100;
     order_offer.end_date = order_listing.start_date + 100;
 
-    start_warp(CheatTarget::One(contract_address), order_offer.start_date);
+    cheat_block_timestamp(contract_address, order_listing.start_date, CheatSpan::TargetCalls(1));
 
     let fulfill_info = FulfillInfo {
         order_hash: order_listing.compute_order_hash(),
@@ -430,7 +429,7 @@ fn test_fulfill_expired_offer() {
     let fulfill_broker_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
 
-    start_warp(CheatTarget::One(contract_address), order_listing.end_date + 3600); // +1 hour
+    cheat_block_timestamp(contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)); // +1 hour
 
     let fulfill_info = FulfillInfo {
         order_hash: order_listing.compute_order_hash(),
