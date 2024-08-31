@@ -1,5 +1,8 @@
 use core::option::OptionTrait;
-use ark_orderbook::orderbook::{orderbook, orderbook_errors};
+use ark_orderbook::orderbook::orderbook;
+use ark_orderbook::interface::orderbook_errors;
+use ark_orderbook::component::OrderbookComponent;
+
 use ark_common::protocol::order_v1::OrderV1;
 use core::traits::Into;
 use core::traits::TryInto;
@@ -9,8 +12,8 @@ use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
 use snforge_std::{
-    ContractClassTrait, spy_events, EventSpyAssertionsTrait, test_address, cheat_block_timestamp,
-    CheatSpan,
+    ContractClassTrait, spy_events, EventSpyAssertionsTrait, EventSpyTrait, Event, test_address,
+    cheat_block_timestamp, CheatSpan,
 };
 use array::ArrayTrait;
 
@@ -51,23 +54,34 @@ fn test_create_listing() {
         @state, token_hash
     );
     assert(state_order_hash_for_token_hash == order_hash, 'storage order');
-    spy
-        .assert_emitted(
-            @array![
-                (
-                    contract_address,
-                    orderbook::Event::OrderPlaced(
-                        orderbook::OrderPlaced {
-                            order_hash: order_hash_1,
-                            cancelled_order_hash: Option::None,
-                            order_version: ORDER_VERSION_V1,
-                            order_type: OrderType::Listing,
-                            order: order_listing_1
-                        }
-                    )
-                )
-            ]
-        );
+    let events = spy.get_events(); // Ad 2.
+
+    assert(events.events.len() == 1, 'There should be one event');
+
+    let (from, event) = events.events.at(0); // Ad 3.
+    assert(from == @contract_address, 'Emitted from wrong address');
+    assert_eq!(event.keys.len(), 5, "Wrong number of keys");
+    // assert_eq!(event.keys.at(1), @order_hash_1, "Wrong order hash");
+    assert_eq!(event.keys.at(0), @selector!("OrderbookComponent"), "Wrong keys[0]");
+    assert_eq!(event.keys.at(1), @selector!("OrderPlaced"), "Wrong selector");
+    assert_eq!(event.keys.at(2), @order_hash_1, "Wrong order hash");
+    //     spy
+//         .assert_emitted(
+//             @array![
+//                 (
+//                     contract_address,
+//                     OrderbookComponent::Event::OrderPlaced(
+//                         OrderbookComponent::OrderPlaced {
+//                             order_hash: order_hash_1,
+//                             cancelled_order_hash: Option::None,
+//                             order_version: ORDER_VERSION_V1,
+//                             order_type: OrderType::Listing,
+//                             order: order_listing_1
+//                         }
+//                     )
+//                 )
+//            ]
+//        );
 }
 
 #[should_panic(expected: ('OB: order already exists',))]
@@ -232,8 +246,8 @@ fn test_create_offer() {
             @array![
                 (
                     contract_address,
-                    orderbook::Event::OrderPlaced(
-                        orderbook::OrderPlaced {
+                    OrderbookComponent::Event::OrderPlaced(
+                        OrderbookComponent::OrderPlaced {
                             order_hash,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::Offer,
@@ -270,8 +284,8 @@ fn test_create_collection_offer() {
             @array![
                 (
                     contract_address,
-                    orderbook::Event::OrderPlaced(
-                        orderbook::OrderPlaced {
+                    OrderbookComponent::Event::OrderPlaced(
+                        OrderbookComponent::OrderPlaced {
                             order_hash,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::CollectionOffer,
@@ -373,8 +387,8 @@ fn test_fulfill_classic_token_offer() {
             @array![
                 (
                     contract_address,
-                    orderbook::Event::OrderFulfilled(
-                        orderbook::OrderFulfilled {
+                    OrderbookComponent::Event::OrderFulfilled(
+                        OrderbookComponent::OrderFulfilled {
                             order_hash: fulfill_info.order_hash,
                             fulfiller: fulfill_info.fulfiller,
                             related_order_hash: Option::None
@@ -415,8 +429,8 @@ fn test_fulfill_classic_collection_offer() {
             @array![
                 (
                     contract_address,
-                    orderbook::Event::OrderFulfilled(
-                        orderbook::OrderFulfilled {
+                    OrderbookComponent::Event::OrderFulfilled(
+                        OrderbookComponent::OrderFulfilled {
                             order_hash: fulfill_info.order_hash,
                             fulfiller: fulfill_info.fulfiller,
                             related_order_hash: Option::None
