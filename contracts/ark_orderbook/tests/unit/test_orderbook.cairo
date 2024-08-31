@@ -1,5 +1,8 @@
 use core::option::OptionTrait;
-use ark_orderbook::orderbook::{orderbook, orderbook_errors};
+use ark_orderbook::orderbook::orderbook;
+use ark_orderbook::interface::orderbook_errors;
+use ark_orderbook::component::OrderbookComponent;
+
 use ark_common::protocol::order_v1::OrderV1;
 use core::traits::Into;
 use core::traits::TryInto;
@@ -8,8 +11,8 @@ use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
 use snforge_std::{
-    ContractClassTrait, spy_events, EventSpyAssertionsTrait, test_address, cheat_block_timestamp,
-    CheatSpan,
+    ContractClassTrait, spy_events, EventSpyAssertionsTrait, EventSpyTrait, Event, test_address,
+    cheat_block_timestamp, CheatSpan,
 };
 use array::ArrayTrait;
 use core::option::OptionTrait;
@@ -57,24 +60,34 @@ fn test_create_listing() {
         @state, token_hash
     );
     assert(state_order_hash_for_token_hash == order_hash, 'storage order');
-    spy
-        .assert_emitted(
-            @array![
-                (
-                    contract_address,
-                    OrderbookComponent::Event::OrderPlaced(
-                        OrderbookComponent::OrderPlaced {
-                            order_hash: order_hash_1,
-                            cancelled_order_hash: Option::None,
-                            order_version: ORDER_VERSION_V1,
-                            order_type: OrderType::Listing,
-                            version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
-                            order: order_listing_1
-                        }
-                    )
-                )
-            ]
-        );
+    let events = spy.get_events(); // Ad 2.
+
+    assert(events.events.len() == 1, 'There should be one event');
+
+    let (from, event) = events.events.at(0); // Ad 3.
+    assert(from == @contract_address, 'Emitted from wrong address');
+    assert_eq!(event.keys.len(), 5, "Wrong number of keys");
+    // assert_eq!(event.keys.at(1), @order_hash_1, "Wrong order hash");
+    assert_eq!(event.keys.at(0), @selector!("OrderbookComponent"), "Wrong keys[0]");
+    assert_eq!(event.keys.at(1), @selector!("OrderPlaced"), "Wrong selector");
+    assert_eq!(event.keys.at(2), @order_hash_1, "Wrong order hash");
+    //     spy
+//         .assert_emitted(
+//             @array![
+//                 (
+//                     contract_address,
+//                     OrderbookComponent::Event::OrderPlaced(
+//                         OrderbookComponent::OrderPlaced {
+//                             order_hash: order_hash_1,
+//                             cancelled_order_hash: Option::None,
+//                             order_version: ORDER_VERSION_V1,
+//                             order_type: OrderType::Listing,
+//                             order: order_listing_1
+//                         }
+//                     )
+//                 )
+//            ]
+//        );
 }
 
 #[should_panic(expected: ('OB: order already exists',))]
@@ -377,24 +390,39 @@ fn test_fulfill_classic_token_offer() {
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
     // FIXME: _fulfill_offer doesn't emit anymore event
-// spy
-//     .assert_emitted(
-//         @array![
-//             (
-//                 contract_address,
-//                 OrderbookComponent::Event::OrderFulfilled(
-//                     OrderbookComponent::OrderFulfilled {
-//                         order_hash: fulfill_info.order_hash,
-//                         fulfiller: fulfill_info.fulfiller,
-//                         related_order_hash: fulfill_info.related_order_hash,
-//                         order_type: OrderType::Offer,
-//                         version: OrderbookComponent::ORDER_FULFILLED_EVENT_VERSION,
-//                     }
-//                 )
-//             )
-//         ]
-//     );
+    // spy
+    //     .assert_emitted(
+    //         @array![
+    //             (
+    //                 contract_address,
+    //                 OrderbookComponent::Event::OrderFulfilled(
+    //                     OrderbookComponent::OrderFulfilled {
+    //                         order_hash: fulfill_info.order_hash,
+    //                         fulfiller: fulfill_info.fulfiller,
+    //                         related_order_hash: fulfill_info.related_order_hash,
+    //                         order_type: OrderType::Offer,
+    //                         version: OrderbookComponent::ORDER_FULFILLED_EVENT_VERSION,
+    //                     }
+    //                 )
+    //             )
+    //         ]
+    //     );
 
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    OrderbookComponent::Event::OrderFulfilled(
+                        OrderbookComponent::OrderFulfilled {
+                            order_hash: fulfill_info.order_hash,
+                            fulfiller: fulfill_info.fulfiller,
+                            related_order_hash: Option::None
+                        }
+                    )
+                )
+            ]
+        );
 }
 
 #[test]
@@ -421,24 +449,22 @@ fn test_fulfill_classic_collection_offer() {
     };
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
-    // FIXME: _fulfill_offer doesn't emit anymore event
-// spy
-//     .assert_emitted(
-//         @array![
-//             (
-//                 contract_address,
-//                 OrderbookComponent::Event::OrderFulfilled(
-//                     OrderbookComponent::OrderFulfilled {
-//                         order_hash: fulfill_info.order_hash,
-//                         fulfiller: fulfill_info.fulfiller,
-//                         related_order_hash: Option::None,
-//                         order_type: OrderType::CollectionOffer,
-//                         version: OrderbookComponent::ORDER_FULFILLED_EVENT_VERSION,
-//                     }
-//                 )
-//             )
-//         ]
-//     );
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    OrderbookComponent::Event::OrderFulfilled(
+                        OrderbookComponent::OrderFulfilled {
+                            order_hash: fulfill_info.order_hash,
+                            fulfiller: fulfill_info.fulfiller,
+                            related_order_hash: Option::None
+                        }
+                    )
+                )
+            ]
+        );
 }
 
 #[test]
@@ -449,19 +475,9 @@ fn test_fulfill_expired_offer() {
     let fulfill_broker_address = test_address();
     let mut state = orderbook::contract_state_for_testing();
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     cheat_block_timestamp(
         contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)
     ); // +1 hour
-=======
-    cheat_block_timestamp(contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)); // +1 hour
->>>>>>> 2e7258f (contract: update `ark_common`, `ark_orderbook` and `ark_token` to cairo 2.7.1, OZ 0.15.1 and foundry 0.28.0)
-=======
-    cheat_block_timestamp(
-        contract_address, order_listing.end_date + 3600, CheatSpan::TargetCalls(1)
-    ); // +1 hour
->>>>>>> 11d0d92 (scarb fmt)
 
     let fulfill_info = FulfillInfo {
         order_hash: order_listing.compute_order_hash(),

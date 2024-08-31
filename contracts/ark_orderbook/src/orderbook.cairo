@@ -21,6 +21,39 @@ trait OrderbookAdmin<T> {
     fn update_starknet_executor_address(ref self: T, value: starknet::ContractAddress);
 }
 
+/// Orderbook trait to define operations on orderbooks.
+#[starknet::interface]
+trait Orderbook<T> {
+    /// Retrieves the type of an order using its hash.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
+    fn get_order_type(self: @T, order_hash: felt252) -> OrderType;
+
+    /// Retrieves the status of an order using its hash.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
+    fn get_order_status(self: @T, order_hash: felt252) -> OrderStatus;
+
+    /// Retrieves the auction end date.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
+    fn get_auction_expiration(self: @T, order_hash: felt252) -> u64;
+
+    /// Retrieves the order using its hash.
+    ///
+    /// # Arguments
+    /// * `order_hash` - The order hash of order.
+    fn get_order(self: @T, order_hash: felt252) -> OrderV1;
+
+    /// Retrieves the order hash using its token hash.
+    ///
+    /// # Arguments
+    /// * `token_hash` - The token hash of the order.
+    fn get_order_hash(self: @T, token_hash: felt252) -> felt252;
+}
 
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
@@ -42,7 +75,11 @@ mod orderbook {
     use core::option::OptionTrait;
     use core::starknet::event::EventEmitter;
     use core::traits::Into;
-    use super::{orderbook_errors, Orderbook};
+    use super::Orderbook;
+    use super::OrderbookAdmin;
+    use super::super::interface::orderbook_errors;
+    use super::super::component::OrderbookComponent;
+
     use starknet::ContractAddress;
     use starknet::storage::Map;
     use ark_common::protocol::order_v1::OrderV1;
@@ -76,15 +113,6 @@ mod orderbook {
         chain_id: felt252,
         /// Administrator address of the order book.
         admin: ContractAddress,
-        /// Mapping of broker addresses to their whitelisted status.
-        /// Represented as felt252, set to 1 if the broker is registered.
-        brokers: Map<felt252, felt252>,
-        /// Mapping of token_hash to order_hash.
-        token_listings: Map<felt252, felt252>,
-        /// Mapping of token_hash to auction details (order_hash and end_date, auction_offer_count).
-        auctions: Map<felt252, (felt252, u64, u256)>,
-        /// Mapping of auction offer order_hash to auction listing order_hash.
-        auction_offers: Map<felt252, felt252>,
         /// The address of the StarkNet executor contract.
         starknet_executor_address: ContractAddress,
         #[substorage(v0)]
@@ -99,7 +127,6 @@ mod orderbook {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        #[flat]
         OrderbookEvent: OrderbookComponent::Event,
         Upgraded: Upgraded,
     }
@@ -166,7 +193,7 @@ mod orderbook {
     fn fulfill_order_from_l2(
         ref self: ContractState, _from_address: felt252, fulfillInfo: FulfillInfo
     ) {
-        let _ = self.orderbook.fulfill_order(fulfillInfo);
+        self.orderbook.fulfill_order(fulfillInfo);
     }
 
     #[abi(embed_v0)]
@@ -203,7 +230,7 @@ mod orderbook {
         }
 
         fn _fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo) {
-            let _ = self.orderbook.fulfill_order(fulfill_info);
+            self.orderbook.fulfill_order(fulfill_info);
         }
 
         /// Fulfill auction order
@@ -215,8 +242,7 @@ mod orderbook {
         fn _fulfill_auction_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
-            let (execute_info, _) = self.orderbook._fulfill_auction_order(fulfill_info, order);
-            match execute_info {
+            match self.orderbook._fulfill_auction_order(fulfill_info, order) {
                 Option::Some(execute_info) => {
                     let execute_order_selector = selector!("execute_order");
                     let starknet_executor_address: ContractAddress = self
@@ -240,8 +266,7 @@ mod orderbook {
         /// * `order` - The order.
         ///
         fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
-            let (execute_info, _) = self.orderbook._fulfill_offer(fulfill_info, order);
-            match execute_info {
+            match self.orderbook._fulfill_offer(fulfill_info, order) {
                 Option::Some(execute_info) => {
                     let execute_order_selector = selector!("execute_order");
                     let starknet_executor_address: ContractAddress = self
@@ -267,8 +292,7 @@ mod orderbook {
         fn _fulfill_listing_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
-            let (execute_info, _) = self.orderbook._fulfill_listing_order(fulfill_info, order);
-            match execute_info {
+            match self.orderbook._fulfill_listing_order(fulfill_info, order) {
                 Option::Some(execute_info) => {
                     let execute_order_selector = selector!("execute_order");
                     let starknet_executor_address: ContractAddress = self
@@ -336,43 +360,7 @@ mod orderbook {
         }
 
         fn _manage_auction_offer(ref self: ContractState, order: OrderV1, order_hash: felt252) {
-            let token_hash = order.compute_token_hash();
-            let (auction_order_hash, auction_end_date, auction_offer_count) = self
-                .auctions
-                .read(token_hash);
-
-            let current_block_timestamp = starknet::get_block_timestamp();
-            // Determine if the auction end date has passed, indicating that the auction is still
-            // ongoing.
-            let auction_is_pending = current_block_timestamp < auction_end_date;
-
-            if auction_is_pending {
-                // If the auction is still pending, record the new offer by linking it to the
-                // auction order hash in the 'auction_offers' mapping.
-                self.auction_offers.write(order_hash, auction_order_hash);
-
-                if auction_end_date - current_block_timestamp < EXTENSION_TIME_IN_SECONDS {
-                    // Increment the number of offers for this auction and extend the auction
-                    // end date by the predefined extension time to allow for additional offers.
-                    self
-                        .auctions
-                        .write(
-                            token_hash,
-                            (
-                                auction_order_hash,
-                                auction_end_date + EXTENSION_TIME_IN_SECONDS,
-                                auction_offer_count + 1
-                            )
-                        );
-                } else {
-                    self
-                        .auctions
-                        .write(
-                            token_hash,
-                            (auction_order_hash, auction_end_date, auction_offer_count + 1)
-                        );
-                }
-            }
+            self.orderbook._manage_auction_offer(order, order_hash)
         }
 
         /// Creates an offer order.
