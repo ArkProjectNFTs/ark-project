@@ -21,39 +21,6 @@ trait OrderbookAdmin<T> {
     fn update_starknet_executor_address(ref self: T, value: starknet::ContractAddress);
 }
 
-/// Orderbook trait to define operations on orderbooks.
-#[starknet::interface]
-trait Orderbook<T> {
-    /// Retrieves the type of an order using its hash.
-    ///
-    /// # Arguments
-    /// * `order_hash` - The order hash of order.
-    fn get_order_type(self: @T, order_hash: felt252) -> OrderType;
-
-    /// Retrieves the status of an order using its hash.
-    ///
-    /// # Arguments
-    /// * `order_hash` - The order hash of order.
-    fn get_order_status(self: @T, order_hash: felt252) -> OrderStatus;
-
-    /// Retrieves the auction end date.
-    ///
-    /// # Arguments
-    /// * `order_hash` - The order hash of order.
-    fn get_auction_expiration(self: @T, order_hash: felt252) -> u64;
-
-    /// Retrieves the order using its hash.
-    ///
-    /// # Arguments
-    /// * `order_hash` - The order hash of order.
-    fn get_order(self: @T, order_hash: felt252) -> OrderV1;
-
-    /// Retrieves the order hash using its token hash.
-    ///
-    /// # Arguments
-    /// * `token_hash` - The token hash of the order.
-    fn get_order_hash(self: @T, token_hash: felt252) -> felt252;
-}
 
 /// StarkNet smart contract module for an order book.
 #[starknet::contract]
@@ -73,9 +40,8 @@ mod orderbook {
     use core::result::ResultTrait;
     use core::zeroable::Zeroable;
     use core::option::OptionTrait;
-    use core::starknet::event::EventEmitter;
+    // use core::starknet::event::EventEmitter;
     use core::traits::Into;
-    use super::Orderbook;
     use super::OrderbookAdmin;
     use super::super::interface::orderbook_errors;
     use super::super::component::OrderbookComponent;
@@ -127,6 +93,7 @@ mod orderbook {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
+        #[flat]
         OrderbookEvent: OrderbookComponent::Event,
         Upgraded: Upgraded,
     }

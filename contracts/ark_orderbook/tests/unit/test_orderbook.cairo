@@ -60,34 +60,23 @@ fn test_create_listing() {
         @state, token_hash
     );
     assert(state_order_hash_for_token_hash == order_hash, 'storage order');
-    let events = spy.get_events(); // Ad 2.
-
-    assert(events.events.len() == 1, 'There should be one event');
-
-    let (from, event) = events.events.at(0); // Ad 3.
-    assert(from == @contract_address, 'Emitted from wrong address');
-    assert_eq!(event.keys.len(), 5, "Wrong number of keys");
-    // assert_eq!(event.keys.at(1), @order_hash_1, "Wrong order hash");
-    assert_eq!(event.keys.at(0), @selector!("OrderbookComponent"), "Wrong keys[0]");
-    assert_eq!(event.keys.at(1), @selector!("OrderPlaced"), "Wrong selector");
-    assert_eq!(event.keys.at(2), @order_hash_1, "Wrong order hash");
-    //     spy
-//         .assert_emitted(
-//             @array![
-//                 (
-//                     contract_address,
-//                     OrderbookComponent::Event::OrderPlaced(
-//                         OrderbookComponent::OrderPlaced {
-//                             order_hash: order_hash_1,
-//                             cancelled_order_hash: Option::None,
-//                             order_version: ORDER_VERSION_V1,
-//                             order_type: OrderType::Listing,
-//                             order: order_listing_1
-//                         }
-//                     )
-//                 )
-//            ]
-//        );
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    contract_address,
+                    OrderbookComponent::Event::OrderPlaced(
+                        OrderbookComponent::OrderPlaced {
+                            order_hash: order_hash_1,
+                            cancelled_order_hash: Option::None,
+                            order_version: ORDER_VERSION_V1,
+                            order_type: OrderType::Listing,
+                            order: order_listing_1
+                        }
+                    )
+                )
+            ]
+        );
 }
 
 #[should_panic(expected: ('OB: order already exists',))]
