@@ -18,7 +18,7 @@ trait IExecutor<T> {
     fn fulfill_order(ref self: T, fulfillInfo: FulfillInfo);
     fn cancel_order(ref self: T, cancelInfo: CancelInfo);
     fn create_order(ref self: T, order: OrderV1);
-    fn execute_order(ref self: T, execution_info: ExecutionInfo);
+    // fn execute_order(ref self: T, execution_info: ExecutionInfo);
     fn update_admin_address(ref self: T, admin_address: ContractAddress);
     fn update_orderbook_address(ref self: T, orderbook_address: ContractAddress);
     fn update_eth_address(ref self: T, eth_address: ContractAddress);
