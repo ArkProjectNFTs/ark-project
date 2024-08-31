@@ -73,11 +73,7 @@ mod executor {
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 
-    use ark_component::orderbook::OrderbookComponent;
-    use ark_component::orderbook::{
-        OrderbookHooksCreateOrderEmptyImpl, OrderbookHooksCancelOrderEmptyImpl,
-        OrderbookHooksFulfillOrderEmptyImpl, OrderbookHooksValidateOrderExecutionEmptyImpl,
-    };
+    use ark_orderbook::component::OrderbookComponent;
     use ark_oz::erc2981::interface::IERC2981_ID;
     use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
     use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
@@ -172,8 +168,6 @@ mod executor {
         const FEES_RATIO_INVALID: felt252 = 'Fees ratio is invalid';
     }
 
-    #[abi(embed_v0)]
-    impl OrderbookImpl = OrderbookComponent::OrderbookImpl<ContractState>;
     impl OrderbookActionImpl = OrderbookComponent::OrderbookActionImpl<ContractState>;
 
     #[constructor]
@@ -658,23 +652,19 @@ mod executor {
                 + ark_fees_amount);
 
         // split the fees
-        if fulfill_broker_fees_amount > 0 {
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from,
-                    execution_info.fulfill_broker_address,
-                    fulfill_broker_fees_amount,
-                );
-        }
+        currency_contract
+            .transfer_from(
+                execution_info.payment_from,
+                execution_info.fulfill_broker_address,
+                fulfill_broker_fees_amount,
+            );
 
-        if listing_broker_fees_amount > 0 {
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from,
-                    execution_info.listing_broker_address,
-                    listing_broker_fees_amount
-                );
-        }
+        currency_contract
+            .transfer_from(
+                execution_info.payment_from,
+                execution_info.listing_broker_address,
+                listing_broker_fees_amount
+            );
 
         if creator_fees_amount > 0 {
             let (default_receiver_creator, _) = self.get_default_creator_fees();
@@ -700,12 +690,8 @@ mod executor {
                 );
         }
         // finally transfer to the seller
-        if seller_amount > 0 {
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from, execution_info.payment_to, seller_amount
-                );
-        }
+        currency_contract
+            .transfer_from(execution_info.payment_from, execution_info.payment_to, seller_amount);
 
         let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
         nft_contract
