@@ -1,7 +1,7 @@
+use ark_common::protocol::order_v1::OrderV1;
+use poseidon::poseidon_hash_span;
 //! Order generic variables.
 use starknet::ContractAddress;
-use poseidon::poseidon_hash_span;
-use ark_common::protocol::order_v1::OrderV1;
 
 /// Order types.
 #[derive(Serde, Drop, PartialEq, Copy, Debug, starknet::Store)]

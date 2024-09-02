@@ -1,15 +1,15 @@
-use core::traits::TryInto;
-use traits::Into;
-use box::BoxTrait;
+use ark_common::crypto::signer::{Signer, SignInfo};
 
 use ark_common::crypto::typed_data::{OrderSign, TypedDataTrait};
+use box::BoxTrait;
 
 use core::option::OptionTrait;
-use ark_common::crypto::signer::{Signer, SignInfo};
+use core::traits::TryInto;
 use snforge_std::signature::KeyPairTrait;
 use snforge_std::signature::stark_curve::{
     StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl
 };
+use traits::Into;
 
 fn sign_mock(message_hash: felt252) -> Signer {
     let key_pair = KeyPairTrait::<felt252, felt252>::generate();

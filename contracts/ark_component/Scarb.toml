@@ -13,4 +13,7 @@ assert_macros = "0.1.0"
 [scripts]
 test.workspace = true
 
+[tool]
+fmt.workspace = true
+
 [lib]

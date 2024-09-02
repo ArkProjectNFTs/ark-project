@@ -1,20 +1,20 @@
-use core::option::OptionTrait;
-use ark_orderbook::orderbook::orderbook;
-use ark_component::orderbook::OrderbookComponent;
-
-use ark_common::protocol::order_v1::OrderV1;
-use core::traits::Into;
-use core::traits::TryInto;
 use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
-use ark_common::protocol::order_types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
 use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
+use ark_common::protocol::order_types::{OrderTrait, RouteType, OrderType, FulfillInfo, OrderStatus};
+
+use ark_common::protocol::order_v1::OrderV1;
+use ark_component::orderbook::OrderbookComponent;
+use ark_orderbook::orderbook::orderbook;
+use array::ArrayTrait;
+use core::option::OptionTrait;
+use core::traits::Into;
+use core::traits::TryInto;
 use snforge_std::{
     ContractClassTrait, spy_events, EventSpyAssertionsTrait, EventSpyTrait, Event, test_address,
     cheat_block_timestamp, CheatSpan,
 };
-use array::ArrayTrait;
 
 use super::super::common::setup::{setup_listing_order, get_offer_order, setup_orders};
 

@@ -10,6 +10,9 @@ starknet.workspace = true
 [dev-dependencies]
 snforge_std.workspace = true
 
+[tool]
+fmt.workspace = true
+
 [lib]
 
 [[target.starknet-contract]]
