@@ -1,5 +1,5 @@
-use ark_common::protocol::order_v1::OrderTraitOrderV1;
 use ark_common::protocol::order_types::OrderType;
+use ark_common::protocol::order_v1::OrderTraitOrderV1;
 use super::super::super::common::setup::setup_orders;
 
 #[test]

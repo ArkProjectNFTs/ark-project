@@ -19,10 +19,7 @@ mod FreeMintNFTRoyalty {
     use openzeppelin::introspection::src5::SRC5Component;
     use openzeppelin::token::erc721::ERC721Component;
     use openzeppelin::token::erc721::ERC721HooksEmptyImpl;
-    use openzeppelin::access::ownable::OwnableComponent;
-
-    use ark_oz::erc2981::ERC2981Component;
-    use ark_oz::erc2981::FeesRatioDefault;
+    use starknet::ContractAddress;
 
     use super::IFreeMint;
 

@@ -12,10 +12,14 @@ use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
+use openzeppelin::token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
+use openzeppelin::token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
+
 use snforge_std::{
     ContractClass, ContractClassTrait, cheat_caller_address, CheatSpan, spy_events,
     EventSpyAssertionsTrait, EventSpyTrait, Event, EventsFilterTrait,
 };
+use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::{setup, setup_order, setup_royalty};
 
 fn create_fulfill_info(

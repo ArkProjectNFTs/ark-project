@@ -14,6 +14,7 @@ use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
 use snforge_std::{cheat_caller_address, CheatSpan};
+use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{setup, setup_order};
 

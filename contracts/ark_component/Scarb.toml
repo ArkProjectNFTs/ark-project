@@ -13,11 +13,7 @@ assert_macros = "0.1.0"
 [scripts]
 
 
-<<<<<<< HEAD
 [tool]
-
-=======
->>>>>>> 2b060f9 (contracts: add `ark_component` package.)
-test.workspace = true
 fmt.workspace = true
+
 [lib]

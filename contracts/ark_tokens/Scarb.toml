@@ -11,6 +11,9 @@ ark_oz = { path = "../ark_oz" }
 [dev-dependencies]
 snforge_std.workspace = true
 
+[tool]
+fmt.workspace = true
+
 [lib]
 
 [[target.starknet-contract]]
