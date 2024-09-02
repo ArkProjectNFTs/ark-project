@@ -168,6 +168,8 @@ mod executor {
         const FEES_RATIO_INVALID: felt252 = 'Fees ratio is invalid';
     }
 
+    #[abi(embed_v0)]
+    impl OrderbookImpl = OrderbookComponent::OrderbookImpl<ContractState>;
     impl OrderbookActionImpl = OrderbookComponent::OrderbookActionImpl<ContractState>;
 
     #[constructor]
