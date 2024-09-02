@@ -223,7 +223,6 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
             attributes
                 .iter()
                 .filter_map(|attr| {
-                    // Cas standard où les attributs ont "trait_type" et "value"
                     if let (Some(trait_type), Some(value)) = (
                         attr.get("trait_type")
                             .or_else(|| attr.get("trait"))
