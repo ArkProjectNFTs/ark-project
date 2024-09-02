@@ -1,9 +1,14 @@
-use crate::types::{MetadataType, NormalizedMetadata, TokenMetadata};
+use crate::types::{
+    DisplayType, MetadataAttribute, MetadataTraitValue, MetadataType, NormalizedMetadata,
+    TokenMetadata,
+};
 use anyhow::{anyhow, Result};
 use base64::{engine::general_purpose, Engine as _};
 use chrono::Utc;
 use reqwest::header::{HeaderMap, CONTENT_LENGTH, CONTENT_TYPE};
 use reqwest::Client;
+use serde_json::Value;
+use std::str::FromStr;
 use std::time::Duration;
 use tracing::{debug, error, trace};
 
@@ -163,124 +168,107 @@ pub fn get_content_type_from_extension(extension: &str) -> &str {
 }
 
 fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
-    // Try to split from the comma as it is the standard with on chain metadata
-    let url_encoded = urlencoding::decode(uri).map(|s| String::from(s.as_ref()));
-    let uri_string = match url_encoded {
-        Ok(encoded) => encoded,
-        Err(_) => String::from(uri),
+    let uri_string = urlencoding::decode(uri)
+        .map(|s| s.into_owned())
+        .unwrap_or_else(|_| uri.to_string());
+
+    let now = Utc::now().timestamp();
+
+    let (prefix, content) = uri_string.split_once(',').unwrap_or(("", &uri_string));
+
+    let json_value: Value = match prefix {
+        "data:application/json;base64" => {
+            let decoded = general_purpose::STANDARD.decode(content)?;
+            let raw_metadata = std::str::from_utf8(&decoded)?;
+            serde_json::from_str(raw_metadata)?
+        }
+        "data:application/json" | "data:application/json;utf8" => serde_json::from_str(content)?,
+        _ => serde_json::from_str(&uri_string).unwrap_or(Value::Null),
     };
 
-    let now = Utc::now();
-    match uri_string.split_once(',') {
-        Some(("data:application/json;base64", uri)) => {
-            // If it is base64 encoded, decode it, parse and return
-            let decoded = general_purpose::STANDARD.decode(uri)?;
-            let raw_metadata = std::str::from_utf8(&decoded)?;
-            match serde_json::from_str::<NormalizedMetadata>(raw_metadata) {
-                Ok(normalized_metadata) => Ok(TokenMetadata {
-                    raw: raw_metadata.to_string(),
-                    normalized: normalized_metadata,
-                    metadata_updated_at: Some(now.timestamp()),
-                }),
-                Err(_) => {
-                    let metadata = serde_json::from_str::<serde_json::Value>(raw_metadata)?;
-                    let normalized_metadata = NormalizedMetadata {
-                        name: extract_string(&metadata, "name"),
-                        animation_key: extract_string(&metadata, "animation_key"),
-                        image: extract_string(&metadata, "image"),
-                        animation_mime_type: extract_string(&metadata, "animation_mime_type"),
-                        animation_url: extract_string(&metadata, "animation_url"),
-                        background_color: extract_string(&metadata, "background_color"),
-                        description: extract_string(&metadata, "description"),
-                        external_url: extract_string(&metadata, "external_url"),
-                        image_mime_type: extract_string(&metadata, "image_mime_type"),
-                        image_data: extract_string(&metadata, "image_data"),
-                        image_key: extract_string(&metadata, "image_key"),
-                        youtube_url: extract_string(&metadata, "youtube_url"),
-                        ..Default::default()
-                    };
+    let mut normalized_metadata = NormalizedMetadata {
+        name: json_value
+            .get("name")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        image: json_value
+            .get("image")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        description: json_value
+            .get("description")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        external_url: json_value
+            .get("external_url")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        background_color: json_value
+            .get("background_color")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        animation_url: json_value
+            .get("animation_url")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        youtube_url: json_value
+            .get("youtube_url")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        ..Default::default()
+    };
 
-                    Ok(TokenMetadata {
-                        raw: raw_metadata.to_string(),
-                        normalized: normalized_metadata,
-                        metadata_updated_at: Some(now.timestamp()),
-                    })
-                }
-            }
-        }
-        Some(("data:application/json", uri)) => {
-            match serde_json::from_str::<NormalizedMetadata>(uri) {
-                Ok(normalized_metadata) => Ok(TokenMetadata {
-                    raw: uri.to_string(),
-                    normalized: normalized_metadata,
-                    metadata_updated_at: Some(now.timestamp()),
-                }),
-                Err(_) => {
-                    let metadata = serde_json::from_str::<serde_json::Value>(uri)?;
-                    let normalized_metadata = NormalizedMetadata {
-                        name: extract_string(&metadata, "name"),
-                        animation_key: extract_string(&metadata, "animation_key"),
-                        image: extract_string(&metadata, "image"),
-                        animation_mime_type: extract_string(&metadata, "animation_mime_type"),
-                        animation_url: extract_string(&metadata, "animation_url"),
-                        background_color: extract_string(&metadata, "background_color"),
-                        description: extract_string(&metadata, "description"),
-                        external_url: extract_string(&metadata, "external_url"),
-                        image_mime_type: extract_string(&metadata, "image_mime_type"),
-                        image_data: extract_string(&metadata, "image_data"),
-                        image_key: extract_string(&metadata, "image_key"),
-                        youtube_url: extract_string(&metadata, "youtube_url"),
-                        ..Default::default()
-                    };
+    if let Some(attributes) = json_value.get("attributes").and_then(|v| v.as_array()) {
+        normalized_metadata.attributes = Some(
+            attributes
+                .iter()
+                .filter_map(|attr| {
+                    // Cas standard où les attributs ont "trait_type" et "value"
+                    if let (Some(trait_type), Some(value)) = (
+                        attr.get("trait_type")
+                            .or_else(|| attr.get("trait"))
+                            .and_then(|v| v.as_str())
+                            .map(String::from),
+                        attr.get("value")
+                            .map(|v| MetadataTraitValue::String(v.as_str().unwrap().to_string())),
+                    ) {
+                        let display_type = attr
+                            .get("display_type")
+                            .and_then(|v| v.as_str())
+                            .and_then(|s| DisplayType::from_str(s).ok());
 
-                    Ok(TokenMetadata {
-                        raw: uri.to_string(),
-                        normalized: normalized_metadata,
-                        metadata_updated_at: Some(now.timestamp()),
-                    })
-                }
-            }
-        }
-        Some(("data:application/json;utf8", uri)) => {
-            match serde_json::from_str::<NormalizedMetadata>(uri) {
-                Ok(normalized_metadata) => Ok(TokenMetadata {
-                    raw: uri.to_string(),
-                    normalized: normalized_metadata,
-                    metadata_updated_at: Some(now.timestamp()),
-                }),
-                Err(_) => {
-                    let metadata = serde_json::from_str::<serde_json::Value>(uri)?;
-                    let normalized_metadata = NormalizedMetadata {
-                        name: extract_string(&metadata, "name"),
-                        animation_key: extract_string(&metadata, "animation_key"),
-                        image: extract_string(&metadata, "image"),
-                        animation_mime_type: extract_string(&metadata, "animation_mime_type"),
-                        animation_url: extract_string(&metadata, "animation_url"),
-                        background_color: extract_string(&metadata, "background_color"),
-                        description: extract_string(&metadata, "description"),
-                        external_url: extract_string(&metadata, "external_url"),
-                        image_mime_type: extract_string(&metadata, "image_mime_type"),
-                        image_data: extract_string(&metadata, "image_data"),
-                        image_key: extract_string(&metadata, "image_key"),
-                        youtube_url: extract_string(&metadata, "youtube_url"),
-                        ..Default::default()
-                    };
-
-                    Ok(TokenMetadata {
-                        raw: uri.to_string(),
-                        normalized: normalized_metadata,
-                        metadata_updated_at: Some(now.timestamp()),
-                    })
-                }
-            }
-        }
-        _ => match serde_json::from_str(uri) {
-            // If it is only the URI without the data format information, try to format it
-            // and if it fails, return empty metadata
-            Ok(v) => Ok(v),
-            Err(_) => Ok(TokenMetadata::default()),
-        },
+                        Some(MetadataAttribute {
+                            display_type: display_type,
+                            trait_type: Some(trait_type),
+                            value: value,
+                        })
+                    } else if let (Some(trait_type), Some(value)) = (
+                        attr.get("trait").and_then(|v| v.as_str()).map(String::from),
+                        attr.get("value")
+                            .map(|v| MetadataTraitValue::String(v.as_str().unwrap().to_string())),
+                    ) {
+                        Some(MetadataAttribute {
+                            display_type: None,
+                            trait_type: Some(trait_type),
+                            value: value,
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        );
+    } else if let Some(attributes) = json_value.get("attributes") {
+        normalized_metadata.attributes = serde_json::from_value(attributes.clone()).ok();
     }
+
+    // TODO: manage properties
+
+    Ok(TokenMetadata {
+        raw: json_value.to_string(),
+        normalized: normalized_metadata,
+        metadata_updated_at: Some(now),
+    })
 }
 
 pub fn extract_metadata_from_headers(headers: &HeaderMap) -> Result<(String, Option<u64>)> {

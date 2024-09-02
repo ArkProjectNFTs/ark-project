@@ -1,5 +1,6 @@
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Number;
+use std::str::FromStr;
 use std::{collections::HashMap, fmt};
 
 #[derive(Debug, PartialEq)]
@@ -37,6 +38,20 @@ pub enum DisplayType {
     BoostNumber,
     #[serde(rename = "date")]
     Date,
+}
+
+impl FromStr for DisplayType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "number" => Ok(DisplayType::Number),
+            "boost_percentage" => Ok(DisplayType::BoostPercentage),
+            "boost_number" => Ok(DisplayType::BoostNumber),
+            "date" => Ok(DisplayType::Date),
+            _ => Err(()), // Gérer le cas d'erreur si la chaîne ne correspond à aucun type
+        }
+    }
 }
 
 impl fmt::Display for DisplayType {
