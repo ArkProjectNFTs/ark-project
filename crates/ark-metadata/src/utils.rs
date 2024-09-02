@@ -244,7 +244,7 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
                         Some(MetadataAttribute {
                             display_type: display_type,
                             trait_type: Some(trait_type),
-                            value: value,
+                            value,
                         })
                     } else if let (Some(trait_type), Some(value)) = (
                         attr.get("trait").and_then(|v| v.as_str()).map(String::from),
@@ -254,7 +254,7 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
                         Some(MetadataAttribute {
                             display_type: None,
                             trait_type: Some(trait_type),
-                            value: value,
+                            value,
                         })
                     } else {
                         None
