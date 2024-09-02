@@ -73,7 +73,7 @@ mod executor {
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 
-    use ark_orderbook::component::OrderbookComponent;
+    use ark_component::orderbook::OrderbookComponent;
     use ark_oz::erc2981::interface::IERC2981_ID;
     use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
     use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
