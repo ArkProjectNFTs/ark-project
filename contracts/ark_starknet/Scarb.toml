@@ -6,9 +6,10 @@ version = "0.1.0"
 starknet.workspace = true
 openzeppelin.workspace = true
 ark_common = { path = "../ark_common" }
+ark_component = { path = "../ark_component" }
+
 ark_tokens = { path = "../ark_tokens" }
 ark_oz = { path = "../ark_oz" }
-ark_orderbook = { path = "../ark_orderbook" }
 
 [dev-dependencies]
 snforge_std.workspace = true

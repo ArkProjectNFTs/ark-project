@@ -1,7 +1,6 @@
 use core::option::OptionTrait;
 use ark_orderbook::orderbook::orderbook;
-use ark_orderbook::interface::orderbook_errors;
-use ark_orderbook::component::OrderbookComponent;
+use ark_component::orderbook::OrderbookComponent;
 
 use ark_common::protocol::order_v1::OrderV1;
 use core::traits::Into;

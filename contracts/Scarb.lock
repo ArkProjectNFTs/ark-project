@@ -9,10 +9,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark_component"
+version = "0.1.0"
+dependencies = [
+ "ark_common",
+ "snforge_std",
+]
+
+[[package]]
 name = "ark_orderbook"
 version = "0.1.0"
 dependencies = [
  "ark_common",
+ "ark_component",
  "snforge_std",
 ]
 
@@ -28,7 +37,7 @@ name = "ark_starknet"
 version = "0.1.0"
 dependencies = [
  "ark_common",
- "ark_orderbook",
+ "ark_component",
  "ark_oz",
  "ark_tokens",
  "openzeppelin",
