@@ -49,7 +49,7 @@ impl FromStr for DisplayType {
             "boost_percentage" => Ok(DisplayType::BoostPercentage),
             "boost_number" => Ok(DisplayType::BoostNumber),
             "date" => Ok(DisplayType::Date),
-            _ => Err(()), // Gérer le cas d'erreur si la chaîne ne correspond à aucun type
+            _ => Err(()),
         }
     }
 }
