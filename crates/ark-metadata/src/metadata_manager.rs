@@ -16,7 +16,7 @@ use reqwest::Client as ReqwestClient;
 use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::macros::selector;
 use std::{str::FromStr, time::Duration};
-use tracing::{debug, error, trace};
+use tracing::{debug, error, trace, warn};
 
 /// `MetadataManager` is responsible for managing metadata information related to tokens.
 /// It works with the underlying storage and Starknet client to fetch and update token metadata.
@@ -285,43 +285,58 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
                     .timeout(timeout)
                     .send()
                     .await?;
+
+                if !response.status().is_success() {
+                    warn!("Failed to fetch image from URL: {}", url);
+                    return Err(anyhow!("Failed to fetch image from URL: {}", url));
+                }
+
                 let headers = response.headers().clone();
                 let bytes = response.bytes().await?;
                 let (content_type_from_headers, content_length) =
                     extract_metadata_from_headers(&headers)?;
 
-                let (file_ext, content_type): (&str, &str) = match url.split('.').last() {
-                    Some(fe) => {
-                        let content_type = get_content_type_from_extension(fe);
-                        (fe, content_type)
-                    }
-                    None => {
-                        let file_extension =
-                            file_extension_from_mime_type(content_type_from_headers.as_str());
-                        (file_extension, content_type_from_headers.as_str())
-                    }
-                };
+                if let Some(last_part) = url.split('/').last() {
+                    let (file_name, content_type) = if last_part.contains('.') {
+                        if let Some(file_extension) = last_part.split('.').last() {
+                            let content_type = get_content_type_from_extension(file_extension);
+                            (file_extension.to_string(), content_type.to_string())
+                        } else {
+                            return Err(anyhow!("Failed to extract file extension from URL"));
+                        }
+                    } else {
+                        match file_extension_from_mime_type(content_type_from_headers.as_str()) {
+                            Some(file_extension) => {
+                                let file_name = format!("{}.{}", token_id, file_extension);
+                                (file_name, file_extension.to_string())
+                            }
+                            None => (token_id.to_string(), content_type_from_headers),
+                        }
+                    };
 
-                debug!(
-                    "Image: Content-Type={}, Content-Length={:?}, File-Ext={}",
-                    content_type, content_length, file_ext
-                );
+                    debug!(
+                        "Image: Content-Type={}, Content-Length={:?}, Filename={:?}",
+                        content_type, content_length, file_name
+                    );
 
-                let media_key = self
-                    .file_manager
-                    .save(&FileInfo {
-                        name: format!("{}.{}", token_id, file_ext),
-                        content: bytes.to_vec(),
-                        dir_path: None,
+                    let media_key = self
+                        .file_manager
+                        .save(&FileInfo {
+                            name: file_name.clone(),
+                            content: bytes.to_vec(),
+                            dir_path: None,
+                        })
+                        .await?;
+
+                    Ok(MetadataMedia {
+                        file_type: content_type,
+                        content_length,
+                        is_cache_updated: true,
+                        media_key: Some(media_key),
                     })
-                    .await?;
-
-                Ok(MetadataMedia {
-                    file_type: content_type.to_string(),
-                    content_length,
-                    is_cache_updated: true,
-                    media_key: Some(media_key),
-                })
+                } else {
+                    Err(anyhow!("Failed to extract file name from URL"))
+                }
             }
         }
     }

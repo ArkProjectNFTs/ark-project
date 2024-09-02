@@ -10,7 +10,7 @@ use reqwest::Client;
 use serde_json::Value;
 use std::str::FromStr;
 use std::time::Duration;
-use tracing::{debug, error, trace};
+use tracing::{debug, error, trace, warn};
 
 pub async fn get_token_metadata(
     client: &Client,
@@ -19,7 +19,8 @@ pub async fn get_token_metadata(
     request_timeout_duration: Duration,
     request_referrer: &str,
 ) -> Result<TokenMetadata> {
-    let metadata_type = get_metadata_type(uri);
+    let parsed_uri = uri.replace("https://gateway.pinata.cloud/ipfs/", "ipfs://");
+    let metadata_type = get_metadata_type(parsed_uri.as_str());
     let metadata = match metadata_type {
         MetadataType::Ipfs(uri) => {
             let ipfs_hash = uri.trim_start_matches("ipfs://");
@@ -129,22 +130,25 @@ async fn fetch_metadata(
     }
 }
 
-pub fn file_extension_from_mime_type(mime_type: &str) -> &str {
+pub fn file_extension_from_mime_type(mime_type: &str) -> Option<&str> {
     match mime_type {
-        "model/gltf-binary" => "glb",
-        "image/png" => "png",
-        "image/jpeg" => "jpg",
-        "image/gif" => "gif",
-        "image/bmp" => "bmp",
-        "image/webp" => "webp",
-        "image/svg+xml" => "svg",
-        "video/mp4" => "mp4",
-        "video/quicktime" => "mov",
-        "video/x-msvideo" => "avi",
-        "video/x-matroska" => "mkv",
-        "video/ogg" => "ogv",
-        "video/webm" => "webm",
-        _ => "",
+        "model/gltf-binary" => Some("glb"),
+        "image/png" => Some("png"),
+        "image/jpeg" => Some("jpg"),
+        "image/gif" => Some("gif"),
+        "image/bmp" => Some("bmp"),
+        "image/webp" => Some("webp"),
+        "image/svg+xml" => Some("svg"),
+        "video/mp4" => Some("mp4"),
+        "video/quicktime" => Some("mov"),
+        "video/x-msvideo" => Some("avi"),
+        "video/x-matroska" => Some("mkv"),
+        "video/ogg" => Some("ogv"),
+        "video/webm" => Some("webm"),
+        _ => {
+            warn!("Unknown MIME type: {}", mime_type);
+            None
+        }
     }
 }
 
@@ -194,7 +198,8 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
         image: json_value
             .get("image")
             .and_then(|v| v.as_str())
-            .map(String::from),
+            .map(String::from)
+            .map(|image| image.replace("https://gateway.pinata.cloud/ipfs/", "ipfs://")),
         description: json_value
             .get("description")
             .and_then(|v| v.as_str())
