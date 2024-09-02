@@ -40,11 +40,8 @@ mod orderbook {
     use core::result::ResultTrait;
     use core::zeroable::Zeroable;
     use core::option::OptionTrait;
-    // use core::starknet::event::EventEmitter;
     use core::traits::Into;
     use super::OrderbookAdmin;
-    use super::super::interface::orderbook_errors;
-    use super::super::component::OrderbookComponent;
 
     use starknet::ContractAddress;
     use starknet::storage::Map;
@@ -54,16 +51,7 @@ mod orderbook {
         OrderbookHooksCreateOrderEmptyImpl, OrderbookHooksCancelOrderEmptyImpl,
         OrderbookHooksFulfillOrderEmptyImpl, OrderbookHooksValidateOrderExecutionEmptyImpl,
     };
-    use core::debug::PrintTrait;
-    use core::option::OptionTrait;
-    use core::result::ResultTrait;
-    use core::traits::Into;
-    use core::traits::TryInto;
-    use core::zeroable::Zeroable;
-
-    use starknet::ContractAddress;
-    use starknet::storage::Map;
-    use super::OrderbookAdmin;
+    use ark_component::orderbook::OrderbookComponent;
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
 

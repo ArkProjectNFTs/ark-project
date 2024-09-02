@@ -4,6 +4,7 @@ version = "0.1.0"
 
 [dependencies]
 ark_common = { path = "../ark_common" }
+ark_component = { path = "../ark_component" }
 starknet.workspace = true
 
 [dev-dependencies]
@@ -12,8 +13,6 @@ assert_macros = "0.1.0"
 
 [scripts]
 test.workspace = true
-
-[lib]
 
 [[target.starknet-contract]]
 sierra = true

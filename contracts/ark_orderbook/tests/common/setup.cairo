@@ -8,8 +8,8 @@ use core::traits::Into;
 use ark_common::protocol::order_types::{RouteType, FulfillInfo, OrderTrait, OrderType, OrderStatus};
 use ark_common::crypto::signer::{Signer, SignInfo};
 use ark_common::protocol::order_v1::OrderV1;
-use ark_orderbook::interface::IOrderbookDispatcher as OrderbookDispatcher;
-use ark_orderbook::interface::IOrderbookDispatcherTrait as OrderbookDispatcherTrait;
+use ark_component::orderbook::interface::IOrderbookDispatcher as OrderbookDispatcher;
+use ark_component::orderbook::interface::IOrderbookDispatcherTrait as OrderbookDispatcherTrait;
 
 use snforge_std::signature::KeyPairTrait;
 use snforge_std::signature::stark_curve::{

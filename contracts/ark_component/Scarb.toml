@@ -8,12 +8,16 @@ starknet.workspace = true
 
 [dev-dependencies]
 snforge_std.workspace = true
-assert_macros.workspace = true
+assert_macros = "0.1.0"
 
 [scripts]
-test.workspace = true
 
+
+<<<<<<< HEAD
 [tool]
-fmt.workspace = true
 
+=======
+>>>>>>> 2b060f9 (contracts: add `ark_component` package.)
+test.workspace = true
+fmt.workspace = true
 [lib]

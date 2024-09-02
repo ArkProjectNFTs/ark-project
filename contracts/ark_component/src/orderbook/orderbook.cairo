@@ -1,23 +1,25 @@
 #[starknet::component]
 pub mod OrderbookComponent {
-    use ark_common::protocol::order_database::{
-        order_read, order_status_read, order_write, order_status_write, order_type_read
-    };
+    use ark_common::crypto::typed_data::{OrderSign, TypedDataTrait};
+    use core::debug::PrintTrait;
+    use ark_common::crypto::signer::{SignInfo, Signer, SignerTrait, SignerValidator};
     use ark_common::protocol::order_types::{
         OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo,
         ExecutionInfo, RouteType
     };
-    use ark_common::protocol::order_v1::OrderV1;
-    use core::debug::PrintTrait;
-    use core::option::OptionTrait;
+    use core::traits::TryInto;
     use core::result::ResultTrait;
+    use core::zeroable::Zeroable;
+    use core::option::OptionTrait;
     use core::starknet::event::EventEmitter;
     use core::traits::Into;
-    use core::traits::TryInto;
-    use core::zeroable::Zeroable;
+    use super::super::interface::{IOrderbook, IOrderbookAction, orderbook_errors};
     use starknet::ContractAddress;
     use starknet::storage::Map;
-    use super::super::interface::{IOrderbook, IOrderbookAction, orderbook_errors};
+    use ark_common::protocol::order_v1::OrderV1;
+    use ark_common::protocol::order_database::{
+        order_read, order_status_read, order_write, order_status_write, order_type_read
+    };
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
     const AUCTION_ACCEPTING_TIME_SECS: u64 = 172800;
@@ -50,8 +52,6 @@ pub mod OrderbookComponent {
         OrderFulfilled: OrderFulfilled,
     }
 
-    // must be increased when `OrderPlaced` content change
-    const ORDER_PLACED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is placed.
     #[derive(Drop, starknet::Event)]
     struct OrderPlaced {
@@ -61,8 +61,6 @@ pub mod OrderbookComponent {
         order_version: felt252,
         #[key]
         order_type: OrderType,
-        ///
-        version: u8,
         // The order that was cancelled by this order.
         cancelled_order_hash: Option<felt252>,
         // The full order serialized.
@@ -70,7 +68,7 @@ pub mod OrderbookComponent {
     }
 
     // must be increased when `OrderExecuted` content change
-    const ORDER_EXECUTED_EVENT_VERSION: u8 = 2;
+    const ORDER_EXECUTED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is executed.
     #[derive(Drop, starknet::Event)]
     struct OrderExecuted {
@@ -78,17 +76,12 @@ pub mod OrderbookComponent {
         order_hash: felt252,
         #[key]
         order_status: OrderStatus,
-        #[key]
-        order_type: OrderType,
-        ///
         version: u8,
         transaction_hash: felt252,
         from: ContractAddress,
         to: ContractAddress,
     }
 
-    // must be increased when `OrderPlaced` content change
-    const ORDER_CANCELLED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is cancelled.
     #[derive(Drop, starknet::Event)]
     struct OrderCancelled {
@@ -96,28 +89,17 @@ pub mod OrderbookComponent {
         order_hash: felt252,
         #[key]
         reason: felt252,
-        #[key]
-        order_type: OrderType,
-        version: u8,
     }
 
-    // must be increased when `RollbackStatus` content change
-    const ROLLBACK_STATUS_EVENT_VERSION: u8 = 1;
     /// Event for when an order has been rollbacked to placed.
     #[derive(Drop, starknet::Event)]
     struct RollbackStatus {
         #[key]
         order_hash: felt252,
         #[key]
-        reason: felt252,
-        #[key]
-        order_type: OrderType,
-        ///
-        version: u8,
+        reason: felt252
     }
 
-    // must be increased when `OrderFulfilled` content change
-    const ORDER_FULFILLED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is fulfilled.
     #[derive(Drop, starknet::Event)]
     struct OrderFulfilled {
@@ -127,39 +109,8 @@ pub mod OrderbookComponent {
         fulfiller: ContractAddress,
         #[key]
         related_order_hash: Option<felt252>,
-        #[key]
-        order_type: OrderType,
-        ///
-        version: u8,
     }
 
-    pub trait OrderbookHooksCreateOrderTrait<TContractState> {
-        fn before_create_order(ref self: ComponentState<TContractState>, order: OrderV1) {}
-        fn after_create_order(ref self: ComponentState<TContractState>, order: OrderV1) {}
-    }
-
-    pub trait OrderbookHooksCancelOrderTrait<TContractState> {
-        fn before_cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {}
-        fn after_cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {}
-    }
-
-    pub trait OrderbookHooksFulfillOrderTrait<TContractState> {
-        fn before_fulfill_order(
-            ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo
-        ) {}
-        fn after_fulfill_order(
-            ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo
-        ) {}
-    }
-
-    pub trait OrderbookHooksValidateOrderExecutionTrait<TContractState> {
-        fn before_validate_order_execution(
-            ref self: ComponentState<TContractState>, info: ExecutionValidationInfo
-        ) {}
-        fn after_validate_order_execution(
-            ref self: ComponentState<TContractState>, info: ExecutionValidationInfo
-        ) {}
-    }
 
     #[embeddable_as(OrderbookImpl)]
     pub impl Orderbook<
@@ -223,39 +174,28 @@ pub mod OrderbookComponent {
     }
 
     pub impl OrderbookActionImpl<
-        TContractState,
-        +HasComponent<TContractState>,
-        impl HooksCreateOrder: OrderbookHooksCreateOrderTrait<TContractState>,
-        impl HooksCancelOrder: OrderbookHooksCancelOrderTrait<TContractState>,
-        impl HooksFulfillOrder: OrderbookHooksFulfillOrderTrait<TContractState>,
-        impl HooksValidateOrder: OrderbookHooksValidateOrderExecutionTrait<TContractState>,
+        TContractState, +HasComponent<TContractState>
     > of IOrderbookAction<ComponentState<TContractState>> {
         fn validate_order_execution(
             ref self: ComponentState<TContractState>, info: ExecutionValidationInfo
         ) {
-            HooksValidateOrder::before_validate_order_execution(ref self, info);
             order_status_write(info.order_hash, OrderStatus::Executed);
             let order_status = order_status_read(info.order_hash).unwrap();
-            let order_type = order_type_read(info.order_hash).unwrap();
             self
                 .emit(
                     OrderExecuted {
                         order_hash: info.order_hash,
-                        order_status,
-                        order_type,
+                        order_status: order_status,
                         transaction_hash: info.transaction_hash,
                         from: info.from,
                         to: info.to,
                         version: ORDER_EXECUTED_EVENT_VERSION,
                     }
                 );
-
-            HooksValidateOrder::after_validate_order_execution(ref self, info);
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ComponentState<TContractState>, order: OrderV1) {
-            HooksCreateOrder::before_create_order(ref self, order);
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
             if validation.is_err() {
@@ -285,13 +225,9 @@ pub mod OrderbookComponent {
                     self._create_collection_offer(order, order_type, order_hash);
                 },
             };
-
-            HooksCreateOrder::after_create_order(ref self, order);
         }
 
         fn cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {
-            HooksCancelOrder::before_cancel_order(ref self, cancel_info);
-
             let order_hash = cancel_info.order_hash;
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
@@ -302,7 +238,7 @@ pub mod OrderbookComponent {
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
             let block_ts = starknet::get_block_timestamp();
-            let order_type = match order_type_read(order_hash) {
+            match order_type_read(order_hash) {
                 Option::Some(order_type) => {
                     if order_type == OrderType::Auction {
                         let auction_token_hash = order.compute_token_hash();
@@ -317,31 +253,18 @@ pub mod OrderbookComponent {
                             self.token_listings.write(order.compute_token_hash(), 0);
                         }
                     }
-                    order_type
                 },
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
 
             // Cancel order
             order_status_write(order_hash, OrderStatus::CancelledUser);
-            self
-                .emit(
-                    OrderCancelled {
-                        order_hash,
-                        reason: OrderStatus::CancelledUser.into(),
-                        order_type,
-                        version: ORDER_CANCELLED_EVENT_VERSION,
-                    }
-                );
-
-            HooksCancelOrder::after_cancel_order(ref self, cancel_info);
+            self.emit(OrderCancelled { order_hash, reason: OrderStatus::CancelledUser.into() });
         }
 
         fn fulfill_order(
             ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo
         ) -> Option::<ExecutionInfo> {
-            HooksFulfillOrder::before_fulfill_order(ref self, fulfill_info);
-
             let order_hash = fulfill_info.order_hash;
             let order: OrderV1 = match order_read(order_hash) {
                 Option::Some(o) => o,
@@ -356,29 +279,14 @@ pub mod OrderbookComponent {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
-            let (execution_info, related_order_hash) = match order_type {
+            match order_type {
                 OrderType::Listing => self._fulfill_listing_order(fulfill_info, order),
                 OrderType::Auction => self._fulfill_auction_order(fulfill_info, order),
                 OrderType::Offer => self._fulfill_offer(fulfill_info, order),
                 OrderType::CollectionOffer => self._fulfill_offer(fulfill_info, order),
-            };
-
-            self
-                .emit(
-                    OrderFulfilled {
-                        order_hash: fulfill_info.order_hash,
-                        fulfiller: fulfill_info.fulfiller,
-                        related_order_hash,
-                        order_type,
-                        version: ORDER_FULFILLED_EVENT_VERSION,
-                    }
-                );
-
-            HooksFulfillOrder::after_fulfill_order(ref self, fulfill_info);
-            execution_info
+            }
         }
     }
-
     // *************************************************************************
     // INTERNAL FUNCTIONS
     // *************************************************************************
@@ -394,7 +302,7 @@ pub mod OrderbookComponent {
         ///
         fn _fulfill_auction_order(
             ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo, order: OrderV1
-        ) -> (Option<ExecutionInfo>, Option<felt252>) {
+        ) -> Option<ExecutionInfo> {
             let block_timestamp = starknet::get_block_timestamp();
             assert(
                 order.offerer == fulfill_info.fulfiller, orderbook_errors::ORDER_NOT_SAME_OFFERER
@@ -455,6 +363,14 @@ pub mod OrderbookComponent {
 
             order_status_write(related_order_hash, OrderStatus::Fulfilled);
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
+            self
+                .emit(
+                    OrderFulfilled {
+                        order_hash: fulfill_info.order_hash,
+                        fulfiller: fulfill_info.fulfiller,
+                        related_order_hash: Option::Some(related_order_hash)
+                    }
+                );
 
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
@@ -471,9 +387,9 @@ pub mod OrderbookComponent {
                     listing_broker_address: order.broker_id,
                     fulfill_broker_address: fulfill_info.fulfill_broker_address
                 };
-                (Option::Some(execute_info), Option::Some(related_order_hash))
+                Option::Some(execute_info)
             } else {
-                (Option::None, Option::Some(related_order_hash))
+                Option::None
             }
         }
 
@@ -485,7 +401,7 @@ pub mod OrderbookComponent {
         ///
         fn _fulfill_offer(
             ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo, order: OrderV1
-        ) -> (Option<ExecutionInfo>, Option<felt252>) {
+        ) -> Option<ExecutionInfo> {
             if order.token_id.is_some() {
                 let (auction_order_hash, _, _) = self.auctions.read(order.compute_token_hash());
 
@@ -496,13 +412,21 @@ pub mod OrderbookComponent {
 
             let current_date = starknet::get_block_timestamp();
             assert(order.end_date > current_date, orderbook_errors::ORDER_EXPIRED);
+
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
+            self
+                .emit(
+                    OrderFulfilled {
+                        order_hash: fulfill_info.order_hash,
+                        fulfiller: fulfill_info.fulfiller,
+                        related_order_hash: Option::None
+                    }
+                );
 
             if order.token_id.is_some() {
                 // remove token from listed tokens
                 self.token_listings.write(order.compute_token_hash(), 0);
             }
-
             let execute_info = ExecutionInfo {
                 order_hash: order.compute_order_hash(),
                 nft_address: order.token_address,
@@ -517,7 +441,7 @@ pub mod OrderbookComponent {
                 listing_broker_address: order.broker_id,
                 fulfill_broker_address: fulfill_info.fulfill_broker_address
             };
-            (Option::Some(execute_info), Option::None)
+            Option::Some(execute_info)
         }
 
         /// Fulfill listing order
@@ -528,12 +452,20 @@ pub mod OrderbookComponent {
         ///
         fn _fulfill_listing_order(
             ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo, order: OrderV1
-        ) -> (Option<ExecutionInfo>, Option<felt252>) {
+        ) -> Option<ExecutionInfo> {
             assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
             assert(
                 order.end_date > starknet::get_block_timestamp(), orderbook_errors::ORDER_EXPIRED
             );
             order_status_write(fulfill_info.order_hash, OrderStatus::Fulfilled);
+            self
+                .emit(
+                    OrderFulfilled {
+                        order_hash: fulfill_info.order_hash,
+                        fulfiller: fulfill_info.fulfiller,
+                        related_order_hash: Option::None
+                    }
+                );
 
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
@@ -550,9 +482,9 @@ pub mod OrderbookComponent {
                     listing_broker_address: order.broker_id,
                     fulfill_broker_address: fulfill_info.fulfill_broker_address
                 };
-                (Option::Some(execute_info), Option::None)
+                Option::Some(execute_info)
             } else {
-                (Option::None, Option::None)
+                Option::None
             }
         }
 
@@ -678,7 +610,6 @@ pub mod OrderbookComponent {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        version: ORDER_PLACED_EVENT_VERSION,
                         cancelled_order_hash,
                         order: order
                     }
@@ -722,7 +653,6 @@ pub mod OrderbookComponent {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        version: ORDER_PLACED_EVENT_VERSION,
                         cancelled_order_hash,
                         order: order,
                     }
@@ -786,7 +716,6 @@ pub mod OrderbookComponent {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        version: ORDER_PLACED_EVENT_VERSION,
                         cancelled_order_hash: Option::None,
                         order: order,
                     }
@@ -806,8 +735,7 @@ pub mod OrderbookComponent {
                     OrderPlaced {
                         order_hash: order_hash,
                         order_version: order.get_version(),
-                        order_type,
-                        version: ORDER_PLACED_EVENT_VERSION,
+                        order_type: order_type,
                         cancelled_order_hash: Option::None,
                         order: order,
                     }
@@ -815,15 +743,3 @@ pub mod OrderbookComponent {
         }
     }
 }
-pub impl OrderbookHooksCreateOrderEmptyImpl<
-    TContractState
-> of OrderbookComponent::OrderbookHooksCreateOrderTrait<TContractState> {}
-pub impl OrderbookHooksCancelOrderEmptyImpl<
-    TContractState
-> of OrderbookComponent::OrderbookHooksCancelOrderTrait<TContractState> {}
-pub impl OrderbookHooksFulfillOrderEmptyImpl<
-    TContractState
-> of OrderbookComponent::OrderbookHooksFulfillOrderTrait<TContractState> {}
-pub impl OrderbookHooksValidateOrderExecutionEmptyImpl<
-    TContractState
-> of OrderbookComponent::OrderbookHooksValidateOrderExecutionTrait<TContractState> {}
