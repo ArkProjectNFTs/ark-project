@@ -1,10 +1,9 @@
-use starknet::{ContractAddress, contract_address_const};
-
 use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, FeesAmount, FeesRatio
 };
 
 use snforge_std::{cheat_caller_address, CheatSpan};
+use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::setup;
 
 

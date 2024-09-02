@@ -1,10 +1,10 @@
-use serde::Serde;
-
-use starknet::{ContractAddress, contract_address_const};
-use snforge_std::{ContractClass, ContractClassTrait, declare, DeclareResultTrait};
+use ark_common::protocol::order_types::RouteType;
 
 use ark_common::protocol::order_v1::OrderV1;
-use ark_common::protocol::order_types::RouteType;
+use serde::Serde;
+use snforge_std::{ContractClass, ContractClassTrait, declare, DeclareResultTrait};
+
+use starknet::{ContractAddress, contract_address_const};
 
 fn deploy_erc20() -> ContractAddress {
     let contract = declare("FreeMintERC20").unwrap().contract_class();

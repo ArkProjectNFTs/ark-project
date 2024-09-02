@@ -1,9 +1,9 @@
-//! Interfaces for arkchain operator.
-use starknet::{ClassHash, ContractAddress};
 use ark_common::protocol::order_types::ExecutionInfo;
 use ark_common::protocol::order_types::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
 use ark_oz::erc2981::FeesRatio;
+//! Interfaces for arkchain operator.
+use starknet::{ClassHash, ContractAddress};
 
 #[derive(Serde, Drop)]
 struct FeesAmount {

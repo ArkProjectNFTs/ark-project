@@ -16,3 +16,6 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag 
 
 [workspace.scripts]
 test = "snforge test"
+
+[workspace.tool.fmt]
+sort-module-level-items = true

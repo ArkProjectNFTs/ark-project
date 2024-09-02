@@ -8,19 +8,18 @@ trait IFreeMint<T> {
 
 #[starknet::contract]
 mod FreeMintNFTRoyalty {
-    use starknet::ContractAddress;
-    use core::traits::Into;
-    use core::serde::Serde;
-    use core::traits::TryInto;
+    use ark_oz::erc2981::ERC2981Component;
+    use ark_oz::erc2981::FeesRatioDefault;
     use core::array::ArrayTrait;
+    use core::serde::Serde;
+    use core::traits::Into;
+    use core::traits::TryInto;
+    use openzeppelin::access::ownable::OwnableComponent;
 
     use openzeppelin::introspection::src5::SRC5Component;
     use openzeppelin::token::erc721::ERC721Component;
     use openzeppelin::token::erc721::ERC721HooksEmptyImpl;
-    use openzeppelin::access::ownable::OwnableComponent;
-
-    use ark_oz::erc2981::ERC2981Component;
-    use ark_oz::erc2981::FeesRatioDefault;
+    use starknet::ContractAddress;
 
     use super::IFreeMint;
 

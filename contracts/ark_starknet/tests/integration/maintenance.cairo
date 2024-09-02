@@ -1,11 +1,11 @@
-use starknet::{ContractAddress, contract_address_const};
-use ark_starknet::interfaces::{IMaintenanceDispatcher, IMaintenanceDispatcherTrait};
 use ark_starknet::executor::executor;
+use ark_starknet::interfaces::{IMaintenanceDispatcher, IMaintenanceDispatcherTrait};
 
 use snforge_std::{
     ContractClass, ContractClassTrait, cheat_caller_address, CheatSpan, spy_events,
     EventSpyAssertionsTrait,
 };
+use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::deploy_executor;
 

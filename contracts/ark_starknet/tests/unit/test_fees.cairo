@@ -1,12 +1,12 @@
 use ark_starknet::executor::{executor};
 use ark_starknet::interfaces::FeesRatio;
 
-use starknet::{ContractAddress};
-use starknet::testing;
-
 use snforge_std::{
     start_cheat_caller_address_global, stop_cheat_caller_address_global, test_address
 };
+use starknet::testing;
+
+use starknet::{ContractAddress};
 
 #[test]
 fn test_add_broker() {

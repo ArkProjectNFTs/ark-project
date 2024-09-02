@@ -1,10 +1,10 @@
 use ark_common::protocol::order_types::OrderTrait;
+use ark_common::protocol::order_types::OrderType;
+
+use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 use core::serde::Serde;
 
 use starknet::ContractAddress;
-
-use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-use ark_common::protocol::order_types::OrderType;
 
 
 #[derive(Drop, Copy, Debug, Serde, starknet::Store)]
@@ -54,19 +54,6 @@ impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
 
 #[starknet::contract]
 mod executor {
-    use core::zeroable::Zeroable;
-    use core::traits::Into;
-    use starknet::contract_address_to_felt252;
-    use starknet::get_contract_address;
-
-    use core::debug::PrintTrait;
-    use core::traits::TryInto;
-    use core::box::BoxTrait;
-    use core::option::OptionTrait;
-
-    use starknet::{ContractAddress, ClassHash};
-    use starknet::storage::Map;
-
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
@@ -75,21 +62,33 @@ mod executor {
 
     use ark_component::orderbook::OrderbookComponent;
     use ark_oz::erc2981::interface::IERC2981_ID;
-    use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
     use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
-
-    use ark_starknet::interfaces::{IExecutor, IUpgradable, IMaintenance};
-    use ark_starknet::interfaces::FeesAmount;
+    use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
 
     use ark_starknet::appchain_messaging::{
         IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
     };
+    use ark_starknet::interfaces::FeesAmount;
+
+    use ark_starknet::interfaces::{IExecutor, IUpgradable, IMaintenance};
+    use core::box::BoxTrait;
+
+    use core::debug::PrintTrait;
+    use core::option::OptionTrait;
+    use core::traits::Into;
+    use core::traits::TryInto;
+    use core::zeroable::Zeroable;
+    use openzeppelin::introspection::interface::{ISRC5, ISRC5Dispatcher, ISRC5DispatcherTrait};
 
     use openzeppelin::token::{
         erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
         erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
     };
-    use openzeppelin::introspection::interface::{ISRC5, ISRC5Dispatcher, ISRC5DispatcherTrait};
+    use starknet::contract_address_to_felt252;
+    use starknet::get_contract_address;
+    use starknet::storage::Map;
+
+    use starknet::{ContractAddress, ClassHash};
 
     use super::{OrderInfo, OrderV1IntoOrderInfo};
 
