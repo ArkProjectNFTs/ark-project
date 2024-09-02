@@ -242,7 +242,7 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
                             .and_then(|s| DisplayType::from_str(s).ok());
 
                         Some(MetadataAttribute {
-                            display_type: display_type,
+                            display_type,
                             trait_type: Some(trait_type),
                             value,
                         })
