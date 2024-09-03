@@ -7,7 +7,7 @@ use base64::{engine::general_purpose, Engine as _};
 use chrono::Utc;
 use reqwest::header::{HeaderMap, CONTENT_LENGTH, CONTENT_TYPE};
 use reqwest::Client;
-use serde_json::Value;
+use serde_json::{Number, Value};
 use std::str::FromStr;
 use std::time::Duration;
 use tracing::{debug, error, trace, warn};
@@ -233,8 +233,14 @@ fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
                             .or_else(|| attr.get("trait"))
                             .and_then(|v| v.as_str())
                             .map(String::from),
-                        attr.get("value")
-                            .map(|v| MetadataTraitValue::String(v.as_str().unwrap().to_string())),
+                        attr.get("value").map(|v| match v {
+                            value if value.is_number() => MetadataTraitValue::Number(Number::from(
+                                value.as_i64().unwrap_or_default(),
+                            )),
+                            value => MetadataTraitValue::String(
+                                value.as_str().unwrap_or_default().to_string(),
+                            ),
+                        }),
                     ) {
                         let display_type = attr
                             .get("display_type")
