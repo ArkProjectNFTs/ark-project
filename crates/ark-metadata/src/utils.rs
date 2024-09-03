@@ -77,12 +77,14 @@ fn normalize_metadata(raw_metadata: &str) -> Result<NormalizedMetadata> {
     let name = extract_string(&value, "name");
     let description = extract_string(&value, "description");
     let external_url = extract_string(&value, "external_url");
+    let animation_url = extract_string(&value, "animation_url");
 
     Ok(NormalizedMetadata {
         image,
         name,
         description,
         external_url,
+        animation_url,
         ..Default::default()
     })
 }
@@ -365,6 +367,10 @@ mod tests {
         assert_eq!(file_extension_from_mime_type("image/png"), Some("png"));
         assert_eq!(file_extension_from_mime_type("image/jpeg"), Some("jpg"));
         assert_eq!(file_extension_from_mime_type("video/mp4"), Some("mp4"));
+        assert_eq!(
+            file_extension_from_mime_type("model/gltf-binary"),
+            Some("glb")
+        );
     }
 
     #[tokio::test]
