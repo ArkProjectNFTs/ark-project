@@ -356,9 +356,9 @@ mod tests {
 
     #[test]
     fn test_file_extension_from_mime_type() {
-        assert_eq!(file_extension_from_mime_type("image/png"), "png");
-        assert_eq!(file_extension_from_mime_type("image/jpeg"), "jpg");
-        assert_eq!(file_extension_from_mime_type("video/mp4"), "mp4");
+        assert_eq!(file_extension_from_mime_type("image/png"), Some("png"));
+        assert_eq!(file_extension_from_mime_type("image/jpeg"), Some("jpg"));
+        assert_eq!(file_extension_from_mime_type("video/mp4"), Some("mp4"));
     }
 
     #[tokio::test]
