@@ -46,6 +46,13 @@ const createOffer = async (
   currentDate.setDate(currentDate.getDate() + 30);
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
+  const currencyAddress =
+    baseOrder.currencyAddress || config.starknetCurrencyContract;
+
+  if (currencyAddress !== approveInfo.currencyAddress) {
+    throw new Error("Invalid currency address, offer and approveInfo mismatch");
+  }
+
   const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,
@@ -55,7 +62,8 @@ const createOffer = async (
   const allowance = currentAllowance + approveInfo.amount;
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
-    currencyAddress: config.starknetCurrencyContract,
+    currencyAddress:
+      baseOrder.currencyAddress ?? config.starknetCurrencyContract,
     currencyChainId: chainId,
     salt: 1,
     offerer: starknetAccount.address,

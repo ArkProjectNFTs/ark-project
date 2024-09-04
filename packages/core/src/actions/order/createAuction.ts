@@ -65,7 +65,8 @@ const createAuction = async (
 
   const order: OrderV1 = {
     route: RouteType.Erc721ToErc20,
-    currencyAddress: config.starknetCurrencyContract,
+    currencyAddress:
+      baseOrder.currencyAddress ?? config.starknetCurrencyContract,
     currencyChainId: chainId,
     salt: 1,
     offerer: starknetAccount.address,

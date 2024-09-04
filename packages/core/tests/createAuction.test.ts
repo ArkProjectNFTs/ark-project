@@ -33,6 +33,33 @@ describe("createAuction", () => {
     expect(orderType).toEqual("AUCTION");
   }, 50_000);
 
+  it("default: with custom currency", async () => {
+    const { seller, listingBroker } = accounts;
+    const tokenId = await mintERC721({ account: seller });
+
+    const orderHash = await createAuction(config, {
+      starknetAccount: seller,
+      order: {
+        brokerId: listingBroker.address,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId,
+        startAmount: BigInt(1),
+        endAmount: BigInt(10),
+        currencyAddress:
+          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
+      },
+      approveInfo: {
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenId
+      }
+    });
+
+    const orderTypeCairo = await getOrderType(config, { orderHash });
+    const orderType = getTypeFromCairoCustomEnum(orderTypeCairo.orderType);
+
+    expect(orderType).toEqual("AUCTION");
+  }, 50_000);
+
   it("error: invalid start date", async () => {
     const { seller, listingBroker } = accounts;
     const tokenId = await mintERC721({ account: seller });
