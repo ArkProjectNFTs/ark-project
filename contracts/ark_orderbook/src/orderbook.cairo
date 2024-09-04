@@ -37,6 +37,10 @@ mod orderbook {
     };
     use ark_common::protocol::order_v1::OrderV1;
     use ark_component::orderbook::OrderbookComponent;
+    use ark_component::orderbook::{
+        OrderbookHooksCreateOrderEmptyImpl, OrderbookHooksCancelOrderEmptyImpl,
+        OrderbookHooksFulfillOrderEmptyImpl, OrderbookHooksValidateOrderExecutionEmptyImpl,
+    };
     use core::debug::PrintTrait;
     use core::option::OptionTrait;
     use core::result::ResultTrait;
@@ -143,7 +147,7 @@ mod orderbook {
     fn fulfill_order_from_l2(
         ref self: ContractState, _from_address: felt252, fulfillInfo: FulfillInfo
     ) {
-        self.orderbook.fulfill_order(fulfillInfo);
+        let _ = self.orderbook.fulfill_order(fulfillInfo);
     }
 
     #[abi(embed_v0)]
@@ -180,7 +184,7 @@ mod orderbook {
         }
 
         fn _fulfill_order(ref self: ContractState, fulfill_info: FulfillInfo) {
-            self.orderbook.fulfill_order(fulfill_info);
+            let _ = self.orderbook.fulfill_order(fulfill_info);
         }
 
         /// Fulfill auction order
