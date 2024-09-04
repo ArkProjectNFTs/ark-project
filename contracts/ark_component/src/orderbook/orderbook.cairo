@@ -1,7 +1,5 @@
 #[starknet::component]
 pub mod OrderbookComponent {
-    use ark_common::crypto::signer::{SignInfo, Signer, SignerTrait, SignerValidator};
-    use ark_common::crypto::typed_data::{OrderSign, TypedDataTrait};
     use ark_common::protocol::order_database::{
         order_read, order_status_read, order_write, order_status_write, order_type_read
     };
@@ -111,6 +109,29 @@ pub mod OrderbookComponent {
         related_order_hash: Option<felt252>,
     }
 
+    pub trait OrderbookHooksCreateOrderTrait<TContractState> {
+        fn before_create_order(ref self: TContractState, order: OrderV1) {}
+        fn after_create_order(ref self: TContractState, order: OrderV1) {}
+    }
+
+    pub trait OrderbookHooksCancelOrderTrait<TContractState> {
+        fn before_cancel_order(ref self: TContractState, cancel_info: CancelInfo) {}
+        fn after_cancel_order(ref self: TContractState, cancel_info: CancelInfo) {}
+    }
+
+    pub trait OrderbookHooksFulfillOrderTrait<TContractState> {
+        fn before_fulfill_order(ref self: TContractState, fulfill_info: FulfillInfo) {}
+        fn after_fulfill_order(ref self: TContractState, fulfill_info: FulfillInfo) {}
+    }
+
+    pub trait OrderbookHooksValidateOrderExecutionTrait<TContractState> {
+        fn before_validate_order_execution(
+            ref self: TContractState, info: ExecutionValidationInfo
+        ) {}
+        fn after_validate_order_execution(
+            ref self: TContractState, info: ExecutionValidationInfo
+        ) {}
+    }
 
     #[embeddable_as(OrderbookImpl)]
     pub impl Orderbook<
@@ -174,7 +195,12 @@ pub mod OrderbookComponent {
     }
 
     pub impl OrderbookActionImpl<
-        TContractState, +HasComponent<TContractState>
+        TContractState,
+        +HasComponent<TContractState>,
+        impl Hooks: OrderbookHooksCreateOrderTrait<TContractState>,
+        impl Hooks: OrderbookHooksCancelOrderTrait<TContractState>,
+        impl Hooks: OrderbookHooksFulfillOrderTrait<TContractState>,
+        impl Hooks: OrderbookHooksValidateOrderExecutionTrait<TContractState>,
     > of IOrderbookAction<ComponentState<TContractState>> {
         fn validate_order_execution(
             ref self: ComponentState<TContractState>, info: ExecutionValidationInfo
@@ -743,3 +769,15 @@ pub mod OrderbookComponent {
         }
     }
 }
+pub impl OrderbookHooksCreateOrderEmptyImpl<
+    TContractState
+> of OrderbookComponent::OrderbookHooksCreateOrderTrait<TContractState> {}
+pub impl OrderbookHooksCancelOrderEmptyImpl<
+    TContractState
+> of OrderbookComponent::OrderbookHooksCancelOrderTrait<TContractState> {}
+pub impl OrderbookHooksFulfillOrderEmptyImpl<
+    TContractState
+> of OrderbookComponent::OrderbookHooksFulfillOrderTrait<TContractState> {}
+pub impl OrderbookHooksValidateOrderExecutionEmptyImpl<
+    TContractState
+> of OrderbookComponent::OrderbookHooksValidateOrderExecutionTrait<TContractState> {}
