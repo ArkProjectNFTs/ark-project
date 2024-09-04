@@ -1,5 +1,12 @@
 # @ark-project/react
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [50a694d]
+  - @ark-project/core@2.1.2
+
 ## 1.1.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 2.1.2
+
+### Patch Changes
+
+- 50a694d: use offer currency address optional param
+
 ## 2.1.1
 
 ### Patch Changes
