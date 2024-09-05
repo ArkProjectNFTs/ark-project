@@ -110,26 +110,30 @@ pub mod OrderbookComponent {
     }
 
     pub trait OrderbookHooksCreateOrderTrait<TContractState> {
-        fn before_create_order(ref self: TContractState, order: OrderV1) {}
-        fn after_create_order(ref self: TContractState, order: OrderV1) {}
+        fn before_create_order(ref self: ComponentState<TContractState>, order: OrderV1) {}
+        fn after_create_order(ref self: ComponentState<TContractState>, order: OrderV1) {}
     }
 
     pub trait OrderbookHooksCancelOrderTrait<TContractState> {
-        fn before_cancel_order(ref self: TContractState, cancel_info: CancelInfo) {}
-        fn after_cancel_order(ref self: TContractState, cancel_info: CancelInfo) {}
+        fn before_cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {}
+        fn after_cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {}
     }
 
     pub trait OrderbookHooksFulfillOrderTrait<TContractState> {
-        fn before_fulfill_order(ref self: TContractState, fulfill_info: FulfillInfo) {}
-        fn after_fulfill_order(ref self: TContractState, fulfill_info: FulfillInfo) {}
+        fn before_fulfill_order(
+            ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo
+        ) {}
+        fn after_fulfill_order(
+            ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo
+        ) {}
     }
 
     pub trait OrderbookHooksValidateOrderExecutionTrait<TContractState> {
         fn before_validate_order_execution(
-            ref self: TContractState, info: ExecutionValidationInfo
+            ref self: ComponentState<TContractState>, info: ExecutionValidationInfo
         ) {}
         fn after_validate_order_execution(
-            ref self: TContractState, info: ExecutionValidationInfo
+            ref self: ComponentState<TContractState>, info: ExecutionValidationInfo
         ) {}
     }
 
@@ -197,14 +201,15 @@ pub mod OrderbookComponent {
     pub impl OrderbookActionImpl<
         TContractState,
         +HasComponent<TContractState>,
-        impl Hooks: OrderbookHooksCreateOrderTrait<TContractState>,
-        impl Hooks: OrderbookHooksCancelOrderTrait<TContractState>,
-        impl Hooks: OrderbookHooksFulfillOrderTrait<TContractState>,
-        impl Hooks: OrderbookHooksValidateOrderExecutionTrait<TContractState>,
+        impl HooksCreateOrder: OrderbookHooksCreateOrderTrait<TContractState>,
+        impl HooksCancelOrder: OrderbookHooksCancelOrderTrait<TContractState>,
+        impl HooksFulfillOrder: OrderbookHooksFulfillOrderTrait<TContractState>,
+        impl HooksValidateOrder: OrderbookHooksValidateOrderExecutionTrait<TContractState>,
     > of IOrderbookAction<ComponentState<TContractState>> {
         fn validate_order_execution(
             ref self: ComponentState<TContractState>, info: ExecutionValidationInfo
         ) {
+            HooksValidateOrder::before_validate_order_execution(ref self, info);
             order_status_write(info.order_hash, OrderStatus::Executed);
             let order_status = order_status_read(info.order_hash).unwrap();
             self
@@ -218,10 +223,13 @@ pub mod OrderbookComponent {
                         version: ORDER_EXECUTED_EVENT_VERSION,
                     }
                 );
+
+            HooksValidateOrder::after_validate_order_execution(ref self, info);
         }
 
         /// Submits and places an order to the orderbook if the order is valid.
         fn create_order(ref self: ComponentState<TContractState>, order: OrderV1) {
+            HooksCreateOrder::before_create_order(ref self, order);
             let block_ts = starknet::get_block_timestamp();
             let validation = order.validate_common_data(block_ts);
             if validation.is_err() {
@@ -251,9 +259,13 @@ pub mod OrderbookComponent {
                     self._create_collection_offer(order, order_type, order_hash);
                 },
             };
+
+            HooksCreateOrder::after_create_order(ref self, order);
         }
 
         fn cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {
+            HooksCancelOrder::before_cancel_order(ref self, cancel_info);
+
             let order_hash = cancel_info.order_hash;
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
@@ -286,11 +298,15 @@ pub mod OrderbookComponent {
             // Cancel order
             order_status_write(order_hash, OrderStatus::CancelledUser);
             self.emit(OrderCancelled { order_hash, reason: OrderStatus::CancelledUser.into() });
+
+            HooksCancelOrder::after_cancel_order(ref self, cancel_info);
         }
 
         fn fulfill_order(
             ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo
         ) -> Option::<ExecutionInfo> {
+            HooksFulfillOrder::before_fulfill_order(ref self, fulfill_info);
+
             let order_hash = fulfill_info.order_hash;
             let order: OrderV1 = match order_read(order_hash) {
                 Option::Some(o) => o,
@@ -305,14 +321,18 @@ pub mod OrderbookComponent {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
-            match order_type {
+            let execution_info = match order_type {
                 OrderType::Listing => self._fulfill_listing_order(fulfill_info, order),
                 OrderType::Auction => self._fulfill_auction_order(fulfill_info, order),
                 OrderType::Offer => self._fulfill_offer(fulfill_info, order),
                 OrderType::CollectionOffer => self._fulfill_offer(fulfill_info, order),
-            }
+            };
+
+            HooksFulfillOrder::after_fulfill_order(ref self, fulfill_info);
+            execution_info
         }
     }
+
     // *************************************************************************
     // INTERNAL FUNCTIONS
     // *************************************************************************
