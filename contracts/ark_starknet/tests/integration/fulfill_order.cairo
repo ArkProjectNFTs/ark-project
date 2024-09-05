@@ -406,7 +406,7 @@ fn test_fulfill_auction_order_ok() {
     let (order_hash, offerer, token_id) = create_auction_order(
         executor_address, erc20_address, nft_address, start_amount, end_amount
     );
-    let fulfiller = contract_address_const::<'fulfiller'>();
+    let fulfiller = offerer;
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
 
