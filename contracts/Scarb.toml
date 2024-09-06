@@ -13,6 +13,7 @@ members = [
 starknet = "2.7.1"
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.15.1" }
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
+assert_macros = "0.1.0"
 
 [workspace.scripts]
 test = "snforge test"
