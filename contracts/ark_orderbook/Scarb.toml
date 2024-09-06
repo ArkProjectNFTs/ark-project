@@ -9,7 +9,7 @@ starknet.workspace = true
 
 [dev-dependencies]
 snforge_std.workspace = true
-assert_macros = "0.1.0"
+assert_macros.workspace = true
 
 [scripts]
 test.workspace = true
