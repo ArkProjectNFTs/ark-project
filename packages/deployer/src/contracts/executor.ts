@@ -63,8 +63,7 @@ export async function deployExecutor(
   artifactsPath: string,
   account: sn.Account,
   provider: sn.RpcProvider,
-  ethContractAddress: string,
-  messagingAddress: string
+  ethContractAddress: string
 ) {
   const artifacts = getArtifacts(artifactsPath);
   const chain_id = await provider.getChainId();
@@ -72,7 +71,6 @@ export async function deployExecutor(
   const contractConstructor = contractCallData.compile("constructor", {
     admin_address: account.address,
     eth_contract_address: ethContractAddress,
-    messaging_address: messagingAddress,
     chain_id: chain_id
   });
 

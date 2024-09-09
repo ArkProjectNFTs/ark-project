@@ -1,8 +1,6 @@
 import { RpcProvider, type ProviderInterface } from "starknet";
 
 import {
-  arkchainOrderbookContracts,
-  arkchainRpcUrls,
   networks,
   starknetEthContract,
   starknetExecutorContracts,
@@ -17,10 +15,6 @@ export interface Config {
   starknetRpcUrl: string;
   starknetExecutorContract: string;
   starknetCurrencyContract: string;
-  arkchainNetwork: Network;
-  arkProvider: ProviderInterface;
-  arkchainRpcUrl: string;
-  arkchainOrderbookContract: string;
 }
 
 export type CreateConfigParameters = {
@@ -29,10 +23,6 @@ export type CreateConfigParameters = {
   starknetProvider?: ProviderInterface;
   starknetExecutorContract?: string;
   starknetCurrencyContract?: string;
-  arkchainNetwork: Network;
-  arkchainRpcUrl?: string;
-  arkProvider?: ProviderInterface;
-  arkchainOrderbookContract?: string;
 };
 
 export function createConfig({
@@ -40,18 +30,10 @@ export function createConfig({
   starknetRpcUrl,
   starknetProvider,
   starknetExecutorContract,
-  starknetCurrencyContract = starknetEthContract,
-  arkchainNetwork,
-  arkchainRpcUrl,
-  arkProvider,
-  arkchainOrderbookContract
+  starknetCurrencyContract = starknetEthContract
 }: CreateConfigParameters): Config {
   if (starknetNetwork === networks.dev && !starknetExecutorContract) {
     throw new Error("starknetExecutorContract is required for dev network");
-  }
-
-  if (arkchainNetwork === networks.dev && !arkchainOrderbookContract) {
-    throw new Error("arkchainOrderbookContract is required for dev network");
   }
 
   return {
@@ -64,15 +46,6 @@ export function createConfig({
       }),
     starknetExecutorContract:
       starknetExecutorContract || starknetExecutorContracts[starknetNetwork],
-    starknetCurrencyContract,
-    arkchainNetwork,
-    arkchainRpcUrl: arkchainRpcUrl || arkchainRpcUrls[arkchainNetwork],
-    arkProvider:
-      arkProvider ||
-      new RpcProvider({
-        nodeUrl: arkchainRpcUrl || arkchainRpcUrls[arkchainNetwork]
-      }),
-    arkchainOrderbookContract:
-      arkchainOrderbookContract || arkchainOrderbookContracts[arkchainNetwork]
+    starknetCurrencyContract
   };
 }
