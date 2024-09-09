@@ -16,7 +16,7 @@ const getOrderHash = async (
   const chainId = await config.starknetProvider.getChainId();
   const tokenHash = {
     tokenId: cairo.uint256(tokenId),
-    tokenAddress: tokenAddress,
+    tokenAddress,
     tokenChainId: shortString.decodeShortString(chainId.toString())
   };
 

@@ -10,3 +10,7 @@ export const getOrderHashFromOrderV1 = (order: OrderV1) => {
   const compiletOrderBigIntArray = compiledOrder.map(BigInt);
   return starknet.poseidonHashMany(compiletOrderBigIntArray);
 };
+
+export function validateFeesRatio(numerator: number, denominator: number) {
+  return numerator >= 0 && denominator > 0 && numerator < denominator
+}

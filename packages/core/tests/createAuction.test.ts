@@ -3,26 +3,25 @@ import {
   accounts,
   config,
   getTypeFromCairoCustomEnum,
-  mintERC721,
-  STARKNET_NFT_ADDRESS
+  mintERC721
 } from "./utils/index.js";
 
 describe("createAuction", () => {
   it("default", async () => {
     const { seller, listingBroker } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const orderHash = await createAuction(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount: BigInt(1),
         endAmount: BigInt(10)
       },
       approveInfo: {
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId
       }
     });
@@ -62,13 +61,13 @@ describe("createAuction", () => {
 
   it("error: invalid start date", async () => {
     const { seller, listingBroker } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const invalidStartDate = Math.floor(Date.now() / 1000 - 30);
 
     const order: AuctionV1 = {
       brokerId: listingBroker.address,
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress,
       tokenId,
       startDate: invalidStartDate,
       startAmount: BigInt(1),
@@ -80,7 +79,7 @@ describe("createAuction", () => {
         starknetAccount: seller,
         order,
         approveInfo: {
-          tokenAddress: STARKNET_NFT_ADDRESS,
+          tokenAddress,
           tokenId
         }
       })
@@ -89,13 +88,13 @@ describe("createAuction", () => {
 
   it("error: invalid end date", async () => {
     const { seller, listingBroker } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const invalidEndDate = Math.floor(Date.now() / 1000) - 30;
 
     const order: AuctionV1 = {
       brokerId: listingBroker.address,
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress,
       tokenId,
       endDate: invalidEndDate,
       startAmount: BigInt(1),
@@ -106,7 +105,7 @@ describe("createAuction", () => {
       createAuction(config, {
         starknetAccount: seller,
         approveInfo: {
-          tokenAddress: STARKNET_NFT_ADDRESS,
+          tokenAddress,
           tokenId
         },
         order
@@ -116,11 +115,11 @@ describe("createAuction", () => {
 
   it("error: invalid end amount", async () => {
     const { seller, listingBroker } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const order: AuctionV1 = {
       brokerId: listingBroker.address,
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress,
       tokenId,
       startAmount: BigInt(1),
       endAmount: BigInt(0)
@@ -130,7 +129,7 @@ describe("createAuction", () => {
       createAuction(config, {
         starknetAccount: seller,
         approveInfo: {
-          tokenAddress: STARKNET_NFT_ADDRESS,
+          tokenAddress,
           tokenId
         },
         order
