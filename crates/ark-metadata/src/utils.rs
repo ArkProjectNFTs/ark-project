@@ -17,14 +17,10 @@ pub fn normalize_onchain_data(contract_address: &str, uri: &str) -> String {
 
     // Loot Survivor: Beasts
     if contract_address == "0x0158160018d590d93528995b340260e65aedd76d28a686e9daa5c4e8fad0c5dd" {
-        normalized = normalized
-            .replace("%20", " ")
-            .replace("\"%20", " ")
-            .replace(":\"\"", ":\"");
-
-        for c in 'A'..='Z' {
-            normalized = normalized.replace(&format!("\" {}", c), &format!(" {}", c));
-        }
+        normalized = normalized.replace("%20", " ").replace(":\"\"", ":\"");
+        normalized = ('A'..='Z').fold(normalized, |acc, c| {
+            acc.replace(&format!("\" {}", c), &format!(" {}", c))
+        });
     }
 
     normalized
