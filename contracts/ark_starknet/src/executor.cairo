@@ -645,19 +645,23 @@ mod executor {
                 + ark_fees_amount);
 
         // split the fees
-        currency_contract
-            .transfer_from(
-                execution_info.payment_from,
-                execution_info.fulfill_broker_address,
-                fulfill_broker_fees_amount,
-            );
+        if fulfill_broker_fees_amount > 0 {
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from,
+                    execution_info.fulfill_broker_address,
+                    fulfill_broker_fees_amount,
+                );
+        }
 
-        currency_contract
-            .transfer_from(
-                execution_info.payment_from,
-                execution_info.listing_broker_address,
-                listing_broker_fees_amount
-            );
+        if listing_broker_fees_amount > 0 {
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from,
+                    execution_info.listing_broker_address,
+                    listing_broker_fees_amount
+                );
+        }
 
         if creator_fees_amount > 0 {
             let (default_receiver_creator, _) = self.get_default_creator_fees();
@@ -683,8 +687,12 @@ mod executor {
                 );
         }
         // finally transfer to the seller
-        currency_contract
-            .transfer_from(execution_info.payment_from, execution_info.payment_to, seller_amount);
+        if seller_amount > 0 {
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from, execution_info.payment_to, seller_amount
+                );
+        }
 
         let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
         nft_contract
