@@ -43,7 +43,7 @@ const createOffer = async (
 ) => {
   const { starknetAccount, offer: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() + 30);
+  currentDate.setDate(currentDate.getDate());
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
   const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
   const currencyAddress =

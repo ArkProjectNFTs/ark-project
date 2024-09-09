@@ -22,8 +22,6 @@ trait IExecutor<T> {
     fn update_admin_address(ref self: T, admin_address: ContractAddress);
     fn update_orderbook_address(ref self: T, orderbook_address: ContractAddress);
     fn update_eth_address(ref self: T, eth_address: ContractAddress);
-    fn update_messaging_address(ref self: T, msger_address: ContractAddress);
-    fn get_messaging_address(self: @T) -> ContractAddress;
     fn get_orderbook_address(self: @T) -> ContractAddress;
     fn update_arkchain_orderbook_address(ref self: T, orderbook_address: ContractAddress);
     fn set_broker_fees(ref self: T, fees_ratio: FeesRatio);
