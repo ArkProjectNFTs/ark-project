@@ -29,17 +29,17 @@ const getOrderHash = async (
 
   const tokenHashMessage = starknet.poseidonHashMany(tokenHashBigIntArray);
 
-  const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainOrderbookContract
+  const { abi: executorAbi } = await config.starknetProvider.getClassAt(
+    config.starknetExecutorContract
   );
-  if (orderbookAbi === undefined) {
+  if (executorAbi === undefined) {
     throw new Error("no abi.");
   }
 
   const orderbookContract = new Contract(
-    orderbookAbi,
-    config.arkchainOrderbookContract,
-    config.arkProvider
+    executorAbi,
+    config.starknetExecutorContract,
+    config.starknetProvider
   );
 
   const order_hash_calldata = CallData.compile({
