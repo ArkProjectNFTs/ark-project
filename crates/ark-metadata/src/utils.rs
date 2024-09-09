@@ -20,8 +20,7 @@ pub fn normalize_onchain_data(contract_address: &str, uri: &str) -> String {
         normalized = normalized
             .replace("%20", " ")
             .replace("\"%20", " ")
-            .replace(":\"\"", ":\"")
-            .replace("\" O", " O");
+            .replace(":\"\"", ":\"");
 
         for c in 'A'..='Z' {
             normalized = normalized.replace(&format!("\" {}", c), &format!(" {}", c));
@@ -473,8 +472,8 @@ mod tests {
         .to_string();
         let encoded_metadata = base64_encode(&metadata_json);
         let uri = format!("data:application/json;base64,{}", encoded_metadata);
-
-        let fetched_metadata = fetch_onchain_metadata(&uri).unwrap();
+        let contract_address = "0x1234567890123456789012345678901234567890";
+        let fetched_metadata = fetch_onchain_metadata(contract_address, &uri).unwrap();
 
         assert_eq!(fetched_metadata.raw, metadata_json);
         assert_eq!(
@@ -493,8 +492,8 @@ mod tests {
         })
         .to_string();
         let uri = format!("data:application/json,{}", metadata_json);
-
-        let fetched_metadata = fetch_onchain_metadata(&uri).unwrap();
+        let contract_address = "0x1234567890123456789012345678901234567890";
+        let fetched_metadata = fetch_onchain_metadata(contract_address, &uri).unwrap();
 
         assert_eq!(fetched_metadata.raw, metadata_json);
         assert_eq!(
@@ -506,10 +505,17 @@ mod tests {
 
     #[test]
     fn handle_invalid_onchain_metadata_format() {
+        let contract_address = "0x1234567890123456789012345678901234567890";
         let invalid_uri = "data:application/json;utf8,invalid_json";
-
-        let result = fetch_onchain_metadata(invalid_uri);
-
+        let result = fetch_onchain_metadata(contract_address, invalid_uri);
         assert!(result.is_err() || result.unwrap().normalized.name.is_none());
+    }
+
+    #[test]
+    fn test_normalize_onchain_data() {
+        let contract_address = "0x0158160018d590d93528995b340260e65aedd76d28a686e9daa5c4e8fad0c5dd";
+        let uri = r#"data:application/json;utf8,{"name":""Pandemonium%20Growl"%20Wyvern","description":"Beasts","attributes":[{"trait_type":"prefix","value":"Pandemonium"},{"trait_type":"name","value":"Wyvern"},{"trait_type":"suffix","value":"Growl"},{"trait_type":"type","value":"Hunter"},{"trait_type":"tier","value":3},{"trait_type":"level","value":115},{"trait_type":"health","value":511}],"image":"data:image/svg+xml;utf8,<svg%20width=\"100%\"%20height=\"100%\"%20viewBox=\"0%200%2020000%2020000\"%20xmlns=\"http://www.w3.org/2000/svg\"><style>svg{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAAXNSR0IArs4c6QAAAAxQTFRFAAAAAAAAAP8AAAD/0o8flwAAAAR0Uk5TAP///7MtQIgAAAC8SURBVDiNnZILDsMgDEMT+f533gSx49DPpLVSK/DDJIbIH088KoADqKHJNRVz2HLWVFD/fn11rhcb4GqYWRELWP/Fb19utokw/VILAdKlGgSwiyrMHnpE69rCCG4BJNpKLXoXULhqsqNWcZ45PWOzUEwj7ulgy+w4Vw0+raXDYepW7c2FUb14AOgHazO9CBztRt4Rdl4CjlPWsIHz2h7AtMAd0NPwQLtNBTp0z4EXZuhnUJjndQVeuvgb+AA3cQYBxBXi6QAAAABJRU5ErkJggg==);background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:-webkit-optimize-contrast;-ms-interpolation-mode:nearest-neighbor;image-rendering:-moz-crisp-edges;image-rendering:pixelated;}</style></svg>"}"#;
+        let normalized = normalize_onchain_data(contract_address, uri);
+        assert_eq!(normalized, "data:application/json;utf8,{\"name\":\"Pandemonium Growl Wyvern\",\"description\":\"Beasts\",\"attributes\":[{\"trait_type\":\"prefix\",\"value\":\"Pandemonium\"},{\"trait_type\":\"name\",\"value\":\"Wyvern\"},{\"trait_type\":\"suffix\",\"value\":\"Growl\"},{\"trait_type\":\"type\",\"value\":\"Hunter\"},{\"trait_type\":\"tier\",\"value\":3},{\"trait_type\":\"level\",\"value\":115},{\"trait_type\":\"health\",\"value\":511}],\"image\":\"data:image/svg+xml;utf8,<svg width=\\\"100%\\\" height=\\\"100%\\\" viewBox=\\\"0 0 20000 20000\\\" xmlns=\\\"http://www.w3.org/2000/svg\\\"><style>svg{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAAXNSR0IArs4c6QAAAAxQTFRFAAAAAAAAAP8AAAD/0o8flwAAAAR0Uk5TAP///7MtQIgAAAC8SURBVDiNnZILDsMgDEMT+f533gSx49DPpLVSK/DDJIbIH088KoADqKHJNRVz2HLWVFD/fn11rhcb4GqYWRELWP/Fb19utokw/VILAdKlGgSwiyrMHnpE69rCCG4BJNpKLXoXULhqsqNWcZ45PWOzUEwj7ulgy+w4Vw0+raXDYepW7c2FUb14AOgHazO9CBztRt4Rdl4CjlPWsIHz2h7AtMAd0NPwQLtNBTp0z4EXZuhnUJjndQVeuvgb+AA3cQYBxBXi6QAAAABJRU5ErkJggg==);background-repeat:no-repeat;background-size:contain;background-position:center;image-rendering:-webkit-optimize-contrast;-ms-interpolation-mode:nearest-neighbor;image-rendering:-moz-crisp-edges;image-rendering:pixelated;}</style></svg>\"}");
     }
 }
