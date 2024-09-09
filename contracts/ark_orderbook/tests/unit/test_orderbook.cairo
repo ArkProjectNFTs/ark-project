@@ -64,6 +64,7 @@ fn test_create_listing() {
                             cancelled_order_hash: Option::None,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::Listing,
+                            version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
                             order: order_listing_1
                         }
                     )
@@ -239,6 +240,7 @@ fn test_create_offer() {
                             order_hash,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::Offer,
+                            version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
                             order: offer_order,
                             cancelled_order_hash: Option::None
                         }
@@ -277,6 +279,7 @@ fn test_create_collection_offer() {
                             order_hash,
                             order_version: ORDER_VERSION_V1,
                             order_type: OrderType::CollectionOffer,
+                            version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
                             order: offer_order,
                             cancelled_order_hash: Option::None
                         }
@@ -379,7 +382,9 @@ fn test_fulfill_classic_token_offer() {
                         OrderbookComponent::OrderFulfilled {
                             order_hash: fulfill_info.order_hash,
                             fulfiller: fulfill_info.fulfiller,
-                            related_order_hash: Option::None
+                            related_order_hash: fulfill_info.related_order_hash,
+                            order_type: OrderType::Offer,
+                            version: OrderbookComponent::ORDER_FULFILLED_EVENT_VERSION,
                         }
                     )
                 )
@@ -421,7 +426,9 @@ fn test_fulfill_classic_collection_offer() {
                         OrderbookComponent::OrderFulfilled {
                             order_hash: fulfill_info.order_hash,
                             fulfiller: fulfill_info.fulfiller,
-                            related_order_hash: Option::None
+                            related_order_hash: Option::None,
+                            order_type: OrderType::CollectionOffer,
+                            version: OrderbookComponent::ORDER_FULFILLED_EVENT_VERSION,
                         }
                     )
                 )

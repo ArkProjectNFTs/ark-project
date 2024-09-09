@@ -196,7 +196,8 @@ mod orderbook {
         fn _fulfill_auction_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
-            match self.orderbook._fulfill_auction_order(fulfill_info, order) {
+            let (execute_info, _) = self.orderbook._fulfill_auction_order(fulfill_info, order);
+            match execute_info {
                 Option::Some(execute_info) => {
                     let execute_order_selector = selector!("execute_order");
                     let starknet_executor_address: ContractAddress = self
@@ -220,7 +221,8 @@ mod orderbook {
         /// * `order` - The order.
         ///
         fn _fulfill_offer(ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1) {
-            match self.orderbook._fulfill_offer(fulfill_info, order) {
+            let (execute_info, _) = self.orderbook._fulfill_offer(fulfill_info, order);
+            match execute_info {
                 Option::Some(execute_info) => {
                     let execute_order_selector = selector!("execute_order");
                     let starknet_executor_address: ContractAddress = self
@@ -246,7 +248,8 @@ mod orderbook {
         fn _fulfill_listing_order(
             ref self: ContractState, fulfill_info: FulfillInfo, order: OrderV1
         ) {
-            match self.orderbook._fulfill_listing_order(fulfill_info, order) {
+            let (execute_info, _) = self.orderbook._fulfill_listing_order(fulfill_info, order);
+            match execute_info {
                 Option::Some(execute_info) => {
                     let execute_order_selector = selector!("execute_order");
                     let starknet_executor_address: ContractAddress = self
