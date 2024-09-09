@@ -15,6 +15,10 @@ use tracing::{debug, error, trace, warn};
 pub fn normalize_onchain_data(contract_address: &str, uri: &str) -> String {
     let mut normalized = uri.replace("https://gateway.pinata.cloud/ipfs/", "ipfs://");
 
+    // This is a workaround to handle the invalid JSON format specific to the Loot Survivor: Beasts collection.
+    // The original JSON contains some improperly formatted quotes that need correction
+    // for proper parsing. This normalization is tailored specifically to fix those issues.
+
     // Loot Survivor: Beasts
     if contract_address == "0x0158160018d590d93528995b340260e65aedd76d28a686e9daa5c4e8fad0c5dd" {
         normalized = normalized.replace("%20", " ").replace(":\"\"", ":\"");
