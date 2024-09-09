@@ -34,13 +34,13 @@ describe("createAuction", () => {
 
   it("default: with custom currency", async () => {
     const { seller, listingBroker } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const orderHash = await createAuction(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount: BigInt(1),
         endAmount: BigInt(10),
@@ -48,7 +48,7 @@ describe("createAuction", () => {
           "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
       },
       approveInfo: {
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId
       }
     });

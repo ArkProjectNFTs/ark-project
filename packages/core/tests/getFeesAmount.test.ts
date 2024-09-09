@@ -1,4 +1,4 @@
-import { getFeesAmount } from "../src/actions/read/index.js";
+import { getFeesAmount } from "../src/index.js";
 import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("getFeesAmount", () => {
