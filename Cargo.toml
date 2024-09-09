@@ -11,14 +11,12 @@ homepage = "https://arkproject.dev"
 description = """
 ArkProject libraries written in Rust
 """
-exclude = ["crates/solis"]
 
 [workspace]
 members = [
   "crates/ark-metadata",
   "crates/ark-starknet",
   "crates/pontos",
-  "crates/solis",
   "crates/diri",
   "crates/sana",
 ]
@@ -54,10 +52,6 @@ tracing-log = "0.1"
 sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
 alloy-primitives = { version = "0.7.1", default-features = false }
 alloy-sol-types = { version = "0.7.1", default-features = false }
-
-# ** SOLIS **
-[patch."https://github.com/starkware-libs/blockifier"]
-blockifier = { git = "https://github.com/dojoengine/blockifier", rev = "e6e9c90" }
 
 [patch.crates-io]
 cairo-felt = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "1031381" }
