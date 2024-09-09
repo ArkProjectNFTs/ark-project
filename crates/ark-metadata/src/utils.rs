@@ -12,12 +12,32 @@ use std::str::FromStr;
 use std::time::Duration;
 use tracing::{debug, error, trace, warn};
 
+pub fn normalize_onchain_data(contract_address: &str, uri: &str) -> String {
+    let mut normalized = uri.replace("https://gateway.pinata.cloud/ipfs/", "ipfs://");
+
+    // Loot Survivor: Beasts
+    if contract_address == "0x0158160018d590d93528995b340260e65aedd76d28a686e9daa5c4e8fad0c5dd" {
+        normalized = normalized
+            .replace("%20", " ")
+            .replace("\"%20", " ")
+            .replace(":\"\"", ":\"")
+            .replace("\" O", " O");
+
+        for c in 'A'..='Z' {
+            normalized = normalized.replace(&format!("\" {}", c), &format!(" {}", c));
+        }
+    }
+
+    normalized
+}
+
 pub async fn get_token_metadata(
     client: &Client,
     uri: &str,
     ipfs_gateway_uri: &str,
     request_timeout_duration: Duration,
     request_referrer: &str,
+    contract_address: &str,
 ) -> Result<TokenMetadata> {
     let parsed_uri = uri.replace("https://gateway.pinata.cloud/ipfs/", "ipfs://");
     let metadata_type = get_metadata_type(parsed_uri.as_str());
@@ -40,7 +60,7 @@ pub async fn get_token_metadata(
         }
         MetadataType::OnChain(uri) => {
             trace!("Fetching on-chain metadata: {}", uri);
-            fetch_onchain_metadata(&uri)?
+            fetch_onchain_metadata(contract_address, &uri)?
         }
     };
     Ok(metadata)
@@ -171,8 +191,10 @@ pub fn get_content_type_from_extension(extension: &str) -> &str {
     }
 }
 
-fn fetch_onchain_metadata(uri: &str) -> Result<TokenMetadata> {
-    let uri_string = urlencoding::decode(uri)
+fn fetch_onchain_metadata(contract_address: &str, uri: &str) -> Result<TokenMetadata> {
+    let parsed_uri = normalize_onchain_data(contract_address, uri);
+
+    let uri_string = urlencoding::decode(parsed_uri.as_str())
         .map(|s| s.into_owned())
         .unwrap_or_else(|_| uri.to_string());
 
