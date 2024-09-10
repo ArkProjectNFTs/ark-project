@@ -1,7 +1,41 @@
-export { createListing } from "./createListing.js";
-export { createAuction } from "./createAuction.js";
-export { createOffer } from "./createOffer.js";
-export { cancelOrder } from "./cancel.js";
-export { fulfillListing } from "./fulfillListing.js";
-export { fulfillAuction } from "./fulfillAuction.js";
-export { fulfillOffer } from "./fulfillOffer.js";
+export {
+  createListing,
+  type CreateListingParameters,
+  type CreateListingResult
+} from "./createListing.js";
+
+export {
+  createAuction,
+  type CreateAuctionParameters,
+  type CreateAuctionResult
+} from "./createAuction.js";
+
+export {
+  createOffer,
+  type CreateOfferParameters,
+  type CreateOfferResult
+} from "./createOffer.js";
+
+export {
+  cancelOrder,
+  type CancelOrderParameters,
+  type CancelOrderResult
+} from "./cancel.js";
+
+export {
+  fulfillListing,
+  type FulfillListingParameters,
+  type FulfillListingResult
+} from "./fulfillListing.js";
+
+export {
+  fulfillAuction,
+  type FulfillAuctionParameters,
+  type FulfillAuctionResult
+} from "./fulfillAuction.js";
+
+export {
+  fulfillOffer,
+  type FulfillOfferParameters,
+  type FulfillOfferResult
+} from "./fulfillOffer.js";

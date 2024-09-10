@@ -14,6 +14,17 @@ import {
   FulfillOfferInfo
 } from "../../types/index.js";
 
+export interface FulfillOfferParameters {
+  starknetAccount: AccountInterface;
+  fulfillOfferInfo: FulfillOfferInfo;
+  approveInfo: ApproveErc721Info;
+  waitForTransaction?: boolean;
+}
+
+export interface FulfillOfferResult {
+  transactionHash: string;
+}
+
 /**
  * Fulfill an offer on the Arkchain.
  *
@@ -22,17 +33,16 @@ import {
  *
  * @returns {Promise<void>} A promise that resolves when the transaction is completed.
  */
-interface FulfillOfferParameters {
-  starknetAccount: AccountInterface;
-  fulfillOfferInfo: FulfillOfferInfo;
-  approveInfo: ApproveErc721Info;
-}
-
-const fulfillOffer = async (
+export async function fulfillOffer(
   config: Config,
   parameters: FulfillOfferParameters
-) => {
-  const { starknetAccount, fulfillOfferInfo, approveInfo } = parameters;
+): Promise<FulfillOfferResult> {
+  const {
+    starknetAccount,
+    fulfillOfferInfo,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fulfillInfo: FulfillInfo = {
     orderHash: fulfillOfferInfo.orderHash,
@@ -65,10 +75,13 @@ const fulfillOffer = async (
     }
   ]);
 
-  // Wait for the transaction to be processed
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
-};
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
-export { fulfillOffer };
+  return {
+    transactionHash: result.transaction_hash
+  };
+}

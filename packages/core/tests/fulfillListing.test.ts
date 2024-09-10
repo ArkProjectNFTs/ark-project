@@ -8,7 +8,7 @@ describe("fulfillOffer", () => {
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const startAmount = BigInt(1);
 
-    const orderHash = await createListing(config, {
+    const { orderHash } = await createListing(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,

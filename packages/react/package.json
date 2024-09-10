@@ -13,6 +13,7 @@
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --ext .ts,.tsx . --fix",
     "test": "vitest",
+    "typecheck": "tsc --noEmit",
     "dev": "nodemon --watch src --exec \"pnpm run build\""
   },
   "keywords": [],

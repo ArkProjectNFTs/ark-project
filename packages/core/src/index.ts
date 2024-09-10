@@ -12,7 +12,21 @@ export {
   createOffer,
   fulfillAuction,
   fulfillListing,
-  fulfillOffer
+  fulfillOffer,
+  type CancelOrderParameters,
+  type CancelOrderResult,
+  type CreateAuctionParameters,
+  type CreateAuctionResult,
+  type CreateListingParameters,
+  type CreateListingResult,
+  type CreateOfferParameters,
+  type CreateOfferResult,
+  type FulfillAuctionParameters,
+  type FulfillAuctionResult,
+  type FulfillListingParameters,
+  type FulfillListingResult,
+  type FulfillOfferParameters,
+  type FulfillOfferResult
 } from "./actions/order/index.js";
 
 export { createBroker } from "./actions/broker/createBroker.js";

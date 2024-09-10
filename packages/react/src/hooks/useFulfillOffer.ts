@@ -2,45 +2,46 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
-
-import { Config, fulfillOffer as fulfillOfferCore } from "@ark-project/core";
-import { FulfillOfferInfo } from "@ark-project/core/src/types";
+import {
+  fulfillOffer as fulfillOfferCore,
+  FulfillOfferParameters,
+  FulfillOfferResult
+} from "@ark-project/core";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-export type FulfillOfferParameters = {
-  starknetAccount: AccountInterface;
-} & FulfillOfferInfo;
-
 function useFulfillOffer() {
   const [status, setStatus] = useState<Status>("idle");
+  const [result, setResult] = useState<FulfillOfferResult>();
   const config = useConfig();
 
   async function fulfillOffer(parameters: FulfillOfferParameters) {
+    if (!config) {
+      throw new Error("Invalid config.");
+    }
+
+    setStatus("loading");
+
     try {
-      setStatus("loading");
-      await fulfillOfferCore(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        fulfillOfferInfo: {
-          orderHash: parameters.orderHash,
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId,
-          brokerId: parameters.brokerId
-        } as FulfillOfferInfo,
-        approveInfo: {
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId
-        }
-      });
+      const fulfillOfferResult = await fulfillOfferCore(config, parameters);
+
       setStatus("success");
+      setResult(fulfillOfferResult);
     } catch (error) {
       console.error(error);
       setStatus("error");
     }
   }
-  return { fulfillOffer, status };
+
+  return {
+    fulfillOffer,
+    isLoading: status === "loading",
+    isError: status === "error",
+    isSuccess: status === "success",
+    status,
+    result
+  };
 }
 
 export { useFulfillOffer };

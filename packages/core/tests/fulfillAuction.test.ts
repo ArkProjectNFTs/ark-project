@@ -16,7 +16,7 @@ describe("fulfillAuction", () => {
     const initialSellerBalance = await getBalance({ account: seller });
     await mintERC20({ account: buyer, amount: 5000 });
 
-    const orderHash = await createAuction(config, {
+    const { orderHash } = await createAuction(config, {
       starknetAccount: seller,
       order: {
         brokerId: accounts.listingBroker.address,
@@ -32,7 +32,7 @@ describe("fulfillAuction", () => {
     });
 
     const offerAmount = BigInt(1000);
-    const offerOrderHash = await createOffer(config, {
+    const { orderHash: offerOrderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer: {
         brokerId: accounts.listingBroker.address,

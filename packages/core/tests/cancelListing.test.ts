@@ -7,7 +7,7 @@ describe("cancelListing", () => {
     const { seller, listingBroker } = accounts;
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
-    const orderHash = await createListing(config, {
+    const { orderHash } = await createListing(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,

@@ -7,7 +7,7 @@ describe("cancelAuction", () => {
     const { seller, listingBroker } = accounts;
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
-    const orderHash = await createAuction(config, {
+    const { orderHash } = await createAuction(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,
@@ -31,9 +31,7 @@ describe("cancelAuction", () => {
       }
     });
 
-    const { orderStatus } = await getOrderStatus(config, {
-      orderHash
-    });
+    const { orderStatus } = await getOrderStatus(config, { orderHash });
 
     expect(orderStatus).toBe("CancelledUser");
   }, 50_000);

@@ -1,19 +1,12 @@
 {
   "extends": "@ark-project/typescript-config/react-library.json",
-  "include": [
-    "."
-  ],
-  "exclude": [
-    "dist",
-    "build",
-    "node_modules"
-  ],
+  "include": ["."],
+  "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
     "jsx": "react",
     "declarationDir": "types",
     "sourceMap": true,
     "outDir": "dist",
-    "allowSyntheticDefaultImports": true,
-    "emitDeclarationOnly": true
+    "allowSyntheticDefaultImports": true
   }
 }

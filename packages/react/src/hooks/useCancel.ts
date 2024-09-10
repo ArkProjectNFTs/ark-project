@@ -2,43 +2,46 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
-
 import {
-  CancelInfo,
   cancelOrder as cancelOrderCore,
-  Config
+  CancelOrderParameters,
+  CancelOrderResult
 } from "@ark-project/core";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-type CancelParameters = {
-  starknetAccount: AccountInterface;
-} & CancelInfo;
-
 function useCancel() {
   const [status, setStatus] = useState<Status>("idle");
+  const [result, setResult] = useState<CancelOrderResult>();
   const config = useConfig();
-  async function cancel(parameters: CancelParameters) {
+
+  async function cancel(parameters: CancelOrderParameters) {
+    if (!config) {
+      throw new Error("config not loaded");
+    }
+
+    setStatus("loading");
+
     try {
-      setStatus("loading");
-      await cancelOrderCore(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        cancelInfo: {
-          orderHash: parameters.orderHash,
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId
-        }
-      });
+      const cancelResult = await cancelOrderCore(config, parameters);
+
       setStatus("success");
+      setResult(cancelResult);
     } catch (error) {
       setStatus("error");
       console.error(error);
     }
   }
 
-  return { cancel, status };
+  return {
+    cancel,
+    isLoading: status === "loading",
+    isError: status === "error",
+    isSuccess: status === "success",
+    status,
+    result
+  };
 }
 
 export { useCancel };
