@@ -7,7 +7,5 @@ export { contracts };
 export const config = createConfig({
   starknetNetwork: "dev",
   starknetExecutorContract: contracts.executor,
-  starknetCurrencyContract: contracts.eth,
-  arkchainNetwork: "dev",
-  arkchainOrderbookContract: contracts.orderbook
+  starknetCurrencyContract: contracts.eth
 });
