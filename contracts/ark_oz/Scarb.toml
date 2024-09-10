@@ -9,7 +9,7 @@ starknet = "2.7.1"
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.15.1" }
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
 assert_macros = "0.1.0"
 
 [tool.fmt]
