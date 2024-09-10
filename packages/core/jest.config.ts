@@ -6,9 +6,9 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  // moduleNameMapper: {
-  //   "^(\\.{1,2}/.*)\\.js$": "$1"
-  // },
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  },
   preset: "ts-jest/presets/default-esm",
   testMatch: ["**/?(*.)test.ts?(x)"],
   globals: {

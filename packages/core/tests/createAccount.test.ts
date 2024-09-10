@@ -3,8 +3,8 @@ import { config } from "./utils/index.js";
 
 describe("createAccount", () => {
   it("default", async () => {
-    const { arkProvider } = config;
-    const accountDetails = await createAccount(arkProvider);
+    const { starknetProvider } = config;
+    const accountDetails = await createAccount(starknetProvider);
 
     expect(accountDetails).toHaveProperty("address");
     expect(typeof accountDetails.address).toBe("string");
