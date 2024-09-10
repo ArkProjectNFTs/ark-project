@@ -42,14 +42,6 @@ fn deploy_nft(royalty: bool) -> ContractAddress {
 }
 
 fn deploy_executor() -> ContractAddress {
-    let messaging_contract = declare("appchain_messaging").unwrap().contract_class();
-    let messaging_owner = contract_address_const::<'messaging_owner'>();
-    let appchain_account = contract_address_const::<'messaging_account'>();
-    let mut messaging_calldata: Array<felt252> = array![];
-    messaging_calldata.append(messaging_owner.into());
-    messaging_calldata.append(appchain_account.into());
-    let (messaging_address, _) = messaging_contract.deploy(@messaging_calldata).unwrap();
-
     let contract = declare("executor").unwrap().contract_class();
     let admin_address = contract_address_const::<'admin'>();
     let eth_address = contract_address_const::<'eth'>();
@@ -57,7 +49,6 @@ fn deploy_executor() -> ContractAddress {
     let mut calldata: Array<felt252> = array![];
     calldata.append(admin_address.into());
     calldata.append(eth_address.into());
-    calldata.append(messaging_address.into());
     calldata.append('SN_MAIN');
     let (executor_address, _) = contract.deploy(@calldata).unwrap();
     executor_address
