@@ -18,6 +18,10 @@ export {
 export { createBroker } from "./actions/broker/createBroker.js";
 
 export {
+  getArkFees,
+  getBrokerFees,
+  getCollectionCreatorFees,
+  getDefaultCreatorFees,
   getFeesAmount,
   setArkFees,
   setBrokerFees,

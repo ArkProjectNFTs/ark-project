@@ -12,58 +12,58 @@ interface GetFeesAmountParameters {
 
 export const GET_FEES_AMOUNT_ABI = [
   {
-    "name": "ark_starknet::interfaces::FeesAmount",
-    "type": "struct",
-    "members": [
+    name: "ark_starknet::interfaces::FeesAmount",
+    type: "struct",
+    members: [
       {
-        "name": "fulfill_broker",
-        "type": "core::integer::u256"
+        name: "fulfill_broker",
+        type: "core::integer::u256"
       },
       {
-        "name": "listing_broker",
-        "type": "core::integer::u256"
+        name: "listing_broker",
+        type: "core::integer::u256"
       },
       {
-        "name": "ark",
-        "type": "core::integer::u256"
+        name: "ark",
+        type: "core::integer::u256"
       },
       {
-        "name": "creator",
-        "type": "core::integer::u256"
+        name: "creator",
+        type: "core::integer::u256"
       }
     ]
   },
   {
-    "name": "get_fees_amount",
-    "type": "function",
-    "inputs": [
+    name: "get_fees_amount",
+    type: "function",
+    inputs: [
       {
-        "name": "fulfill_broker",
-        "type": "core::starknet::contract_address::ContractAddress"
+        name: "fulfill_broker",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
-        "name": "listing_broker",
-        "type": "core::starknet::contract_address::ContractAddress"
+        name: "listing_broker",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
-        "name": "nft_address",
-        "type": "core::starknet::contract_address::ContractAddress"
+        name: "nft_address",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
-        "name": "nft_token_id",
-        "type": "core::integer::u256"
+        name: "nft_token_id",
+        type: "core::integer::u256"
       },
       {
-        "name": "payment_amount",
-        "type": "core::integer::u256"
+        name: "payment_amount",
+        type: "core::integer::u256"
       }
     ],
-    "outputs": [
+    outputs: [
       {
-        "type": "ark_starknet::interfaces::FeesAmount"
+        type: "ark_starknet::interfaces::FeesAmount"
       }
     ],
-    "state_mutability": "view"
+    state_mutability: "view"
   }
 ] as const;
 

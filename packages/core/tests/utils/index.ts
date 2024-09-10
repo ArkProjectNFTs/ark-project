@@ -137,9 +137,9 @@ export async function mintERC721({ account }: { account: Account }) {
     retryInterval: 1000
   });
 
-  return {    
+  return {
     tokenId,
-    tokenAddress: contracts.nftContract,
+    tokenAddress: contracts.nftContract
   };
 }
 
