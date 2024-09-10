@@ -41,16 +41,14 @@ impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
         }
     }
 }
-//! Executor contract on Starknet for arkchain.
+
+//! Executor contract on Starknet
 //!
 //! This contract is responsible of executing the orders
 //! and move the assets accordingly.
 //! Once done, an event is emitted to confirm at the arkchain
 //! that the order was executed correctly.
 //!
-//! In order to communicate with the Arkchain, this contract
-//! uses the `appchain_messaging` contract dispatcher to send
-//! messages.
 
 #[starknet::contract]
 mod executor {
@@ -69,9 +67,6 @@ mod executor {
     use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
     use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
 
-    use ark_starknet::appchain_messaging::{
-        IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
-    };
     use ark_starknet::interfaces::FeesAmount;
 
     use ark_starknet::interfaces::{IExecutor, IUpgradable, IMaintenance};
@@ -103,7 +98,6 @@ mod executor {
         admin_address: ContractAddress,
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
-        messaging_address: ContractAddress,
         chain_id: felt252,
         broker_fees: Map<ContractAddress, FeesRatio>,
         ark_fees: FeesRatio,
@@ -168,12 +162,10 @@ mod executor {
         ref self: ContractState,
         admin_address: ContractAddress,
         eth_contract_address: ContractAddress,
-        messaging_address: ContractAddress,
         chain_id: felt252
     ) {
         self.admin_address.write(admin_address);
         self.eth_contract_address.write(eth_contract_address);
-        self.messaging_address.write(messaging_address);
         self.chain_id.write(chain_id);
         self.ark_fees.write(Default::default());
         self.default_receiver.write(admin_address);
@@ -271,10 +263,6 @@ mod executor {
             }
         }
 
-        fn get_messaging_address(self: @ContractState) -> ContractAddress {
-            self.messaging_address.read()
-        }
-
         fn get_orderbook_address(self: @ContractState) -> ContractAddress {
             self.arkchain_orderbook_address.read()
         }
@@ -285,12 +273,6 @@ mod executor {
             _ensure_admin(@self);
 
             self.arkchain_orderbook_address.write(orderbook_address);
-        }
-
-        fn update_messaging_address(ref self: ContractState, msger_address: ContractAddress) {
-            _ensure_admin(@self);
-
-            self.messaging_address.write(msger_address);
         }
 
         fn update_eth_address(ref self: ContractState, eth_address: ContractAddress) {
@@ -598,11 +580,6 @@ mod executor {
     }
 
     fn _execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
-        // assert(
-        //     starknet::get_caller_address() == self.messaging_address.read(),
-        //     'Invalid msg sender'
-        // );
-
         // Check if execution_info.currency_contract_address is whitelisted
         _ensure_is_not_in_maintenance(@self);
         assert(

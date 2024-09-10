@@ -77,10 +77,6 @@ export const starknetExecutorContract = verifyContractAddress(
   contracts.executor,
   "Executor"
 );
-export const arkchainOrderbookContract = verifyContractAddress(
-  contracts.orderbook,
-  "Orderbook"
-);
 export const starknetCurrencyContract = verifyContractAddress(
   isDev && isDevContracts(contracts) ? contracts.eth : starknetEthContract,
   "Currency"
@@ -101,6 +97,5 @@ export const config = createConfig({
   starknetNetwork: network,
   starknetExecutorContract,
   starknetCurrencyContract,
-  arkchainNetwork: network,
-  arkchainOrderbookContract
+  arkchainNetwork: network
 });

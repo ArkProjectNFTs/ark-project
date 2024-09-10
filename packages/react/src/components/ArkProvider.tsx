@@ -17,7 +17,6 @@ import {
 } from "@ark-project/core";
 
 import { getOwner } from "../lib/getOwner";
-import { RpcProviderProvider } from "./RpcContext";
 
 const OwnerDataContext = createContext<string | undefined>(undefined);
 const ConfigDataContext = createContext<Config | undefined>(undefined);
@@ -34,16 +33,14 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
   const [config, setConfig] = useState<Config>(
     createConfig({
       starknetProvider: starknetProvider,
-      starknetNetwork: baseConfig.starknetNetwork as Network,
-      arkchainNetwork: baseConfig.arkchainNetwork as Network
+      starknetNetwork: baseConfig.starknetNetwork as Network
     })
   );
 
   useEffect(() => {
     const newConfig = createConfig({
       starknetProvider: starknetProvider,
-      starknetNetwork: baseConfig.starknetNetwork as Network,
-      arkchainNetwork: baseConfig.arkchainNetwork as Network
+      starknetNetwork: baseConfig.starknetNetwork as Network
     });
     setConfig(newConfig);
   }, [starknetProvider, starknetChain, baseConfig]);
@@ -71,7 +68,7 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
   return (
     <ConfigDataContext.Provider value={config}>
       <OwnerDataContext.Provider value={owner}>
-        <RpcProviderProvider config={config}>{children}</RpcProviderProvider>
+        {children}
       </OwnerDataContext.Provider>
     </ConfigDataContext.Provider>
   );

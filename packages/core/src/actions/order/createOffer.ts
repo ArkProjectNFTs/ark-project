@@ -43,16 +43,17 @@ const createOffer = async (
 ) => {
   const { starknetAccount, offer: baseOrder, approveInfo } = parameters;
   const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() + 30);
+  currentDate.setDate(currentDate.getDate());
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
-  const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
+  const endDate =
+    baseOrder.endDate || Math.floor(currentDate.getTime() / 1000) + 30;
+
   const currencyAddress =
     baseOrder.currencyAddress || config.starknetCurrencyContract;
 
   if (currencyAddress !== approveInfo.currencyAddress) {
     throw new Error("Invalid currency address, offer and approveInfo mismatch");
   }
-
   const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,

@@ -8,8 +8,8 @@ interface GetOrderParameters {
 
 const getOrder = async (config: Config, parameters: GetOrderParameters) => {
   const { orderHash } = parameters;
-  const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainOrderbookContract
+  const { abi: orderbookAbi } = await config.starknetProvider.getClassAt(
+    config.starknetExecutorContract
   );
   if (orderbookAbi === undefined) {
     throw new Error("no abi.");
@@ -17,8 +17,8 @@ const getOrder = async (config: Config, parameters: GetOrderParameters) => {
 
   const orderbookContract = new Contract(
     orderbookAbi,
-    config.arkchainOrderbookContract,
-    config.arkProvider
+    config.starknetExecutorContract,
+    config.starknetProvider
   );
 
   const order_hash_calldata = CallData.compile({
