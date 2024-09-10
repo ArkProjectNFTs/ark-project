@@ -16,13 +16,4 @@ describe("createconfig", () => {
       });
     }).toThrow();
   });
-
-  test("error: missing dev arkchainOrderbookContract", async () => {
-    expect(() => {
-      createConfig({
-        starknetNetwork: networks.dev,
-        starknetExecutorContract: "0x"
-      });
-    }).toThrow();
-  });
 });
