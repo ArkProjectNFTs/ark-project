@@ -1,7 +1,10 @@
-use ark_common::protocol::order_types::RouteType;
-
+use ark_common::protocol::order_types::{OrderStatus, OrderTrait, OrderType, RouteType};
 use ark_common::protocol::order_v1::OrderV1;
 
+use ark_component::orderbook::OrderbookComponent;
+use ark_component::orderbook::interface::{IOrderbookDispatcher, IOrderbookDispatcherTrait,};
+
+use ark_starknet::executor::executor;
 
 use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, IMaintenanceDispatcher,
@@ -13,7 +16,7 @@ use ark_tokens::erc20::IFreeMintDispatcherTrait as Erc20DispatcherTrait;
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
-use snforge_std::{cheat_caller_address, CheatSpan};
+use snforge_std::{cheat_caller_address, CheatSpan, spy_events, EventSpyAssertionsTrait,};
 use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{setup, setup_order};
@@ -28,11 +31,47 @@ fn test_create_order_erc20_to_erc721_ok() {
     Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
     let mut order = setup_order(erc20_address, nft_address);
+
     order.offerer = offerer;
     order.start_amount = start_amount;
+    let order_hash = order.compute_order_hash();
+    let order_version = order.get_version();
 
+    let mut spy = spy_events();
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    executor_address,
+                    executor::Event::OrderbookEvent(
+                        OrderbookComponent::Event::OrderPlaced(
+                            OrderbookComponent::OrderPlaced {
+                                order_hash,
+                                order_version,
+                                order_type: OrderType::Offer,
+                                version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
+                                cancelled_order_hash: Option::None,
+                                order,
+                            }
+                        )
+                    )
+                )
+            ]
+        );
+
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
+        OrderType::Offer,
+        "Wrong order type"
+    );
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_status(order_hash),
+        OrderStatus::Open,
+        "Wrong order status"
+    );
 }
 
 #[test]
@@ -49,9 +88,44 @@ fn test_create_order_erc721_to_erc20_ok() {
     order.route = RouteType::Erc721ToErc20.into();
     order.offerer = offerer;
     order.token_id = Option::Some(token_id);
+    let order_hash = order.compute_order_hash();
+    let order_version = order.get_version();
 
+    let mut spy = spy_events();
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    executor_address,
+                    executor::Event::OrderbookEvent(
+                        OrderbookComponent::Event::OrderPlaced(
+                            OrderbookComponent::OrderPlaced {
+                                order_hash,
+                                order_version,
+                                order_type: OrderType::Listing,
+                                version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
+                                cancelled_order_hash: Option::None,
+                                order,
+                            }
+                        )
+                    )
+                )
+            ]
+        );
+
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
+        OrderType::Listing,
+        "Wrong order type"
+    );
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_status(order_hash),
+        OrderStatus::Open,
+        "Wrong order status"
+    );
 }
 
 
