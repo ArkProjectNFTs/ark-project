@@ -74,4 +74,4 @@ function ArkProvider(props: PropsWithChildren<ArkProviderProviderProps>) {
   );
 }
 
-export { ArkProvider, OwnerDataContext, ConfigDataContext };
+export { ArkProvider, ConfigDataContext, OwnerDataContext };

@@ -1,23 +1,17 @@
 import { createOffer, getOrderStatus } from "../src/index.js";
-import {
-  accounts,
-  config,
-  mintERC20,
-  mintERC721,
-  STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+import { accounts, config, mintERC20, mintERC721 } from "./utils/index.js";
 
 describe("createOffer", () => {
   it("default", async () => {
     const { seller, buyer } = accounts;
-    const tokenId = await mintERC721({ account: seller });
-    await mintERC20({ account: buyer, amount: 1000 });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
+    await mintERC20({ account: buyer, amount: 1 });
 
     const orderHash = await createOffer(config, {
       starknetAccount: buyer,
       offer: {
         brokerId: accounts.listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount: BigInt(10)
       },
@@ -69,7 +63,7 @@ describe("createOffer", () => {
 
   it("error: invalid currency address", async () => {
     const { seller, buyer } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     await mintERC20({ account: buyer, amount: 1 });
 
     await expect(
@@ -77,7 +71,7 @@ describe("createOffer", () => {
         starknetAccount: buyer,
         offer: {
           brokerId: accounts.listingBroker.address,
-          tokenAddress: STARKNET_NFT_ADDRESS,
+          tokenAddress,
           tokenId,
           startAmount: BigInt(10),
           currencyAddress:

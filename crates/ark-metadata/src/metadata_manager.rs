@@ -119,6 +119,7 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
             ipfs_gateway_uri,
             image_timeout,
             request_referrer,
+            contract_address,
         )
         .await
         .map_err(|err| MetadataError::RequestTokenUriError(err.to_string()))?;
