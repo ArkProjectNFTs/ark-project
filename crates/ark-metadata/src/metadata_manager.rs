@@ -301,15 +301,15 @@ impl<'a, T: Storage, C: StarknetClient, F: FileManager, E: ElasticsearchManager>
                     let (file_name, content_type) = if last_part.contains('.') {
                         if let Some(file_extension) = last_part.split('.').last() {
                             let content_type = get_content_type_from_extension(file_extension);
-                            (file_extension.to_string(), content_type.to_string())
+                            (last_part.to_string(), content_type.to_string())
                         } else {
                             return Err(anyhow!("Failed to extract file extension from URL"));
                         }
                     } else {
                         match file_extension_from_mime_type(content_type_from_headers.as_str()) {
                             Some(file_extension) => {
-                                let file_name = format!("{}.{}", token_id, file_extension);
-                                (file_name, file_extension.to_string())
+                                let name = format!("{}.{}", token_id, file_extension);
+                                (name, file_extension.to_string())
                             }
                             None => (token_id.to_string(), content_type_from_headers),
                         }
