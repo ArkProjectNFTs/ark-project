@@ -1,0 +1,77 @@
+export const metadata = {
+  title: 'useCreateListing',
+  description: 'Hook for creating listings.',
+}
+
+# useCreateListing
+
+Hook for creating listings.
+
+## Import
+
+```typescript
+import { useCreateListing } from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import { useCreateListing } from '@ark-project/react';
+
+function CreateListing({ tokenAddress, tokenId, startAmount }) {
+  const { createListing, status, response } = useCreateListing();
+
+  const handleCreateListing = async () => {
+    await createListing({
+      starknetAccount: /* account info */,
+      tokenAddress: tokenAddress,
+      tokenId: tokenId,
+      startAmount: startAmount,
+      // Additional parameters...
+    });
+  };
+
+  return (
+    <>
+      <button onClick={handleCreateListing}>Create Listing</button>
+      <div>Status: {status}</div>
+      {response && <div>Response: {response.toString()}</div>}
+    </>
+  );
+};
+```
+
+## Return Type
+
+### createListing
+
+`(variables: CreateListingParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+- variables
+
+  `CreateListingParameters`
+
+  The variables object to pass to the [createListing](/sdk-core/create-listing#parameters) action.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+### response
+
+`BigNumber`
+
+Order hash of the listing creation order.
+
+## Actions
+
+- [createListing](/sdk-core/create-listing)
+
+[CreateListingParameters](/sdk-core/create-listing#parameters) and [CreateListingResponse](/sdk-core/create-listing#response) for more details.

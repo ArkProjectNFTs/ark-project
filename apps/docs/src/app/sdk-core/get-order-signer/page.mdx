@@ -1,0 +1,39 @@
+export const metadata = {
+  title: 'getOrderSigner',
+  description: 'Action for fetching order signer.',
+}
+
+# getOrderSigner
+
+Action for fetching order signer.
+
+## Import
+
+```typescript
+import { getOrderSigner } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { getOrderSigner } from '@arkproject/core'
+import { config } from './config'
+
+const { orderSigner } = await getOrderSigner(config, {
+  orderHash: '...',
+})
+```
+
+## Parameters
+
+`import { type GetOrderSignerParameters } from "@arkproject/core"`
+
+### orderHash
+
+`bigint`
+
+Orderhash to get order status for.
+
+## Function Description
+
+`getOrderSigner` begins by extracting the order hash from the provided parameters. It retrieves the ABI of the orderbook contract using the Starknet provider. If the ABI is undefined, an error is thrown. The function creates a `Contract` instance with the orderbook contract's ABI and address and calls the `get_order_signer` method with the compiled order hash. It returns the signer of the order.

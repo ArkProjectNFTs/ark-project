@@ -1,0 +1,39 @@
+export const metadata = {
+  title: 'getOrderStatus',
+  description: 'Action for fetching order status',
+}
+
+# getOrderStatus
+
+Action for fetching order status.
+
+## import
+
+```typescript
+import { getOrderStatus } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { getOrderStatus } from '@arkproject/core'
+import { config } from './config'
+
+const parameters = {
+  orderHash: '...',
+}
+
+const { orderStatus } = await getOrderStatus(config, {
+  orderHash: '...',
+})
+```
+
+## Parameters
+
+`import { type GetOrderStatusParameters } from "@arkproject/core"`
+
+### orderHash
+
+`bigint`
+
+Orderhash to get order status for.

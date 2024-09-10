@@ -1,0 +1,44 @@
+export const metadata = {
+  title: 'Increase ERC20 Allowance',
+  description:
+    'Increases the allowance of an ERC20 token within the ArkProject ecosystem, utilizing Starknet blockchain features.',
+}
+
+# increaseERC20
+
+Function to increase the allowance of an ERC20 token. This operation is performed on the Starknet blockchain and adjusts the permitted token amount for a specific use case.
+
+## import
+
+```typescript
+import { increaseERC20 } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { increaseERC20 } from '@arkproject/core'
+import { config, parameters } from './config'
+
+increaseERC20(config, parameters)
+  .then(() => {
+    console.log('Allowance increased successfully')
+  })
+  .catch((error) => {
+    console.error('Error in increasing allowance:', error)
+  })
+```
+
+## parameters
+
+### `config`
+
+type `Config` - Configuration object for the ArkProject SDK.
+
+### `parameters`
+
+type `ERC20Parameters` - Object containing `contractAddress`, `amount`, and `starknetAccount` details for the operation.
+
+## Function Description
+
+The `increaseERC20` function begins by extracting the contract address, amount, and Starknet account from the parameters. It then retrieves the ERC20 ABI using the contract address from the Starknet provider. If no ABI is found, an error is thrown. The function constructs a call to the `increase_allowance` entrypoint of the ERC20 contract with the specified amount. This call is executed using the Starknet account, and the function waits for the transaction to complete, ensuring that the allowance increase is processed.

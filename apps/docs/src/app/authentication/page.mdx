@@ -1,0 +1,30 @@
+export const metadata = {
+  title: 'Authentication',
+  description:
+    'API Key authentication is a simple and effective way to authenticate requests to an API.',
+}
+
+# Authentication
+
+API Key authentication is a simple and effective way to authenticate requests to an API. To use API Key authentication, you will need to create an API Key for your project.
+
+## Creating an API Key
+
+To create an API Key, you must first signin and create a project in the dashboard. Once you have created a project, you can access your API Key.
+
+To create an API Key, follow these steps:
+
+- Log in and access to the [dashboard](https://www.arkproject.dev/dashboard).
+- Create a new project. You will be prompted to provide a name and a description for your project.
+- Once you have created your project, you will able to copy/paste your API Key on the project page.
+
+## Using API Key Authentication
+
+To use API Key authentication, you must include the `x-api-key` header in your request. For example, the following request uses API Key authentication:
+
+```bash {{ title: 'cURL' }}
+ curl https://api.arkproject.dev/v1/contracts \
+   -H "x-api-key: <INSERT_API_KEY_HERE>"
+```
+
+Always keep your token safe and reset it if you suspect it has been compromised.

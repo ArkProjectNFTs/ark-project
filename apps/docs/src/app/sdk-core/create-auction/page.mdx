@@ -1,0 +1,65 @@
+export const metadata = {
+  title: 'createAuction',
+  description: 'Action for creating an auction.',
+}
+
+# createAuction
+
+Action for creating an auction.
+
+## Import
+
+```typescript
+import { createAuction } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { createAuction } from '@arkproject/core'
+import { config, parameters } from './config'
+
+await createAuction(config, {
+  starknetAccount: '0x0...',
+  order: {
+    brokerId: '0x...',
+    tokenAddress: '0x0...',
+    tokenId: BigInt(1),
+    startAmount: BigInt(1000),
+    endAmount: BigInt(10000),
+  },
+  approveInfo: {
+    tokenAddress: '0x0...',
+    tokenId: BigInt(1),
+  },
+})
+```
+
+## Parameters
+
+### starknetAccount
+
+`AccountInterface`
+
+The Starknet account used for the transaction.
+
+### order
+
+`AuctionV1`
+
+The base order details for the listing, includes:
+
+- `tokenAddress: string`
+- `tokenId: bigint`
+- `brokerId: string`
+- `startAmount: bigint`
+- `endAmount: bigint`
+
+### approveInfo
+
+`ApproveErc721Info`
+
+Informations about the ERC721 token to approve, includes :
+
+- `tokenAddress: string`
+- `tokenId: bigint`

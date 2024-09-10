@@ -1,0 +1,54 @@
+export const metadata = {
+  title: 'Getting started',
+  description: 'ArkProject Core is a VanillaJS library for arkchain.',
+}
+
+# Getting started
+
+<br />
+
+## Overview
+
+ArkProject Core is a VanillaJS library for arkchain. You can learn more about the rationale behind the project in the What is the ArkProject section.
+
+## Package manager
+
+Install the required packages.
+
+```bash {{ title: 'pnpm' }}
+pnpm add @arkproject/core
+```
+
+## Create config
+
+Create and export a new ArkProject config using createConfig.
+
+```typescript
+import { createConfig, Network } from '@arkproject/core'
+import { ProviderInterface, RpcProvider } from 'starknet'
+
+// Initialize a RPC provider with your Starknet node URL using starknet.js
+const starknetProvider = new RpcProvider({
+  nodeUrl: process.env.STARKNET_RPC_URL ?? 'localhost:5050',
+}) as ProviderInterface
+
+// Create the Ark SDK configuration
+export const config = createConfig({
+  starknetProvider: starknetProvider,
+  starknetNetwork: Network.goerli,
+  arkchainNetwork: Network.goerli,
+  arkchainRpcUrl: 'https://staging.solis.arkproject.dev',
+})
+```
+
+## Use ArkProject Core
+
+Now that everything is set up, you can pass the config to use actions.
+
+```typescript
+import { createAccount } from '@arkproject/core'
+import { config } from './config'
+
+const { arkProvider, starknetProvider } = config
+const { account } = await createAccount(arkProvider)
+```

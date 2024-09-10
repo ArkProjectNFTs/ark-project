@@ -1,0 +1,160 @@
+## List All Collections {{ tag: 'GET', label: 'collections' }}
+
+<Row>
+  <Col>
+
+    This endpoint allows you to retrieve a list of all collections.
+
+    ### Query parameters
+
+    <Properties>
+      <Property name="page" type="integer">
+        The page number to fetch. Defaults to 1 if not provided.
+      </Property>
+      <Property name="items_per_page" type="integer">
+        The number of items to fetch per page. Defaults to 100 if not provided.
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="collections">
+
+    ```bash {{ title: 'cURL' }}
+    curl "https://api.marketplace.arkproject.dev/collections?page=1&items_per_page=100"
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "data": [
+        {
+          "collection_id": "0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af",
+          "collection_name": "Ark Collection",
+          "collection_description": "This is an Ark collection",
+          "collection_image": "https://example.com/image.png"
+        }
+      ],
+      "collection_count": 1,
+      "next_page": 2
+    }
+    ```
+
+  </Col>
+</Row>
+
+---
+
+## Get a Specific Collection {{ tag: 'GET', label: 'collections/{address}/{chain_id}' }}
+
+<Row>
+  <Col>
+
+    This endpoint allows you to retrieve a specific collection.
+
+    ### Path parameters
+
+    <Properties>
+      <Property name="address" type="string">
+        Address of the collection.
+      </Property>
+      <Property name="chain_id" type="string">
+        Chain ID of the collection.
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="collections/{address}/{chain_id}">
+
+    ```bash {{ title: 'cURL' }}
+    curl "https://api.marketplace.arkproject.dev/collections/{address}/{chain_id}"
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "data": {
+        "collection_id": "0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af",
+        "collection_name": "Ark Collection",
+        "collection_description": "This is an Ark collection",
+        "collection_image": "https://example.com/image.png"
+      }
+    }
+    ```
+
+  </Col>
+</Row>
+---
+
+## List All Collections for a User's Portfolio {{ tag: 'GET', label: '/portfolio/{user_address}/collections' }}
+<Row>
+  <Col>
+
+    This endpoint allows you to retrieve a list of all collections for a user's portfolio. The response includes the collections data, the total number of collections, and the next page number if there are more collections to fetch.
+
+    ### Path parameters
+
+    <Properties>
+      <Property name="user_address" type="string">
+        Address of the user.
+      </Property>
+    </Properties>
+
+    ### Query parameters
+
+    <Properties>
+      <Property name="page" type="integer">
+        The page number to fetch. Defaults to 1 if not provided.
+      </Property>
+      <Property name="items_per_page" type="integer">
+        The number of items to fetch per page. Defaults to 100 if not provided.
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/portfolio/{user_address}/collections?page=1&items_per_page=100">
+
+    ```bash {{ title: 'cURL' }}
+    curl "https://api.marketplace.arkproject.dev/portfolio/{user_address}/collections?page=1&items_per_page=100"
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "data": [
+        {
+          "address": "0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af",
+          "image": "https://example.com/image.png",
+          "collection_name": "Ark Collection",
+          "floor": 100,
+          "token_count": 20,
+          "user_token_count": 10,
+          "user_listed_tokens": 5,
+          "is_verified": true,
+        },
+        {
+          "address": "0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af",
+          "image": "https://example.com/image.png",
+          "collection_name": "Ark Collection 2",
+          "floor": 200,
+          "token_count": 40,
+          "user_token_count": 20,
+          "user_listed_tokens": 10,
+          "is_verified": false,
+        }
+      ],
+      "collection_count": 2,
+      "next_page": 2
+    }
+    ```
+
+  </Col>
+</Row>

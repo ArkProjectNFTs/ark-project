@@ -1,0 +1,54 @@
+export const metadata = {
+  title: 'fulfillAuction',
+  description:
+    'Executes the process to fulfill a listing on the Arkchain, completing the necessary transaction.',
+}
+
+# fulfillAuction
+
+Action for fulfilling an auction.
+
+## import
+
+```typescript
+import { fulfillAuction } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { fulfillAuction } from '@arkproject/core'
+import { config } from './config'
+
+await fulfillListing(config, {
+  starknetAccount: '0x0...',
+  fulfillAuctionInfo: {
+    orderHash: BigInt(0x0),
+    relatedOrderHash: BigInt(0x0),
+    tokenAddress: '0x0...',
+    tokenId: BigInt(1),
+    brokerId: '0x...',
+  },
+})
+```
+
+## Parameters
+
+### starknetAccount
+
+`AccountInterface`
+
+The Starknet account used for the transaction.
+
+### fulfillAuctionInfo
+
+`FulfillAuctionInfo`
+
+Informations about the listing to fulfill, includes :
+
+- `orderHash: bigint` Auction order hash.
+
+- `relatedOrderHash: bigint` Offer order hash.
+- `tokenAddress: string` Token address.
+- `tokenId: bigint` Token ID.
+- `brokerId: string` Broker ID.

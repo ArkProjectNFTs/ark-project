@@ -1,0 +1,67 @@
+export const metadata = {
+  title: 'createOffer',
+  description: 'Action for creating an offer.',
+}
+
+# createOffer
+
+Action for creating an offer.
+
+## Import
+
+```typescript
+import { createOffer } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { createOffer } from '@arkproject/core'
+import { config, parameters } from './config'
+
+await createOffer(config, {
+  starknetAccount: '0x0...',
+  offer: {
+    brokerId: '0x...',
+    tokenAddress: '0x0...',
+    tokenId: BigInt(1),
+    startAmount: BigInt(1000),
+  },
+  approveInfo: {
+    currencyAddress: '0x...',
+    amount: BigInt(1000),
+  },
+})
+```
+
+## Parameters
+
+### starknetAccount
+
+`AccountInterface`
+
+The Starknet account used for the transaction.
+
+### offer
+
+`OfferV1`
+
+The base order details for the offer. `OfferV1` includes:
+
+- `orderHash: bigint`
+- `tokenAddress: string`
+- `tokenId: bigint`
+- `brokerId: string`
+
+### approveInfo
+
+`ApproveErc20Info`
+
+Informations about the ERC20 token to approve, includes :
+
+- `currencyAddress: string`
+- `amount: bigint`
+
+## Function Description
+
+`createOffer` starts by extracting details from the provided parameters, including Starknet and Arkchain accounts, and the base offer. It sets default values for unspecified fields in the offer, retrieves the chain ID, and constructs a complete `OrderV1` object. The function then calls `createOrder` to compile, sign, and execute the transaction. Finally, it returns the hash of the created offer, encapsulated in a promise.

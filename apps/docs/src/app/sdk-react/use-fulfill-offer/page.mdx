@@ -1,0 +1,76 @@
+export const metadata = {
+  title: 'useFulfillOffer',
+  description: 'Hook for fulfilling offers.',
+}
+
+# useFulfillOffer
+
+Hook for fulfilling offers.
+
+## Import
+
+```typescript
+import { useFulfillOffer } from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import { useFulfillOffer } from '@ark-project/react'
+
+const FulfillOfferComponent = ({
+  starknetAccount,
+  orderHash,
+  tokenAddress,
+  tokenId,
+  brokerId,
+}) => {
+  const { fulfillOffer, status } = useFulfillOffer()
+
+  const handleFulfillOffer = async () => {
+    await fulfillOffer({
+      starknetAccount: starknetAccount,
+      orderHash: orderHash,
+      tokenAddress: tokenAddress,
+      tokenId: tokenId,
+      brokerId: brokerId,
+    })
+  }
+
+  return (
+    <div>
+      <button onClick={handleFulfillOffer}>Fulfill Offer</button>
+      <div>Status: {status}</div>
+    </div>
+  )
+}
+```
+
+## Return Type
+
+### fulfillOffer
+
+`(variables: FulfillOfferParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+- variables
+
+  `FulfillOfferParameters`
+
+  The variables object to pass to the [fulfillOffer](/sdk-core/fulfill-offer#parameters) action.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+## Actions
+
+- [fulfillOffer](/sdk-core/fulfill-offer)
+
+[FulfillOfferParameters](/sdk-core/fulfill-offer#parameters) and [FulfillOfferResponse](/sdk-core/fulfill-offer#response) for more details.

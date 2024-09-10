@@ -1,0 +1,77 @@
+export const metadata = {
+  title: 'useCreateListing',
+  description: 'Hook for creating listings.',
+}
+
+# useCreateAuction
+
+Hook for creating auction listings.
+
+## Import
+
+```typescript
+import { useCreateAuction } from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import { useCreateAuction } from '@ark-project/react';
+
+function CreateAuction({ tokenAddress, tokenId, startAmount }) {
+  const { createAuction, status, response } = useCreateAuction();
+
+  const handleCreateAuction = async () => {
+    await createListing({
+      starknetAccount: /* account info */,
+      tokenAddress: tokenAddress,
+      tokenId: tokenId,
+      startAmount: startAmount,
+      // Additional parameters...
+    });
+  };
+
+  return (
+    <>
+      <button onClick={handleCreateListing}>Create Listing</button>
+      <div>Status: {status}</div>
+      {response && <div>Response: {response.toString()}</div>}
+    </>
+  );
+};
+```
+
+## Return Type
+
+### createAuction
+
+`(variables: CreateAuctionParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+- variables
+
+  `CreateAuctionParameters`
+
+  The variables object to pass to the [createAuction](/sdk-core/create-auction#parameters) action.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+### response
+
+`BigNumber`
+
+Order hash of the listing creation order.
+
+## Actions
+
+- [createAuction](/sdk-core/create-auction)
+
+[CreateListingParameters](/sdk-core/create-auction#parameters) and [CreateAuctionResponse](/sdk-core/create-auction#response) for more details.

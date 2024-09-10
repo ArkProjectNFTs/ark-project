@@ -1,0 +1,65 @@
+export const metadata = {
+  title: 'fulfillCollectionOffer',
+  description: 'Action for fulfilling a collection offer.',
+}
+
+# fulfillOffer
+
+Action for fulfilling a collection offer.
+
+## Import
+
+```typescript
+import { fulfillCollectionOffer } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { fulfillCollectionOffer } from '@arkproject/core'
+import { config } from './config'
+
+await fulfillCollectionOffer(config, {
+  starknetAccount: '0x0...',
+  fulfillOfferInfo: {
+    orderHash: '0x...',
+    tokenAddress:
+      '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+    tokenId: BigInt(1),
+    brokerId: '0x...',
+  },
+  approveInfo: {
+    tokenAddress:
+      '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+    tokenId: BigInt(1),
+  },
+})
+```
+
+## Parameters
+
+### starknetAccount
+
+`AccountInterface`
+
+The Starknet account used for the transaction.
+
+### fulfillCollectionOfferInfo
+
+`FulfillCollectionOfferInfo`
+
+Informations about the collection offer to fulfill, includes :
+
+- `orderHash: bigint`
+- `tokenAddress: string`
+- `tokenId: bigint`
+- `brokerId: string`
+
+### approveInfo
+
+`ApproveErc721Info`
+
+Informations about the ERC721 token to approve, includes :
+
+- `tokenAddress: string`
+- `tokenId: bigint`

@@ -1,0 +1,53 @@
+export const metadata = {
+  title: 'Getting Started with ArkProject React SDK',
+  description:
+    'Learn how to set up the ArkProject React SDK in your application.',
+}
+
+# Getting Started
+
+## Overview
+
+The ArkProject React SDK provides React components and hooks to interact with arkchain seamlessly in your React or Next.js applications.
+
+## Installation
+
+To get started, install the `@ark-project/react` package:
+
+```bash
+pnpm add @ark-project/react
+```
+
+## Creating the Starknet Provider
+
+Before using the `ArkProvider`, you need to create a Starknet provider. For detailed instructions on setting this up, refer to the Starknet React documentation: [Create Starknet Provider](https://starknet-react.com/docs/getting-started).
+
+## React/Next.js Application Setup with Starknet Provider
+
+Integrate the ArkProvider and StarknetProvider into your application like so:
+
+```jsx
+import { StarknetProvider } from '@/components/starknet-provider' // Ensure you have a StarknetProvider component
+import { networks } from '@ark-project/core'
+import { ArkProvider } from '@ark-project/react'
+
+export default function Layout({ children }) {
+  const config = {
+    starknetNetwork: networks.mainnet,
+    arkchainNetwork: networks.mainnet,
+  }
+
+  return (
+    <StarknetProvider>
+      <ArkProvider config={config}>
+        {/* Rest of your application components */}
+        {children}
+      </ArkProvider>
+    </StarknetProvider>
+  )
+}
+```
+
+## Next Steps
+
+Now that your ArkProvider is set up, you can use the various hooks and components provided by the SDK to build your application.

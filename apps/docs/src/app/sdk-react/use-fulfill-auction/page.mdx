@@ -1,0 +1,82 @@
+export const metadata = {
+  title: 'useFulfillAuction',
+  description: 'Hook for fulfilling auctions.',
+}
+
+# useFulfillAuction
+
+Hook for fulfilling auctions.
+
+## Import
+
+```typescript
+import { useFulfillAuction } from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import React from 'react'
+import { useFulfillAuction } from '@ark-project/react'
+
+function FulfillAuction({
+  starknetAccount,
+  orderHash,
+  tokenAddress,
+  tokenId,
+  brokerId,
+  startAmount,
+  currencyAddress,
+}) {
+  const { fulfillAuction, status } = useFulfillAuction()
+
+  const handleFulfillAuction = async () => {
+    await fulfillAuction({
+      starknetAccount: starknetAccount,
+      orderHash: orderHash,
+      tokenAddress: tokenAddress,
+      tokenId: tokenId,
+      brokerId: brokerId,
+      startAmount: startAmount,
+      currencyAddress: currencyAddress,
+      // Additional parameters...
+    })
+  }
+
+  return (
+    <div>
+      <button onClick={handleFulfillAuction}>Fulfill Auction</button>
+      <div>Status: {status}</div>
+    </div>
+  )
+}
+```
+
+## Return Type
+
+### fulfillAuction
+
+`(variables: FulfillAuctionParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+- variables
+
+  `FulfillAuctionParameters`
+
+  The variables object to pass to the [fulfillAuction](/sdk-core/fulfill-auction#parameters) action.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+## Actions
+
+- [fulfillAuction](/sdk-core/fulfill-auction)
+
+[FulfillAuctionParameters](/sdk-core/fulfill-auction#parameters) and [FulfillAuctionResponse](/sdk-core/fulfill-auction#response) for more details.
