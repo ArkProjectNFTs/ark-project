@@ -681,13 +681,6 @@ mod executor {
         let transaction_hash = tx_info.transaction_hash;
         let block_timestamp = starknet::info::get_block_timestamp();
 
-        self
-            .emit(
-                OrderExecuted {
-                    order_hash: execution_info.order_hash, transaction_hash, block_timestamp,
-                }
-            );
-
         let vinfo = ExecutionValidationInfo {
             order_hash: execution_info.order_hash,
             transaction_hash,
