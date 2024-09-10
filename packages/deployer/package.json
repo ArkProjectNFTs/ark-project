@@ -32,7 +32,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@ark-project/core": "workspace:*",
     "@ark-project/eslint-config": "workspace:*",
     "@ark-project/typescript-config": "workspace:*",
     "@types/node": "^20.10.7",

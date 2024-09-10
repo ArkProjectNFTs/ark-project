@@ -1,19 +1,19 @@
-use core::traits::TryInto;
-use traits::Into;
-use box::BoxTrait;
+use ark_common::crypto::signer::{Signer, SignInfo};
 
 use ark_common::crypto::typed_data::{OrderSign, TypedDataTrait};
+use box::BoxTrait;
 
 use core::option::OptionTrait;
-use ark_common::crypto::signer::{Signer, SignInfo};
+use core::traits::TryInto;
 use snforge_std::signature::KeyPairTrait;
 use snforge_std::signature::stark_curve::{
     StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl
 };
+use traits::Into;
 
 fn sign_mock(message_hash: felt252) -> Signer {
     let key_pair = KeyPairTrait::<felt252, felt252>::generate();
-    let (r, s): (felt252, felt252) = key_pair.sign(message_hash);
+    let (r, s): (felt252, felt252) = key_pair.sign(message_hash).unwrap();
     Signer::WEIERSTRESS_STARKNET(
         SignInfo { user_pubkey: key_pair.public_key, user_sig_r: r, user_sig_s: s, }
     )

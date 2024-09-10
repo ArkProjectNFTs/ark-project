@@ -17,10 +17,16 @@ import {
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 import { getAllowance } from "../read/getAllowance.js";
 
-interface CreateOfferParameters {
+export interface CreateOfferParameters {
   starknetAccount: AccountInterface;
   offer: OfferV1;
   approveInfo: ApproveErc20Info;
+  waitForTransaction?: boolean;
+}
+
+export interface CreateOfferResult {
+  orderHash: bigint;
+  transactionHash: string;
 }
 
 /**
@@ -34,25 +40,31 @@ interface CreateOfferParameters {
  * @param {CreateListingParameters} parameters - The parameters for the listing, including Starknet account,
  * Arkchain account, base order details, and an optional owner address.
  *
- * @returns {Promise<string>} A promise that resolves with the hash of the created order.
+ * @returns {Promise<CreateOfferResult>} A promise that resolves with the hash of the created order.
  *
  */
-const createOffer = async (
+export async function createOffer(
   config: Config,
   parameters: CreateOfferParameters
-) => {
-  const { starknetAccount, offer: baseOrder, approveInfo } = parameters;
+): Promise<CreateOfferResult> {
+  const {
+    starknetAccount,
+    offer: baseOrder,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() + 30);
+  currentDate.setDate(currentDate.getDate());
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
-  const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
+  const endDate =
+    baseOrder.endDate || Math.floor(currentDate.getTime() / 1000) + 30;
+
   const currencyAddress =
     baseOrder.currencyAddress || config.starknetCurrencyContract;
 
   if (currencyAddress !== approveInfo.currencyAddress) {
     throw new Error("Invalid currency address, offer and approveInfo mismatch");
   }
-
   const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,
@@ -100,13 +112,16 @@ const createOffer = async (
     }
   ]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
   const orderHash = getOrderHashFromOrderV1(order);
 
-  return orderHash;
-};
-
-export { createOffer };
+  return {
+    orderHash,
+    transactionHash: result.transaction_hash
+  };
+}

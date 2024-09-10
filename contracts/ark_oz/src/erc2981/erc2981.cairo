@@ -1,6 +1,8 @@
 #[starknet::component]
 pub mod ERC2981Component {
     use starknet::ContractAddress;
+    use starknet::storage::Map;
+
     use openzeppelin::introspection::src5::SRC5Component::InternalTrait as SRC5InternalTrait;
     use openzeppelin::introspection::src5::SRC5Component::SRC5Impl;
     use openzeppelin::introspection::src5::SRC5Component;
@@ -15,8 +17,8 @@ pub mod ERC2981Component {
     struct Storage {
         default_receiver: ContractAddress,
         default_fees: FeesRatio,
-        token_receiver: LegacyMap<u256, ContractAddress>,
-        token_fees: LegacyMap<u256, FeesRatio>,
+        token_receiver: Map<u256, ContractAddress>,
+        token_fees: Map<u256, FeesRatio>,
     }
 
     #[event]

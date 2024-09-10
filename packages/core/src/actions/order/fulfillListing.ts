@@ -15,25 +15,35 @@ import {
 } from "../../types/index.js";
 import { getAllowance } from "../read/getAllowance.js";
 
+export interface FulfillListingParameters {
+  starknetAccount: AccountInterface;
+  fulfillListingInfo: FulfillListingInfo;
+  approveInfo: ApproveErc20Info;
+  waitForTransaction?: boolean;
+}
+
+export type FulfillListingResult = {
+  transactionHash: string;
+};
+
 /**
  * Fulfill a listing on the Arkchain.
  *
  * @param {Config} config - The core SDK configuration.
  * @param {FulfillListingParameters} parameters - Parameters for fulfilling the listing.
  *
- * @returns {Promise<void>} A promise that resolves when the transaction is completed.
+ * @returns {Promise<FulfillListingResult>} A promise that resolves when the transaction is completed.
  */
-interface FulfillListingParameters {
-  starknetAccount: AccountInterface;
-  fulfillListingInfo: FulfillListingInfo;
-  approveInfo: ApproveErc20Info;
-}
-
-const fulfillListing = async (
+export async function fulfillListing(
   config: Config,
   parameters: FulfillListingParameters
-) => {
-  const { starknetAccount, fulfillListingInfo, approveInfo } = parameters;
+): Promise<FulfillListingResult> {
+  const {
+    starknetAccount,
+    fulfillListingInfo,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,
@@ -73,10 +83,13 @@ const fulfillListing = async (
     }
   ]);
 
-  // Wait for the transaction to be processed
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
-};
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
-export { fulfillListing };
+  return {
+    transactionHash: result.transaction_hash
+  };
+}

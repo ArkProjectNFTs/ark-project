@@ -1,7 +1,6 @@
-use traits::Into;
-
 // locals
 use super::constants;
+use traits::Into;
 
 fn hash_u256(n: u256) -> felt252 {
     let mut hash = pedersen::pedersen(0, constants::U256_TYPE_HASH);

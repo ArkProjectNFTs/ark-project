@@ -1,27 +1,22 @@
 import { cancelOrder, createListing } from "../src/actions/order/index.js";
 import { getOrderStatus } from "../src/actions/read/index.js";
-import {
-  accounts,
-  config,
-  mintERC721,
-  STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("cancelListing", () => {
   it("default", async () => {
     const { seller, listingBroker } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
-    const orderHash = await createListing(config, {
+    const { orderHash } = await createListing(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount: BigInt(1)
       },
       approveInfo: {
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId
       }
     });
@@ -30,7 +25,7 @@ describe("cancelListing", () => {
       starknetAccount: seller,
       cancelInfo: {
         orderHash,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId
       }
     });

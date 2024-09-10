@@ -8,14 +8,14 @@ mod orderbook_event_mock {
     use ark_common::protocol::order_types::{
         FulfillInfo, OrderType, CancelInfo, OrderStatus, RouteType
     };
-    use core::traits::TryInto;
-    use core::result::ResultTrait;
-    use core::zeroable::Zeroable;
+    use ark_common::protocol::order_v1::OrderV1;
     use core::option::OptionTrait;
+    use core::result::ResultTrait;
     use core::starknet::event::EventEmitter;
     use core::traits::Into;
+    use core::traits::TryInto;
+    use core::zeroable::Zeroable;
     use starknet::ContractAddress;
-    use ark_common::protocol::order_v1::OrderV1;
 
     #[storage]
     struct Storage {}

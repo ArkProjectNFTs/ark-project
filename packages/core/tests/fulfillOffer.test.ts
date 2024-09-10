@@ -9,25 +9,24 @@ import {
   config,
   getBalance,
   mintERC20,
-  mintERC721,
-  STARKNET_NFT_ADDRESS
+  mintERC721
 } from "./utils/index.js";
 
 describe("fulfillOffer", () => {
   it("default", async function () {
     const { seller, buyer, listingBroker, saleBroker } = accounts;
     await mintERC20({ account: buyer, amount: 100000 });
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const initialSellerBalance = await getBalance({ account: seller });
 
     const offer: OfferV1 = {
       brokerId: listingBroker.address,
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress,
       tokenId,
       startAmount: BigInt(10)
     };
 
-    const orderHash = await createOffer(config, {
+    const { orderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer,
       approveInfo: {
@@ -49,8 +48,6 @@ describe("fulfillOffer", () => {
         tokenId: offer.tokenId
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash
@@ -71,17 +68,17 @@ describe("fulfillOffer", () => {
     const { seller, buyer, listingBroker, saleBroker } = accounts;
 
     await mintERC20({ account: buyer, amount: 100000 });
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const initialSellerBalance = await getBalance({ account: seller });
 
     const offer: OfferV1 = {
       brokerId: listingBroker.address,
-      tokenAddress: STARKNET_NFT_ADDRESS,
+      tokenAddress,
       tokenId,
       startAmount: BigInt(10)
     };
 
-    const orderHash = await createOffer(config, {
+    const { orderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer,
       approveInfo: {
@@ -103,8 +100,6 @@ describe("fulfillOffer", () => {
         tokenId: offer.tokenId
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash

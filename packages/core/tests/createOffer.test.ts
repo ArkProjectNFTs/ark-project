@@ -2,22 +2,22 @@ import { createOffer, getOrderStatus } from "../src/index.js";
 import {
   accounts,
   config,
+  FEE_TOKEN,
   mintERC20,
-  mintERC721,
-  STARKNET_NFT_ADDRESS
+  mintERC721
 } from "./utils/index.js";
 
 describe("createOffer", () => {
   it("default", async () => {
     const { seller, buyer } = accounts;
-    const tokenId = await mintERC721({ account: seller });
-    await mintERC20({ account: buyer, amount: 1000 });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
+    await mintERC20({ account: buyer, amount: 10000000 });
 
-    const orderHash = await createOffer(config, {
+    const { orderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer: {
         brokerId: accounts.listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount: BigInt(10)
       },
@@ -26,8 +26,6 @@ describe("createOffer", () => {
         amount: BigInt(10)
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
 
     const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
       orderHash
@@ -58,8 +56,6 @@ describe("createOffer", () => {
   //     }
   //   });
 
-  //   await new Promise((resolve) => setTimeout(resolve, 5_000));
-
   //   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
   //     orderHash
   //   });
@@ -69,7 +65,7 @@ describe("createOffer", () => {
 
   it("error: invalid currency address", async () => {
     const { seller, buyer } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     await mintERC20({ account: buyer, amount: 1 });
 
     await expect(
@@ -77,11 +73,10 @@ describe("createOffer", () => {
         starknetAccount: buyer,
         offer: {
           brokerId: accounts.listingBroker.address,
-          tokenAddress: STARKNET_NFT_ADDRESS,
+          tokenAddress,
           tokenId,
           startAmount: BigInt(10),
-          currencyAddress:
-            "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
+          currencyAddress: FEE_TOKEN
         },
         approveInfo: {
           currencyAddress: config.starknetCurrencyContract,

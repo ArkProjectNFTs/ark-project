@@ -10,6 +10,13 @@ const config: Config = {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
   preset: "ts-jest/presets/default-esm",
+  testMatch: ["**/?(*.)test.ts?(x)"],
+  globals: {
+    "ts-jest": {
+      tsConfig: "tsconfig.json",
+      diagnostics: false
+    }
+  },
   setupFiles: ["<rootDir>/tests/setup.ts"]
 };
 

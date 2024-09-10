@@ -1,10 +1,10 @@
 use ark_common::protocol::order_types::OrderTrait;
+use ark_common::protocol::order_types::OrderType;
+
+use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 use core::serde::Serde;
 
 use starknet::ContractAddress;
-
-use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-use ark_common::protocol::order_types::OrderType;
 
 
 #[derive(Drop, Copy, Debug, Serde, starknet::Store)]
@@ -41,72 +41,76 @@ impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
         }
     }
 }
-//! Executor contract on Starknet for arkchain.
+
+//! Executor contract on Starknet
 //!
 //! This contract is responsible of executing the orders
 //! and move the assets accordingly.
 //! Once done, an event is emitted to confirm at the arkchain
 //! that the order was executed correctly.
 //!
-//! In order to communicate with the Arkchain, this contract
-//! uses the `appchain_messaging` contract dispatcher to send
-//! messages.
 
 #[starknet::contract]
 mod executor {
-    use core::zeroable::Zeroable;
-    use core::traits::Into;
-    use starknet::contract_address_to_felt252;
-    use starknet::get_contract_address;
-
-    use core::debug::PrintTrait;
-    use core::traits::TryInto;
-    use core::box::BoxTrait;
-    use core::option::OptionTrait;
-
-    use starknet::{ContractAddress, ClassHash};
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
         FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 
+    use ark_component::orderbook::OrderbookComponent;
+    use ark_component::orderbook::{
+        OrderbookHooksCreateOrderEmptyImpl, OrderbookHooksCancelOrderEmptyImpl,
+        OrderbookHooksFulfillOrderEmptyImpl, OrderbookHooksValidateOrderExecutionEmptyImpl,
+    };
     use ark_oz::erc2981::interface::IERC2981_ID;
-    use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
     use ark_oz::erc2981::{FeesRatio, FeesRatioDefault, FeesImpl};
+    use ark_oz::erc2981::{IERC2981Dispatcher, IERC2981DispatcherTrait};
 
-    use ark_starknet::interfaces::{IExecutor, IUpgradable, IMaintenance};
     use ark_starknet::interfaces::FeesAmount;
 
-    use ark_starknet::appchain_messaging::{
-        IAppchainMessagingDispatcher, IAppchainMessagingDispatcherTrait,
-    };
+    use ark_starknet::interfaces::{IExecutor, IUpgradable, IMaintenance};
+    use core::box::BoxTrait;
+
+    use core::debug::PrintTrait;
+    use core::option::OptionTrait;
+    use core::traits::Into;
+    use core::traits::TryInto;
+    use core::zeroable::Zeroable;
+    use openzeppelin::introspection::interface::{ISRC5, ISRC5Dispatcher, ISRC5DispatcherTrait};
 
     use openzeppelin::token::{
         erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
         erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
     };
-    use openzeppelin::introspection::interface::{ISRC5, ISRC5Dispatcher, ISRC5DispatcherTrait};
+    use starknet::contract_address_to_felt252;
+    use starknet::get_contract_address;
+    use starknet::storage::Map;
+
+    use starknet::{ContractAddress, ClassHash};
 
     use super::{OrderInfo, OrderV1IntoOrderInfo};
+
+    component!(path: OrderbookComponent, storage: orderbook, event: OrderbookEvent);
 
     #[storage]
     struct Storage {
         admin_address: ContractAddress,
         arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
-        messaging_address: ContractAddress,
         chain_id: felt252,
-        broker_fees: LegacyMap<ContractAddress, FeesRatio>,
+        broker_fees: Map<ContractAddress, FeesRatio>,
         ark_fees: FeesRatio,
         // order hash -> OrderInfo
-        orders: LegacyMap<felt252, OrderInfo>,
+        orders: Map<felt252, OrderInfo>,
         // fallback when collection doesn't implement ERC2981
         default_receiver: ContractAddress,
         default_fees: FeesRatio,
-        creator_fees: LegacyMap<ContractAddress, (ContractAddress, FeesRatio)>,
+        creator_fees: Map<ContractAddress, (ContractAddress, FeesRatio)>,
         // maintenance mode
         in_maintenance: bool,
+        #[substorage(v0)]
+        orderbook: OrderbookComponent::Storage,
     }
 
     #[event]
@@ -115,6 +119,8 @@ mod executor {
         OrderExecuted: OrderExecuted,
         CollectionFallbackFees: CollectionFallbackFees,
         ExecutorInMaintenance: ExecutorInMaintenance,
+        // #[flat] // OrderExecuted conflict
+        OrderbookEvent: OrderbookComponent::Event,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -147,17 +153,19 @@ mod executor {
         const FEES_RATIO_INVALID: felt252 = 'Fees ratio is invalid';
     }
 
+    #[abi(embed_v0)]
+    impl OrderbookImpl = OrderbookComponent::OrderbookImpl<ContractState>;
+    impl OrderbookActionImpl = OrderbookComponent::OrderbookActionImpl<ContractState>;
+
     #[constructor]
     fn constructor(
         ref self: ContractState,
         admin_address: ContractAddress,
         eth_contract_address: ContractAddress,
-        messaging_address: ContractAddress,
         chain_id: felt252
     ) {
         self.admin_address.write(admin_address);
         self.eth_contract_address.write(eth_contract_address);
-        self.messaging_address.write(messaging_address);
         self.chain_id.write(chain_id);
         self.ark_fees.write(Default::default());
         self.default_receiver.write(admin_address);
@@ -255,10 +263,6 @@ mod executor {
             }
         }
 
-        fn get_messaging_address(self: @ContractState) -> ContractAddress {
-            self.messaging_address.read()
-        }
-
         fn get_orderbook_address(self: @ContractState) -> ContractAddress {
             self.arkchain_orderbook_address.read()
         }
@@ -269,12 +273,6 @@ mod executor {
             _ensure_admin(@self);
 
             self.arkchain_orderbook_address.write(orderbook_address);
-        }
-
-        fn update_messaging_address(ref self: ContractState, msger_address: ContractAddress) {
-            _ensure_admin(@self);
-
-            self.messaging_address.write(msger_address);
         }
 
         fn update_eth_address(ref self: ContractState, eth_address: ContractAddress) {
@@ -297,28 +295,11 @@ mod executor {
 
         fn cancel_order(ref self: ContractState, cancelInfo: CancelInfo) {
             _ensure_is_not_in_maintenance(@self);
-            let messaging = IAppchainMessagingDispatcher {
-                contract_address: self.messaging_address.read()
-            };
-
-            let vinfo = CancelOrderInfo { cancelInfo: cancelInfo.clone() };
-
-            let mut vinfo_buf = array![];
-            Serde::serialize(@vinfo, ref vinfo_buf);
-
-            messaging
-                .send_message_to_appchain(
-                    self.arkchain_orderbook_address.read(),
-                    selector!("cancel_order_from_l2"),
-                    vinfo_buf.span(),
-                );
+            self.orderbook.cancel_order(cancelInfo);
         }
 
         fn create_order(ref self: ContractState, order: OrderV1) {
             _ensure_is_not_in_maintenance(@self);
-            let messaging = IAppchainMessagingDispatcher {
-                contract_address: self.messaging_address.read()
-            };
 
             let vinfo = CreateOrderInfo { order: order.clone() };
             _verify_create_order(@self, @vinfo);
@@ -327,169 +308,20 @@ mod executor {
             let order_info = order.into();
             self.orders.write(order_hash, order_info);
 
-            let mut vinfo_buf = array![];
-            Serde::serialize(@vinfo, ref vinfo_buf);
-
-            messaging
-                .send_message_to_appchain(
-                    self.arkchain_orderbook_address.read(),
-                    selector!("create_order_from_l2"),
-                    vinfo_buf.span(),
-                );
+            self.orderbook.create_order(order);
         }
 
         fn fulfill_order(ref self: ContractState, fulfillInfo: FulfillInfo) {
             _ensure_is_not_in_maintenance(@self);
-            let messaging = IAppchainMessagingDispatcher {
-                contract_address: self.messaging_address.read()
-            };
 
             let vinfo = FulfillOrderInfo { fulfillInfo: fulfillInfo.clone() };
 
             _verify_fulfill_order(@self, @vinfo);
 
-            let mut vinfo_buf = array![];
-            Serde::serialize(@vinfo, ref vinfo_buf);
-
-            messaging
-                .send_message_to_appchain(
-                    self.arkchain_orderbook_address.read(),
-                    selector!("fulfill_order_from_l2"),
-                    vinfo_buf.span(),
-                );
-        }
-
-        fn execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
-            // assert(
-            //     starknet::get_caller_address() == self.messaging_address.read(),
-            //     'Invalid msg sender'
-            // );
-
-            // Check if execution_info.currency_contract_address is whitelisted
-            _ensure_is_not_in_maintenance(@self);
-            assert(
-                execution_info.payment_currency_chain_id == self.chain_id.read(),
-                'Chain ID is not SN_MAIN'
-            );
-
-            let currency_contract = IERC20Dispatcher {
-                contract_address: execution_info.payment_currency_address.try_into().unwrap()
-            };
-
-            let (creator_address, creator_fees_amount) = _compute_creator_fees_amount(
-                @self,
-                @execution_info.nft_address,
-                execution_info.payment_amount,
-                execution_info.nft_token_id
-            );
-            let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
-                _compute_fees_amount(
-                @self,
-                execution_info.fulfill_broker_address,
-                execution_info.listing_broker_address,
-                execution_info.nft_address,
-                execution_info.nft_token_id,
-                execution_info.payment_amount
-            );
-            assert!(
-                execution_info
-                    .payment_amount > (fulfill_broker_fees_amount
-                        + listing_broker_fees_amount
-                        + creator_fees_amount
-                        + ark_fees_amount),
-                "Fees exceed payment amount"
-            );
-
-            let seller_amount = execution_info.payment_amount
-                - (fulfill_broker_fees_amount
-                    + listing_broker_fees_amount
-                    + creator_fees_amount
-                    + ark_fees_amount);
-
-            // split the fees
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from,
-                    execution_info.fulfill_broker_address,
-                    fulfill_broker_fees_amount,
-                );
-
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from,
-                    execution_info.listing_broker_address,
-                    listing_broker_fees_amount
-                );
-
-            if creator_fees_amount > 0 {
-                let (default_receiver_creator, _) = self.get_default_creator_fees();
-                if creator_address == default_receiver_creator {
-                    self
-                        .emit(
-                            CollectionFallbackFees {
-                                collection: execution_info.nft_address,
-                                amount: creator_fees_amount,
-                                currency_contract: currency_contract.contract_address,
-                                receiver: default_receiver_creator,
-                            }
-                        )
-                }
-                currency_contract
-                    .transfer_from(
-                        execution_info.payment_from, creator_address, creator_fees_amount
-                    );
+            match self.orderbook.fulfill_order(fulfillInfo) {
+                Option::Some(execute_info) => { _execute_order(ref self, execute_info); },
+                Option::None => panic!("OB: failed to fulfill order"),
             }
-
-            if ark_fees_amount > 0 {
-                currency_contract
-                    .transfer_from(
-                        execution_info.payment_from, self.admin_address.read(), ark_fees_amount
-                    );
-            }
-            // finally transfer to the seller
-            currency_contract
-                .transfer_from(
-                    execution_info.payment_from, execution_info.payment_to, seller_amount
-                );
-
-            let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
-            nft_contract
-                .transfer_from(
-                    execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
-                );
-
-            let tx_info = starknet::get_tx_info().unbox();
-            let transaction_hash = tx_info.transaction_hash;
-            let block_timestamp = starknet::info::get_block_timestamp();
-
-            self
-                .emit(
-                    OrderExecuted {
-                        order_hash: execution_info.order_hash, transaction_hash, block_timestamp,
-                    }
-                );
-
-            let messaging = IAppchainMessagingDispatcher {
-                contract_address: self.messaging_address.read()
-            };
-
-            let vinfo = ExecutionValidationInfo {
-                order_hash: execution_info.order_hash,
-                transaction_hash,
-                starknet_block_timestamp: block_timestamp,
-                from: execution_info.nft_from,
-                to: execution_info.nft_to,
-            };
-
-            let mut vinfo_buf = array![];
-            Serde::serialize(@vinfo, ref vinfo_buf);
-
-            messaging
-                .send_message_to_appchain(
-                    self.arkchain_orderbook_address.read(),
-                    selector!("validate_order_execution"),
-                    vinfo_buf.span(),
-                );
         }
     }
 
@@ -745,6 +577,126 @@ mod executor {
             ),
             "Offerer's allowance of executor is not enough"
         )
+    }
+
+    fn _execute_order(ref self: ContractState, execution_info: ExecutionInfo) {
+        // Check if execution_info.currency_contract_address is whitelisted
+        _ensure_is_not_in_maintenance(@self);
+        assert(
+            execution_info.payment_currency_chain_id == self.chain_id.read(),
+            'Chain ID is not SN_MAIN'
+        );
+
+        let currency_contract = IERC20Dispatcher {
+            contract_address: execution_info.payment_currency_address.try_into().unwrap()
+        };
+
+        let (creator_address, creator_fees_amount) = _compute_creator_fees_amount(
+            @self,
+            @execution_info.nft_address,
+            execution_info.payment_amount,
+            execution_info.nft_token_id
+        );
+        let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
+            _compute_fees_amount(
+            @self,
+            execution_info.fulfill_broker_address,
+            execution_info.listing_broker_address,
+            execution_info.nft_address,
+            execution_info.nft_token_id,
+            execution_info.payment_amount
+        );
+        assert!(
+            execution_info
+                .payment_amount > (fulfill_broker_fees_amount
+                    + listing_broker_fees_amount
+                    + creator_fees_amount
+                    + ark_fees_amount),
+            "Fees exceed payment amount"
+        );
+
+        let seller_amount = execution_info.payment_amount
+            - (fulfill_broker_fees_amount
+                + listing_broker_fees_amount
+                + creator_fees_amount
+                + ark_fees_amount);
+
+        // split the fees
+        if fulfill_broker_fees_amount > 0 {
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from,
+                    execution_info.fulfill_broker_address,
+                    fulfill_broker_fees_amount,
+                );
+        }
+
+        if listing_broker_fees_amount > 0 {
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from,
+                    execution_info.listing_broker_address,
+                    listing_broker_fees_amount
+                );
+        }
+
+        if creator_fees_amount > 0 {
+            let (default_receiver_creator, _) = self.get_default_creator_fees();
+            if creator_address == default_receiver_creator {
+                self
+                    .emit(
+                        CollectionFallbackFees {
+                            collection: execution_info.nft_address,
+                            amount: creator_fees_amount,
+                            currency_contract: currency_contract.contract_address,
+                            receiver: default_receiver_creator,
+                        }
+                    )
+            }
+            currency_contract
+                .transfer_from(execution_info.payment_from, creator_address, creator_fees_amount);
+        }
+
+        if ark_fees_amount > 0 {
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from, self.admin_address.read(), ark_fees_amount
+                );
+        }
+        // finally transfer to the seller
+        if seller_amount > 0 {
+            currency_contract
+                .transfer_from(
+                    execution_info.payment_from, execution_info.payment_to, seller_amount
+                );
+        }
+
+        let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
+        nft_contract
+            .transfer_from(
+                execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
+            );
+
+        let tx_info = starknet::get_tx_info().unbox();
+        let transaction_hash = tx_info.transaction_hash;
+        let block_timestamp = starknet::info::get_block_timestamp();
+
+        self
+            .emit(
+                OrderExecuted {
+                    order_hash: execution_info.order_hash, transaction_hash, block_timestamp,
+                }
+            );
+
+        let vinfo = ExecutionValidationInfo {
+            order_hash: execution_info.order_hash,
+            transaction_hash,
+            starknet_block_timestamp: block_timestamp,
+            from: execution_info.nft_from,
+            to: execution_info.nft_to,
+        };
+
+        self.orderbook.validate_order_execution(vinfo);
     }
 
     fn _check_erc20_amount(

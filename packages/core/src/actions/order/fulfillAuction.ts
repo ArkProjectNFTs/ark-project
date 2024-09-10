@@ -10,6 +10,16 @@ import {
 import { Config } from "../../createConfig.js";
 import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
 
+export interface FulfillAuctionParameters {
+  starknetAccount: AccountInterface;
+  fulfillAuctionInfo: FulfillAuctionInfo;
+  waitForTransaction?: boolean;
+}
+
+export interface FulfillAuctionResult {
+  transactionHash: string;
+}
+
 /**
  * Fulfill an auction on the Arkchain.
  *
@@ -18,16 +28,15 @@ import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
  *
  * @returns {Promise<void>} A promise that resolves when the transaction is completed.
  */
-interface FulfillAuctionParameters {
-  starknetAccount: AccountInterface;
-  fulfillAuctionInfo: FulfillAuctionInfo;
-}
-
-const fulfillAuction = async (
+export async function fulfillAuction(
   config: Config,
   parameters: FulfillAuctionParameters
-) => {
-  const { starknetAccount, fulfillAuctionInfo } = parameters;
+): Promise<FulfillAuctionResult> {
+  const {
+    starknetAccount,
+    fulfillAuctionInfo,
+    waitForTransaction = true
+  } = parameters;
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
@@ -56,9 +65,13 @@ const fulfillAuction = async (
     }
   ]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
-};
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
-export { fulfillAuction };
+  return {
+    transactionHash: result.transaction_hash
+  };
+}

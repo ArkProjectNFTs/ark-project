@@ -6,38 +6,37 @@ import {
   config,
   getBalance,
   mintERC20,
-  mintERC721,
-  STARKNET_NFT_ADDRESS
+  mintERC721
 } from "./utils/index.js";
 
 describe("fulfillAuction", () => {
   it("default", async () => {
     const { seller, buyer } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const initialSellerBalance = await getBalance({ account: seller });
     await mintERC20({ account: buyer, amount: 5000 });
 
-    const orderHash = await createAuction(config, {
+    const { orderHash } = await createAuction(config, {
       starknetAccount: seller,
       order: {
         brokerId: accounts.listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount: BigInt(1000),
         endAmount: BigInt(5000)
       },
       approveInfo: {
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId
       }
     });
 
     const offerAmount = BigInt(1000);
-    const offerOrderHash = await createOffer(config, {
+    const { orderHash: offerOrderHash } = await createOffer(config, {
       starknetAccount: buyer,
       offer: {
         brokerId: accounts.listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount: offerAmount
       },
@@ -52,20 +51,18 @@ describe("fulfillAuction", () => {
       fulfillAuctionInfo: {
         orderHash,
         relatedOrderHash: offerOrderHash,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         brokerId: accounts.listingBroker.address
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus } = await getOrderStatus(config, {
       orderHash
     });
 
     const sellerBalance = await getBalance({ account: seller });
-    const fees = (BigInt(offerAmount) * BigInt(0)) / BigInt(100);
+    const fees = (BigInt(offerAmount) * BigInt(4)) / BigInt(100);
     const profit = BigInt(offerAmount) - fees;
 
     expect(orderStatus).toBe("Executed");

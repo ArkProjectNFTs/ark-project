@@ -2,20 +2,19 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
-
-import { AuctionV1, Config, createAuction } from "@ark-project/core";
+import {
+  Config,
+  createAuction,
+  CreateAuctionParameters,
+  type CreateAuctionResult
+} from "@ark-project/core";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-export type CreateAuctionParameters = {
-  starknetAccount: AccountInterface;
-} & AuctionV1;
-
 export default function useCreateAuction() {
   const [status, setStatus] = useState<Status>("idle");
-  const [response, setResponse] = useState<bigint | undefined>();
+  const [result, setResult] = useState<CreateAuctionResult>();
   const config = useConfig();
 
   async function create(parameters: CreateAuctionParameters) {
@@ -26,28 +25,12 @@ export default function useCreateAuction() {
     setStatus("loading");
 
     try {
-      const orderHash = await createAuction(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        order: {
-          startAmount: parameters.startAmount,
-          endAmount: parameters.endAmount,
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId,
-          currencyAddress:
-            parameters.currencyAddress || config.starknetCurrencyContract,
-          currencyChainId:
-            parameters.currencyChainId || config.starknetProvider.getChainId(),
-          brokerId: parameters.brokerId,
-          startDate: parameters.startDate,
-          endDate: parameters.endDate
-        } as AuctionV1,
-        approveInfo: {
-          tokenAddress: parameters.tokenAddress,
-          tokenId: parameters.tokenId
-        }
-      });
+      const createAuctionResult = await createAuction(
+        config as Config,
+        parameters
+      );
 
-      setResponse(orderHash);
+      setResult(createAuctionResult);
       setStatus("success");
     } catch (error) {
       console.error("error: failed to create auction", error);
@@ -55,7 +38,14 @@ export default function useCreateAuction() {
     }
   }
 
-  return { create, status, response };
+  return {
+    create,
+    isLoading: status === "loading",
+    isError: status === "error",
+    isSuccess: status === "success",
+    status,
+    result
+  };
 }
 
 export { useCreateAuction };

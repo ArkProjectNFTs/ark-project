@@ -10,18 +10,20 @@ import {
 
 import contracts from "../../../../contracts.dev.json";
 import { Config, createConfig } from "../../src/createConfig.js";
-import { createBroker } from "../../src/index.js";
 
 type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
 
 export const STARKNET_NFT_ADDRESS = contracts.nftContract;
 
+export const FEE_TOKEN =
+  "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+
+export { contracts };
+
 export const config = createConfig({
   starknetNetwork: "dev",
   starknetExecutorContract: contracts.executor,
-  starknetCurrencyContract: contracts.eth,
-  arkchainNetwork: "dev",
-  arkchainOrderbookContract: contracts.orderbook
+  starknetCurrencyContract: contracts.eth
 });
 
 export function generateRandomTokenId(): number {
@@ -44,36 +46,6 @@ export function getTypeFromCairoCustomEnum(cairoCustomEnum: CairoCustomEnum) {
 
   throw new Error("No valid variant found in CairoCustomEnum");
 }
-
-export const whitelistBroker = async (
-  config: Config,
-  adminAccount: Account,
-  brokerId: string
-) => {
-  const { abi: orderbookAbi } = await config.arkProvider.getClassAt(
-    config.arkchainOrderbookContract
-  );
-
-  if (orderbookAbi === undefined) {
-    throw new Error("no abi.");
-  }
-
-  const whitelist_hash_calldata = CallData.compile({
-    broker_id: brokerId
-  });
-
-  const result = await adminAccount.execute({
-    contractAddress: config.arkchainOrderbookContract,
-    entrypoint: "whitelist_broker",
-    calldata: whitelist_hash_calldata
-  });
-
-  await config.arkProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
-
-  return result;
-};
 
 export const mintERC20 = async ({
   account,
@@ -136,29 +108,11 @@ export async function mintERC721({ account }: { account: Account }) {
     retryInterval: 1000
   });
 
-  return tokenId;
+  return {
+    tokenId,
+    tokenAddress: contracts.nftContract
+  };
 }
-
-export const getCurrentTokenId = async (
-  config: Config,
-  nftContractAddress: string
-) => {
-  const { abi } = await config.starknetProvider.getClassAt(nftContractAddress);
-
-  if (!abi) {
-    throw new Error("no abi.");
-  }
-
-  const nftContract = new Contract(
-    abi,
-    nftContractAddress,
-    config.starknetProvider
-  );
-
-  const token_id = await nftContract.get_current_token_id();
-  // we need to subtract 1 because the contract returns the next token id
-  return token_id - BigInt(1);
-};
 
 export const getBalance = async ({ account }: { account: Account }) => {
   const { abi } = await config.starknetProvider.getClassAt(
@@ -178,47 +132,6 @@ export const getBalance = async ({ account }: { account: Account }) => {
   const balance: bigint = await contract.balanceOf(account.address);
 
   return balance;
-};
-
-export const setArkFees = async (
-  config: Config,
-  deployerAccount: Account,
-  fees: number
-) => {
-  const { abi } = await config.starknetProvider.getClassAt(
-    config.starknetExecutorContract
-  );
-
-  if (!abi) {
-    throw new Error("no abi.");
-  }
-
-  const executorContract = new Contract(
-    abi,
-    config.starknetExecutorContract,
-    config.starknetProvider
-  );
-
-  executorContract.connect(deployerAccount);
-
-  const response = await executorContract.set_ark_fees({
-    numerator: cairo.uint256(fees),
-    denominator: cairo.uint256(10000)
-  });
-
-  await config.starknetProvider.waitForTransaction(response.transaction_hash);
-};
-
-export const setBrokerFees = async (
-  config: Config,
-  brokerAccount: Account,
-  fees: number
-) => {
-  await createBroker(config, {
-    brokenAccount: brokerAccount,
-    numerator: fees,
-    denominator: 10000
-  });
 };
 
 function fetchAccount(
@@ -342,41 +255,3 @@ export const setDefaultCreatorFees = async (
 
   await config.starknetProvider.waitForTransaction(response.transaction_hash);
 };
-
-export async function setupFees(config: Config) {
-  await setArkFees(config, accounts.admin, 100);
-  await setBrokerFees(config, accounts.listingBroker, 100);
-  await setBrokerFees(config, accounts.saleBroker, 100);
-  await setDefaultCreatorFees(
-    config,
-    accounts.admin,
-    accounts.arkDefaultFeesReceiver.address,
-    100
-  );
-  await setCollectionCreatorFees(
-    config,
-    accounts.admin,
-    accounts.arkSetbyAdminCollectionReceiver.address,
-    100,
-    contracts.nftContractFixedFees
-  );
-}
-
-export async function resetFees(config: Config) {
-  await setArkFees(config, accounts.admin, 0);
-  await setBrokerFees(config, accounts.listingBroker, 0);
-  await setBrokerFees(config, accounts.saleBroker, 0);
-  await setDefaultCreatorFees(
-    config,
-    accounts.admin,
-    accounts.arkDefaultFeesReceiver.address,
-    0
-  );
-  await setCollectionCreatorFees(
-    config,
-    accounts.admin,
-    accounts.arkSetbyAdminCollectionReceiver.address,
-    0,
-    contracts.nftContractFixedFees
-  );
-}

@@ -1,28 +1,23 @@
 import { getOrderStatus } from "../src/actions/read/index.js";
 import { createListing, fulfillListing } from "../src/index.js";
-import {
-  accounts,
-  config,
-  mintERC721,
-  STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("fulfillOffer", () => {
   it("default", async () => {
     const { seller, buyer, listingBroker, saleBroker } = accounts;
-    const tokenId = await mintERC721({ account: seller });
+    const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const startAmount = BigInt(1);
 
-    const orderHash = await createListing(config, {
+    const { orderHash } = await createListing(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         startAmount
       },
       approveInfo: {
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId
       }
     });
@@ -31,7 +26,7 @@ describe("fulfillOffer", () => {
       starknetAccount: buyer,
       fulfillListingInfo: {
         orderHash,
-        tokenAddress: STARKNET_NFT_ADDRESS,
+        tokenAddress,
         tokenId,
         brokerId: saleBroker.address
       },
@@ -40,8 +35,6 @@ describe("fulfillOffer", () => {
         amount: startAmount
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus } = await getOrderStatus(config, {
       orderHash

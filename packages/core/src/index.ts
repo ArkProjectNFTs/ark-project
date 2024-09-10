@@ -1,49 +1,75 @@
 export { createConfig } from "./createConfig.js";
 
 export {
-  fetchOrCreateAccount,
-  createAccount
+  createAccount,
+  fetchOrCreateAccount
 } from "./actions/account/index.js";
 
 export {
+  cancelOrder,
   createAuction,
   createListing,
   createOffer,
-  cancelOrder,
   fulfillAuction,
   fulfillListing,
-  fulfillOffer
+  fulfillOffer,
+  type CancelOrderParameters,
+  type CancelOrderResult,
+  type CreateAuctionParameters,
+  type CreateAuctionResult,
+  type CreateListingParameters,
+  type CreateListingResult,
+  type CreateOfferParameters,
+  type CreateOfferResult,
+  type FulfillAuctionParameters,
+  type FulfillAuctionResult,
+  type FulfillListingParameters,
+  type FulfillListingResult,
+  type FulfillOfferParameters,
+  type FulfillOfferResult
 } from "./actions/order/index.js";
 
 export { createBroker } from "./actions/broker/createBroker.js";
 
 export {
-  getOrderHash,
+  getArkFees,
+  getBrokerFees,
+  getCollectionCreatorFees,
+  getDefaultCreatorFees,
+  getFeesAmount,
+  setArkFees,
+  setBrokerFees,
+  setCollectionCreatorFees,
+  setDefaultCreatorFees
+} from "./actions/fees/index.js";
+
+export {
+  getAllowance,
   getOrder,
-  getOrderStatus,
+  getOrderHash,
   getOrderSigner,
-  getOrderType,
-  getAllowance
+  getOrderStatus,
+  getOrderType
 } from "./actions/read/index.js";
 
 export type {
   AuctionV1,
+  CancelInfo,
+  FulfillAuctionInfo,
   ListingV1,
   OfferV1,
-  CancelInfo,
-  RouteType,
-  FulfillAuctionInfo
+  RouteType
 } from "./types/index.js";
 
 export type {
   Config,
-  Network,
-  CreateConfigParameters
+  CreateConfigParameters,
+  Network
 } from "./createConfig.js";
 
 export {
-  starknetRpcUrls,
   arkchainRpcUrls,
   networks,
-  starknetEthContract
+  starknetEthContract,
+  starknetRpcUrls
 } from "./constants.js";

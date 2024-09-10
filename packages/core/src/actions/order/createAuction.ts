@@ -16,10 +16,16 @@ import {
 } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
-interface CreateAuctionParameters {
+export interface CreateAuctionParameters {
   starknetAccount: AccountInterface;
   order: AuctionV1;
   approveInfo: ApproveErc721Info;
+  waitForTransaction?: boolean;
+}
+
+export interface CreateAuctionResult {
+  orderHash: bigint;
+  transactionHash: string;
 }
 
 /**
@@ -36,15 +42,22 @@ interface CreateAuctionParameters {
  * @returns {Promise<string>} A promise that resolves with the hash of the created order.
  *
  */
-const createAuction = async (
+export async function createAuction(
   config: Config,
   parameters: CreateAuctionParameters
-) => {
-  const { starknetAccount, order: baseOrder, approveInfo } = parameters;
+): Promise<CreateAuctionResult> {
+  const {
+    starknetAccount,
+    order: baseOrder,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() + 30);
+  currentDate.setDate(currentDate.getDate());
   const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
-  const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
+  const endDate =
+    baseOrder.endDate ||
+    Math.floor(currentDate.getTime() / 1000) + 60 * 60 * 24 * 7;
   const chainId = await config.starknetProvider.getChainId();
 
   if (startDate < Math.floor(Date.now() / 1000)) {
@@ -103,13 +116,16 @@ const createAuction = async (
     }
   ]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
   const orderHash = getOrderHashFromOrderV1(order);
 
-  return orderHash;
-};
-
-export { createAuction };
+  return {
+    orderHash,
+    transactionHash: result.transaction_hash
+  };
+}

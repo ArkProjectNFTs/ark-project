@@ -1,0 +1,19 @@
+[package]
+name = "ark_component"
+version = "0.1.0"
+
+[dependencies]
+ark_common = { path = "../ark_common" }
+starknet.workspace = true
+
+[dev-dependencies]
+snforge_std.workspace = true
+assert_macros.workspace = true
+
+[scripts]
+test.workspace = true
+
+[tool]
+fmt.workspace = true
+
+[lib]
