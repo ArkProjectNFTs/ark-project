@@ -36,8 +36,6 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
-
     const { orderStatus } = await getOrderStatus(config, {
       orderHash
     });

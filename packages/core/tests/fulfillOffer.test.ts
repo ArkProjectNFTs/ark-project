@@ -49,8 +49,6 @@ describe("fulfillOffer", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
-
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash
     });
@@ -102,8 +100,6 @@ describe("fulfillOffer", () => {
         tokenId: offer.tokenId
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
 
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
       orderHash

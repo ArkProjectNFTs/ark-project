@@ -1,5 +1,3 @@
-import fs from "fs";
-
 import { getFeesAmount, setBrokerFees } from "../src/index.js";
 import { accounts, config, mintERC721 } from "./utils/index.js";
 
@@ -18,9 +16,6 @@ describe("setBrokerFees", () => {
     if (abi === undefined) {
       throw new Error("no abi.");
     }
-
-    const abiJson = JSON.stringify(abi);
-    fs.writeFileSync("abi.json", abiJson);
 
     await setBrokerFees(config, {
       brokerAccount: listingBroker,

@@ -57,14 +57,12 @@ describe("fulfillAuction", () => {
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 4_000));
-
     const { orderStatus } = await getOrderStatus(config, {
       orderHash
     });
 
     const sellerBalance = await getBalance({ account: seller });
-    const fees = (BigInt(offerAmount) * BigInt(0)) / BigInt(100);
+    const fees = (BigInt(offerAmount) * BigInt(4)) / BigInt(100);
     const profit = BigInt(offerAmount) - fees;
 
     expect(orderStatus).toBe("Executed");

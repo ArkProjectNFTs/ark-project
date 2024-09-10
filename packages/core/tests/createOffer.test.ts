@@ -56,8 +56,6 @@ describe("createOffer", () => {
   //     }
   //   });
 
-  //   await new Promise((resolve) => setTimeout(resolve, 5_000));
-
   //   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
   //     orderHash
   //   });
