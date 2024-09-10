@@ -1,10 +1,9 @@
 [package]
-name = "ark_orderbook"
+name = "ark_component"
 version = "0.1.0"
 
 [dependencies]
 ark_common = { path = "../ark_common" }
-ark_component = { path = "../ark_component" }
 starknet.workspace = true
 
 [dev-dependencies]
@@ -17,6 +16,4 @@ test.workspace = true
 [tool]
 fmt.workspace = true
 
-[[target.starknet-contract]]
-sierra = true
-casm = true
+[lib]

@@ -1,20 +1,6 @@
-use core::option::OptionTrait;
-use core::result::ResultTrait;
-use core::traits::Into;
-use core::traits::TryInto;
-use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-use ark_orderbook::orderbook::{
-    orderbook, orderbook_errors, OrderbookDispatcher, OrderbookDispatcherTrait
-};
-use ark_common::protocol::order_types::{OrderType, OrderTrait, RouteType};
-use ark_common::crypto::signer::{SignInfo, Signer, SignerValidator};
-use debug::PrintTrait;
+use ark_common::protocol::order_types::OrderType;
+use ark_common::protocol::order_v1::OrderTraitOrderV1;
 use super::super::super::common::setup::setup_orders;
-use snforge_std::{ContractClassTrait, declare};
-
-// *********************************************************
-// validate_common_data
-// *********************************************************
 
 #[test]
 fn test_validate_common_data_with_valid_order() {

@@ -1,7 +1,6 @@
-use starknet::{ContractAddress, contract_address_const};
+use ark_common::protocol::order_types::RouteType;
 
 use ark_common::protocol::order_v1::OrderV1;
-use ark_common::protocol::order_types::RouteType;
 
 
 use ark_starknet::interfaces::{
@@ -14,8 +13,8 @@ use ark_tokens::erc20::IFreeMintDispatcherTrait as Erc20DispatcherTrait;
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
-use snforge_std as snf;
-use snf::{ContractClass, ContractClassTrait, CheatTarget};
+use snforge_std::{cheat_caller_address, CheatSpan};
+use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{setup, setup_order};
 
@@ -32,9 +31,8 @@ fn test_create_order_erc20_to_erc721_ok() {
     order.offerer = offerer;
     order.start_amount = start_amount;
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
@@ -52,14 +50,13 @@ fn test_create_order_erc721_to_erc20_ok() {
     order.offerer = offerer;
     order.token_id = Option::Some(token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 
 #[test]
-#[should_panic(expected: ("Caller is not the offerer",))]
+#[should_panic(expected: "Caller is not the offerer")]
 fn test_create_order_offerer_shall_be_caller() {
     let (executor_address, erc20_address, nft_address) = setup();
     let offerer = contract_address_const::<'offerer'>();
@@ -68,13 +65,12 @@ fn test_create_order_offerer_shall_be_caller() {
     let mut order = setup_order(erc20_address, nft_address);
     order.offerer = offerer;
 
-    snf::start_prank(CheatTarget::One(executor_address), caller);
+    cheat_caller_address(executor_address, caller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Offerer does not own enough ERC20 tokens",))]
+#[should_panic(expected: "Offerer does not own enough ERC20 tokens")]
 fn test_create_order_offerer_not_enough_erc20_tokens() {
     let (executor_address, erc20_address, nft_address) = setup();
     let offerer = contract_address_const::<'offerer'>();
@@ -87,13 +83,12 @@ fn test_create_order_offerer_not_enough_erc20_tokens() {
     order.offerer = offerer;
     order.start_amount = start_amount;
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ("Offerer does not own the specified ERC721 token",))]
+#[should_panic(expected: "Offerer does not own the specified ERC721 token")]
 fn test_create_order_offerer_not_own_ec721_token() {
     let (executor_address, erc20_address, nft_address) = setup();
     let offerer = contract_address_const::<'offerer'>();
@@ -109,13 +104,12 @@ fn test_create_order_offerer_not_own_ec721_token() {
     order.offerer = offerer;
     order.token_id = Option::Some(token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ('Executor not enabled',))]
+#[should_panic(expected: 'Executor not enabled')]
 fn test_create_order_erc20_to_erc721_disabled() {
     let (executor_address, erc20_address, nft_address) = setup();
     let admin = contract_address_const::<'admin'>();
@@ -128,17 +122,15 @@ fn test_create_order_erc20_to_erc721_disabled() {
     order.offerer = offerer;
     order.start_amount = start_amount;
 
-    snf::start_prank(CheatTarget::One(executor_address), admin);
+    cheat_caller_address(executor_address, admin, CheatSpan::TargetCalls(1));
     IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }
 
 #[test]
-#[should_panic(expected: ('Executor not enabled',))]
+#[should_panic(expected: 'Executor not enabled')]
 fn test_create_order_erc721_to_erc20_disabled() {
     let (executor_address, erc20_address, nft_address) = setup();
     let admin = contract_address_const::<'admin'>();
@@ -154,11 +146,9 @@ fn test_create_order_erc721_to_erc20_disabled() {
     order.offerer = offerer;
     order.token_id = Option::Some(token_id);
 
-    snf::start_prank(CheatTarget::One(executor_address), admin);
+    cheat_caller_address(executor_address, admin, CheatSpan::TargetCalls(1));
     IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
-    snf::stop_prank(CheatTarget::One(executor_address));
 
-    snf::start_prank(CheatTarget::One(executor_address), offerer);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
-    snf::stop_prank(CheatTarget::One(executor_address));
 }

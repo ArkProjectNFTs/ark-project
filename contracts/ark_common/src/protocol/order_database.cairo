@@ -1,3 +1,5 @@
+use ark_common::protocol::order_types::OrderStatus;
+use ark_common::protocol::order_types::OrderType;
 use core::result::ResultTrait;
 //! Orders database.
 //!
@@ -19,9 +21,6 @@ use core::result::ResultTrait;
 //! 3. At base address + offset 1 => The length of the serialized order.
 //! 4. At base addresss + offset 2 => First felt of the serialized order.
 use starknet::SyscallResultTrait;
-
-use ark_common::protocol::order_types::OrderStatus;
-use ark_common::protocol::order_types::OrderType;
 
 /// Must remain equal to 0 for now.
 const ADDRESS_DOMAIN: u32 = 0;

@@ -1,9 +1,9 @@
-//! Interfaces for arkchain operator.
-use starknet::{ClassHash, ContractAddress};
 use ark_common::protocol::order_types::ExecutionInfo;
 use ark_common::protocol::order_types::OrderV1;
 use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
 use ark_oz::erc2981::FeesRatio;
+//! Interfaces for arkchain operator.
+use starknet::{ClassHash, ContractAddress};
 
 #[derive(Serde, Drop)]
 struct FeesAmount {
@@ -18,7 +18,7 @@ trait IExecutor<T> {
     fn fulfill_order(ref self: T, fulfillInfo: FulfillInfo);
     fn cancel_order(ref self: T, cancelInfo: CancelInfo);
     fn create_order(ref self: T, order: OrderV1);
-    fn execute_order(ref self: T, execution_info: ExecutionInfo);
+    // fn execute_order(ref self: T, execution_info: ExecutionInfo);
     fn update_admin_address(ref self: T, admin_address: ContractAddress);
     fn update_orderbook_address(ref self: T, orderbook_address: ContractAddress);
     fn update_eth_address(ref self: T, eth_address: ContractAddress);

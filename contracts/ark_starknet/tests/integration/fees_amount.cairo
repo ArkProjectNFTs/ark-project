@@ -1,12 +1,9 @@
-use starknet::{ContractAddress, contract_address_const};
-
 use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, FeesAmount, FeesRatio
 };
 
-use snforge_std as snf;
-use snf::{ContractClass, ContractClassTrait, CheatTarget};
-
+use snforge_std::{cheat_caller_address, CheatSpan};
+use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::setup;
 
 
@@ -26,18 +23,15 @@ fn test_get_fees_amount_default_creator() {
     let ark_fees_ratio = FeesRatio { numerator: 1, denominator: 100 };
     let default_creator_fees_ratio = FeesRatio { numerator: 2, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin);
+    cheat_caller_address(executor.contract_address, admin, CheatSpan::TargetCalls(2));
     executor.set_ark_fees(ark_fees_ratio);
     executor.set_default_creator_fees(creator, default_creator_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     let fees_amount = executor
         .get_fees_amount(fulfill_broker, listing_broker, nft_address, 1, amount);
@@ -65,19 +59,16 @@ fn test_get_fees_amount_collection_creator() {
     let default_creator_fees_ratio = FeesRatio { numerator: 2, denominator: 100 };
     let collection_creator_fees_ratio = FeesRatio { numerator: 3, denominator: 100 };
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), fulfill_broker);
+    cheat_caller_address(executor.contract_address, fulfill_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(fulfill_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), listing_broker);
+    cheat_caller_address(executor.contract_address, listing_broker, CheatSpan::TargetCalls(1));
     executor.set_broker_fees(listing_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
-    snf::start_prank(CheatTarget::One(executor.contract_address), admin);
+    cheat_caller_address(executor.contract_address, admin, CheatSpan::TargetCalls(3));
     executor.set_ark_fees(ark_fees_ratio);
     executor.set_default_creator_fees(creator, default_creator_fees_ratio);
     executor.set_collection_creator_fees(nft_address, creator, collection_creator_fees_ratio);
-    snf::stop_prank(CheatTarget::One(executor.contract_address));
 
     let fees_amount = executor
         .get_fees_amount(fulfill_broker, listing_broker, nft_address, 1, amount);

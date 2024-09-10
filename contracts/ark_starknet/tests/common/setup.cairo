@@ -1,13 +1,13 @@
-use serde::Serde;
-
-use starknet::{ContractAddress, contract_address_const};
-use snforge_std::{ContractClass, ContractClassTrait, declare};
-
-use ark_common::protocol::order_v1::OrderV1;
 use ark_common::protocol::order_types::RouteType;
 
+use ark_common::protocol::order_v1::OrderV1;
+use serde::Serde;
+use snforge_std::{ContractClass, ContractClassTrait, declare, DeclareResultTrait};
+
+use starknet::{ContractAddress, contract_address_const};
+
 fn deploy_erc20() -> ContractAddress {
-    let contract = declare('FreeMintERC20');
+    let contract = declare("FreeMintERC20").unwrap().contract_class();
     let initial_supply: u256 = 10_000_000_000_u256;
     let name: ByteArray = "DummyERC20";
     let symbol: ByteArray = "DUMMY";
@@ -16,7 +16,7 @@ fn deploy_erc20() -> ContractAddress {
     initial_supply.serialize(ref calldata);
     name.serialize(ref calldata);
     symbol.serialize(ref calldata);
-    let erc20_address = contract.deploy(@calldata).unwrap();
+    let (erc20_address, _) = contract.deploy(@calldata).unwrap();
     erc20_address
 }
 
@@ -29,27 +29,28 @@ fn deploy_nft(royalty: bool) -> ContractAddress {
     name.serialize(ref calldata);
     symbol.serialize(ref calldata);
     base_uri.serialize(ref calldata);
-    if royalty {
+    let (nft_address, _) = if royalty {
         let owner = contract_address_const::<'nft_owner'>();
         calldata.append(owner.into());
-        let contract = declare('FreeMintNFTRoyalty');
+        let contract = declare("FreeMintNFTRoyalty").unwrap().contract_class();
         contract.deploy(@calldata).unwrap()
     } else {
-        let contract = declare('FreeMintNFT');
+        let contract = declare("FreeMintNFT").unwrap().contract_class();
         contract.deploy(@calldata).unwrap()
-    }
+    };
+    nft_address
 }
 
 fn deploy_executor() -> ContractAddress {
-    let messaging_contract = declare('appchain_messaging');
+    let messaging_contract = declare("appchain_messaging").unwrap().contract_class();
     let messaging_owner = contract_address_const::<'messaging_owner'>();
     let appchain_account = contract_address_const::<'messaging_account'>();
     let mut messaging_calldata: Array<felt252> = array![];
     messaging_calldata.append(messaging_owner.into());
     messaging_calldata.append(appchain_account.into());
-    let messaging_address = messaging_contract.deploy(@messaging_calldata).unwrap();
+    let (messaging_address, _) = messaging_contract.deploy(@messaging_calldata).unwrap();
 
-    let contract = declare('executor');
+    let contract = declare("executor").unwrap().contract_class();
     let admin_address = contract_address_const::<'admin'>();
     let eth_address = contract_address_const::<'eth'>();
 
@@ -58,7 +59,8 @@ fn deploy_executor() -> ContractAddress {
     calldata.append(eth_address.into());
     calldata.append(messaging_address.into());
     calldata.append('SN_MAIN');
-    contract.deploy(@calldata).unwrap()
+    let (executor_address, _) = contract.deploy(@calldata).unwrap();
+    executor_address
 }
 
 fn setup() -> (ContractAddress, ContractAddress, ContractAddress) {

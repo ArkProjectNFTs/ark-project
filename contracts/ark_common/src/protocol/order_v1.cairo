@@ -1,16 +1,16 @@
+use ark_common::protocol::order_types::FulfillInfo;
+use ark_common::protocol::order_types::{OrderTrait, OrderValidationError, OrderType, RouteType};
 use core::array::ArrayTrait;
+use core::option::OptionTrait;
 use core::traits::Into;
 use core::traits::TryInto;
-use core::option::OptionTrait;
+use poseidon::poseidon_hash_span;
 
 //! Order v1 supported by the Orderbook.
 //!
 use starknet::ContractAddress;
-use starknet::contract_address_to_felt252;
-use ark_common::protocol::order_types::{OrderTrait, OrderValidationError, OrderType, RouteType};
-use ark_common::protocol::order_types::FulfillInfo;
-use poseidon::poseidon_hash_span;
 use starknet::SyscallResultTrait;
+use starknet::contract_address_to_felt252;
 
 const ORDER_VERSION_V1: felt252 = 'v1';
 // Auction -> end_amount (reserve price) > start_amount (starting price).
