@@ -127,7 +127,7 @@ impl PostgresStorage {
     async fn get_block_by_timestamp(&self, ts: u64) -> Result<Option<BlockData>, StorageError> {
         let q = "SELECT b.block_number, b.block_status, b.block_timestamp, b.indexer_identifier, i.indexer_version
         FROM block as b
-        INNER JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
+        INNER JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier
         WHERE block_timestamp = $1";
 
         match sqlx::query(q).bind(ts as i64).fetch_all(&self.pool).await {
@@ -347,7 +347,11 @@ impl Storage for PostgresStorage {
                     AND te.event_type IN ('Transfer', 'Burn', 'Mint')
                   ORDER BY te.block_timestamp DESC
                   LIMIT 1
-                )
+                ),
+                listing_orderhash = null,
+                listing_start_date = null,
+                listing_end_date = null,
+                listing_start_amount = null, listing_end_amount = null
                 WHERE t.contract_address = $1 AND t.token_id = $2 AND t.chain_id = $3 RETURNING t.current_owner";
 
             let current_owner: Option<String> = sqlx::query_scalar(update_query)
@@ -450,8 +454,8 @@ impl Storage for PostgresStorage {
         }
         let _r = if (self.get_block_by_timestamp(block_timestamp).await?).is_some() {
             let q = r#"
-                UPDATE block 
-                SET block_number = $1, block_status = $2, indexer_identifier = $3 
+                UPDATE block
+                SET block_number = $1, block_status = $2, indexer_identifier = $3
                 WHERE block_timestamp = $4;
             "#;
             sqlx::query(q)
@@ -480,7 +484,7 @@ impl Storage for PostgresStorage {
 
         let q = "SELECT b.block_number, b.block_status, b.block_timestamp, b.indexer_identifier, i.indexer_version
         FROM block as b
-        LEFT JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier 
+        LEFT JOIN indexer as i ON i.indexer_identifier = b.indexer_identifier
         WHERE block_number = $1";
 
         match sqlx::query_as::<_, BlockData>(q)
