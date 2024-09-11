@@ -285,6 +285,10 @@ mod executor {
 
         fn cancel_order(ref self: ContractState, cancelInfo: CancelInfo) {
             _ensure_is_not_in_maintenance(@self);
+
+            let vinfo = CancelOrderInfo { cancelInfo: cancelInfo.clone() };
+            _verify_cancel_order(@self, @vinfo);
+
             self.orderbook.cancel_order(cancelInfo);
         }
 
@@ -366,6 +370,19 @@ mod executor {
                 }
             },
         }
+    }
+
+    fn _verify_cancel_order(self: @ContractState, vinfo: @CancelOrderInfo) {
+        let cancel_info = vinfo.cancelInfo;
+        let caller = starknet::get_caller_address();
+        let canceller = *(cancel_info.canceller);
+        assert!(caller == canceller, "Caller is not the canceller");
+
+        let order_info = self.orders.read(*cancel_info.order_hash);
+        // default value for ContractAddress is zero
+        // and an order's currency address shall not be zero
+        assert!(order_info.currency_address.is_non_zero(), "Order not found");
+        assert!(order_info.offerer == canceller, "Canceller is not the offerer");
     }
 
     fn _verify_fulfill_order(self: @ContractState, vinfo: @FulfillOrderInfo) {
