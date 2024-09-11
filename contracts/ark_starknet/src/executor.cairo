@@ -552,6 +552,9 @@ mod executor {
         let caller = starknet::get_caller_address();
         let canceller = *(cancel_info.canceller);
         assert!(caller == canceller, "Caller is not the canceller");
+
+        let order_info = self.orders.read(*cancel_info.order_hash);
+        assert!(order_info.offerer == canceller, "Canceller is not the offerer");
     }
 
     fn _verify_fulfill_order(self: @ContractState, vinfo: @FulfillOrderInfo) {

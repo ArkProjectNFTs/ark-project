@@ -88,3 +88,27 @@ fn test_cancel_offer_order_only_offerer() {
     IExecutorDispatcher { contract_address: executor_address }.cancel_order(cancel_info);
     snf::stop_prank(CheatTarget::One(executor_address));
 }
+
+#[test]
+#[should_panic(expected: ("Canceller is not the offerer",))]
+fn test_cancel_offer_order_offerer_is_not_the_canceller() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let token_id = 10;
+    let other = contract_address_const::<'other'>();
+
+    let (order_hash, _offerer, _start_amount) = create_offer_order(
+        executor_address, erc20_address, nft_address, token_id
+    );
+
+    let cancel_info = CancelInfo {
+        order_hash,
+        canceller: other,
+        token_chain_id: 'SN_MAIN',
+        token_address: nft_address,
+        token_id: Option::Some(token_id),
+    };
+
+    snf::start_prank(CheatTarget::One(executor_address), other);
+    IExecutorDispatcher { contract_address: executor_address }.cancel_order(cancel_info);
+    snf::stop_prank(CheatTarget::One(executor_address));
+}
