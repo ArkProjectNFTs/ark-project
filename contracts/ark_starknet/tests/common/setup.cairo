@@ -68,7 +68,112 @@ fn setup_royalty() -> (ContractAddress, ContractAddress, ContractAddress) {
     (executor_address, erc20_address, nft_address)
 }
 
-fn setup_order(erc20_address: ContractAddress, nft_address: ContractAddress) -> OrderV1 {
+fn setup_order(
+    currency_address: ContractAddress,
+    nft_address: ContractAddress,
+    route: RouteType,
+    offerer: ContractAddress,
+    token_id: Option<u256>,
+    start_amount: u256,
+    end_amount: u256,
+) -> OrderV1 {
+    let chain_id = 'SN_MAIN';
+    let block_timestamp = starknet::get_block_timestamp();
+    let end_date = block_timestamp + (30 * 24 * 60 * 60);
+    let data = array![];
+
+    OrderV1 {
+        route,
+        currency_address,
+        currency_chain_id: chain_id,
+        salt: 1,
+        offerer,
+        token_chain_id: chain_id,
+        token_address: nft_address,
+        token_id,
+        quantity: 1,
+        start_amount,
+        end_amount,
+        start_date: block_timestamp,
+        end_date: end_date,
+        broker_id: contract_address_const::<'broker_id'>(),
+        additional_data: data.span()
+    }
+}
+
+fn setup_offer_order(
+    currency_address: ContractAddress,
+    nft_address: ContractAddress,
+    offerer: ContractAddress,
+    token_id: u256,
+    start_amount: u256,
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        nft_address,
+        RouteType::Erc20ToErc721,
+        offerer,
+        Option::Some(token_id),
+        start_amount,
+        0
+    )
+}
+
+fn setup_listing_order(
+    currency_address: ContractAddress,
+    nft_address: ContractAddress,
+    offerer: ContractAddress,
+    token_id: u256,
+    start_amount: u256,
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        nft_address,
+        RouteType::Erc721ToErc20,
+        offerer,
+        Option::Some(token_id),
+        start_amount,
+        0
+    )
+}
+
+fn setup_auction_order(
+    currency_address: ContractAddress,
+    nft_address: ContractAddress,
+    offerer: ContractAddress,
+    token_id: u256,
+    start_amount: u256,
+    end_amount: u256,
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        nft_address,
+        RouteType::Erc721ToErc20,
+        offerer,
+        Option::Some(token_id),
+        start_amount,
+        end_amount
+    )
+}
+
+fn setup_collection_offer_order(
+    currency_address: ContractAddress,
+    nft_address: ContractAddress,
+    offerer: ContractAddress,
+    start_amount: u256,
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        nft_address,
+        RouteType::Erc20ToErc721,
+        offerer,
+        Option::None,
+        start_amount,
+        0
+    )
+}
+
+fn setup_default_order(erc20_address: ContractAddress, nft_address: ContractAddress) -> OrderV1 {
     let chain_id = 'SN_MAIN';
     let block_timestamp = starknet::get_block_timestamp();
     let end_date = block_timestamp + (30 * 24 * 60 * 60);

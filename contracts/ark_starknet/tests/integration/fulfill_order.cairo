@@ -17,7 +17,10 @@ use openzeppelin::token::erc721::interface::{IERC721Dispatcher, IERC721Dispatche
 use snforge_std::{cheat_caller_address, CheatSpan};
 use starknet::{ContractAddress, contract_address_const};
 
-use super::super::common::setup::{setup, setup_order};
+use super::super::common::setup::{
+    setup, setup_default_order, setup_auction_order, setup_collection_offer_order,
+    setup_listing_order, setup_offer_order
+};
 
 fn create_offer_order(
     executor_address: ContractAddress,
@@ -30,10 +33,7 @@ fn create_offer_order(
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
-    let mut order = setup_order(erc20_address, nft_address);
-    order.offerer = offerer;
-    order.start_amount = start_amount;
-    order.token_id = Option::Some(token_id);
+    let order = setup_offer_order(erc20_address, nft_address, offerer, token_id, start_amount);
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -49,10 +49,7 @@ fn create_collection_offer_order(
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
-    let mut order = setup_order(erc20_address, nft_address);
-    order.offerer = offerer;
-    order.start_amount = start_amount;
-    order.token_id = Option::None;
+    let order = setup_collection_offer_order(erc20_address, nft_address, offerer, start_amount);
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -73,11 +70,7 @@ fn create_listing_order(
         .into();
     Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
 
-    let mut order = setup_order(erc20_address, nft_address);
-    order.route = RouteType::Erc721ToErc20.into();
-    order.offerer = offerer;
-    order.token_id = Option::Some(token_id);
-    order.start_amount = start_amount;
+    let order = setup_listing_order(erc20_address, nft_address, offerer, token_id, start_amount);
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -99,12 +92,9 @@ fn create_auction_order(
         .into();
     Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
 
-    let mut order = setup_order(erc20_address, nft_address);
-    order.route = RouteType::Erc721ToErc20.into();
-    order.offerer = offerer;
-    order.token_id = Option::Some(token_id);
-    order.start_amount = start_amount;
-    order.end_amount = end_amount;
+    let order = setup_auction_order(
+        erc20_address, nft_address, offerer, token_id, start_amount, end_amount
+    );
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -410,10 +400,7 @@ fn test_fulfill_auction_order_ok() {
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
 
-    let mut buyer_order = setup_order(erc20_address, nft_address);
-    buyer_order.offerer = buyer;
-    buyer_order.start_amount = start_amount;
-    buyer_order.token_id = Option::Some(token_id);
+    let buyer_order = setup_offer_order(erc20_address, nft_address, buyer, token_id, start_amount);
 
     cheat_caller_address(executor_address, buyer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
@@ -446,10 +433,7 @@ fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
 
-    let mut buyer_order = setup_order(erc20_address, nft_address);
-    buyer_order.offerer = buyer;
-    buyer_order.start_amount = start_amount;
-    buyer_order.token_id = Option::Some(token_id);
+    let buyer_order = setup_offer_order(erc20_address, nft_address, buyer, token_id, start_amount);
 
     cheat_caller_address(executor_address, buyer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
