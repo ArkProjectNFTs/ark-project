@@ -1,8 +1,16 @@
-use ark_common::protocol::order_types::RouteType;
-
+use ark_common::protocol::order_types::{OrderTrait, RouteType};
 use ark_common::protocol::order_v1::OrderV1;
+
+use ark_starknet::interfaces::{IExecutorDispatcher, IExecutorDispatcherTrait,};
+
+use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
+use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
+use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
+
 use serde::Serde;
-use snforge_std::{ContractClass, ContractClassTrait, declare, DeclareResultTrait};
+use snforge_std::{
+    cheat_caller_address, CheatSpan, ContractClass, ContractClassTrait, declare, DeclareResultTrait
+};
 
 use starknet::{ContractAddress, contract_address_const};
 
@@ -196,4 +204,84 @@ fn setup_default_order(erc20_address: ContractAddress, nft_address: ContractAddr
         broker_id: contract_address_const::<'broker_id'>(),
         additional_data: data.span()
     }
+}
+
+fn create_offer_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    nft_address: ContractAddress,
+    token_id: u256
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_offer_order(erc20_address, nft_address, offerer, token_id, start_amount);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, start_amount)
+}
+
+fn create_listing_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    nft_address: ContractAddress,
+    start_amount: u256
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let order = setup_listing_order(erc20_address, nft_address, offerer, token_id, start_amount);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, token_id)
+}
+
+fn create_auction_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    nft_address: ContractAddress,
+    start_amount: u256,
+    end_amount: u256
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let order = setup_auction_order(
+        erc20_address, nft_address, offerer, token_id, start_amount, end_amount
+    );
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, token_id)
+}
+
+fn create_collection_offer_order(
+    executor_address: ContractAddress, erc20_address: ContractAddress, nft_address: ContractAddress,
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_collection_offer_order(erc20_address, nft_address, offerer, start_amount);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, start_amount)
 }
