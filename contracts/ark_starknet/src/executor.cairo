@@ -302,6 +302,7 @@ mod executor {
             };
 
             let vinfo = CancelOrderInfo { cancelInfo: cancelInfo.clone() };
+            _verify_cancel_order(@self, @vinfo);
 
             let mut vinfo_buf = array![];
             Serde::serialize(@vinfo, ref vinfo_buf);
@@ -544,6 +545,13 @@ mod executor {
                 }
             },
         }
+    }
+
+    fn _verify_cancel_order(self: @ContractState, vinfo: @CancelOrderInfo) {
+        let cancel_info = vinfo.cancelInfo;
+        let caller = starknet::get_caller_address();
+        let canceller = *(cancel_info.canceller);
+        assert!(caller == canceller, "Caller is not the canceller");
     }
 
     fn _verify_fulfill_order(self: @ContractState, vinfo: @FulfillOrderInfo) {
