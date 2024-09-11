@@ -116,20 +116,10 @@ mod executor {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        OrderExecuted: OrderExecuted,
         CollectionFallbackFees: CollectionFallbackFees,
         ExecutorInMaintenance: ExecutorInMaintenance,
-        // #[flat] // OrderExecuted conflict
+        #[flat]
         OrderbookEvent: OrderbookComponent::Event,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    struct OrderExecuted {
-        #[key]
-        order_hash: felt252,
-        #[key]
-        transaction_hash: felt252,
-        block_timestamp: u64
     }
 
     #[derive(Drop, starknet::Event)]
