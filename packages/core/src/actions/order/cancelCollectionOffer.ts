@@ -12,6 +12,16 @@ import {
   FullCancelInfo
 } from "../../types/index.js";
 
+interface CancelOrderResult {
+  transactionHash: string;
+}
+
+interface cancelOrderParameters {
+  starknetAccount: AccountInterface;
+  cancelInfo: CancelCollectionOfferInfo;
+  waitForTransaction?: boolean;
+}
+
 /**
  * Executes a transaction to cancel an order on the Arkchain.
  *
@@ -31,17 +41,13 @@ import {
  *
  * @throws {Error} Throws an error if the contract ABI is not found or if the transaction fails.
  */
-interface cancelOrderParameters {
-  starknetAccount: AccountInterface;
-  cancelInfo: CancelCollectionOfferInfo;
-}
-
-const cancelCollectionOffer = async (
+async function cancelCollectionOffer(
   config: Config,
   parameters: cancelOrderParameters
-) => {
-  const { starknetAccount, cancelInfo } = parameters;
+): Promise<CancelOrderResult> {
+  const { starknetAccount, cancelInfo, waitForTransaction = true } = parameters;
   const chainId = await config.starknetProvider.getChainId();
+
   const fullCancelInfo: FullCancelInfo = {
     orderHash: cancelInfo.orderHash,
     canceller: starknetAccount.address,
@@ -50,7 +56,6 @@ const cancelCollectionOffer = async (
     tokenId: new CairoOption<Uint256>(CairoOptionVariant.None)
   };
 
-  // Execute the transaction
   const result = await starknetAccount.execute({
     contractAddress: config.starknetExecutorContract,
     entrypoint: "cancel_order",
@@ -59,10 +64,15 @@ const cancelCollectionOffer = async (
     })
   });
 
-  // Wait for the transaction to be processed
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
-};
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
+
+  return {
+    transactionHash: result.transaction_hash
+  };
+}
 
 export { cancelCollectionOffer };

@@ -15,11 +15,18 @@ import {
   RouteType
 } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
+import { getAllowance } from "../read/getAllowance.js";
 
 interface CreateCollectionOfferParameters {
   starknetAccount: AccountInterface;
   offer: CollectionOfferV1;
   approveInfo: ApproveErc20Info;
+  waitForTransaction?: boolean;
+}
+
+export interface CreateCollectionOfferResult {
+  orderHash: bigint;
+  transactionHash: string;
 }
 
 /**
@@ -33,24 +40,66 @@ interface CreateCollectionOfferParameters {
  * @param {CreateCollectionOfferParameters} parameters - The parameters for the listing, including Starknet account,
  * Arkchain account, base order details, and an optional owner address.
  *
- * @returns {Promise<string>} A promise that resolves with the hash of the created order.
+ * @returns {Promise<CreateCollectionOfferResult>} A promise that resolves with the hash of the created order.
  *
  */
-const createCollectionOffer = async (
+async function createCollectionOffer(
   config: Config,
   parameters: CreateCollectionOfferParameters
-) => {
-  const { starknetAccount, offer: baseOrder, approveInfo } = parameters;
-
-  const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() + 30);
-  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000 + 60);
-  const endDate = baseOrder.endDate || Math.floor(currentDate.getTime() / 1000);
+): Promise<CreateCollectionOfferResult> {
+  const {
+    starknetAccount,
+    offer: baseOrder,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
+  const now = Math.floor(Date.now() / 1000);
+  const startDate = baseOrder.startDate || now;
+  const endDate = baseOrder.endDate || now + 30;
+  const maxEndDate = now + 60 * 60 * 24 * 30;
   const chainId = await config.starknetProvider.getChainId();
+  const currencyAddress =
+    baseOrder.currencyAddress || config.starknetCurrencyContract;
+
+  if (startDate < Math.floor(Date.now() / 1000)) {
+    throw new Error(
+      `Invalid start date. Start date (${startDate}) cannot be in the past.`
+    );
+  }
+
+  if (endDate < startDate) {
+    throw new Error(
+      `Invalid end date. End date (${endDate}) must be after the start date (${startDate}).`
+    );
+  }
+
+  if (endDate > maxEndDate) {
+    throw new Error(
+      `End date too far in the future. End date (${endDate}) exceeds the maximum allowed (${maxEndDate}).`
+    );
+  }
+
+  if (baseOrder.startAmount === BigInt(0)) {
+    throw new Error(
+      "Invalid start amount. The start amount must be greater than zero."
+    );
+  }
+
+  if (currencyAddress !== approveInfo.currencyAddress) {
+    throw new Error("Invalid currency address. Offer and approveInfo mismatch");
+  }
+
+  const currentAllowance = await getAllowance(
+    config,
+    approveInfo.currencyAddress,
+    starknetAccount.address
+  );
+  const allowance = currentAllowance + approveInfo.amount;
 
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
-    currencyAddress: config.starknetCurrencyContract,
+    currencyAddress:
+      baseOrder.currencyAddress ?? config.starknetCurrencyContract,
     currencyChainId: chainId,
     salt: 1,
     offerer: starknetAccount.address,
@@ -60,37 +109,42 @@ const createCollectionOffer = async (
     quantity: cairo.uint256(1),
     startAmount: cairo.uint256(baseOrder.startAmount),
     endAmount: cairo.uint256(0),
-    startDate: startDate,
-    endDate: endDate,
+    startDate,
+    endDate,
     brokerId: baseOrder.brokerId,
     additionalData: []
   };
 
   const result = await starknetAccount.execute([
     {
-      contractAddress: approveInfo.currencyAddress as string,
+      contractAddress: approveInfo.currencyAddress,
       entrypoint: "approve",
       calldata: CallData.compile({
         spender: config.starknetExecutorContract,
-        amount: cairo.uint256(approveInfo.amount)
+        amount: cairo.uint256(allowance)
       })
     },
     {
       contractAddress: config.starknetExecutorContract,
       entrypoint: "create_order",
       calldata: CallData.compile({
-        order: order
+        order
       })
     }
   ]);
 
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
+  if (waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
 
   const orderHash = getOrderHashFromOrderV1(order);
 
-  return orderHash;
-};
+  return {
+    orderHash,
+    transactionHash: result.transaction_hash
+  };
+}
 
 export { createCollectionOffer };
