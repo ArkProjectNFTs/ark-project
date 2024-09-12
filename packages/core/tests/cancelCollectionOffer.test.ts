@@ -1,64 +1,35 @@
-import { stark } from "starknet";
-
 import {
   cancelCollectionOffer,
-  createBroker,
   createCollectionOffer,
-  fetchOrCreateAccount,
   getOrderStatus
 } from "../src/index.js";
-import { CollectionOfferV1 } from "../src/types/index.js";
-import {
-  config,
-  STARKNET_NFT_ADDRESS,
-  whitelistBroker
-} from "./utils/index.js";
+import { accounts, config, mintERC721 } from "./utils/index.js";
 
-describe("cancelOffer", () => {
+describe("cancelCollectionOffer", () => {
   it("default", async () => {
-    const adminAccount = await fetchOrCreateAccount(
-      config.arkProvider,
-      process.env.SOLIS_ADMIN_ADDRESS,
-      process.env.SOLIS_ADMIN_PRIVATE_KEY
-    );
-    const buyerAccount = await fetchOrCreateAccount(
-      config.starknetProvider,
-      process.env.STARKNET_ACCOUNT2_ADDRESS,
-      process.env.STARKNET_ACCOUNT2_PRIVATE_KEY
-    );
+    const { buyer, listingBroker } = accounts;
+    const { tokenAddress } = await mintERC721({ account: buyer });
 
-    const brokerId = stark.randomAddress();
-    await createBroker(config, { brokerID: brokerId });
-    await whitelistBroker(config, adminAccount, brokerId);
-
-    const offer: CollectionOfferV1 = {
-      brokerId,
-      tokenAddress: STARKNET_NFT_ADDRESS,
-      startAmount: BigInt(1000)
-    };
-
-    const orderHash = await createCollectionOffer(config, {
-      starknetAccount: buyerAccount,
-      offer,
+    const { orderHash } = await createCollectionOffer(config, {
+      starknetAccount: buyer,
+      offer: {
+        brokerId: listingBroker.address,
+        tokenAddress,
+        startAmount: BigInt(10)
+      },
       approveInfo: {
         currencyAddress: config.starknetCurrencyContract,
-        amount: BigInt(offer.startAmount)
+        amount: BigInt(10)
       }
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 3_000));
-
-    const cancelInfo = {
-      orderHash: orderHash,
-      tokenAddress: STARKNET_NFT_ADDRESS
-    };
-
     await cancelCollectionOffer(config, {
-      starknetAccount: buyerAccount,
-      cancelInfo
+      starknetAccount: buyer,
+      cancelInfo: {
+        orderHash,
+        tokenAddress
+      }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
 
     const { orderStatus } = await getOrderStatus(config, { orderHash });
 

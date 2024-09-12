@@ -14,26 +14,37 @@ import {
   FulfillInfo
 } from "../../types/index.js";
 
+interface FulfillCollectionOfferParameters {
+  starknetAccount: AccountInterface;
+  fulfillOfferInfo: BaseFulfillInfo;
+  approveInfo: ApproveErc721Info;
+  waitForTransaction?: boolean;
+}
+
+interface FulfillCollectionOfferResult {
+  transactionHash: string;
+}
+
 /**
- * Fulfill an offer on the Arkchain.
+ * Fulfill a collection offer on the Arkchain.
  *
  * @param {Config} config - The core SDK configuration.
  * @param {FulfillOfferParameters} parameters - Parameters for fulfilling the offer.
  *
  * @returns {Promise<void>} A promise that resolves when the transaction is completed.
  */
-interface FulfillCollectionOfferParameters {
-  starknetAccount: AccountInterface;
-  fulfillOfferInfo: BaseFulfillInfo;
-  approveInfo: ApproveErc721Info;
-}
-
-const fulfillCollectionOffer = async (
+async function fulfillCollectionOffer(
   config: Config,
   parameters: FulfillCollectionOfferParameters
-) => {
-  const { starknetAccount, fulfillOfferInfo, approveInfo } = parameters;
+): Promise<FulfillCollectionOfferResult> {
+  const {
+    starknetAccount,
+    fulfillOfferInfo,
+    approveInfo,
+    waitForTransaction = true
+  } = parameters;
   const chainId = await config.starknetProvider.getChainId();
+
   const fulfillInfo: FulfillInfo = {
     orderHash: fulfillOfferInfo.orderHash,
     relatedOrderHash: new CairoOption<bigint>(CairoOptionVariant.None),
@@ -65,10 +76,15 @@ const fulfillCollectionOffer = async (
     }
   ]);
 
-  // Wait for the transaction to be processed
-  await config.starknetProvider.waitForTransaction(result.transaction_hash, {
-    retryInterval: 1000
-  });
-};
+  if (!waitForTransaction) {
+    await config.starknetProvider.waitForTransaction(result.transaction_hash, {
+      retryInterval: 1000
+    });
+  }
+
+  return {
+    transactionHash: result.transaction_hash
+  };
+}
 
 export { fulfillCollectionOffer };

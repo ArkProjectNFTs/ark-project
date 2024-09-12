@@ -1,56 +1,104 @@
-import { stark } from "starknet";
-
 import {
-  createBroker,
   createCollectionOffer,
-  fetchOrCreateAccount,
-  getOrderStatus
+  getOrderStatus,
+  getOrderType
 } from "../src/index.js";
-import { CollectionOfferV1 } from "../src/types/index.js";
 import {
+  accounts,
   config,
-  STARKNET_NFT_ADDRESS,
-  whitelistBroker
+  getTypeFromCairoCustomEnum,
+  mintERC20,
+  STARKNET_NFT_ADDRESS
 } from "./utils/index.js";
 
 describe("createCollectionOffer", () => {
   it("default", async () => {
-    const adminAccount = await fetchOrCreateAccount(
-      config.arkProvider,
-      process.env.SOLIS_ADMIN_ADDRESS,
-      process.env.SOLIS_ADMIN_PRIVATE_KEY
-    );
-    const buyerAccount = await fetchOrCreateAccount(
-      config.starknetProvider,
-      process.env.STARKNET_ACCOUNT1_ADDRESS,
-      process.env.STARKNET_ACCOUNT1_PRIVATE_KEY
-    );
+    const { buyer, listingBroker } = accounts;
+    await mintERC20({ account: buyer, amount: 10000000 });
 
-    const brokerId = stark.randomAddress();
-    await createBroker(config, { brokerID: brokerId });
-    await whitelistBroker(config, adminAccount, brokerId);
-
-    const offer: CollectionOfferV1 = {
-      brokerId,
-      tokenAddress: STARKNET_NFT_ADDRESS,
-      startAmount: BigInt(1)
-    };
-
-    const orderHash = await createCollectionOffer(config, {
-      starknetAccount: buyerAccount,
-      offer,
+    const { orderHash } = await createCollectionOffer(config, {
+      starknetAccount: buyer,
+      offer: {
+        brokerId: listingBroker.address,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        startAmount: BigInt(10)
+      },
       approveInfo: {
         currencyAddress: config.starknetCurrencyContract,
-        amount: offer.startAmount
+        amount: BigInt(10)
       }
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-
+    const orderTypeCairo = await getOrderType(config, { orderHash });
+    const orderType = getTypeFromCairoCustomEnum(orderTypeCairo.orderType);
     const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
       orderHash
     });
 
+    expect(orderType).toBe("COLLECTION_OFFER");
     expect(orderStatusAfter).toBe("Open");
+  }, 50_000);
+
+  it("error: invalid start date", async () => {
+    const { buyer, listingBroker } = accounts;
+    await mintERC20({ account: buyer, amount: 10000000 });
+
+    await expect(
+      createCollectionOffer(config, {
+        starknetAccount: buyer,
+        offer: {
+          brokerId: listingBroker.address,
+          tokenAddress: STARKNET_NFT_ADDRESS,
+          startAmount: BigInt(10),
+          startDate: Math.floor(Date.now() / 1000) - 1000
+        },
+        approveInfo: {
+          currencyAddress: config.starknetCurrencyContract,
+          amount: BigInt(10)
+        }
+      })
+    ).rejects.toThrow();
+  }, 50_000);
+
+  it("error: invalid start date / end date", async () => {
+    const { buyer, listingBroker } = accounts;
+    await mintERC20({ account: buyer, amount: 10000000 });
+
+    await expect(
+      createCollectionOffer(config, {
+        starknetAccount: buyer,
+        offer: {
+          brokerId: listingBroker.address,
+          tokenAddress: STARKNET_NFT_ADDRESS,
+          startAmount: BigInt(10),
+          startDate: Math.floor(Date.now() / 1000) + 1000,
+          endDate: Math.floor(Date.now() / 1000) + 500
+        },
+        approveInfo: {
+          currencyAddress: config.starknetCurrencyContract,
+          amount: BigInt(10)
+        }
+      })
+    ).rejects.toThrow();
+  }, 50_000);
+
+  it("error: invalid end date", async () => {
+    const { buyer, listingBroker } = accounts;
+    await mintERC20({ account: buyer, amount: 10000000 });
+
+    await expect(
+      createCollectionOffer(config, {
+        starknetAccount: buyer,
+        offer: {
+          brokerId: listingBroker.address,
+          tokenAddress: STARKNET_NFT_ADDRESS,
+          startAmount: BigInt(10),
+          endDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 + 1
+        },
+        approveInfo: {
+          currencyAddress: config.starknetCurrencyContract,
+          amount: BigInt(10)
+        }
+      })
+    ).rejects.toThrow();
   }, 50_000);
 });
