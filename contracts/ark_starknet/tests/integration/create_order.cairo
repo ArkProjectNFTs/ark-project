@@ -183,7 +183,6 @@ fn test_create_collection_offer_order_ok() {
     let (executor_address, erc20_address, nft_address) = setup();
     let offerer = contract_address_const::<'offerer'>();
     let start_amount = 10_000_000;
-    let token_id = 10_u256;
     Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
     let order = setup_collection_offer_order(erc20_address, nft_address, offerer, start_amount);
@@ -318,5 +317,75 @@ fn test_create_listing_order_disabled() {
     IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: 'OB: order already exists')]
+fn test_create_offer_order_twice() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let token_id = 10_u256;
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_offer_order(erc20_address, nft_address, offerer, token_id, start_amount);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: 'OB: order already exists')]
+fn test_create_listing_order_twice() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let order = setup_listing_order(erc20_address, nft_address, offerer, token_id, start_amount);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: 'OB: order already exists')]
+fn test_create_auction_order_twice() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let end_amount = start_amount * 2;
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let order = setup_auction_order(
+        erc20_address, nft_address, offerer, token_id, start_amount, end_amount
+    );
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: 'OB: order already exists')]
+fn test_create_collection_offer_order_twice() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_collection_offer_order(erc20_address, nft_address, offerer, start_amount);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
 }
