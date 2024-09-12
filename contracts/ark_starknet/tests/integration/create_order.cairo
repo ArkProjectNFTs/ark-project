@@ -16,7 +16,10 @@ use ark_tokens::erc20::IFreeMintDispatcherTrait as Erc20DispatcherTrait;
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
 use ark_tokens::erc721::IFreeMintDispatcherTrait as Erc721DispatcherTrait;
 
-use snforge_std::{cheat_caller_address, CheatSpan, spy_events, EventSpyAssertionsTrait,};
+use snforge_std::{
+    cheat_caller_address, CheatSpan, spy_events, EventSpyAssertionsTrait,
+    start_cheat_block_timestamp_global, stop_cheat_block_timestamp_global
+};
 use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{
@@ -388,4 +391,84 @@ fn test_create_collection_offer_order_twice() {
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: 'END_DATE_IN_THE_PAST')]
+fn test_create_offer_order_expired() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let token_id = 10_u256;
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let mut order = setup_offer_order(erc20_address, nft_address, offerer, token_id, start_amount);
+    let current = starknet::get_block_timestamp();
+    order.end_date = current + 10;
+    start_cheat_block_timestamp_global(current + 30);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    stop_cheat_block_timestamp_global();
+}
+
+#[test]
+#[should_panic(expected: 'END_DATE_IN_THE_PAST')]
+fn test_create_listing_order_expired() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let mut order = setup_listing_order(
+        erc20_address, nft_address, offerer, token_id, start_amount
+    );
+    let current = starknet::get_block_timestamp();
+    order.end_date = current + 10;
+    start_cheat_block_timestamp_global(current + 30);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    stop_cheat_block_timestamp_global();
+}
+
+#[test]
+#[should_panic(expected: 'END_DATE_IN_THE_PAST')]
+fn test_create_auction_order_expired() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let end_amount = start_amount * 2;
+    let token_id: u256 = Erc721Dispatcher { contract_address: nft_address }
+        .get_current_token_id()
+        .into();
+    Erc721Dispatcher { contract_address: nft_address }.mint(offerer, 'base_uri');
+
+    let mut order = setup_auction_order(
+        erc20_address, nft_address, offerer, token_id, start_amount, end_amount
+    );
+    let current = starknet::get_block_timestamp();
+    order.end_date = current + 10;
+    start_cheat_block_timestamp_global(current + 30);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    stop_cheat_block_timestamp_global();
+}
+
+#[test]
+#[should_panic(expected: 'END_DATE_IN_THE_PAST')]
+fn test_create_collection_offer_order_expired() {
+    let (executor_address, erc20_address, nft_address) = setup();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let mut order = setup_collection_offer_order(erc20_address, nft_address, offerer, start_amount);
+    let current = starknet::get_block_timestamp();
+    order.end_date = current + 10;
+    start_cheat_block_timestamp_global(current + 30);
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    stop_cheat_block_timestamp_global();
 }
