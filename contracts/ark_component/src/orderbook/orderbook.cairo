@@ -265,21 +265,12 @@ pub mod OrderbookComponent {
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
             let order_hash = order.compute_order_hash();
+            assert(order_status_read(order_hash).is_none(), orderbook_errors::ORDER_ALREADY_EXISTS);
             match order_type {
                 OrderType::Listing => {
-                    assert(
-                        order_status_read(order_hash).is_none(),
-                        orderbook_errors::ORDER_ALREADY_EXISTS
-                    );
                     let _ = self._create_listing_order(order, order_type, order_hash);
                 },
-                OrderType::Auction => {
-                    assert(
-                        order_status_read(order_hash).is_none(),
-                        orderbook_errors::ORDER_ALREADY_EXISTS
-                    );
-                    self._create_auction(order, order_type, order_hash);
-                },
+                OrderType::Auction => { self._create_auction(order, order_type, order_hash); },
                 OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
                 OrderType::CollectionOffer => {
                     self._create_collection_offer(order, order_type, order_hash);
