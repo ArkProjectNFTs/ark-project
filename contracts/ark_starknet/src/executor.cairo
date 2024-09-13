@@ -96,7 +96,6 @@ mod executor {
     #[storage]
     struct Storage {
         admin_address: ContractAddress,
-        arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         chain_id: felt252,
         broker_fees: Map<ContractAddress, FeesRatio>,
@@ -253,28 +252,10 @@ mod executor {
             }
         }
 
-        fn get_orderbook_address(self: @ContractState) -> ContractAddress {
-            self.arkchain_orderbook_address.read()
-        }
-
-        fn update_arkchain_orderbook_address(
-            ref self: ContractState, orderbook_address: ContractAddress
-        ) {
-            _ensure_admin(@self);
-
-            self.arkchain_orderbook_address.write(orderbook_address);
-        }
-
         fn update_eth_address(ref self: ContractState, eth_address: ContractAddress) {
             _ensure_admin(@self);
 
             self.eth_contract_address.write(eth_address);
-        }
-
-        fn update_orderbook_address(ref self: ContractState, orderbook_address: ContractAddress) {
-            _ensure_admin(@self);
-
-            self.arkchain_orderbook_address.write(orderbook_address);
         }
 
         fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
