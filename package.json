@@ -22,8 +22,6 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "accounts:new": "dotenv -- turbo run accounts:new",
     "accounts:deploy": "dotenv -- turbo run accounts:deploy",
-    "deploy:solis": "dotenv -- turbo run deploy:solis --log-prefix=none",
-    "deploy:solis:local": "dotenv -- turbo run deploy:solis:local --log-prefix=none",
     "deploy:starknet": "dotenv -- turbo run deploy:starknet",
     "deploy:starknet:local": "dotenv -- turbo run deploy:starknet:local --log-prefix=none",
     "deploy:starknet:tokens": "dotenv -- turbo run deploy:starknet:tokens --log-prefix=none",

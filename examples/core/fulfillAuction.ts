@@ -37,7 +37,7 @@ async function createAndFulfillAuction(
   };
 
   logger.info("Creating auction...");
-  const auctionOrderHash = await createAuction(config, {
+  const { orderHash: auctionOrderHash } = await createAuction(config, {
     starknetAccount: accounts.fulfiller,
     order: auction,
     approveInfo: {
@@ -57,7 +57,7 @@ async function createAndFulfillAuction(
   };
 
   logger.info("Creating offer...");
-  const offerOrderHash = await createOffer(config, {
+  const { orderHash: offerOrderHash } = await createOffer(config, {
     starknetAccount: accounts.offerer,
     offer,
     approveInfo: {

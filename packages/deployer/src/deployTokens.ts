@@ -20,14 +20,18 @@ export async function deployStarknetContracts(
   const { starknetAdminAccount } = getStarknetAccounts(starknetNetwork);
   let existingContracts = await getExistingContracts();
 
-  const artifacts = loadArtifacts(ARTIFACTS_PATH, "ark_tokens_FreeMintNFT");
+  const artifacts = loadArtifacts(
+    ARTIFACTS_PATH,
+    "ark_tokens_FreeMintNFTRoyalty"
+  );
 
   const contractCallData = new CallData(artifacts.sierra.abi);
   const contractConstructor = contractCallData.compile("constructor", {
-    name: "ARKSEPOLIA",
-    symbol: "ARKSEPOLIA",
+    name: "ARKSEPOLIA2981",
+    symbol: "ARKSEPOLIA2981",
     base_uri:
-      "https://ipfs.io/ipfs/QmVXJ2eEx3xrD2mSdPqLBEEYM5obj6DRYkn5yant6rXPmw/"
+      "https://ipfs.io/ipfs/QmVXJ2eEx3xrD2mSdPqLBEEYM5obj6DRYkn5yant6rXPmw/",
+    owner: starknetAdminAccount.address
   });
 
   const deployR = await starknetAdminAccount.declareAndDeploy({

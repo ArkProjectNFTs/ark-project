@@ -22,7 +22,7 @@ async function createAndFulfillCollectionOffer(
   offer: OfferV1
 ): Promise<bigint> {
   logger.info("Creating collection offer...");
-  const orderHash = await createOffer(config, {
+  const { orderHash } = await createOffer(config, {
     starknetAccount: accounts.offerer,
     offer,
     approveInfo: {

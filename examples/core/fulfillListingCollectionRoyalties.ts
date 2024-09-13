@@ -24,7 +24,7 @@ async function createAndFulfillListing(
   order: ListingV1
 ): Promise<bigint> {
   logger.info("Creating listing...");
-  const orderHash = await createListing(config, {
+  const { orderHash } = await createListing(config, {
     starknetAccount: accounts.offerer,
     order,
     approveInfo: {
@@ -57,10 +57,6 @@ async function createAndFulfillListing(
 }
 
 async function main(): Promise<void> {
-  if (!isDev || !("nftContract" in contracts)) {
-    throw new Error("NFT contract is not available in this environment");
-  }
-
   logger.info("Starting the listing process...");
 
   const accounts = await setupAccounts(config);

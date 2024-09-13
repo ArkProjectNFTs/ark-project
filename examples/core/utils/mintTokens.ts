@@ -44,11 +44,6 @@ export async function mintTokens(
     }
   }
 
-  if (config.starknetNetwork !== "dev") {
-    logger.info("Waiting for 5 minutes for transaction to complete...");
-    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
-  }
-
   tokenId = await getCurrentTokenId(config, nftContract);
   logger.info("Token minted with tokenId:", tokenId);
 

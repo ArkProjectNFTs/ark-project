@@ -23,7 +23,7 @@ async function createOfferAndCheckStatus(
   offer: OfferV1
 ): Promise<bigint> {
   logger.info("Creating offer...");
-  const orderHash = await createOffer(config, {
+  const { orderHash } = await createOffer(config, {
     starknetAccount: accounts.offerer,
     offer,
     approveInfo: {

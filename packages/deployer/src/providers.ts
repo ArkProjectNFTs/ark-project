@@ -22,28 +22,6 @@ export function getStarknetProvider(starknetNetwork: string) {
   };
 }
 
-export function getSolisProvider(solisNetwork?: string) {
-  let solisNodeUrl: string;
-  switch (solisNetwork) {
-    case "dev":
-      solisNodeUrl = process.env.SOLIS_NODE_URL_DEV || "";
-      break;
-    case "mainnet":
-      solisNodeUrl = process.env.SOLIS_NODE_URL_MAINNET || "";
-      break;
-    case "sepolia":
-      solisNodeUrl = process.env.SOLIS_NODE_URL_SEPOLIA || "";
-      break;
-    default:
-      throw new Error(`Unsupported solisNetwork: ${solisNetwork}`);
-  }
-
-  return {
-    provider: new RpcProvider({ nodeUrl: solisNodeUrl }),
-    nodeUrl: solisNodeUrl
-  };
-}
-
 export function getFeeAddress(network: string) {
   switch (network) {
     case "dev":

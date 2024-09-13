@@ -21,7 +21,7 @@ async function createListingAndCheckStatus(
   order: ListingV1
 ): Promise<bigint> {
   logger.info("Creating listing...");
-  const orderHash = await createListing(config, {
+  const { orderHash } = await createListing(config, {
     starknetAccount: accounts.offerer,
     order,
     approveInfo: {

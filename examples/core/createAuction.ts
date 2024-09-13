@@ -21,7 +21,7 @@ async function createAuctionAndCheckStatus(
   auction: AuctionV1
 ): Promise<void> {
   logger.info("Creating auction...");
-  const orderHash = await createAuction(config, {
+  const { orderHash } = await createAuction(config, {
     starknetAccount: accounts.fulfiller,
     order: auction,
     approveInfo: {

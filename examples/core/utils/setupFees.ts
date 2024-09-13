@@ -13,10 +13,6 @@ export async function setupFees(
 ): Promise<void> {
   logger.info("Setting up fees...");
 
-  if (!isDev || !("nftContract" in contracts)) {
-    throw new Error("NFT contract is not available in this environment");
-  }
-
   await setArkFees(config, accounts.admin, config.starknetExecutorContract, 25);
 
   await createBroker(config, {

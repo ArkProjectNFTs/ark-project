@@ -22,7 +22,7 @@ async function createAndFulfillListing(
   order: ListingV1
 ): Promise<bigint> {
   logger.info("Creating listing...");
-  const orderHash = await createListing(config, {
+  const { orderHash } = await createListing(config, {
     starknetAccount: accounts.offerer,
     order,
     approveInfo: {
@@ -30,8 +30,6 @@ async function createAndFulfillListing(
       tokenId: order.tokenId
     }
   });
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   logger.info("Fulfilling listing...");
   const fulfillListingInfo = {
@@ -55,14 +53,10 @@ async function createAndFulfillListing(
 }
 
 async function main(): Promise<void> {
-  if (!isDev || !("nftContract" in contracts)) {
-    throw new Error("NFT contract is not available in this environment");
-  }
-
   logger.info("Starting the listing process...");
 
   const accounts = await setupAccounts(config);
-  await setupFees(config, accounts);
+  // await setupFees(config, accounts);
 
   const { tokenId, orderAmount } = await mintTokens(
     config,
@@ -80,8 +74,6 @@ async function main(): Promise<void> {
   await displayBalances(config, accounts, "before sale");
 
   const orderHash = await createAndFulfillListing(config, accounts, order);
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash

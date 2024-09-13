@@ -32,7 +32,6 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   console.log(`| Admin account |  ${starknetAdminAccount.address}`);
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
 
-  starknetSpinner.text = "⚡ Deploying Executor Contract...";
   let executorContract;
   if (existingContracts[starknetNetwork].executor) {
     console.log("⚡ Upgrading Executor Contract..");

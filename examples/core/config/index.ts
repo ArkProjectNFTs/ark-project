@@ -17,9 +17,15 @@ interface DevContracts extends BaseContracts {
   eth: string;
 }
 
+interface DeployedContracts extends BaseContracts {
+  nftContract: string;
+  nftContractFixedFees: string;
+  nftContractRoyalties: string;
+}
+
 interface DeployedContracts {
-  sepolia: BaseContracts;
-  mainnet: BaseContracts;
+  sepolia: DeployedContracts;
+  mainnet: DeployedContracts;
 }
 
 // Type guard to check if contracts object has NFT-related properties
@@ -56,14 +62,28 @@ export const network = (process.env.STARKNET_NETWORK_ID || "dev") as Network;
 export const isDev = network === "dev";
 
 // Function to get the correct contract configuration based on the network
-function getContractConfig(network: Network): BaseContracts | DevContracts {
+function getContractConfig(network: Network): DevContracts | DeployedContracts {
   switch (network) {
     case "dev":
       return typedContractsDev;
     case "sepolia":
-      return typedContractsDeployed.sepolia;
+      return {
+        ...typedContractsDeployed.sepolia,
+        nftContract: process.env.NFT_CONTRACT_ADDRESS as string,
+        nftContractFixedFees: process.env
+          .NFT_CONTRACT_FIXED_FEES_ADDRESS as string,
+        nftContractRoyalties: process.env
+          .NFT_CONTRACT_ROYALTIES_ADDRESS as string
+      };
     case "mainnet":
-      return typedContractsDeployed.mainnet;
+      return {
+        ...typedContractsDeployed.mainnet,
+        nftContract: process.env.NFT_CONTRACT_ADDRESS as string,
+        nftContractFixedFees: process.env
+          .NFT_CONTRACT_FIXED_FEES_ADDRESS as string,
+        nftContractRoyalties: process.env
+          .NFT_CONTRACT_ROYALTIES_ADDRESS as string
+      };
     default:
       throw new Error(`Unsupported network: ${network}`);
   }
@@ -96,6 +116,5 @@ export const nftContractRoyalties = isDevContracts(contracts)
 export const config = createConfig({
   starknetNetwork: network,
   starknetExecutorContract,
-  starknetCurrencyContract,
-  arkchainNetwork: network
+  starknetCurrencyContract
 });
