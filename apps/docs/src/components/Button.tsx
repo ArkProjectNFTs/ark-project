@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import clsx from 'clsx'
+import Link from 'next/link'
 
 function ArrowIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   return (
@@ -30,15 +30,18 @@ const sizeStyles = {
   auto: 'h-auto',
 }
 
+type ButtonType = 'button' | 'submit' | 'reset'
+
 type ButtonProps = {
   variant?: keyof typeof variantStyles
   size?: keyof typeof sizeStyles
   arrow?: 'left' | 'right'
   isExternal?: boolean
-} & (
-  | React.ComponentPropsWithoutRef<typeof Link>
-  | (React.ComponentPropsWithoutRef<'button'> & { href?: undefined })
-)
+  className?: string
+  href?: string
+  onClick?: () => void
+  children: React.ReactNode
+}
 
 export function Button({
   variant = 'primary',
@@ -47,7 +50,8 @@ export function Button({
   children,
   arrow,
   isExternal,
-  ...props
+  href,
+  onClick,
 }: ButtonProps) {
   className = clsx(
     'inline-flex gap-0.5 justify-center overflow-hidden text-sm font-medium transition',
@@ -77,21 +81,21 @@ export function Button({
     </>
   )
 
-  if (typeof props.href === 'undefined') {
+  if (href) {
     return (
-      <button className={className} {...props}>
+      <Link
+        target={isExternal ? '_blank' : '_self'}
+        className={className}
+        href={href}
+      >
         {inner}
-      </button>
+      </Link>
     )
   }
 
   return (
-    <Link
-      target={isExternal ? '_blank' : '_self'}
-      className={className}
-      {...props}
-    >
+    <button className={className} onClick={onClick}>
       {inner}
-    </Link>
+    </button>
   )
 }

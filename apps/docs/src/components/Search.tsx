@@ -1,6 +1,15 @@
 'use client'
 
 import {
+  createAutocomplete,
+  type AutocompleteApi,
+  type AutocompleteCollection,
+  type AutocompleteState,
+} from '@algolia/autocomplete-core'
+import { Dialog, Transition } from '@headlessui/react'
+import clsx from 'clsx'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import {
   forwardRef,
   Fragment,
   Suspense,
@@ -11,15 +20,6 @@ import {
   useState,
 } from 'react'
 import Highlighter from 'react-highlight-words'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import {
-  type AutocompleteApi,
-  createAutocomplete,
-  type AutocompleteState,
-  type AutocompleteCollection,
-} from '@algolia/autocomplete-core'
-import { Dialog, Transition } from '@headlessui/react'
-import clsx from 'clsx'
 
 import { navigation } from '@/components/Navigation'
 import { type Result } from '@/mdx/search.mjs'

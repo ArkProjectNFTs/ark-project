@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "browserslist": "defaults, not ie <= 11",
   "dependencies": {
@@ -50,9 +51,10 @@
     "zustand": "^4.3.2"
   },
   "devDependencies": {
+    "@ark-project/typescript-config": "workspace:*",
     "@types/mixpanel-browser": "^2.47.4",
-    "eslint": "8.45.0",
-    "eslint-config-next": "13.4.16",
+    "eslint": "^8.48.0",
+    "eslint-config-next": "^14.2.11",
     "prettier": "^3.0.1",
     "prettier-plugin-tailwindcss": "^0.5.2",
     "sharp": "^0.32.0"

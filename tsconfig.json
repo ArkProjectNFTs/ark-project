@@ -1,8 +1,6 @@
 {
   // This tsconfig file contains the shared config for the build (tsconfig.build.json) and type checking (tsconfig.json) config.
-  "include": [
-    ".scripts/**/*.ts"
-  ],
+  "include": [".scripts/**/*.ts"],
   "compilerOptions": {
     // Incremental builds
     // NOTE: Enabling incremental builds speeds up `tsc`. Keep in mind though that it does not reliably bust the cache when the `tsconfig.json` file changes.
@@ -35,8 +33,6 @@
     // Skip type checking for node modules
     "skipLibCheck": true,
     "noErrorTruncation": true,
-    "types": [
-      "bun-types"
-    ]
+    "types": ["bun-types"]
   }
 }

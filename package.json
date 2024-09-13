@@ -17,6 +17,7 @@
     "changeset:publish": "pnpm changeset:prepublish && changeset publish",
     "changeset:version": "changeset version && pnpm version:update",
     "dev": "dotenv -- turbo run dev --parallel",
+    "typecheck": "dotenv -- turbo run typecheck",
     "lint": "dotenv -- turbo run lint",
     "lint:fix": "dotenv -- turbo run lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
