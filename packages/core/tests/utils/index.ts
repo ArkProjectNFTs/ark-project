@@ -47,6 +47,25 @@ export function getTypeFromCairoCustomEnum(cairoCustomEnum: CairoCustomEnum) {
   throw new Error("No valid variant found in CairoCustomEnum");
 }
 
+const mintERC20ABI = [
+  {
+    type: "function",
+    name: "mint",
+    inputs: [
+      {
+        name: "recipient",
+        type: "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        name: "amount",
+        type: "core::integer::u256"
+      }
+    ],
+    outputs: [],
+    state_mutability: "external"
+  }
+];
+
 export const mintERC20 = async ({
   account,
   amount = 1000
@@ -54,21 +73,13 @@ export const mintERC20 = async ({
   account: Account;
   amount: number;
 }) => {
-  const { abi } = await config.starknetProvider.getClassAt(
-    config.starknetCurrencyContract
-  );
-
-  if (!abi) {
-    throw new Error("no abi.");
-  }
-
   const mintERC20Call: Call = {
     contractAddress: config.starknetCurrencyContract,
     entrypoint: "mint",
     calldata: CallData.compile([account.address, cairo.uint256(amount)])
   };
 
-  const result = await account.execute(mintERC20Call, [abi]);
+  const result = await account.execute(mintERC20Call, [mintERC20ABI]);
 
   await config.starknetProvider.waitForTransaction(result.transaction_hash, {
     retryInterval: 1000
@@ -77,21 +88,36 @@ export const mintERC20 = async ({
   return result.transaction_hash;
 };
 
-export async function mintERC721({ account }: { account: Account }) {
-  const { abi } = await config.starknetProvider.getClassAt(
-    contracts.nftContract
-  );
-
-  if (!abi) {
-    throw new Error("no abi.");
+const mintERC721ABI = [
+  {
+    type: "function",
+    name: "mint",
+    inputs: [
+      {
+        name: "recipient",
+        type: "core::starknet::contract_address::ContractAddress"
+      },
+      { name: "token_uri", type: "core::felt252" }
+    ],
+    outputs: [],
+    state_mutability: "external"
+  },
+  {
+    type: "function",
+    name: "get_current_token_id",
+    inputs: [],
+    outputs: [{ type: "core::felt252" }],
+    state_mutability: "view"
   }
+] as const;
 
+export async function mintERC721({ account }: { account: Account }) {
   const contract = new Contract(
-    abi,
+    mintERC721ABI,
     contracts.nftContract,
     config.starknetProvider
-  );
-  const tokenId: bigint = await contract.get_current_token_id();
+  ).typedv2(mintERC721ABI);
+  const tokenId = BigInt(await contract.get_current_token_id());
 
   const mintCall: Call = {
     contractAddress: contracts.nftContract,
@@ -102,7 +128,7 @@ export async function mintERC721({ account }: { account: Account }) {
     })
   };
 
-  const { transaction_hash } = await account.execute(mintCall, [abi]);
+  const { transaction_hash } = await account.execute(mintCall, [mintERC721ABI]);
 
   await config.starknetProvider.waitForTransaction(transaction_hash, {
     retryInterval: 1000
@@ -114,24 +140,31 @@ export async function mintERC721({ account }: { account: Account }) {
   };
 }
 
-export const getBalance = async ({ account }: { account: Account }) => {
-  const { abi } = await config.starknetProvider.getClassAt(
-    config.starknetCurrencyContract
-  );
-
-  if (!abi) {
-    throw new Error("no abi.");
+const balanceOfERC20ABI = [
+  {
+    type: "function",
+    name: "balanceOf",
+    inputs: [
+      {
+        name: "account",
+        type: "core::starknet::contract_address::ContractAddress"
+      }
+    ],
+    outputs: [{ type: "core::integer::u256" }],
+    state_mutability: "view"
   }
+] as const;
 
+export const getBalance = async ({ account }: { account: Account }) => {
   const contract = new Contract(
-    abi,
+    balanceOfERC20ABI,
     config.starknetCurrencyContract,
     config.starknetProvider
-  );
+  ).typedv2(balanceOfERC20ABI);
 
-  const balance: bigint = await contract.balanceOf(account.address);
+  const balance = await contract.balanceOf(account.address);
 
-  return balance;
+  return balance as bigint;
 };
 
 function fetchAccount(

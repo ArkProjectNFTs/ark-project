@@ -8,27 +8,18 @@ describe("cancelAuction", () => {
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const { orderHash } = await createAuction(config, {
-      starknetAccount: seller,
-      order: {
-        brokerId: listingBroker.address,
-        tokenAddress,
-        tokenId,
-        startAmount: BigInt(1),
-        endAmount: BigInt(10)
-      },
-      approveInfo: {
-        tokenAddress,
-        tokenId
-      }
+      account: seller,
+      brokerAddress: listingBroker.address,
+      tokenAddress,
+      tokenId,
+      startAmount: BigInt(1)
     });
 
     await cancelOrder(config, {
-      starknetAccount: seller,
-      cancelInfo: {
-        orderHash: orderHash,
-        tokenAddress,
-        tokenId
-      }
+      account: seller,
+      orderHash: orderHash,
+      tokenAddress,
+      tokenId
     });
 
     const { orderStatus } = await getOrderStatus(config, { orderHash });

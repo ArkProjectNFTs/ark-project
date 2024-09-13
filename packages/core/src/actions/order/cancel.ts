@@ -8,11 +8,13 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { CancelInfo, FullCancelInfo } from "../../types/index.js";
+import { FullCancelInfo } from "../../types/index.js";
 
 export interface CancelOrderParameters {
-  starknetAccount: AccountInterface;
-  cancelInfo: CancelInfo;
+  account: AccountInterface;
+  orderHash: bigint;
+  tokenAddress: string;
+  tokenId: bigint;
   waitForTransaction?: boolean;
 }
 
@@ -43,20 +45,26 @@ export async function cancelOrder(
   config: Config,
   parameters: CancelOrderParameters
 ): Promise<CancelOrderResult> {
-  const { starknetAccount, cancelInfo, waitForTransaction = true } = parameters;
+  const {
+    account,
+    orderHash,
+    tokenAddress,
+    tokenId,
+    waitForTransaction = true
+  } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const fullCancelInfo: FullCancelInfo = {
-    orderHash: cancelInfo.orderHash,
-    canceller: starknetAccount.address,
+    orderHash,
+    canceller: account.address,
     tokenChainId: chainId,
-    tokenAddress: cancelInfo.tokenAddress,
+    tokenAddress: tokenAddress,
     tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(cancelInfo.tokenId)
+      cairo.uint256(tokenId)
     )
   };
 
-  const result = await starknetAccount.execute({
+  const result = await account.execute({
     contractAddress: config.starknetExecutorContract,
     entrypoint: "cancel_order",
     calldata: CallData.compile({

@@ -8,11 +8,16 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import { FulfillAuctionInfo, FulfillInfo } from "../../types/index.js";
+import { FulfillInfo } from "../../types/index.js";
 
 export interface FulfillAuctionParameters {
-  starknetAccount: AccountInterface;
-  fulfillAuctionInfo: FulfillAuctionInfo;
+  account: AccountInterface;
+  brokerAddress: string;
+  orderHash: bigint;
+  relatedOrderHash: bigint;
+  tokenAddress: string;
+  tokenId: bigint;
+  currencyAddress?: string;
   waitForTransaction?: boolean;
 }
 
@@ -33,29 +38,33 @@ export async function fulfillAuction(
   parameters: FulfillAuctionParameters
 ): Promise<FulfillAuctionResult> {
   const {
-    starknetAccount,
-    fulfillAuctionInfo,
+    account,
+    brokerAddress,
+    orderHash,
+    relatedOrderHash,
+    tokenAddress,
+    tokenId,
     waitForTransaction = true
   } = parameters;
   const chainId = await config.starknetProvider.getChainId();
 
   const fulfillInfo: FulfillInfo = {
-    orderHash: fulfillAuctionInfo.orderHash,
+    orderHash,
     relatedOrderHash: new CairoOption<bigint>(
       CairoOptionVariant.Some,
-      fulfillAuctionInfo.relatedOrderHash
+      relatedOrderHash
     ),
-    fulfiller: starknetAccount.address,
+    fulfiller: account.address,
     tokenChainId: chainId,
-    tokenAddress: fulfillAuctionInfo.tokenAddress,
+    tokenAddress,
     tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(fulfillAuctionInfo.tokenId)
+      cairo.uint256(tokenId)
     ),
-    fulfillBrokerAddress: fulfillAuctionInfo.brokerId
+    fulfillBrokerAddress: brokerAddress
   };
 
-  const result = await starknetAccount.execute([
+  const result = await account.execute([
     {
       contractAddress: config.starknetExecutorContract,
       entrypoint: "fulfill_order",

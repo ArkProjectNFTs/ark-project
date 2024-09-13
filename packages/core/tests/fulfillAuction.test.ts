@@ -11,50 +11,35 @@ import {
 
 describe("fulfillAuction", () => {
   it("default", async () => {
-    const { seller, buyer } = accounts;
+    const { seller, buyer, saleBroker, listingBroker } = accounts;
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const initialSellerBalance = await getBalance({ account: seller });
+    const amount = BigInt(1000);
     await mintERC20({ account: buyer, amount: 5000 });
 
     const { orderHash } = await createAuction(config, {
-      starknetAccount: seller,
-      order: {
-        brokerId: accounts.listingBroker.address,
-        tokenAddress,
-        tokenId,
-        startAmount: BigInt(1000),
-        endAmount: BigInt(5000)
-      },
-      approveInfo: {
-        tokenAddress,
-        tokenId
-      }
+      account: seller,
+      brokerAddress: listingBroker.address,
+      tokenAddress,
+      tokenId,
+      startAmount: BigInt(1000)
     });
 
-    const offerAmount = BigInt(1000);
     const { orderHash: offerOrderHash } = await createOffer(config, {
-      starknetAccount: buyer,
-      offer: {
-        brokerId: accounts.listingBroker.address,
-        tokenAddress,
-        tokenId,
-        startAmount: offerAmount
-      },
-      approveInfo: {
-        currencyAddress: config.starknetCurrencyContract,
-        amount: offerAmount
-      }
+      account: buyer,
+      brokerAddress: accounts.listingBroker.address,
+      tokenAddress,
+      tokenId,
+      amount
     });
 
     await fulfillAuction(config, {
-      starknetAccount: seller,
-      fulfillAuctionInfo: {
-        orderHash,
-        relatedOrderHash: offerOrderHash,
-        tokenAddress,
-        tokenId,
-        brokerId: accounts.listingBroker.address
-      }
+      account: buyer,
+      brokerAddress: saleBroker.address,
+      orderHash,
+      relatedOrderHash: offerOrderHash,
+      tokenAddress,
+      tokenId
     });
 
     const { orderStatus } = await getOrderStatus(config, {
@@ -62,8 +47,8 @@ describe("fulfillAuction", () => {
     });
 
     const sellerBalance = await getBalance({ account: seller });
-    const fees = (BigInt(offerAmount) * BigInt(4)) / BigInt(100);
-    const profit = BigInt(offerAmount) - fees;
+    const fees = (BigInt(amount) * BigInt(1)) / BigInt(100);
+    const profit = BigInt(amount) - fees;
 
     expect(orderStatus).toBe("Executed");
     expect(sellerBalance).toEqual(initialSellerBalance + profit);

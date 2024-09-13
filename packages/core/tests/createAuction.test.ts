@@ -13,18 +13,12 @@ describe("createAuction", () => {
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const { orderHash } = await createAuction(config, {
-      starknetAccount: seller,
-      order: {
-        brokerId: listingBroker.address,
-        tokenAddress,
-        tokenId,
-        startAmount: BigInt(1),
-        endAmount: BigInt(10)
-      },
-      approveInfo: {
-        tokenAddress,
-        tokenId
-      }
+      account: seller,
+      brokerAddress: listingBroker.address,
+      tokenAddress,
+      tokenId,
+      startAmount: BigInt(1),
+      endAmount: BigInt(1)
     });
 
     const orderTypeCairo = await getOrderType(config, { orderHash });
@@ -38,19 +32,13 @@ describe("createAuction", () => {
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const { orderHash } = await createAuction(config, {
-      starknetAccount: seller,
-      order: {
-        brokerId: listingBroker.address,
-        tokenAddress,
-        tokenId,
-        startAmount: BigInt(1),
-        endAmount: BigInt(10),
-        currencyAddress: FEE_TOKEN
-      },
-      approveInfo: {
-        tokenAddress,
-        tokenId
-      }
+      account: seller,
+      brokerAddress: listingBroker.address,
+      tokenAddress,
+      tokenId,
+      startAmount: BigInt(1),
+      endAmount: BigInt(10),
+      currencyAddress: FEE_TOKEN
     });
 
     const orderTypeCairo = await getOrderType(config, { orderHash });
@@ -67,19 +55,13 @@ describe("createAuction", () => {
 
     await expect(
       createAuction(config, {
-        starknetAccount: seller,
-        order: {
-          brokerId: listingBroker.address,
-          tokenAddress,
-          tokenId,
-          startDate: invalidStartDate,
-          startAmount: BigInt(1),
-          endAmount: BigInt(10)
-        },
-        approveInfo: {
-          tokenAddress,
-          tokenId
-        }
+        account: seller,
+        brokerAddress: listingBroker.address,
+        tokenAddress,
+        tokenId,
+        startDate: invalidStartDate,
+        startAmount: BigInt(1),
+        endAmount: BigInt(10)
       })
     ).rejects.toThrow();
   }, 50_000);
@@ -92,19 +74,13 @@ describe("createAuction", () => {
 
     await expect(
       createAuction(config, {
-        starknetAccount: seller,
-        approveInfo: {
-          tokenAddress,
-          tokenId
-        },
-        order: {
-          brokerId: listingBroker.address,
-          tokenAddress,
-          tokenId,
-          endDate: invalidEndDate,
-          startAmount: BigInt(1),
-          endAmount: BigInt(10)
-        }
+        account: seller,
+        brokerAddress: listingBroker.address,
+        tokenAddress,
+        tokenId,
+        endDate: invalidEndDate,
+        startAmount: BigInt(1),
+        endAmount: BigInt(10)
       })
     ).rejects.toThrow();
   }, 50_000);
@@ -115,18 +91,12 @@ describe("createAuction", () => {
 
     await expect(
       createAuction(config, {
-        starknetAccount: seller,
-        approveInfo: {
-          tokenAddress,
-          tokenId
-        },
-        order: {
-          brokerId: listingBroker.address,
-          tokenAddress,
-          tokenId,
-          startAmount: BigInt(1),
-          endAmount: BigInt(0)
-        }
+        account: seller,
+        brokerAddress: listingBroker.address,
+        tokenAddress,
+        tokenId,
+        startAmount: BigInt(2),
+        endAmount: BigInt(1)
       })
     ).rejects.toThrow();
   }, 50_000);

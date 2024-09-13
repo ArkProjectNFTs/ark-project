@@ -8,19 +8,19 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import {
-  ApproveErc20Info,
-  OfferV1,
-  OrderV1,
-  RouteType
-} from "../../types/index.js";
+import { OrderV1, RouteType } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 import { getAllowance } from "../read/getAllowance.js";
 
 export interface CreateOfferParameters {
-  starknetAccount: AccountInterface;
-  offer: OfferV1;
-  approveInfo: ApproveErc20Info;
+  account: AccountInterface;
+  brokerAddress: string;
+  currencyAddress?: string;
+  tokenAddress: string;
+  tokenId: bigint;
+  amount: bigint;
+  startDate?: number;
+  endDate?: number;
   waitForTransaction?: boolean;
 }
 
@@ -48,55 +48,77 @@ export async function createOffer(
   parameters: CreateOfferParameters
 ): Promise<CreateOfferResult> {
   const {
-    starknetAccount,
-    offer: baseOrder,
-    approveInfo,
+    account,
+    brokerAddress,
+    currencyAddress = config.starknetCurrencyContract,
+    tokenAddress,
+    tokenId,
+    amount,
+    startDate,
+    endDate,
     waitForTransaction = true
   } = parameters;
-  const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate());
-  const startDate = baseOrder.startDate || Math.floor(Date.now() / 1000);
-  const endDate =
-    baseOrder.endDate || Math.floor(currentDate.getTime() / 1000) + 30;
+  const now = Math.floor(Date.now() / 1000);
+  const startedAt = startDate || now;
+  const endedAt = endDate || now + 60 * 60 * 24;
+  const maxEndedAt = now + 60 * 60 * 24 * 30;
 
-  const currencyAddress =
-    baseOrder.currencyAddress || config.starknetCurrencyContract;
-
-  if (currencyAddress !== approveInfo.currencyAddress) {
-    throw new Error("Invalid currency address, offer and approveInfo mismatch");
+  if (startedAt < Math.floor(Date.now() / 1000)) {
+    throw new Error(
+      `Invalid start date. Start date (${startDate}) cannot be in the past.`
+    );
   }
+
+  if (endedAt < startedAt) {
+    throw new Error(
+      `Invalid end date. End date (${endDate}) must be after the start date (${startDate}).`
+    );
+  }
+
+  if (endedAt > maxEndedAt) {
+    throw new Error(
+      `End date too far in the future. End date (${endDate}) exceeds the maximum allowed (${maxEndedAt}).`
+    );
+  }
+
+  if (amount === BigInt(0)) {
+    throw new Error(
+      "Invalid start amount. The start amount must be greater than zero."
+    );
+  }
+
   const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,
-    approveInfo.currencyAddress,
-    starknetAccount.address
+    currencyAddress,
+    account.address
   );
-  const allowance = currentAllowance + approveInfo.amount;
+
+  const allowance = currentAllowance + amount;
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
-    currencyAddress:
-      baseOrder.currencyAddress ?? config.starknetCurrencyContract,
+    currencyAddress,
     currencyChainId: chainId,
     salt: 1,
-    offerer: starknetAccount.address,
+    offerer: account.address,
     tokenChainId: chainId,
-    tokenAddress: baseOrder.tokenAddress,
+    tokenAddress,
     tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(baseOrder.tokenId)
+      cairo.uint256(tokenId)
     ),
     quantity: cairo.uint256(1),
-    startAmount: cairo.uint256(baseOrder.startAmount),
+    startAmount: cairo.uint256(amount),
     endAmount: cairo.uint256(0),
-    startDate: startDate,
-    endDate: endDate,
-    brokerId: baseOrder.brokerId,
+    startDate: startedAt,
+    endDate: endedAt,
+    brokerId: brokerAddress,
     additionalData: []
   };
 
-  const result = await starknetAccount.execute([
+  const result = await account.execute([
     {
-      contractAddress: approveInfo.currencyAddress,
+      contractAddress: currencyAddress,
       entrypoint: "approve",
       calldata: CallData.compile({
         spender: config.starknetExecutorContract,
