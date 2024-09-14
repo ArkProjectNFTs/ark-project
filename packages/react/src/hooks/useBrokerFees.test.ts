@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { renderHook, waitFor } from "../../../test/src/react";
-import { useArkFees } from "./useArkFees";
+import { accounts } from "@ark-project/test";
 
-describe("useArkFees", () => {
+import { renderHook, waitFor } from "../../../test/src/react";
+import { useBrokerFees } from "./useBrokerFees";
+
+describe("useBrokerFees", () => {
   it("default", async () => {
-    const { result } = renderHook(() => useArkFees());
+    const { listingBroker } = accounts;
+
+    const { result } = renderHook(() =>
+      useBrokerFees({ brokerAdress: listingBroker.address })
+    );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 

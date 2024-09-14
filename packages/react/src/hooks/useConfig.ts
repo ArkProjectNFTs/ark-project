@@ -2,10 +2,15 @@
 
 import { useContext } from "react";
 
-import { ConfigDataContext } from "../components/ArkProvider";
+import { ArkContext } from "../components/ArkProvider";
 
 function useConfig() {
-  const context = useContext(ConfigDataContext);
+  const context = useContext(ArkContext);
+
+  if (context === undefined) {
+    throw new Error("useConfig must be used within a ArkProvider");
+  }
+
   return context;
 }
 

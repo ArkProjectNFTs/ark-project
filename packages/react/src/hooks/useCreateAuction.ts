@@ -1,50 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
-import {
-  Config,
-  createAuction,
-  CreateAuctionParameters,
-  type CreateAuctionResult
-} from "@ark-project/core";
+import { createAuction, CreateAuctionParameters } from "@ark-project/core";
 
-import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
 export default function useCreateAuction() {
-  const [status, setStatus] = useState<Status>("idle");
-  const [result, setResult] = useState<CreateAuctionResult>();
   const config = useConfig();
 
-  async function create(parameters: CreateAuctionParameters) {
-    if (!config) {
-      throw new Error("config not loaded");
+  const { mutate, mutateAsync, ...result } = useMutation({
+    mutationKey: ["createAuction"],
+    mutationFn: async (parameters: CreateAuctionParameters) => {
+      if (!config) {
+        throw new Error("config not loaded");
+      }
+
+      const result = await createAuction(config, parameters);
+
+      return result;
     }
-
-    setStatus("loading");
-
-    try {
-      const createAuctionResult = await createAuction(
-        config as Config,
-        parameters
-      );
-
-      setResult(createAuctionResult);
-      setStatus("success");
-    } catch (error) {
-      console.error("error: failed to create auction", error);
-      setStatus("error");
-    }
-  }
+  });
 
   return {
-    create,
-    isLoading: status === "loading",
-    isError: status === "error",
-    isSuccess: status === "success",
-    status,
-    result
+    ...result,
+    createAuction: mutate,
+    createAuctionAsync: mutateAsync
   };
 }
 

@@ -1,7 +1,7 @@
 import { MockConnector } from "@starknet-react/core";
 import { Account, AccountInterface, ProviderInterface } from "starknet";
 
-import { config } from "./config";
+import config from "./config";
 
 function fetchAccount(
   provider: ProviderInterface,

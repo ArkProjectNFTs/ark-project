@@ -8,20 +8,17 @@ import { useConfig } from "./useConfig";
 
 function useArkFees() {
   const config = useConfig();
-  const query = useQuery({
+
+  return useQuery({
     queryKey: ["getArkFees"],
     queryFn: async () => {
       if (!config) {
         throw new Error("Config not found");
       }
 
-      const fees = await getArkFees(config);
-
-      return fees;
+      return getArkFees(config);
     }
   });
-
-  return query;
 }
 
 export { useArkFees };

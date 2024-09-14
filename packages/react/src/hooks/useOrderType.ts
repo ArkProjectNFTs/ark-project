@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
+import { useQuery } from "@tanstack/react-query";
 import { CairoCustomEnum } from "starknet";
 
 import { getOrderType } from "@ark-project/core";
@@ -28,25 +27,21 @@ export function getTypeFromCairoCustomEnum(cairoCustomEnum: CairoCustomEnum) {
 }
 
 function useOrderType({ orderHash }: { orderHash: bigint }) {
-  const [type, setType] = useState<string | null>(null);
   const config = useConfig();
 
-  useEffect(() => {
-    const run = async () => {
+  return useQuery({
+    queryKey: ["orderType", orderHash],
+    queryFn: async () => {
       if (!config) {
-        return;
+        throw new Error("Config not found");
       }
 
       const orderTypeCairo = await getOrderType(config, { orderHash });
       const orderType = getTypeFromCairoCustomEnum(orderTypeCairo.orderType);
 
-      setType(orderType);
-    };
-
-    run();
-  }, [config, orderHash]);
-
-  return type;
+      return orderType;
+    }
+  });
 }
 
 export { useOrderType };

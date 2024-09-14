@@ -22,29 +22,31 @@ function useFeesAmount({
   amount
 }: UseFeesAmountProps) {
   const config = useConfig();
-  const query = useQuery({
+
+  return useQuery({
     queryKey: [
       "getFeesAmount",
-      { fulfillBroker, listingBroker, tokenAddress, tokenId, amount }
+      {
+        fulfillBroker,
+        listingBroker,
+        tokenAddress,
+        tokenId: tokenId.toString()
+      }
     ],
     queryFn: async () => {
       if (!config) {
         throw new Error("Config not found");
       }
 
-      const fees = await getFeesAmount(config, {
+      return getFeesAmount(config, {
         fulfillBroker,
         listingBroker,
         nftAddress: tokenAddress,
         nftTokenId: tokenId,
         paymentAmount: amount
       });
-
-      return fees;
     }
   });
-
-  return query;
 }
 
 export { useFeesAmount };
