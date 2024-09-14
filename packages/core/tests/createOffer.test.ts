@@ -1,11 +1,5 @@
 import { createOffer, getOrderStatus } from "../src/index.js";
-import {
-  accounts,
-  config,
-  FEE_TOKEN,
-  mintERC20,
-  mintERC721
-} from "./utils/index.js";
+import { accounts, config, mintERC20, mintERC721 } from "./utils/index.js";
 
 describe("createOffer", () => {
   it("default", async () => {
@@ -14,17 +8,11 @@ describe("createOffer", () => {
     await mintERC20({ account: buyer, amount: 10000000 });
 
     const { orderHash } = await createOffer(config, {
-      starknetAccount: buyer,
-      offer: {
-        brokerId: accounts.listingBroker.address,
-        tokenAddress,
-        tokenId,
-        startAmount: BigInt(10)
-      },
-      approveInfo: {
-        currencyAddress: config.starknetCurrencyContract,
-        amount: BigInt(10)
-      }
+      account: buyer,
+      brokerAddress: accounts.listingBroker.address,
+      tokenAddress,
+      tokenId,
+      amount: BigInt(10)
     });
 
     const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
@@ -70,18 +58,12 @@ describe("createOffer", () => {
 
     await expect(
       createOffer(config, {
-        starknetAccount: buyer,
-        offer: {
-          brokerId: accounts.listingBroker.address,
-          tokenAddress,
-          tokenId,
-          startAmount: BigInt(10),
-          currencyAddress: FEE_TOKEN
-        },
-        approveInfo: {
-          currencyAddress: config.starknetCurrencyContract,
-          amount: BigInt(10)
-        }
+        account: buyer,
+        brokerAddress: accounts.listingBroker.address,
+        tokenAddress,
+        tokenId,
+        amount: BigInt(1),
+        currencyAddress: "0x0"
       })
     ).rejects.toThrow();
   }, 50_000);

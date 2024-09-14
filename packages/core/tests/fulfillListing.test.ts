@@ -9,31 +9,20 @@ describe("fulfillOffer", () => {
     const startAmount = BigInt(1);
 
     const { orderHash } = await createListing(config, {
-      starknetAccount: seller,
-      order: {
-        brokerId: listingBroker.address,
-        tokenAddress,
-        tokenId,
-        startAmount
-      },
-      approveInfo: {
-        tokenAddress,
-        tokenId
-      }
+      account: seller,
+      brokerAddress: listingBroker.address,
+      tokenAddress,
+      tokenId,
+      amount: startAmount
     });
 
     await fulfillListing(config, {
-      starknetAccount: buyer,
-      fulfillListingInfo: {
-        orderHash,
-        tokenAddress,
-        tokenId,
-        brokerId: saleBroker.address
-      },
-      approveInfo: {
-        currencyAddress: config.starknetCurrencyContract,
-        amount: startAmount
-      }
+      account: buyer,
+      brokerAddress: saleBroker.address,
+      orderHash,
+      tokenAddress,
+      tokenId,
+      amount: startAmount
     });
 
     const { orderStatus } = await getOrderStatus(config, {

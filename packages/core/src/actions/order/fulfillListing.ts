@@ -8,17 +8,17 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import {
-  ApproveErc20Info,
-  FulfillInfo,
-  FulfillListingInfo
-} from "../../types/index.js";
+import { FulfillInfo } from "../../types/index.js";
 import { getAllowance } from "../read/getAllowance.js";
 
 export interface FulfillListingParameters {
-  starknetAccount: AccountInterface;
-  fulfillListingInfo: FulfillListingInfo;
-  approveInfo: ApproveErc20Info;
+  account: AccountInterface;
+  brokerAddress: string;
+  currencyAddress?: string;
+  orderHash: bigint;
+  tokenAddress: string;
+  tokenId: bigint;
+  amount: bigint;
   waitForTransaction?: boolean;
 }
 
@@ -39,35 +39,39 @@ export async function fulfillListing(
   parameters: FulfillListingParameters
 ): Promise<FulfillListingResult> {
   const {
-    starknetAccount,
-    fulfillListingInfo,
-    approveInfo,
+    account,
+    brokerAddress,
+    currencyAddress = config.starknetCurrencyContract,
+    orderHash,
+    tokenAddress,
+    tokenId,
+    amount,
     waitForTransaction = true
   } = parameters;
   const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,
-    approveInfo.currencyAddress,
-    starknetAccount.address
+    currencyAddress,
+    account.address
   );
-  const allowance = currentAllowance + approveInfo.amount;
+  const allowance = currentAllowance + amount;
 
   const fulfillInfo: FulfillInfo = {
-    orderHash: fulfillListingInfo.orderHash,
+    orderHash,
     relatedOrderHash: new CairoOption<bigint>(CairoOptionVariant.None),
-    fulfiller: starknetAccount.address,
+    fulfiller: account.address,
     tokenChainId: chainId,
-    tokenAddress: fulfillListingInfo.tokenAddress,
+    tokenAddress,
     tokenId: new CairoOption<Uint256>(
       CairoOptionVariant.Some,
-      cairo.uint256(fulfillListingInfo.tokenId)
+      cairo.uint256(tokenId)
     ),
-    fulfillBrokerAddress: fulfillListingInfo.brokerId
+    fulfillBrokerAddress: brokerAddress
   };
 
-  const result = await starknetAccount.execute([
+  const result = await account.execute([
     {
-      contractAddress: approveInfo.currencyAddress as string,
+      contractAddress: currencyAddress,
       entrypoint: "approve",
       calldata: CallData.compile({
         spender: config.starknetExecutorContract,
