@@ -9,11 +9,13 @@ runs:
   using: "composite"
   steps:
     - name: Install universal sierra compiler
+      shell: bash
       run: |
         curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
         echo "/root/.local/bin" >> ${GITHUB_PATH}
       
     - name: Check universal sierra compiler version
+      shell: bash
       run: universal-sierra-compiler --version
       
     - name: Setup Scarb
