@@ -1,7 +1,5 @@
 import "dotenv/config";
 
-import * as sn from "starknet";
-
 import {
   AuctionV1,
   Config,

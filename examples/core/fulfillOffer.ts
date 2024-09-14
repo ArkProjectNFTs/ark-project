@@ -1,7 +1,5 @@
 import "dotenv/config";
 
-import * as sn from "starknet";
-
 import {
   Config,
   createOffer,
@@ -16,7 +14,6 @@ import { displayBalances } from "./utils/displayBalances.js";
 import { logger } from "./utils/logger.js";
 import { mintTokens } from "./utils/mintTokens.js";
 import { setupAccounts } from "./utils/setupAccounts.js";
-import { setupFees } from "./utils/setupFees.js";
 
 async function createAndFulfillOffer(
   config: Config,
@@ -62,7 +59,6 @@ async function main(): Promise<void> {
   logger.info("Starting the offer creation and fulfillment process...");
 
   const accounts = await setupAccounts(config);
-  await setupFees(config, accounts);
 
   const { tokenId, orderAmount } = await mintTokens(
     config,

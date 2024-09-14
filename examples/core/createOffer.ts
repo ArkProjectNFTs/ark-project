@@ -1,12 +1,8 @@
 import "dotenv/config";
 
-import * as sn from "starknet";
-
 import {
   Config,
-  createBroker,
   createOffer,
-  fetchOrCreateAccount,
   getOrderStatus,
   OfferV1
 } from "@ark-project/core";

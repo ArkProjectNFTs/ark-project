@@ -19,9 +19,10 @@ export async function mintTokens(
 
   if (isOffer) {
     // For offers, mint ERC20 for offerer and ERC721 for fulfiller
-    logger.info("Minting ERC20 for the offerer...");
-    await mintERC20(config.starknetProvider, accounts.offerer, orderAmount);
-
+    if (process.env.STARKNET_NETWORK_ID === "dev") {
+      logger.info("Minting ERC20 for the offerer...");
+      await mintERC20(config.starknetProvider, accounts.offerer, orderAmount);
+    }
     logger.info("Minting ERC721 for the fulfiller...");
     const transaction_hash = await mintERC721(
       config.starknetProvider,

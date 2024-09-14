@@ -26,7 +26,7 @@ export type OrderV1 = {
 export type OfferV1 = {
   brokerId: string;
   tokenAddress: string;
-  tokenId: bigint;
+  tokenId?: bigint;
   currencyAddress?: string;
   currencyChainId?: constants.StarknetChainId;
   startAmount: bigint;

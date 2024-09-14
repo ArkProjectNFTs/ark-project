@@ -8,13 +8,12 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { config, contracts, isDev } from "./config/index.js";
+import { config, contracts } from "./config/index.js";
 import { Accounts } from "./types/accounts.js";
 import { displayBalances } from "./utils/displayBalances.js";
 import { logger } from "./utils/logger.js";
 import { mintTokens } from "./utils/mintTokens.js";
 import { setupAccounts } from "./utils/setupAccounts.js";
-import { setupFees } from "./utils/setupFees.js";
 
 async function createAndFulfillListing(
   config: Config,
@@ -56,7 +55,6 @@ async function main(): Promise<void> {
   logger.info("Starting the listing process...");
 
   const accounts = await setupAccounts(config);
-  // await setupFees(config, accounts);
 
   const { tokenId, orderAmount } = await mintTokens(
     config,

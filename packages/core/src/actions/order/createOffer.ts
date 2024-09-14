@@ -17,7 +17,7 @@ export interface CreateOfferParameters {
   brokerAddress: string;
   currencyAddress?: string;
   tokenAddress: string;
-  tokenId: bigint;
+  tokenId?: bigint;
   amount: bigint;
   startDate?: number;
   endDate?: number;
@@ -103,10 +103,12 @@ export async function createOffer(
     offerer: account.address,
     tokenChainId: chainId,
     tokenAddress,
-    tokenId: new CairoOption<Uint256>(
-      CairoOptionVariant.Some,
-      cairo.uint256(tokenId)
-    ),
+    tokenId: tokenId
+      ? new CairoOption<Uint256>(
+          CairoOptionVariant.Some,
+          cairo.uint256(tokenId)
+        )
+      : new CairoOption<Uint256>(CairoOptionVariant.None, cairo.uint256(0)),
     quantity: cairo.uint256(1),
     startAmount: cairo.uint256(amount),
     endAmount: cairo.uint256(0),

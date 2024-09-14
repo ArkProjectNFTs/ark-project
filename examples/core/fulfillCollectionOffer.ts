@@ -14,12 +14,12 @@ import { displayBalances } from "./utils/displayBalances.js";
 import { logger } from "./utils/logger.js";
 import { mintTokens } from "./utils/mintTokens.js";
 import { setupAccounts } from "./utils/setupAccounts.js";
-import { setupFees } from "./utils/setupFees.js";
 
 async function createAndFulfillCollectionOffer(
   config: Config,
   accounts: Accounts,
-  offer: OfferV1
+  offer: OfferV1,
+  tokenId: bigint
 ): Promise<bigint> {
   logger.info("Creating collection offer...");
   const { orderHash } = await createOffer(config, {
@@ -39,7 +39,7 @@ async function createAndFulfillCollectionOffer(
   const fulfillOfferInfo = {
     orderHash: orderHash,
     tokenAddress: offer.tokenAddress,
-    tokenId: offer.tokenId,
+    tokenId: tokenId,
     brokerId: offer.brokerId
   };
 
@@ -48,7 +48,7 @@ async function createAndFulfillCollectionOffer(
     fulfillOfferInfo,
     approveInfo: {
       tokenAddress: nftContract as string,
-      tokenId: offer.tokenId
+      tokenId: tokenId
     }
   });
 
@@ -62,7 +62,6 @@ async function main(): Promise<void> {
   );
 
   const accounts = await setupAccounts(config);
-  await setupFees(config, accounts);
 
   const { tokenId, orderAmount } = await mintTokens(
     config,
@@ -74,7 +73,6 @@ async function main(): Promise<void> {
   const offer: OfferV1 = {
     brokerId: accounts.broker_listing.address,
     tokenAddress: nftContract as string,
-    tokenId: tokenId,
     startAmount: orderAmount
   };
 
@@ -87,7 +85,8 @@ async function main(): Promise<void> {
   const orderHash = await createAndFulfillCollectionOffer(
     config,
     accounts,
-    offer
+    offer,
+    tokenId
   );
 
   await new Promise((resolve) => setTimeout(resolve, 5000));
