@@ -68,6 +68,9 @@ jobs:
       - name: Install SDK dependencies
         uses: ./.github/actions/install-dependencies
       
+      - name: Setup environment for devnet
+        run: cp .env.devnet .env
+      
       - name: Deploy smart contract
         run: pnpm deploy:starknet:local
       
