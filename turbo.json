@@ -1,9 +1,16 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local"],
-  "tasks": {
+  "globalDependencies": [
+    "**/.env.*local"
+  ],
+  "globalDotEnv": [
+    ".env"
+  ],
+  "pipeline": {
     "build:packages": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -13,7 +20,9 @@
     },
     "build": {
       "cache": false,
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -22,26 +31,42 @@
       ]
     },
     "@ark-project/demo#build": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "env": [
         "NEXT_PUBLIC_NFT_API_KEY",
         "NEXT_PUBLIC_ORDERBOOK_API_URL",
         "NEXT_PUBLIC_NFT_API_URL"
       ],
-      "outputs": [".next/**", "!.next/cache/**", ".vercel/output/**"]
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".vercel/output/**"
+      ]
     },
     "dev": {
-      "dependsOn": ["^dev"],
-      "outputs": [".dist/**"]
+      "dependsOn": [
+        "^dev"
+      ],
+      "outputs": [
+        ".dist/**"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": [
+        "^test"
+      ]
     },
     "lint:fix": {
-      "dependsOn": ["^lint:fix"]
+      "dependsOn": [
+        "^lint:fix"
+      ]
     },
     "clean": {
       "cache": false
@@ -77,6 +102,7 @@
   },
   "globalEnv": [
     "ACCOUNT_CLASS_HASH",
+    "BROKER_ID",
     "CI",
     "SOLIS_ACCOUNT_CLASS_HASH",
     "SOLIS_ADMIN_ADDRESS",
