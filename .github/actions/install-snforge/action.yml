@@ -1,0 +1,34 @@
+name: "Install contract dependencies"
+description: "Install dependencies for smart contract"
+
+env:
+  SCARB_VERSION: 2.7.1
+  STARKNET_FOUNDRY_VERSION: 0.30.0
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install universal sierra compiler
+      run: |
+        curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+        echo "/root/.local/bin" >> ${GITHUB_PATH}
+      
+    - name: Check universal sierra compiler version
+      run: universal-sierra-compiler --version
+      
+    - name: Setup Scarb
+      uses: software-mansion/setup-scarb@v1
+      with:
+        scarb-version: ${{ env.SCARB_VERSION }}
+
+    - name: Setup Starknet Foundry
+      uses: foundry-rs/setup-snfoundry@v3
+      with:
+        starknet-foundry-version: ${{ env.STARKNET_FOUNDRY_VERSION }}
+      
+    - name: Set Up Stable Rust Toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        
