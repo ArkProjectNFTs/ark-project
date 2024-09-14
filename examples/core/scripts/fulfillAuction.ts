@@ -4,7 +4,6 @@ import {
   AuctionV1,
   Config,
   createAuction,
-  createBroker,
   createOffer,
   fulfillAuction,
   FulfillAuctionInfo,
@@ -12,17 +11,18 @@ import {
   OfferV1
 } from "@ark-project/core";
 
-import { config, nftContract } from "./config/index.js";
-import { Accounts } from "./types/accounts.js";
-import { logger } from "./utils/logger.js";
-import { mintTokens } from "./utils/mintTokens.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
+import { config, nftContract } from "../config/index.js";
+import { Accounts } from "../types/accounts.js";
+import { displayBalances } from "../utils/displayBalances.js";
+import { logger } from "../utils/logger.js";
+import { mintTokens } from "../utils/mintTokens.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
 
 async function createAndFulfillAuction(
   config: Config,
   accounts: Accounts,
   tokenId: bigint
-): Promise<void> {
+): Promise<bigint> {
   const brokerId = accounts.broker_listing.address;
 
   // Create auction
@@ -30,8 +30,8 @@ async function createAndFulfillAuction(
     brokerId,
     tokenAddress: nftContract as string,
     tokenId,
-    startAmount: BigInt(1),
-    endAmount: BigInt(10)
+    startAmount: BigInt(1000000000000000),
+    endAmount: BigInt(10000000000000000)
   };
 
   logger.info("Creating auction...");
@@ -44,14 +44,12 @@ async function createAndFulfillAuction(
     }
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
   // Create offer
   const offer: OfferV1 = {
     brokerId,
     tokenAddress: nftContract as string,
     tokenId,
-    startAmount: BigInt(1)
+    startAmount: BigInt(10000000000000000)
   };
 
   logger.info("Creating offer...");
@@ -64,8 +62,6 @@ async function createAndFulfillAuction(
     }
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
   // Fulfill auction
   const fulfillAuctionInfo: FulfillAuctionInfo = {
     orderHash: auctionOrderHash,
@@ -76,17 +72,14 @@ async function createAndFulfillAuction(
   };
 
   logger.info("Fulfilling auction...");
-  await fulfillAuction(config, {
+  const { transactionHash } = await fulfillAuction(config, {
     starknetAccount: accounts.fulfiller,
     fulfillAuctionInfo
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  const { orderStatus } = await getOrderStatus(config, {
-    orderHash: auctionOrderHash
-  });
-  logger.info("Auction order status:", orderStatus);
+  logger.info("Auction fulfilled.");
+  logger.info(`https://sepolia.starkscan.co/tx/${transactionHash}`);
+  return auctionOrderHash;
 }
 
 async function main(): Promise<void> {
@@ -96,12 +89,6 @@ async function main(): Promise<void> {
 
   const accounts = await setupAccounts(config);
 
-  await createBroker(config, {
-    brokenAccount: accounts.broker_listing,
-    numerator: 1,
-    denominator: 100
-  });
-
   logger.info("Minting tokens...");
   const { tokenId } = await mintTokens(
     config,
@@ -110,7 +97,24 @@ async function main(): Promise<void> {
     true
   );
 
-  await createAndFulfillAuction(config, accounts, tokenId);
+  await displayBalances(
+    config,
+    accounts,
+    "before collection offer creation and fulfillment"
+  );
+
+  const orderHash = await createAndFulfillAuction(config, accounts, tokenId);
+
+  const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
+    orderHash
+  });
+  logger.info("Order status after fulfillment:", orderStatusAfter);
+
+  await displayBalances(
+    config,
+    accounts,
+    "after collection offer creation and fulfillment"
+  );
 }
 
 main().catch((error) => {

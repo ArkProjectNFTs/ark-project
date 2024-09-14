@@ -15,7 +15,7 @@ export async function mintTokens(
   logger.info("Minting tokens...");
 
   let tokenId: bigint;
-  const orderAmount = BigInt(100000000000000000);
+  const orderAmount = BigInt(10000000000000000);
 
   if (isOffer) {
     // For offers, mint ERC20 for offerer and ERC721 for fulfiller

@@ -9,11 +9,11 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { config, nftContract } from "./config/index.js";
-import { Accounts } from "./types/accounts.js";
-import { logger } from "./utils/logger.js";
-import { mintTokens } from "./utils/mintTokens.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
+import { config, nftContract } from "../config/index.js";
+import { Accounts } from "../types/accounts.js";
+import { logger } from "../utils/logger.js";
+import { mintTokens } from "../utils/mintTokens.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
 
 async function createAndCancelListing(
   config: Config,
@@ -29,8 +29,6 @@ async function createAndCancelListing(
       tokenId: order.tokenId
     }
   });
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   logger.info("Fetching order status after creation...");
   const { orderStatus: orderStatusBefore } = await getOrderStatus(config, {
@@ -49,8 +47,6 @@ async function createAndCancelListing(
     starknetAccount: accounts.offerer,
     cancelInfo
   });
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   logger.info("Fetching order status after cancellation...");
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {

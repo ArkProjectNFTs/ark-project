@@ -9,11 +9,11 @@ import {
   getOrderStatus
 } from "@ark-project/core";
 
-import { config, nftContract } from "./config/index.js";
-import { Accounts } from "./types/accounts.js";
-import { logger } from "./utils/logger.js";
-import { mintTokens } from "./utils/mintTokens.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
+import { config, nftContract } from "../config/index.js";
+import { Accounts } from "../types/accounts.js";
+import { logger } from "../utils/logger.js";
+import { mintTokens } from "../utils/mintTokens.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
 
 async function createAndCancelAuctionAndCheckStatus(
   config: Config,
@@ -42,8 +42,6 @@ async function createAndCancelAuctionAndCheckStatus(
     starknetAccount: accounts.fulfiller,
     cancelInfo
   });
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   logger.info("Fetching order status...");
   const { orderStatus } = await getOrderStatus(config, { orderHash });

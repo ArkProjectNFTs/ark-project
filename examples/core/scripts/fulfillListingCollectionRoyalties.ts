@@ -8,12 +8,12 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { config, contracts } from "./config/index.js";
-import { Accounts } from "./types/accounts.js";
-import { displayBalances } from "./utils/displayBalances.js";
-import { logger } from "./utils/logger.js";
-import { mintTokens } from "./utils/mintTokens.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
+import { config, contracts, isDev } from "../config/index.js";
+import { Accounts } from "../types/accounts.js";
+import { displayBalances } from "../utils/displayBalances.js";
+import { logger } from "../utils/logger.js";
+import { mintTokens } from "../utils/mintTokens.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
 
 async function createAndFulfillListing(
   config: Config,
@@ -38,7 +38,7 @@ async function createAndFulfillListing(
     brokerId: accounts.broker_sale.address
   };
 
-  await fulfillListing(config, {
+  const { transactionHash } = await fulfillListing(config, {
     starknetAccount: accounts.fulfiller,
     fulfillListingInfo,
     approveInfo: {
@@ -48,6 +48,8 @@ async function createAndFulfillListing(
   });
 
   logger.info("Listing created and fulfilled.");
+  logger.info("Order hash:", orderHash);
+  logger.info(`https://sepolia.starkscan.co/tx/${transactionHash}`);
   return orderHash;
 }
 
@@ -59,12 +61,12 @@ async function main(): Promise<void> {
   const { tokenId, orderAmount } = await mintTokens(
     config,
     accounts,
-    contracts.nftContractRoyalties
+    contracts.nftContractFixedFees
   );
 
   const order: ListingV1 = {
     brokerId: accounts.broker_listing.address,
-    tokenAddress: contracts.nftContractRoyalties,
+    tokenAddress: contracts.nftContractFixedFees,
     tokenId: tokenId,
     startAmount: BigInt(orderAmount)
   };

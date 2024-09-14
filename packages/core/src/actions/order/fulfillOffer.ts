@@ -82,7 +82,6 @@ export async function fulfillOffer(
     });
   }
 
-  console.log(result.transaction_hash);
   return {
     transactionHash: result.transaction_hash
   };

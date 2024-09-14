@@ -8,20 +8,20 @@ import {
   OfferV1
 } from "@ark-project/core";
 
-import { config, nftContract } from "./config/index.js";
-import { Accounts } from "./types/accounts.js";
-import { displayBalances } from "./utils/displayBalances.js";
-import { logger } from "./utils/logger.js";
-import { mintTokens } from "./utils/mintTokens.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
+import { config, nftContract } from "../config/index.js";
+import { Accounts } from "../types/accounts.js";
+import { displayBalances } from "../utils/displayBalances.js";
+import { logger } from "../utils/logger.js";
+import { mintTokens } from "../utils/mintTokens.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
 
-async function createAndFulfillCollectionOffer(
+async function createAndFulfillOffer(
   config: Config,
   accounts: Accounts,
   offer: OfferV1,
   tokenId: bigint
 ): Promise<bigint> {
-  logger.info("Creating collection offer...");
+  logger.info("Creating offer...");
   const { orderHash } = await createOffer(config, {
     starknetAccount: accounts.offerer,
     offer,
@@ -31,11 +31,7 @@ async function createAndFulfillCollectionOffer(
     }
   });
 
-  if (config.starknetNetwork !== "dev") {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  }
-
-  logger.info("Fulfilling collection offer...");
+  logger.info("Fulfilling offer...");
   const fulfillOfferInfo = {
     orderHash: orderHash,
     tokenAddress: offer.tokenAddress,
@@ -43,7 +39,7 @@ async function createAndFulfillCollectionOffer(
     brokerId: offer.brokerId
   };
 
-  await fulfillOffer(config, {
+  const { transactionHash } = await fulfillOffer(config, {
     starknetAccount: accounts.fulfiller,
     fulfillOfferInfo,
     approveInfo: {
@@ -52,14 +48,14 @@ async function createAndFulfillCollectionOffer(
     }
   });
 
-  logger.info("Collection offer created and fulfilled.");
+  logger.info("Offer created and fulfilled.");
+  logger.info("Order hash:", orderHash);
+  logger.info(`https://sepolia.starkscan.co/tx/${transactionHash}`);
   return orderHash;
 }
 
 async function main(): Promise<void> {
-  logger.info(
-    "Starting the collection offer creation and fulfillment process..."
-  );
+  logger.info("Starting the offer creation and fulfillment process...");
 
   const accounts = await setupAccounts(config);
 
@@ -73,23 +69,22 @@ async function main(): Promise<void> {
   const offer: OfferV1 = {
     brokerId: accounts.broker_listing.address,
     tokenAddress: nftContract as string,
+    tokenId: tokenId,
     startAmount: orderAmount
   };
 
   await displayBalances(
     config,
     accounts,
-    "before collection offer creation and fulfillment"
+    "before offer creation and fulfillment"
   );
 
-  const orderHash = await createAndFulfillCollectionOffer(
+  const orderHash = await createAndFulfillOffer(
     config,
     accounts,
     offer,
     tokenId
   );
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash
@@ -99,7 +94,7 @@ async function main(): Promise<void> {
   await displayBalances(
     config,
     accounts,
-    "after collection offer creation and fulfillment"
+    "after offer creation and fulfillment"
   );
 }
 

@@ -1,9 +1,9 @@
 import "dotenv/config";
 
-import { config } from "./config/index.js";
-import { logger } from "./utils/logger.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
-import { setupFees } from "./utils/setupFees.js";
+import { config } from "../config/index.js";
+import { logger } from "../utils/logger.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
+import { setupFees } from "../utils/setupFees.js";
 
 async function main(): Promise<void> {
   logger.info("Starting the listing process...");

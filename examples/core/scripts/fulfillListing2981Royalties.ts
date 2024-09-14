@@ -1,5 +1,7 @@
 import "dotenv/config";
 
+import { log } from "winston";
+
 import {
   Config,
   createListing,
@@ -8,12 +10,12 @@ import {
   ListingV1
 } from "@ark-project/core";
 
-import { config, contracts, isDev } from "./config/index.js";
-import { Accounts } from "./types/accounts.js";
-import { displayBalances } from "./utils/displayBalances.js";
-import { logger } from "./utils/logger.js";
-import { mintTokens } from "./utils/mintTokens.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
+import { config, contracts } from "../config/index.js";
+import { Accounts } from "../types/accounts.js";
+import { displayBalances } from "../utils/displayBalances.js";
+import { logger } from "../utils/logger.js";
+import { mintTokens } from "../utils/mintTokens.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
 
 async function createAndFulfillListing(
   config: Config,
@@ -30,8 +32,6 @@ async function createAndFulfillListing(
     }
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
   logger.info("Fulfilling listing...");
   const fulfillListingInfo = {
     orderHash: orderHash,
@@ -40,7 +40,7 @@ async function createAndFulfillListing(
     brokerId: accounts.broker_sale.address
   };
 
-  await fulfillListing(config, {
+  const { transactionHash } = await fulfillListing(config, {
     starknetAccount: accounts.fulfiller,
     fulfillListingInfo,
     approveInfo: {
@@ -50,6 +50,8 @@ async function createAndFulfillListing(
   });
 
   logger.info("Listing created and fulfilled.");
+  logger.info("Order hash:", orderHash);
+  logger.info(`https://sepolia.starkscan.co/tx/${transactionHash}`);
   return orderHash;
 }
 
@@ -61,12 +63,12 @@ async function main(): Promise<void> {
   const { tokenId, orderAmount } = await mintTokens(
     config,
     accounts,
-    contracts.nftContractFixedFees
+    contracts.nftContractRoyalties
   );
 
   const order: ListingV1 = {
     brokerId: accounts.broker_listing.address,
-    tokenAddress: contracts.nftContractFixedFees,
+    tokenAddress: contracts.nftContractRoyalties,
     tokenId: tokenId,
     startAmount: BigInt(orderAmount)
   };
@@ -74,8 +76,6 @@ async function main(): Promise<void> {
   await displayBalances(config, accounts, "before sale");
 
   const orderHash = await createAndFulfillListing(config, accounts, order);
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   const { orderStatus: orderStatusAfter } = await getOrderStatus(config, {
     orderHash

@@ -7,11 +7,11 @@ import {
   OfferV1
 } from "@ark-project/core";
 
-import { config, nftContract } from "./config/index.js";
-import { Accounts } from "./types/accounts.js";
-import { logger } from "./utils/logger.js";
-import { mintTokens } from "./utils/mintTokens.js";
-import { setupAccounts } from "./utils/setupAccounts.js";
+import { config, nftContract } from "../config/index.js";
+import { Accounts } from "../types/accounts.js";
+import { logger } from "../utils/logger.js";
+import { mintTokens } from "../utils/mintTokens.js";
+import { setupAccounts } from "../utils/setupAccounts.js";
 
 async function createOfferAndCheckStatus(
   config: Config,
@@ -28,9 +28,6 @@ async function createOfferAndCheckStatus(
     }
   });
   logger.info("Order hash:", orderHash);
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
   logger.info("Fetching order status...");
   const { orderStatus } = await getOrderStatus(config, { orderHash });
   logger.info("Order status:", orderStatus);
@@ -40,21 +37,17 @@ async function createOfferAndCheckStatus(
 
 async function main(): Promise<void> {
   logger.info("Starting the offer creation and status check process...");
-
   const accounts = await setupAccounts(config);
-
-  logger.info("Minting tokens...");
-  const { orderAmount } = await mintTokens(
+  const { tokenId, orderAmount } = await mintTokens(
     config,
     accounts,
     nftContract as string,
     true
   );
-
   const offer: OfferV1 = {
     brokerId: accounts.broker_listing.address,
     tokenAddress: nftContract as string,
-    tokenId: BigInt(20), // Note: This is hardcoded, you might want to generate this dynamically
+    tokenId: tokenId,
     startAmount: orderAmount,
     currencyAddress: config.starknetCurrencyContract
   };
