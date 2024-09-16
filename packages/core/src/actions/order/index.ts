@@ -36,7 +36,6 @@ export {
 
 export { cancelCollectionOffer } from "./cancelCollectionOffer.js";
 export { createCollectionOffer } from "./createCollectionOffer.js";
-export { fulfillCollectionOffer } from "./fulfillCollectionOffer.js";
 
 export {
   fulfillOffer,

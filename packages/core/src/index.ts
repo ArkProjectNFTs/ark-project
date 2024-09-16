@@ -13,7 +13,6 @@ export {
   createListing,
   createOffer,
   fulfillAuction,
-  fulfillCollectionOffer,
   fulfillListing,
   fulfillOffer,
   type CancelOrderParameters,
