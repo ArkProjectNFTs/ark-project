@@ -101,7 +101,7 @@ function ResourcePattern({
   return (
     <div className="pointer-events-none">
       <motion.div
-        className="dark:from-space-blue-800 dark:to-space-blue-900 from-space-blue-50 to-space-blue-100 absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 transition duration-300 group-hover:opacity-100"
+        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-space-blue-50 to-space-blue-100 opacity-0 transition duration-300 group-hover:opacity-100 dark:from-space-blue-800 dark:to-space-blue-900"
         style={style}
       />
     </div>
