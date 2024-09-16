@@ -14,7 +14,8 @@ function useCollectionCreatorFees({
   tokenAddress
 }: UseCollectionCreatorFeesParams) {
   const config = useConfig();
-  const query = useQuery({
+
+  return useQuery({
     queryKey: ["getCollectionCreatorFees", tokenAddress],
     queryFn: async () => {
       if (!config) {
@@ -26,8 +27,6 @@ function useCollectionCreatorFees({
       return fees;
     }
   });
-
-  return query;
 }
 
 export { useCollectionCreatorFees };

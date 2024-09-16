@@ -15,7 +15,9 @@ import {
   RenderResult
 } from "@testing-library/react";
 
+import { ArkProvider } from "../../react/src/components";
 import { defaultConnector } from "./accounts";
+import config from "./config";
 
 function rpc() {
   return {
@@ -74,12 +76,13 @@ function customRender(
   } = {}
 ): RenderResult {
   const { connectorOptions, ...renderOptions } = options;
+  queryClient.clear();
 
   return render(ui, {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>
         <StarknetConfig connectorOptions={connectorOptions}>
-          {children}
+          <ArkProvider config={config}>{children}</ArkProvider>
         </StarknetConfig>
       </QueryClientProvider>
     ),
@@ -94,12 +97,13 @@ function customRenderHook<RenderResult, Props>(
   } = {}
 ) {
   const { connectorOptions, hydrate, ...renderOptions } = options;
+  queryClient.clear();
 
   return renderHook(render, {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>
         <StarknetConfig connectorOptions={connectorOptions}>
-          {children}
+          <ArkProvider config={config}>{children}</ArkProvider>
         </StarknetConfig>
       </QueryClientProvider>
     ),

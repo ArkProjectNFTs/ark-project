@@ -33,7 +33,7 @@ export function createConfig({
   starknetCurrencyContract = starknetEthContract
 }: CreateConfigParameters): Config {
   if (starknetNetwork === networks.dev && !starknetExecutorContract) {
-    throw new Error("starknetExecutorContract is required for dev network");
+    throw new Error("Executor contract address is required for dev network");
   }
 
   return {

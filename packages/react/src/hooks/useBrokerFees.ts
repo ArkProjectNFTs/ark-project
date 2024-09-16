@@ -12,20 +12,17 @@ interface UseBrokerFeesParams {
 
 function useBrokerFees({ brokerAdress }: UseBrokerFeesParams) {
   const config = useConfig();
-  const query = useQuery({
+
+  return useQuery({
     queryKey: ["getBrokerFees", brokerAdress],
     queryFn: async () => {
       if (!config) {
         throw new Error("Config not found");
       }
 
-      const fees = await getBrokerFees(config, brokerAdress);
-
-      return fees;
+      return getBrokerFees(config, brokerAdress);
     }
   });
-
-  return query;
 }
 
 export { useBrokerFees };

@@ -1,46 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
-import {
-  fulfillOffer as fulfillOfferCore,
-  FulfillOfferParameters,
-  FulfillOfferResult
-} from "@ark-project/core";
+import { fulfillOffer, FulfillOfferParameters } from "@ark-project/core";
 
-import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
 function useFulfillOffer() {
-  const [status, setStatus] = useState<Status>("idle");
-  const [result, setResult] = useState<FulfillOfferResult>();
   const config = useConfig();
 
-  async function fulfillOffer(parameters: FulfillOfferParameters) {
-    if (!config) {
-      throw new Error("Invalid config.");
+  const { mutate, mutateAsync, ...result } = useMutation({
+    mutationKey: ["fulfillOffer"],
+    mutationFn: async (parameters: FulfillOfferParameters) => {
+      if (!config) {
+        throw new Error("config not loaded");
+      }
+
+      return fulfillOffer(config, parameters);
     }
-
-    setStatus("loading");
-
-    try {
-      const fulfillOfferResult = await fulfillOfferCore(config, parameters);
-
-      setStatus("success");
-      setResult(fulfillOfferResult);
-    } catch (error) {
-      console.error(error);
-      setStatus("error");
-    }
-  }
+  });
 
   return {
-    fulfillOffer,
-    isLoading: status === "loading",
-    isError: status === "error",
-    isSuccess: status === "success",
-    status,
-    result
+    ...result,
+    fulfillOffer: mutate,
+    fulfillOfferAsync: mutateAsync
   };
 }
 

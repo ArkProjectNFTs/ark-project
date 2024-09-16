@@ -8,20 +8,17 @@ import { useConfig } from "./useConfig";
 
 function useDefaultCreatorFees() {
   const config = useConfig();
-  const query = useQuery({
+
+  return useQuery({
     queryKey: ["getDefaultCreatorFees"],
     queryFn: async () => {
       if (!config) {
         throw new Error("Config not found");
       }
 
-      const fees = await getDefaultCreatorFees(config);
-
-      return fees;
+      return getDefaultCreatorFees(config);
     }
   });
-
-  return query;
 }
 
 export { useDefaultCreatorFees };
