@@ -8,19 +8,18 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
-import {
-  ApproveErc20Info,
-  CollectionOfferV1,
-  OrderV1,
-  RouteType
-} from "../../types/index.js";
+import { OrderV1, RouteType } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 import { getAllowance } from "../read/getAllowance.js";
 
-interface CreateCollectionOfferParameters {
-  starknetAccount: AccountInterface;
-  offer: CollectionOfferV1;
-  approveInfo: ApproveErc20Info;
+export interface CreateCollectionOfferParameters {
+  account: AccountInterface;
+  brokerAddress: string;
+  currencyAddress?: string;
+  tokenAddress: string;
+  amount: bigint;
+  startDate?: number;
+  endDate?: number;
   waitForTransaction?: boolean;
 }
 
@@ -48,76 +47,72 @@ async function createCollectionOffer(
   parameters: CreateCollectionOfferParameters
 ): Promise<CreateCollectionOfferResult> {
   const {
-    starknetAccount,
-    offer: baseOrder,
-    approveInfo,
+    account,
+    brokerAddress,
+    currencyAddress = config.starknetCurrencyContract,
+    tokenAddress,
+    amount,
+    startDate,
+    endDate,
     waitForTransaction = true
   } = parameters;
   const now = Math.floor(Date.now() / 1000);
-  const startDate = baseOrder.startDate || now;
-  const endDate = baseOrder.endDate || now + 30;
-  const maxEndDate = now + 60 * 60 * 24 * 30;
-  const chainId = await config.starknetProvider.getChainId();
-  const currencyAddress =
-    baseOrder.currencyAddress || config.starknetCurrencyContract;
+  const startedAt = startDate || now;
+  const endedAt = endDate || now + 60 * 60 * 24;
+  const maxEndedAt = now + 60 * 60 * 24 * 30;
 
-  if (startDate < Math.floor(Date.now() / 1000)) {
+  if (startedAt < now) {
     throw new Error(
       `Invalid start date. Start date (${startDate}) cannot be in the past.`
     );
   }
 
-  if (endDate < startDate) {
+  if (endedAt < startedAt) {
     throw new Error(
       `Invalid end date. End date (${endDate}) must be after the start date (${startDate}).`
     );
   }
 
-  if (endDate > maxEndDate) {
+  if (endedAt > maxEndedAt) {
     throw new Error(
-      `End date too far in the future. End date (${endDate}) exceeds the maximum allowed (${maxEndDate}).`
+      `End date too far in the future. End date (${endDate}) exceeds the maximum allowed (${maxEndedAt}).`
     );
   }
 
-  if (baseOrder.startAmount === BigInt(0)) {
+  if (amount === BigInt(0)) {
     throw new Error(
       "Invalid start amount. The start amount must be greater than zero."
     );
   }
 
-  if (currencyAddress !== approveInfo.currencyAddress) {
-    throw new Error("Invalid currency address. Offer and approveInfo mismatch");
-  }
-
+  const chainId = await config.starknetProvider.getChainId();
   const currentAllowance = await getAllowance(
     config,
-    approveInfo.currencyAddress,
-    starknetAccount.address
+    currencyAddress,
+    account.address
   );
-  const allowance = currentAllowance + approveInfo.amount;
-
+  const allowance = currentAllowance + amount;
   const order: OrderV1 = {
     route: RouteType.Erc20ToErc721,
-    currencyAddress:
-      baseOrder.currencyAddress ?? config.starknetCurrencyContract,
+    currencyAddress,
     currencyChainId: chainId,
     salt: 1,
-    offerer: starknetAccount.address,
+    offerer: account.address,
     tokenChainId: chainId,
-    tokenAddress: baseOrder.tokenAddress,
+    tokenAddress,
     tokenId: new CairoOption<Uint256>(CairoOptionVariant.None),
     quantity: cairo.uint256(1),
-    startAmount: cairo.uint256(baseOrder.startAmount),
+    startAmount: cairo.uint256(amount),
     endAmount: cairo.uint256(0),
-    startDate,
-    endDate,
-    brokerId: baseOrder.brokerId,
+    startDate: startedAt,
+    endDate: endedAt,
+    brokerId: brokerAddress,
     additionalData: []
   };
 
-  const result = await starknetAccount.execute([
+  const result = await account.execute([
     {
-      contractAddress: approveInfo.currencyAddress,
+      contractAddress: currencyAddress,
       entrypoint: "approve",
       calldata: CallData.compile({
         spender: config.starknetExecutorContract,

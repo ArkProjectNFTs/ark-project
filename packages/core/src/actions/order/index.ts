@@ -35,7 +35,11 @@ export {
 } from "./fulfillAuction.js";
 
 export { cancelCollectionOffer } from "./cancelCollectionOffer.js";
-export { createCollectionOffer } from "./createCollectionOffer.js";
+export {
+  createCollectionOffer,
+  type CreateCollectionOfferParameters,
+  type CreateCollectionOfferResult
+} from "./createCollectionOffer.js";
 
 export {
   fulfillOffer,

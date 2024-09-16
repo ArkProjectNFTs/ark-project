@@ -19,6 +19,8 @@ export {
   type CancelOrderResult,
   type CreateAuctionParameters,
   type CreateAuctionResult,
+  type CreateCollectionOfferParameters,
+  type CreateCollectionOfferResult,
   type CreateListingParameters,
   type CreateListingResult,
   type CreateOfferParameters,

@@ -2,57 +2,36 @@
 
 import { useState } from "react";
 
-import { AccountInterface, constants } from "starknet";
-
 import {
-  CollectionOfferV1,
-  Config,
-  createCollectionOffer
+  createCollectionOffer as createCollectionOfferCore,
+  CreateCollectionOfferParameters,
+  type CreateCollectionOfferResult
 } from "@ark-project/core";
 
 import { Status } from "../types";
 import { useConfig } from "./useConfig";
 
-export type CreateCollectionOfferParameters = {
-  starknetAccount: AccountInterface;
-  startAmount: bigint;
-  tokenAddress: string;
-  brokerId: string;
-  currencyAddress?: string;
-  currencyChainId?: constants.StarknetChainId;
-  startDate?: number;
-  endDate?: number;
-};
-
 export default function useCreateCollectionOffer() {
   const [status, setStatus] = useState<Status>("idle");
-  const [response, setResponse] = useState<bigint | undefined>();
+  const [result, setResult] = useState<CreateCollectionOfferResult>();
   const config = useConfig();
 
-  async function create(parameters: CreateCollectionOfferParameters) {
+  async function createCollectionOffer(
+    parameters: CreateCollectionOfferParameters
+  ) {
+    if (!config) {
+      throw new Error("config not loaded");
+    }
+
+    setStatus("loading");
+
     try {
-      setStatus("loading");
-      const orderHash = await createCollectionOffer(config as Config, {
-        starknetAccount: parameters.starknetAccount,
-        offer: {
-          startAmount: parameters.startAmount,
-          tokenAddress: parameters.tokenAddress,
-          currencyAddress:
-            parameters.currencyAddress || config?.starknetCurrencyContract,
-          currencyChainId:
-            parameters.currencyChainId || config?.starknetProvider.getChainId(),
-          brokerId: parameters.brokerId,
-          startDate: parameters.startDate,
-          endDate: parameters.endDate
-        } as CollectionOfferV1,
-        approveInfo: {
-          currencyAddress:
-            parameters.currencyAddress ||
-            (config?.starknetCurrencyContract as string),
-          amount: parameters.startAmount
-        }
-      });
-      setResponse(orderHash);
+      const createCollectionOfferResult = await createCollectionOfferCore(
+        config,
+        parameters
+      );
+
+      setResult(createCollectionOfferResult);
       setStatus("success");
     } catch (error) {
       setStatus("error");
@@ -60,7 +39,14 @@ export default function useCreateCollectionOffer() {
     }
   }
 
-  return { create, status, response };
+  return {
+    createCollectionOffer,
+    isLoading: status === "loading",
+    isError: status === "error",
+    isSuccess: status === "success",
+    status,
+    result
+  };
 }
 
 export { useCreateCollectionOffer };
