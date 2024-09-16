@@ -1,0 +1,82 @@
+export const metadata = {
+  title: 'useCreateCollectionOffer',
+  description: 'Hook for creating a collection offer.',
+}
+
+# useCreateOffer
+
+Hook for creating a collection offer.
+
+## Import
+
+```typescript
+import { useCreateCollectionOffer } from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import { useCreateCollectionOffer } from '@ark-project/react';
+
+function CreateCollectionOfferComponent({ tokenAddress, tokenId, startAmount, brokerId, currencyAddress }) {
+  const { createCollectionOffer, status, response } = useCreateCollectionOffer();
+
+  const handleCreateOffer = async () => {
+    await createCollectionOffer({
+      starknetAccount: /* account info */,
+      offer: {
+        brokerId,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        startAmount: BigInt(1)
+      },
+      approveInfo: {
+        currencyAddress: '0x...',
+        amount: startAmount,
+      }
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleCreateOffer}>Create Offer</button>
+      <div>Status: {status}</div>
+      {response && <div>Response: {response.toString()}</div>}
+    </div>
+  );
+};
+```
+
+## Return Type
+
+### createListing
+
+`(variables: CreateOfferParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+- variables
+
+  `CreateOfferParameters`
+
+  The variables object to pass to the [createAuction](/sdk-core/create-collection-offer#parameters) action.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+### response
+
+`BigNumber`
+
+Order hash of the created collection offer.
+
+## Actions
+
+- [createCollectionOffer](/sdk-core/create-collection-offer)
+
+[CreateCollectionOfferParameters](/sdk-core/create-collection-offer#parameters) and [CreateCollectionOfferResponse](/sdk-core/create-collection-offer#response) for more details.

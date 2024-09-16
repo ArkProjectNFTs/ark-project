@@ -1,0 +1,62 @@
+export const metadata = {
+  title: 'createCollectionOffer',
+  description: 'Action for creating a collection offer.',
+}
+
+# createCollectionOffer
+
+Action for creating a collection offer.
+
+## Import
+
+```typescript
+import { createCollectionOffer } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { createCollectionOffer } from '@arkproject/core'
+import { config } from './config'
+
+await createCollectionOffer(config, {
+  starknetAccount: '0x0...',
+  offer: {
+    brokerId: '0x...',
+    tokenAddress: '0x0...',
+    startAmount: BigInt(1000),
+  },
+  approveInfo: {
+    currencyAddress: '0x...',
+    amount: BigInt(1000),
+  },
+})
+```
+
+## Parameters
+
+### starknetAccount
+
+`AccountInterface`
+
+The Starknet account used for the transaction.
+
+### offer
+
+`OfferV1`
+
+The base order details for the offer. `OfferV1` includes:
+
+- `orderHash: bigint`
+- `tokenAddress: string`
+- `tokenId: bigint`
+- `brokerId: string`
+
+### approveInfo
+
+`ApproveErc20Info`
+
+Informations about the ERC20 token to approve, includes :
+
+- `currencyAddress: string` currency address
+- `amount: bigint` amount to approve

@@ -1,0 +1,81 @@
+export const metadata = {
+  title: 'useCreateOffer',
+  description: 'Hook for creating offers.',
+}
+
+# useCreateOffer
+
+Hook for creating offers.
+
+## Import
+
+```typescript
+import { useCreateOffer } from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import { useCreateOffer } from '@ark-project/react';
+
+const CreateOfferComponent = ({ tokenAddress, tokenId, startAmount, brokerId, currencyAddress, currencyChainId, startDate, endDate }) => {
+  const { createOffer, status, response } = useCreateOffer();
+
+  const handleCreateOffer = async () => {
+    await createOffer({
+      starknetAccount: /* account info */,
+      startAmount: startAmount,
+      tokenAddress: tokenAddress,
+      tokenId: tokenId,
+      brokerId: brokerId,
+      currencyAddress: currencyAddress,
+      currencyChainId: currencyChainId,
+      startDate: startDate,
+      endDate: endDate
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleCreateOffer}>Create Offer</button>
+      <div>Status: {status}</div>
+      {response && <div>Response: {response.toString()}</div>}
+    </div>
+  );
+};
+```
+
+## Return Type
+
+### createListing
+
+`(variables: CreateOfferParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+- variables
+
+  `CreateOfferParameters`
+
+  The variables object to pass to the [createAuction](/sdk-core/create-offer#parameters) action.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+### response
+
+`BigNumber`
+
+Order hash of the created offer.
+
+## Actions
+
+- [createOffer](/sdk-core/create-offer)
+
+[CreateOfferParameters](/sdk-core/create-offer#parameters) and [CreateOfferResponse](/sdk-core/create-offer#response) for more details.

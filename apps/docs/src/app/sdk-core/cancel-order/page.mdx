@@ -1,0 +1,52 @@
+export const metadata = {
+  title: 'cancelOrder',
+  description: 'Action for cancelling an order.',
+}
+
+# cancelOrder
+
+Action for cancelling an order.
+
+## Import
+
+```typescript
+import { cancelOrder } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { cancelOrder } from '@arkproject/core'
+import { config, parameters } from './config'
+
+await cancelOrder(config, {
+  starknetAccount: sellerAccount,
+  cancelInfo: {
+    orderHash: '0x...',
+    tokenAddress: '0x...',
+    tokenId: BigInt(1),
+  },
+})
+```
+
+## Parameters
+
+### starknetAccount
+
+`AccountInterface`
+
+The Starknet account used for the transaction.
+
+### cancelInfo
+
+`CancelInfo`
+
+Informations about the order to cancel, includes :
+
+- `orderHash: bigint`
+- `tokenAddress: string`
+- `tokenId: bigint`
+
+## Function Description
+
+`cancelOrder` begins by extracting details from the provided parameters, including Starknet and Arkchain accounts, and cancellation information. It then compiles the cancellation details into a `FullCancelInfo` object, compiles and signs the order data, and constructs the calldata for the cancellation. The function executes the transaction and waits for its completion. An error is thrown if the contract ABI is not found or the transaction fails.

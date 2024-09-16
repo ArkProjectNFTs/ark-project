@@ -1,0 +1,31 @@
+export const createAccount = {
+  title: 'Create Account',
+  description: 'Action for creating an arkchain account.',
+}
+
+# createAccount
+
+Action for creating an arkchain account.
+
+## Import
+
+```typescript
+import { createAccount } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { createAccount } from '@arkproject/core'
+import { config } from './config'
+
+const account = await createAccount(config.arkchainProvider)
+```
+
+## Parameters
+
+### provider
+
+`ProviderInterface`
+
+starknet.js provider for the arkchain from config

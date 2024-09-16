@@ -1,0 +1,60 @@
+export const metadata = {
+  title: 'NFT API Introduction',
+  description:
+    'Welcome to the Ark NFT API documentation. Dive into our comprehensive guide to understand and utilize our powerful endpoints.',
+}
+
+# Ark NFT API
+
+Welcome to the Ark NFT API, a robust platform designed to empower developers with tools to interact with the NFT ecosystem. {{ className: 'lead' }}
+
+Our API provides a suite of endpoints tailored to cater to various needs, from fetching token details to tracking events. Below is a brief overview of our primary endpoints:
+
+## Endpoints Overview
+
+### NFT Contracts
+
+- **List All NFT Contracts**: `/v1/contracts`
+- **Retrieve a Specific NFT Contract**: `/v1/contracts/{contract_address}`
+
+[Explore NFT Contracts Endpoints](/nft-contracts)
+
+### Tokens
+
+- **Retrieve NFTs**: `/v1/tokens/{contract_address}`
+- **Retrieve NFT**: `/v1/tokens/{contract_address}/{token_id}`
+- **Batch Retrieve NFTs**: `/v1/tokens/batch`
+
+[Explore Tokens Endpoints](/tokens)
+
+### Events
+
+- **Retrieve Contract Events**: `/v1/events/{contract_address}`
+- **Retrieve Events for a Specific Token**: `/v1/events/{contract_address}/{token_id}`
+
+[Explore Events Endpoints](/events)
+
+### NFT Portfolio
+
+- **Retrieve Collections Owned by an Account**: `/v1/owners/{account_address}/contracts`
+- **Retrieve All NFTs Owned by an Account**: `/v1/owners/{account_address}/tokens`
+- **Retrieve All Collections & NFTs Owned by an Account**: `/v1/owners/{account_address}/all`
+
+[Explore NFT Portfolio Endpoints](/portfolio)
+
+## Getting Started
+
+To start using the Ark NFT API, you'll need an API Key. [Register here](https://arkproject.dev/login) to obtain your key. Once you have the key, include it in the request headers as:
+
+```bash
+curl -G https://api.arkproject.dev/v1/contracts \
+  -H "x-api-key: <INSERT_API_KEY_HERE>"
+```
+
+## Networks
+
+To access Starknet data on other networks, please change the base URL to the following:
+
+Mainnet: https://api.arkproject.dev
+
+Sepolia: https://testnet-api.arkproject.dev

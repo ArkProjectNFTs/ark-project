@@ -1,0 +1,59 @@
+export const metadata = {
+  title: 'Getting started',
+  description: 'ArkProject Core is a VanillaJS library for arkchain.',
+}
+
+# Getting started
+
+## Overview
+
+ArkProject Core is a VanillaJS library for arkchain. You can learn more about the rationale behind the project in the What is the ArkProject section.
+
+## Package manager
+
+Install the required packages.
+
+<CodeGroup>
+
+```bash {{ title: 'pnpm' }}
+pnpm add @arkproject/core
+```
+
+```bash {{ title: 'npm' }}
+npm install @arkproject/core
+```
+
+```bash {{ title: 'yarn' }}
+yarn add @arkproject/core
+```
+
+```bash {{ title: 'bun' }}
+bun add @arkproject/core
+```
+
+</CodeGroup>
+
+## Create config
+
+Create and export a new ArkProject config using [createConfig](/sdk-core/configuration#create-config).
+
+```typescript
+import { createConfig, networks } from '@arkproject/core'
+
+// Create the Ark SDK configuration
+export const config = createConfig({
+  starknetNetwork: networks.mainnet,
+  arkchainNetwork: Network.mainnet,
+})
+```
+
+## Use ArkProject Core
+
+Now that everything is set up, you can pass the `config` to use actions.
+
+```typescript
+import { createOffer } from '@arkproject/core'
+import { config } from './config'
+
+const orderHash = await createOffer(config, parameters)
+```

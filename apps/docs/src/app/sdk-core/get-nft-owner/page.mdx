@@ -1,0 +1,47 @@
+export const metadata = {
+  title: 'getNftOwner',
+  description: 'Action for fetching the owner of a specific NFT.',
+}
+
+# getNftOwner
+
+Action for fetching the owner of a specific NFT.
+
+## import
+
+```typescript
+import { getNftOwner } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { getNftOwner } from '@arkproject/core'
+import { config } from './config'
+
+const address = getNftOwner(
+  config,
+  '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  BigInt(1),
+)
+```
+
+## Parameters
+
+`import { type GetNftOwnerParameters } from "@arkproject/core"`
+
+### tokenAddress
+
+`string`
+
+The contract address of the token.
+
+### tokenId
+
+`bigint`
+
+The unique identifier of the token.
+
+## Function Description
+
+`getNftOwner` starts by retrieving the ABI of the NFT contract from the given contract address using the Starknet provider. If the ABI is undefined, an error is thrown. The function then creates a `Contract` instance and calls the `owner_of` method with the compiled token ID. It returns the owner's address as a formatted string, representing the address of the NFT's owner.

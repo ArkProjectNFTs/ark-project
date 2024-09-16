@@ -1,0 +1,227 @@
+export const metadata = {
+  title: 'NFT Portfolio',
+  description: 'Retrieve all NFTs owned by an account.',
+}
+
+# NFT Portfolio
+
+## Retrieve All NFTs Owned by an Account {{ tag: 'GET', label: '/v1/owners/{account_address}/tokens' }}
+
+<Row>
+  <Col>
+    Retrieves a list of all tokens associated with a specific account. This endpoint provides a comprehensive view of an owner's holdings within the Ark NFT ecosystem.
+
+    ### Path parameters
+
+    <Properties>
+      <Property name="account_address" type="string">
+        Hexadecimal address of the account contract.
+      </Property>
+    </Properties>
+
+    ### Query string parameters
+
+    <Properties>
+      <Property name="contract_address" type="string">
+        To limit the tokens list to a specific collection, you can provide a `contract_address`
+        that is expected to be an hexadecimal string prefixed with `0x`.
+      </Property>
+      <Property name="cursor" type="string">
+        The cursor to get the next page. Retrieved from previous request that may be paginated.
+      </Property>
+      <Property name="limit" type="number">
+        The limit on the number of items returned per request, defaulting to 100, with a 1MB data cap. (Refer to the [pagination](/pagination) section below for more details.)
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+  <CodeGroup title="Request" tag="GET" label="/v1/owners/{account_address}/tokens">
+    ```bash {{ title: 'cURL' }}
+    curl -G https://api.arkproject.dev/v1/owners/{account_address}/tokens \
+    -H "x-api-key: <INSERT_API_KEY_HERE>"
+    ```
+  </CodeGroup>
+  ```json {{ title: 'Response' }}
+    {
+      "cursor": null,
+      "result": [
+        {
+          "contract_address": "0x1111",
+          "token_id": "1",
+          "token_id_hex": "0x0000000000000000000000000000000000000000000000000000000000000001",
+          "owner": "0xOwnerAddress",
+          "block_number_minted": "705103200",
+          "token_uri": "https://token.uri",
+          "name": "Everai",
+          "symbol": "EVE",
+          "metadata": "{...}",
+          "normalized_metadata": "{...}",
+          "last_metadata_refresh": "timestamp",
+          "minter_address": "0xMinterAddress",
+          "mint_transaction_hash": "0xMintTransactionHash"
+        },
+        {
+          "contract_address": "0x2222",
+          // ...
+        }
+      ]
+    }
+  ```
+  </Col>
+</Row>
+
+---
+
+## Retrieve All Collections Owned by an Account {{ tag: 'GET', label: '/v1/owners/{account_address}/contracts' }}
+
+<Row>
+  <Col>
+
+    Retrieves a list of all nft collections associated with a specific account. Any collection for which the given account is the owner of at least one token will be listed here.
+
+    ### Path parameters
+
+    <Properties>
+      <Property name="account_address" type="string">
+        Hexadecimal address of the account contract.
+      </Property>
+    </Properties>
+
+    ### Query string parameters
+
+    <Properties>
+      <Property name="cursor" type="string">
+        The cursor to get the next page. Retrieved from previous request that may be paginated.
+      </Property>
+      <Property name="limit" type="number">
+        The limit on the number of items returned per request, defaulting to 100, with a 1MB data cap. (Refer to the [pagination](/pagination) section below for more details.)
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/v1/owners/{account_address}/contracts">
+
+    ```bash {{ title: 'cURL' }}
+    curl https://api.arkproject.dev/v1/owners/{account_address}/contracts \
+      -H "x-api-key: <INSERT_API_KEY_HERE>"
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "cursor": null,
+      "result": [{
+        "contract_address": "0x1111",
+        "symbol": "EVE",
+        "name": "Everai",
+        "image": null
+      },
+      ...
+      ]
+    }
+    ```
+
+  </Col>
+</Row>
+
+---
+
+## Retrieve All Collections & NFTs Owned by an Account {{ tag: 'GET', label: '/v1/owners/{account_address}/all' }}
+
+<Row>
+  <Col>
+
+    This API endpoint lets you look up all the NFT collections and NFTs owned by a specific account.
+
+    ### Path parameters
+
+    <Properties>
+      <Property name="account_address" type="string">
+        Hexadecimal address of the account contract.
+      </Property>
+    </Properties>
+
+    ### Query string parameters
+
+    <Properties>
+      <Property name="cursor" type="string">
+        The cursor to get the next page. Retrieved from previous request that may be paginated.
+      </Property>
+      <Property name="limit" type="number">
+        The limit on the number of items returned per request, defaulting to 100, with a 1MB data cap. (Refer to the [pagination](/pagination) section below for more details.)
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/v1/owners/{account_address}/all">
+
+    ```bash {{ title: 'cURL' }}
+    curl https://api.arkproject.dev/v1/owners/{account_address}/all \
+      -H "x-api-key: <INSERT_API_KEY_HERE>"
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "cursor": null,
+      "result": [{
+            "contract_address": "0x03ab1124ef9ec3a2f2b1d9838f9066f9a894483d40b33390dda8d85c01a315a3",
+            "contract_name": "Starkurabu",
+            "contract_symbol": "ST",
+            "contract_image": "https://img.starkurabu.com/15576896767724894447561965312147459.png",
+            "items": [
+                {
+                    "token_id": "7046",
+                    "owner": "0x042b0c1a602ee51ba9f6eaa0a7a33871463eb77c7aef60065f43234a1e19f6b8",
+                    "mint_info": {
+                        "address": "0x042b0c1a602ee51ba9f6eaa0a7a33871463eb77c7aef60065f43234a1e19f6b8",
+                        "timestamp": 1709200525,
+                        "transaction_hash": "0x07eedbbcc9ec650680d26dbfeea11101b28fd5766d47f104a709cb58e0231929",
+                        "block_number": null
+                    },
+                    "metadata": {
+                        "normalized": {
+                            "image_mime_type": "image/png",
+                            "image_key": "",
+                            "image": "https://img.starkurabu.com/49344573454186617604290281771894795.png",
+                            "image_data": "",
+                            "external_url": "https://starkurabu.com/ape/7046",
+                            "description": "The NFT trendsetter ape of Starknet.",
+                            "name": "Starkurabu #7046",
+                            "attributes": [
+                                {
+                                    "display_type": null,
+                                    "trait_type": "Background",
+                                    "value": "11"
+                                },
+                                ...
+                            ],
+                            "properties": null,
+                            "background_color": "",
+                            "animation_url": "",
+                            "animation_key": "",
+                            "animation_mime_type": "",
+                            "youtube_url": ""
+                        },
+                        "raw": "{\"description\":\"The NFT trendsetter ape of Starknet.\",\"external_url\":\"https://starkurabu.com/ape/7046\",\"image\":\"https://img.starkurabu.com/49344573454186617604290281771894795.png\",\"name\":\"Starkurabu #7046\",\"attributes\":[{\"trait_type\":\"Background\",\"value\":\"11\"},{\"trait_type\":\"Effect\",\"value\":\"2\"},{\"trait_type\":\"Furr Color\",\"value\":\"8\"},{\"trait_type\":\"Iris Color\",\"value\":\"1\"},{\"trait_type\":\"Hands Shape\",\"value\":\"13\"},{\"trait_type\":\"Mouth Shape\",\"value\":\"5\"},{\"trait_type\":\"Eyebrow Shape\",\"value\":\"2\"},{\"trait_type\":\"Eye Shape\",\"value\":\"2\"},{\"trait_type\":\"Hair Shape\",\"value\":\"0\"},{\"trait_type\":\"Glasses\",\"value\":\"5\"},{\"trait_type\":\"Hat\",\"value\":\"14\"},{\"trait_type\":\"Top\",\"value\":\"38\"}]}",
+                        "metadata_updated_at": 1710340766
+                    },
+                    "awaiting_metadata_update": false
+                },
+                ...
+            ]
+        },
+      ...
+      ]
+    }
+    ```
+
+  </Col>
+</Row>

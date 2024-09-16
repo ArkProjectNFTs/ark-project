@@ -1,0 +1,65 @@
+export const metadata = {
+  title: 'useCancelCollectionOffer',
+  description: 'A hook for canceling a collection offer.',
+}
+
+# useCancel
+
+A hook for canceling collection offer.
+
+## Import
+
+```typescript
+import useCancelCollection from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import { useAccount } from '@starknet-react/core'
+import { useCancelCollectionOffer } from '@ark-project/react'
+
+const CancelCollectionOffer = ({ orderHash, tokenAddress, tokenId }) => {
+  const { account } = useAccount()
+  const { cancelCollectionOffer, status } = useCancelCollectionOffer()
+
+  return (
+    <>
+      <button
+        onClick={() =>
+          cancelCollectionOffer({
+            starknetAccount: account,
+            orderHash: orderHash,
+            tokenAddress: tokenAddress,
+          })
+        }
+      >
+        Cancel listing
+      </button>
+      {status === 'loading' && <p>Cancelling...</p>}
+      {status === 'success' && <p>Cancelled</p>}
+    </>
+  )
+}
+```
+
+## Return Type
+
+### cancelCollectionOffer
+
+`(variables: CancelCollectionOfferParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+## Actions
+
+- [cancelCollectionOffer](/sdk-core/cancel-collection-offer)

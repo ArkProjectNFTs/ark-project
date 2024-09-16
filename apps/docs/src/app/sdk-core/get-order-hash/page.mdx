@@ -1,0 +1,46 @@
+export const metadata = {
+  title: 'getOrderHash',
+  description: 'Action for fetching order hash.',
+}
+
+# getOrderHash
+
+Action for fetching order hash.
+
+## Import
+
+```typescript
+import { getOrderHash } from '@arkproject/core'
+```
+
+## Usage
+
+```typescript
+import { getOrderHash } from '@arkproject/core'
+import { config } from './config'
+
+const { orderHash } = await getOrderHash(config, {
+  tokenId: '...',
+  tokenAddress: '0x...',
+})
+```
+
+## Parameters
+
+`import { type GetOrderHashParameters } from "@arkproject/core"`
+
+### tokenId
+
+`bigint`
+
+The unique identifier of the token.
+
+### tokenAddress
+
+`string`
+
+The contract address of the token.
+
+## Function Description
+
+`getOrderHash` starts by extracting the token ID and address from the provided parameters. It retrieves the chain ID and compiles the token hash data, including token ID, address, and chain ID. The function then computes the token hash using Starknet's Poseidon hash function. With the ABI of the orderbook contract, it creates a `Contract` instance and calls the `get_order_hash` method with the compiled token hash. It returns the computed order hash.

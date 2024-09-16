@@ -1,0 +1,66 @@
+export const metadata = {
+  title: 'useCancel',
+  description: 'Hook for canceling order.',
+}
+
+# useCancel
+
+Hook for canceling order.
+
+## Import
+
+```typescript
+import useCancel from '@ark-project/react'
+```
+
+## Usage
+
+```typescript
+import { useAccount } from '@starknet-react/core'
+import { useCancel } from '@ark-project/react'
+
+function CancelListing({ orderHash, tokenAddress, tokenId }) {
+  const { cancel, status } = useCancel()
+  const { account } = useAccount()
+
+  return (
+    <>
+      <button
+        onClick={() =>
+          cancel({
+            starknetAccount: account,
+            orderHash: orderHash,
+            tokenAddress: tokenAddress,
+            tokenId: tokenId,
+          })
+        }
+      >
+        Cancel listing
+      </button>
+      {status === 'loading' && <p>Cancelling...</p>}
+      {status === 'success' && <p>Cancelled</p>}
+    </>
+  )
+}
+```
+
+## Return Type
+
+### cancel
+
+`(variables: CancelParameters) => void`
+
+The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+
+### status
+
+`'idle' | 'loading' | 'success' | 'error'`
+
+- `idle` if the mutation has not been executed yet.
+- `loading` if the mutation is currently executing.
+- `error` if the last mutation attempt resulted in an error.
+- `success` if the last mutation attempt was successful.
+
+## Actions
+
+- [cancel](/sdk-core/cancel)
