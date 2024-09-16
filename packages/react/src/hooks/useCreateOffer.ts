@@ -10,7 +10,7 @@ export default function useCreateOffer() {
   const config = useConfig();
 
   const { mutate, mutateAsync, ...result } = useMutation({
-    mutationKey: ["cancel"],
+    mutationKey: ["createOffer"],
     mutationFn: async (parameters: CreateOfferParameters) => {
       if (!config) {
         throw new Error("config not loaded");
