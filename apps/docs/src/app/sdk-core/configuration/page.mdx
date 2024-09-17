@@ -19,28 +19,25 @@ import { createConfig } from '@arkproject/core'
 
 ## Usage
 
-Create a mainnet configuration using [pre-deployed contracts](https://github.com/ArkProjectNFTs/ark-project?tab=readme-ov-file#networks).
+Create a configuration using mainnet [pre-deployed contracts](https://github.com/ArkProjectNFTs/ark-project?tab=readme-ov-file#networks).
 
 ```typescript
 import { createConfig, networks } from '@arkproject/core'
 
 export const config = createConfig({
-  starknetNetwork: networks.mainnet,
-  arkchainNetwork: networks.mainnet,
+  network: networks.mainnet,
 })
 ```
 
-Create a local configuration with development contracts. See [development quickstart](https://github.com/ArkProjectNFTs/ark-project) for more information.
+Create a configuration with local contracts, see [development quickstart](https://github.com/ArkProjectNFTs/ark-project).
 
 ```typescript
 import { createConfig, networks } from '@arkproject/core'
 
 export const config = createConfig({
-  starknetNetwork: networks.dev,
-  starknetExecutorContract: '0x0',
-  starknetCurrencyContract: '0x0',
-  arkchainNetwork: networks.dev,
-  arkchainOrderbookContract: '0x0',
+  network: networks.dev,
+  executorContract: '0x0',
+  currencyContract: '0x0',
 })
 ```
 
@@ -50,65 +47,35 @@ export const config = createConfig({
 import { type ConfigParameters } from '@arkproject/core'
 ```
 
-### starknetNetwork
+### network
 
 `mainnet | sepolia | dev`
 
 Specifies the Starknet network to be used.
 
-### starknetRpcUrl
+### rpcUrl (optional)
 
-`string | undefined`
+`string`
 
-Custom RPC URL for the Starknet network. If not provided, a default URL based on the specified `starknetNetwork` is used.
+Custom RPC URL for the Starknet network. If not provided, a default URL based on the specified `network` is used.
 
-### starknetProvider
+### provider (optional)
 
-`ProviderInterface | undefined`
+`ProviderInterface`
 
-The provider interface for Starknet. If not provided, a new `RpcProvider` instance is created using the `starknetRpcUrl`.
+The provider interface for Starknet. If not provided, a new `RpcProvider` instance is created using the `rpcUrl`.
 
-### arkchainNetwork
+### executorContract (optional)
 
-`mainnet | sepolia | dev`
+`string`
 
-Specifies Arkchain network to be used.
+The address of the Starknet executor contract. If not provided, a default contract address based on the `network` is used.
 
-### arkchainRpcUrl
+### currencyContract (optional)
 
-`string | undefined`
+`string`
 
-Custom RPC URL for the Arkchain network. If not provided, a default URL based on the specified `arkchainNetwork` is used.
-
-### arkProvider
-
-`ProviderInterface | undefined`
-
-The provider interface for Arkchain. If not provided, a new `RpcProvider` instance is created using the `arkchainRpcUrl`.
-
-### starknetExecutorContract
-
-`string | undefined`
-
-The address of the Starknet executor contract. If not provided, a default contract address based on the `starknetNetwork` is used.
-
-### starknetCurrencyContract
-
-`string | undefined`
-
-The address of the Starknet currency contract. If not provided, a default contract address based on the `starknetNetwork` is used.
-
-### starknetCurrencyAddress
-
-`string | undefined`
-
-The address of the currency contract on Starknet. If not provided, defaults to a eth address.
-
-### arkchainOrderbookContract
-
-`string | undefined`
-
-The address of the Arkchain orderbook contract. If not provided, a default contract address based on the `arkchainNetwork` is used.
+The address of the Starknet currency contract. If not provided, a default contract address based on the `network` is used.
 
 ## Return Type
 
@@ -124,56 +91,32 @@ Object responsible for managing the configuration of the SDK.
 import { type Config } from '@arkproject/core'
 ```
 
-### starknetNetwork
+### network
 
 `mainnet | sepolia | dev`
 
 `Network` passed to `createConfig`.
 
-### starknetRpcUrl
+### rpcUrl
 
 `string`
 
 Current Starknet RPC url.
 
-### starknetProvider
+### provider
 
 `ProviderInterface`
 
 Current Starknet Provider.
 
-### arkchainNetwork
-
-`mainnet | sepolia | dev`
-
-Current arkchain network.
-
-### arkchainRpcUrl
-
-`string`
-
-Current Arkchain RPC url.
-
-### arkProvider
-
-`ProviderInterface`
-
-Current Arkchain Provider.
-
-### starknetExecutorContract
+### executorContract
 
 `string`
 
 Current Starknet executor contract address.
 
-### starknetCurrencyContract
+### currencyContract
 
 `string`
 
 Current Starknet currency contract address.
-
-### arkchainOrderbookContract
-
-`string`
-
-Current Arkchain orderbook contract address.
