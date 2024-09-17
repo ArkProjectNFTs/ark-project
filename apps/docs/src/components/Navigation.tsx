@@ -379,10 +379,6 @@ export const navigation: Array<NavGroup> = [
       },
       { title: 'useCreateOffer', href: '/sdk-react/use-create-offer' },
       { title: 'useFulfillAuction', href: '/sdk-react/use-fulfill-auction' },
-      {
-        title: 'useFulfillCollectionOffer',
-        href: '/sdk-react/use-fulfill-collection-offer',
-      },
       { title: 'useFulfillListing', href: '/sdk-react/use-fulfill-listing' },
       { title: 'useFulfillOffer', href: '/sdk-react/use-fulfill-offer' },
     ],

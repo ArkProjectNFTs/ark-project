@@ -15,59 +15,74 @@ import { useFulfillOffer } from '@ark-project/react'
 
 ## Usage
 
-```typescript
+```tsx
 import { useFulfillOffer } from '@ark-project/react'
+import { useAccount } from '@starknet-react/core'
 
 const FulfillOfferComponent = ({
-  starknetAccount,
   orderHash,
   tokenAddress,
   tokenId,
   brokerId,
 }) => {
-  const { fulfillOffer, status } = useFulfillOffer()
-
-  const handleFulfillOffer = async () => {
-    await fulfillOffer({
-      starknetAccount: starknetAccount,
-      orderHash: orderHash,
-      tokenAddress: tokenAddress,
-      tokenId: tokenId,
-      brokerId: brokerId,
-    })
-  }
+  const { account } = useAccount()
+  const { fulfillOffer, data, isLoading, isSuccess } = useFulfillOffer()
 
   return (
-    <div>
-      <button onClick={handleFulfillOffer}>Fulfill Offer</button>
-      <div>Status: {status}</div>
-    </div>
+    <>
+      <button
+        onClick={async () => {
+          await fulfillOffer({
+            account,
+            orderHash,
+            tokenAddress,
+            tokenId,
+            brokerId,
+          })
+        }}
+      >
+        Fulfill Offer
+      </button>
+      {isLoading && <p>Loading...</p>}
+      {isSuccess && <div>{data.transactionHash}</div>}
+    </>
   )
 }
 ```
 
 ## Return Type
 
-### fulfillOffer
+```ts
+import { type useFulfillOfferReturnType } from '@ark-project/react'
+```
 
-`(variables: FulfillOfferParameters) => void`
+<Properties>
+  <Property
+    name="fulfillOffer"
+    type="(params: FulfillOfferParams) => FulfillOfferResult"
+  >
+    Mutation to fulfill an offer. See
+    [FulfillOfferParams](/sdk-core/fulfill-offer).
+  </Property>
+  <Property
+    name="fulfillOfferAsync"
+    type="(params: FulfillOfferParams) => Promise<FulfillOfferResult>"
+  >
+    Async mutation to fulfill an offer. See
+    [FulfillOfferParams](/sdk-core/fulfill-offer).
+  </Property>
+  <Property name="data" type="FulfillOfferResult">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-- variables
-
-  `FulfillOfferParameters`
-
-  The variables object to pass to the [fulfillOffer](/sdk-core/fulfill-offer#parameters) action.
-
-### status
-
-`'idle' | 'loading' | 'success' | 'error'`
-
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
+<Properties>
+  <Property name="config (optional)" type="Config | undefined">
+    Config to use instead of retrieving from the nearest ArkProvider.
+  </Property>
+</Properties>
 
 ## Actions
 

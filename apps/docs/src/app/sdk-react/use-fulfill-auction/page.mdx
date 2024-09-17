@@ -15,65 +15,72 @@ import { useFulfillAuction } from '@ark-project/react'
 
 ## Usage
 
-```typescript
-import React from 'react'
+```tsx
+import { useAccount } from '@starknet-react/core'
 import { useFulfillAuction } from '@ark-project/react'
 
 function FulfillAuction({
-  starknetAccount,
   orderHash,
+  relatedOrderHash
   tokenAddress,
   tokenId,
-  brokerId,
-  startAmount,
-  currencyAddress,
 }) {
-  const { fulfillAuction, status } = useFulfillAuction()
-
-  const handleFulfillAuction = async () => {
-    await fulfillAuction({
-      starknetAccount: starknetAccount,
-      orderHash: orderHash,
-      tokenAddress: tokenAddress,
-      tokenId: tokenId,
-      brokerId: brokerId,
-      startAmount: startAmount,
-      currencyAddress: currencyAddress,
-      // Additional parameters...
-    })
-  }
+  const { account } = useAccount();
+  const { fulfillAuction, data, isLoading, isSuccess } = useFulfillAuction()
 
   return (
-    <div>
-      <button onClick={handleFulfillAuction}>Fulfill Auction</button>
-      <div>Status: {status}</div>
-    </div>
+    <>
+      <button onClick={async () => {
+        await fulfillAuction({
+          account,
+          orderHash,
+          relatedOrderHash,
+          tokenAddress,
+          tokenId,
+        });
+      }}>
+        Fulfill Auction
+      </button>
+      {isLoading && <p>Loading...</p>}
+      {isSuccess && <div>{data.transactionHash}</div>}
+    </>
   )
 }
 ```
 
 ## Return Type
 
-### fulfillAuction
+```ts
+import { type useFulfillAuctionReturnType } from '@ark-project/react'
+```
 
-`(variables: FulfillAuctionParameters) => void`
+<Properties>
+  <Property
+    name="fulfillAuction"
+    type="(params: FulfillAuctionParams) => FulfillAuctionResult"
+  >
+    Mutation to fulfill an auction. See
+    [FulfillAuctionParams](/sdk-core/fulfill-auction).
+  </Property>
+  <Property
+    name="fulfillAuctionAsync"
+    type="(params: FulfillAuctionParams) => Promise<FulfillAuctionResult>"
+  >
+    Async mutation to fulfill an auction. See
+    [FulfillAuctionParams](/sdk-core/fulfill-auction).
+  </Property>
+  <Property name="data" type="FulfillAuctionResult">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-- variables
-
-  `FulfillAuctionParameters`
-
-  The variables object to pass to the [fulfillAuction](/sdk-core/fulfill-auction#parameters) action.
-
-### status
-
-`'idle' | 'loading' | 'success' | 'error'`
-
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
+<Properties>
+  <Property name="config (optional)" type="Config | undefined">
+    Config to use instead of retrieving from the nearest ArkProvider.
+  </Property>
+</Properties>
 
 ## Actions
 

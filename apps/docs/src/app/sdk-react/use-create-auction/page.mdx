@@ -15,60 +15,66 @@ import { useCreateAuction } from '@ark-project/react'
 
 ## Usage
 
-```typescript
-import { useCreateAuction } from '@ark-project/react';
+```tsx
+import { useCreateAuction } from '@ark-project/react'
 
-function CreateAuction({ tokenAddress, tokenId, startAmount }) {
-  const { createAuction, status, response } = useCreateAuction();
-
-  const handleCreateAuction = async () => {
-    await createListing({
-      starknetAccount: /* account info */,
-      tokenAddress: tokenAddress,
-      tokenId: tokenId,
-      startAmount: startAmount,
-      // Additional parameters...
-    });
-  };
+function App({ tokenAddress, tokenId, startAmount }) {
+  const { createAuction, data, isLoading, isSuccess } = useCreateAuction()
 
   return (
     <>
-      <button onClick={handleCreateListing}>Create Listing</button>
-      <div>Status: {status}</div>
-      {response && <div>Response: {response.toString()}</div>}
+      <button
+        onClick={async () => {
+          await createauction({
+            account,
+            tokenAddress,
+            tokenId,
+            startAmount: BigInt(startAmount),
+          })
+        }}
+      >
+        Create Listing
+      </button>
+      {isLoading && <p>Loading...</p>}
+      {isSuccess && <div>{data.orderHash}</div>}
     </>
-  );
-};
+  )
+}
 ```
 
 ## Return Type
 
-### createAuction
+```ts
+import { type UseCancelReturnType } from '@ark-project/react'
+```
 
-`(variables: CreateAuctionParameters) => void`
+<Properties>
+  <Property
+    name="createAuction"
+    type="(params: CreateAuctionParams) => CreateAuctionResult"
+  >
+    Mutation to create an auction. See
+    [CreateAuctionParams](/sdk-core/create-auction).
+  </Property>
+  <Property
+    name="cancelAsync"
+    type="(params: CreateAuctionParams) => Promise<CreateAuctionResult>"
+  >
+    Async mutation to create an auction. See
+    [CreateAuctionParams](/sdk-core/create-auction).
+  </Property>
+  <Property name="data" type="CreateAuctionResult">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-- variables
-
-  `CreateAuctionParameters`
-
-  The variables object to pass to the [createAuction](/sdk-core/create-auction#parameters) action.
-
-### status
-
-`'idle' | 'loading' | 'success' | 'error'`
-
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
-
-### response
-
-`BigNumber`
-
-Order hash of the listing creation order.
+<Properties>
+  <Property name="config (optional)" type="Config | undefined">
+    Config to use instead of retrieving from the from nearest ArkProvider.
+  </Property>
+</Properties>
 
 ## Actions
 

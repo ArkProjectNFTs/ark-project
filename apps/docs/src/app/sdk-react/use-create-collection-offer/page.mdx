@@ -3,7 +3,7 @@ export const metadata = {
   description: 'Hook for creating a collection offer.',
 }
 
-# useCreateOffer
+# useCreateCollectionOffer
 
 Hook for creating a collection offer.
 
@@ -15,65 +15,68 @@ import { useCreateCollectionOffer } from '@ark-project/react'
 
 ## Usage
 
-```typescript
-import { useCreateCollectionOffer } from '@ark-project/react';
+```tsx
+import { useCreateCollectionOffer } from '@ark-project/react'
+import { useAccount } from '@starknet-react/core'
 
-function CreateCollectionOfferComponent({ tokenAddress, tokenId, startAmount, brokerId, currencyAddress }) {
-  const { createCollectionOffer, status, response } = useCreateCollectionOffer();
-
-  const handleCreateOffer = async () => {
-    await createCollectionOffer({
-      starknetAccount: /* account info */,
-      offer: {
-        brokerId,
-        tokenAddress: STARKNET_NFT_ADDRESS,
-        startAmount: BigInt(1)
-      },
-      approveInfo: {
-        currencyAddress: '0x...',
-        amount: startAmount,
-      }
-    });
-  };
+function App({ tokenAddress, startAmount, brokerId, currencyAddress }) {
+  const { account } = useAccount()
+  const { createCollectionOffer, data, isLoading, isSuccess } =
+    useCreateCollectionOffer()
 
   return (
-    <div>
-      <button onClick={handleCreateOffer}>Create Offer</button>
-      <div>Status: {status}</div>
-      {response && <div>Response: {response.toString()}</div>}
-    </div>
-  );
-};
+    <>
+      <button
+        onClick={async () => {
+          await createCollectionOffer({
+            account,
+            tokenAddress,
+            amount: BigInt(startAmount),
+          })
+        }}
+      >
+        Create Offer
+      </button>
+      {isLoading && <p>Loading...</p>}
+      {isSuccess && <div>{data.orderHash}</div>}
+    </>
+  )
+}
 ```
 
 ## Return Type
 
-### createListing
+```tsx
+import { type UseCreateCollectionOfferReturnType } from '@ark-project/react'
+```
 
-`(variables: CreateOfferParameters) => void`
+<Properties>
+  <Property
+    name="createCollectionOffer"
+    type="(params: CreateCollectionOfferParams) => CreateCollectionOfferResult"
+  >
+    Mutation to create a collection offer. See
+    [CreateCollectionOfferParams](/sdk-core/create-collection-offer).
+  </Property>
+  <Property
+    name="createCollectionOfferAsync"
+    type="(params: CreateCollectionOfferParams) => Promise<CreateCollectionOfferResult>"
+  >
+    Async mutation to create a collection offer. See
+    [CreateCollectionOfferParams](/sdk-core/create-collection-offer).
+  </Property>
+  <Property name="data" type="CreateCollectionOfferResult">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-- variables
-
-  `CreateOfferParameters`
-
-  The variables object to pass to the [createAuction](/sdk-core/create-collection-offer#parameters) action.
-
-### status
-
-`'idle' | 'loading' | 'success' | 'error'`
-
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
-
-### response
-
-`BigNumber`
-
-Order hash of the created collection offer.
+<Properties>
+  <Property name="config (optional)" type="Config | undefined">
+    Config to use instead of retrieving from the nearest ArkProvider.
+  </Property>
+</Properties>
 
 ## Actions
 

@@ -16,24 +16,25 @@ import { useCreateListing } from '@ark-project/react'
 ## Usage
 
 ```typescript
+import { useAccount } from '@starknet-react/core'
 import { useCreateListing } from '@ark-project/react';
 
-function CreateListing({ tokenAddress, tokenId, startAmount }) {
-  const { createListing, status, response } = useCreateListing();
+function App({ tokenAddress, tokenId, startAmount }) {
+  const { account } = useAccount();
+  const { createListing, data, isLoading, isSuccess } = useCreateListing();
 
-  const handleCreateListing = async () => {
-    await createListing({
-      starknetAccount: /* account info */,
-      tokenAddress: tokenAddress,
-      tokenId: tokenId,
-      startAmount: startAmount,
-      // Additional parameters...
-    });
-  };
-
-  return (
+return (
     <>
-      <button onClick={handleCreateListing}>Create Listing</button>
+      <button onClick={async () => {
+        await createListing({
+          account,
+          tokenAddress,
+          tokenId,
+          amount: BigInt(startAmount),
+        });
+      }}>
+        Create Listing
+      </button>
       <div>Status: {status}</div>
       {response && <div>Response: {response.toString()}</div>}
     </>
@@ -43,32 +44,37 @@ function CreateListing({ tokenAddress, tokenId, startAmount }) {
 
 ## Return Type
 
-### createListing
+```tsx
+import { type useCreateListingReturnType } from '@ark-project/react'
+```
 
-`(variables: CreateListingParameters) => void`
+<Properties>
+  <Property
+    name="createListing"
+    type="(params: CreateListingParams) => CreateListingResult"
+  >
+    Mutation to create a listing. See
+    [CreateListingParams](/sdk-core/create-listing).
+  </Property>
+  <Property
+    name="createListingAsync"
+    type="(params: CreateListingParams) => Promise<CreateListingResult>"
+  >
+    Async mutation to create a listing. See
+    [CreateListingParams](/sdk-core/create-auction).
+  </Property>
+  <Property name="data" type="CreateListingResult">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-- variables
-
-  `CreateListingParameters`
-
-  The variables object to pass to the [createListing](/sdk-core/create-listing#parameters) action.
-
-### status
-
-`'idle' | 'loading' | 'success' | 'error'`
-
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
-
-### response
-
-`BigNumber`
-
-Order hash of the listing creation order.
+<Properties>
+  <Property name="config (optional)" type="Config | undefined">
+    Config to use instead of retrieving from the from nearest ArkProvider.
+  </Property>
+</Properties>
 
 ## Actions
 
