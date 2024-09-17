@@ -12,7 +12,7 @@
     "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo",
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --ext .ts,.tsx . --fix",
-    "test": "vitest",
+    "test": "vitest --no-file-parallelism",
     "typecheck": "tsc --noEmit",
     "dev": "nodemon --watch src --exec \"pnpm run build\""
   },

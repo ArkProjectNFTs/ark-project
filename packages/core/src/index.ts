@@ -6,8 +6,10 @@ export {
 } from "./actions/account/index.js";
 
 export {
+  cancelCollectionOffer,
   cancelOrder,
   createAuction,
+  createCollectionOffer,
   createListing,
   createOffer,
   fulfillAuction,
@@ -17,6 +19,8 @@ export {
   type CancelOrderResult,
   type CreateAuctionParameters,
   type CreateAuctionResult,
+  type CreateCollectionOfferParameters,
+  type CreateCollectionOfferResult,
   type CreateListingParameters,
   type CreateListingResult,
   type CreateOfferParameters,
@@ -54,7 +58,9 @@ export {
 
 export type {
   AuctionV1,
+  CancelCollectionOfferInfo,
   CancelInfo,
+  CollectionOfferV1,
   FulfillAuctionInfo,
   ListingV1,
   OfferV1,
