@@ -15,55 +15,75 @@ import { fulfillOffer } from '@arkproject/core'
 
 ## Usage
 
-```typescript
-import { fulfillOffer } from '@arkproject/core'
-import { config, parameters } from './config'
+<CodeGroup>
 
-await fulfillOffer(config, {
-  starknetAccount: '0x0...',
-  fulfillOfferInfo: {
-    orderHash: '0x...',
-    tokenAddress:
-      '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
-    tokenId: BigInt(1),
-    brokerId: '0x...',
-  },
-  approveInfo: {
-    tokenAddress:
-      '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
-    tokenId: BigInt(1),
-  },
+```ts {{ title: "example.ts" }}
+import { createOffer, fulfillOffer } from '@arkproject/core'
+import { config, buyer, seller, brokerAddress } from './config'
+
+const offer = await createOffer(config, {
+  account: buyer,
+  brokerAddress,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  tokenId: BigInt(1),
+  amount: BigInt(10),
+})
+
+const { transactionHash } = await fulfillOffer(config, {
+  account: seller,
+  brokerAddress,
+  orderHash: offer.orderHash,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  tokenId: BigInt(1),
 })
 ```
 
+```ts {{ title: 'config.ts' }}
+import { createConfig, networks, contracts } from '@arkproject/core'
+
+export const config = createConfig({
+  starknetNetwork: networks.mainnet,
+  starknetExecutorContract: contracts.executor,
+  starknetCurrencyContract: contracts.eth,
+})
+
+export const buyer = new Account(config.starknetProvider, '0x', '0x')
+
+export const seller = new Account(config.starknetProvider, '0x', '0x')
+
+export const brokerAddress = '0x'
+```
+
+</CodeGroup>
+
+## Returns
+
+[`FulfillOfferResult`](https://github.com/ArkProjectNFTs/ark-project/core/src/actions/order/fulfillOffer.ts)
+
+The result of the fulfill offer action, including the transaction hash.
+
 ## Parameters
 
-### starknetAccount
-
-`AccountInterface`
-
-The Starknet account used for the transaction.
-
-### fulfillOfferInfo
-
-`FulfillOfferInfo`
-
-Informations about the offer to fulfill, includes :
-
-- `orderHash: bigint`
-- `tokenAddress: string`
-- `tokenId: bigint`
-- `brokerId: string`
-
-### approveInfo
-
-`ApproveErc721Info`
-
-Informations about the ERC721 token to approve, includes :
-
-- `tokenAddress: string`
-- `tokenId: bigint`
-
-## Function Description
-
-`fulfillOffer` begins by extracting necessary details from the provided parameters, including Starknet and Arkchain accounts, and information about the offer to be fulfilled. It retrieves the chain ID and constructs a `FulfillInfo` object with the relevant data. The function then calls `_fulfillOrder` to execute the transaction, thereby completing the fulfillment process of the offer.
+<Properties>
+  <Property name="account" type="AccountInterface">
+    The account responsible for executing the transaction.
+  </Property>
+  <Property name="brokerAddress" type="string">
+    The address of the broker contract.
+  </Property>
+  <Property name="orderHash" type="bigint">
+    The hash of the offer order.
+  </Property>
+  <Property name="tokenAddress" type="string">
+    The address of the token contract.
+  </Property>
+  <Property name="tokenId" type="bigint">
+    The ID of the token.
+  </Property>
+  <Property name="waitForTransaction (optional)" type="boolean">
+    If `false`, the function will return immediately after sending the
+    transaction. Defaults to `true`.
+  </Property>
+</Properties>

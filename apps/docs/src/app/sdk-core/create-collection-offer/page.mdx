@@ -15,48 +15,70 @@ import { createCollectionOffer } from '@arkproject/core'
 
 ## Usage
 
-```typescript
-import { createCollectionOffer } from '@arkproject/core'
-import { config } from './config'
+<CodeGroup>
 
-await createCollectionOffer(config, {
-  starknetAccount: '0x0...',
-  offer: {
-    brokerId: '0x...',
-    tokenAddress: '0x0...',
-    startAmount: BigInt(1000),
-  },
-  approveInfo: {
-    currencyAddress: '0x...',
-    amount: BigInt(1000),
-  },
+```ts {{ title: "example.ts" }}
+import { createCollectionOffer } from '@arkproject/core'
+import { config, account, brokerAddress } from './config'
+
+const { offerHash } = await createCollectionOffer(config, {
+  account,
+  brokerAddress,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  amount: BigInt(1000),
 })
 ```
 
+```ts {{ title: 'config.ts' }}
+import { createConfig, networks, contracts } from '@arkproject/core'
+
+export const config = createConfig({
+  starknetNetwork: networks.mainnet,
+  starknetExecutorContract: contracts.executor,
+  starknetCurrencyContract: contracts.eth,
+})
+
+export const account = new Account(config.starknetProvider, '0x', '0x')
+
+export const brokerAddress = '0x'
+```
+
+</CodeGroup>
+
+## Returns
+
+[`CreateCollectionOfferResult`](https://github.com/ArkProjectNFTs/ark-project/core/src/actions/order/createCollectionOffer.ts)
+
+The result of the create collection offer action, including the offer hash.
+
 ## Parameters
 
-### starknetAccount
-
-`AccountInterface`
-
-The Starknet account used for the transaction.
-
-### offer
-
-`OfferV1`
-
-The base order details for the offer. `OfferV1` includes:
-
-- `orderHash: bigint`
-- `tokenAddress: string`
-- `tokenId: bigint`
-- `brokerId: string`
-
-### approveInfo
-
-`ApproveErc20Info`
-
-Informations about the ERC20 token to approve, includes :
-
-- `currencyAddress: string` currency address
-- `amount: bigint` amount to approve
+<Properties>
+  <Property name="account" type="AccountInterface">
+    The account responsible for executing the transaction.
+  </Property>
+  <Property name="brokerAddress" type="string">
+    The address of the broker contract.
+  </Property>
+  <Property name="tokenAddress" type="string">
+    The contract address of the token.
+  </Property>
+  <Property name="currencyAddress (optional)" type="string">
+    The currency address for the offer. Defaults to
+    [ETH](https://starkscan.co/token/0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7).
+  </Property>
+  <Property name="amount" type="bigint">
+    The amount of the offer.
+  </Property>
+  <Property name="startDate (optional)" type="number">
+    The start date of the auction.
+  </Property>
+  <Property name="endDate (optional)" type="number">
+    The end date of the auction.
+  </Property>
+  <Property name="waitForTransaction (optional)" type="boolean">
+    If `false`, the function will return immediately after sending the
+    transaction. Defaults to `true`.
+  </Property>
+</Properties>

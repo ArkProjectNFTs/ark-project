@@ -1,10 +1,11 @@
 export const metadata = {
-  title: 'Create Listing',
-  description:
-    'Creates a listing on the Arkchain by building and executing a transaction using specified Starknet and Arkchain accounts.',
+  title: 'createListing',
+  description: 'Action for creating a listing on the Arkchain.',
 }
 
 # createListing
+
+Action for creating a listing on the Arkchain.
 
 ## Import
 
@@ -14,53 +15,70 @@ import { createListing } from '@arkproject/core'
 
 ## Usage
 
-```typescript
-import { createListing } from '@arkproject/core'
-import { config, parameters } from './config'
+<CodeGroup>
 
-await createListing(config, {
-  starknetAccount: '0x0...',
-  order: {
-    brokerId: '0x...',
-    tokenAddress: '0x0...',
-    tokenId: BigInt(1),
-    startAmount: BigInt(1000),
-  },
-  approveInfo: {
-    tokenAddress: '0x0...',
-    tokenId: BigInt(1),
-  },
+```ts {{ title: "example.ts" }}
+import { createListing } from '@arkproject/core'
+import { config, account, brokerAddress } from './config'
+
+const { orderHash } = await createListing(config, {
+  account,
+  brokerAddress,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  tokenId: BigInt(1),
+  amount: BigInt(1000),
 })
 ```
 
+```ts {{ title: 'config.ts' }}
+import { createConfig, networks, contracts } from '@arkproject/core'
+
+export const config = createConfig({
+  starknetNetwork: networks.mainnet,
+  starknetExecutorContract: contracts.executor,
+  starknetCurrencyContract: contracts.eth,
+})
+
+export const account = new Account(config.starknetProvider, '0x', '0x')
+
+export const brokerAddress = '0x'
+```
+
+</CodeGroup>
+
+## Returns
+
+[`CreateListingResult`](https://github.com/ArkProjectNFTs/ark-project/core/src/actions/order/createListing.ts)
+
+The result of the create listing action.
+
 ## Parameters
 
-### starknetAccount
-
-`AccountInterface`
-
-The Starknet account used for the transaction.
-
-### order
-
-`ListingV1`
-
-The base order details for the listing, includes:
-
-- `orderHash: bigint`
-- `tokenAddress: string`
-- `tokenId: bigint`
-- `brokerId: string`
-
-### approveInfo
-
-`ApproveErc721Info`
-
-Informations about the ERC721 token to approve, includes :
-
-- `tokenAddress: string`
-- `tokenId: bigint`
-
-## Function Description
-
-`createListing` starts by extracting details from the provided parameters, including Starknet account, Arkchain account, base order, and an optional owner. It then sets default values for unspecified fields in the order, retrieves the chain ID, and constructs a complete `OrderV1` object. The function then calls internal function `createOrder` to compile, sign, and execute the transaction. Finally, it returns the hash of the created order, encapsulated in a promise.
+<Properties>
+  <Property name="account" type="AccountInterface">
+    The account responsible for executing the transaction.
+  </Property>
+  <Property name="brokerAddress" type="string">
+    The address of the broker contract.
+  </Property>
+  <Property name="currnecyAddress (optional)" type="string">
+    The currency address to be used for the offer. Defaults to ETH.
+  </Property>
+  <Property name="tokenAddress" type="string">
+    The address of the token contract.
+  </Property>
+  <Property name="tokenId" type="BigInt">
+    The ID of the token.
+  </Property>
+  <Property name="startDate (optional)" type="number">
+    The start date of the offer. Defaults to the current date.
+  </Property>
+  <Property name="endDate (optional)" type="number">
+    The end date of the offer. Defaults to 1 week from the start date.
+  </Property>
+  <Property name="waitForTransaction (optional)" type="boolean">
+    If `false`, the function will return immediately after sending the
+    transaction. Defaults to `true`.
+  </Property>
+</Properties>

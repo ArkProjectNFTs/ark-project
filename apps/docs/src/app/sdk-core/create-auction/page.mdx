@@ -15,51 +15,72 @@ import { createAuction } from '@arkproject/core'
 
 ## Usage
 
-```typescript
-import { createAuction } from '@arkproject/core'
-import { config, parameters } from './config'
+<CodeGroup>
 
-await createAuction(config, {
-  starknetAccount: '0x0...',
-  order: {
-    brokerId: '0x...',
-    tokenAddress: '0x0...',
-    tokenId: BigInt(1),
-    startAmount: BigInt(1000),
-    endAmount: BigInt(10000),
-  },
-  approveInfo: {
-    tokenAddress: '0x0...',
-    tokenId: BigInt(1),
-  },
+```ts {{ title: "example.ts" }}
+import { createAuction } from '@arkproject/core'
+import { config, account, brokerAddress } from './config'
+
+const { orderHash } = await createAuction(config, {
+  account,
+  brokerAddress,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  tokenId: BigInt(1),
+  startAmount: BigInt(1000),
+  endAmount: BigInt(10000),
 })
 ```
 
+```ts {{ title: 'config.ts' }}
+import { createConfig, networks, contracts } from '@arkproject/core'
+
+export const config = createConfig({
+  starknetNetwork: networks.mainnet,
+  starknetExecutorContract: contracts.executor,
+  starknetCurrencyContract: contracts.eth,
+})
+
+export const brokerAddress = '0x'
+```
+
+</CodeGroup>
+
+## Returns
+
+[`CreateAuctionResult`](https://github.com/ArkProjectNFTs/ark-project/core/src/actions/order/createAuction.ts)
+
+The result of the create auction action.
+
 ## Parameters
 
-### starknetAccount
-
-`AccountInterface`
-
-The Starknet account used for the transaction.
-
-### order
-
-`AuctionV1`
-
-The base order details for the listing, includes:
-
-- `tokenAddress: string`
-- `tokenId: bigint`
-- `brokerId: string`
-- `startAmount: bigint`
-- `endAmount: bigint`
-
-### approveInfo
-
-`ApproveErc721Info`
-
-Informations about the ERC721 token to approve, includes :
-
-- `tokenAddress: string`
-- `tokenId: bigint`
+<Properties>
+  <Property name="account" type="AccountInterface">
+    The account responsible for executing the transaction.
+  </Property>
+  <Property name="brokerAddress" type="string">
+    The address of the broker.
+  </Property>
+  <Property name="tokenAddress" type="string">
+    The contract address of the token.
+  </Property>
+  <Property name="tokenId" type="bigint">
+    The ID of the token.
+  </Property>
+  <Property name="startAmount" type="bigint">
+    The starting amount of the auction.
+  </Property>
+  <Property name="endAmount (optional)" type="bigint">
+    The end amount (reserve price) of the auction.
+  </Property>
+  <Property name="startDate (optional)" type="number">
+    The start date of the auction.
+  </Property>
+  <Property name="endDate (optional)" type="number">
+    The end date of the auction.
+  </Property>
+  <Property name="waitForTransaction (optional)" type="boolean">
+    If `false`, the function will return immediately after sending the
+    transaction. Defaults to `true`.
+  </Property>
+</Properties>
