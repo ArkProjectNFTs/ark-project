@@ -15,38 +15,69 @@ import { cancelOrder } from '@arkproject/core'
 
 ## Usage
 
-```typescript
-import { cancelOrder } from '@arkproject/core'
-import { config, parameters } from './config'
+<CodeGroup>
 
-await cancelOrder(config, {
-  starknetAccount: sellerAccount,
-  cancelInfo: {
-    orderHash: '0x...',
-    tokenAddress: '0x...',
-    tokenId: BigInt(1),
-  },
+```ts {{ title: "example.ts" }}
+import { cancel } from '@arkproject/core'
+import { config, buyer, brokerAddress } from './config'
+
+const { orderHash } = await createOffer(config, {
+  account: buyer,
+  brokerAddress,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  tokenId: BigInt(1),
+  amount: BigInt(10),
+})
+
+const { transactionHash } = await cancelOrder(config, {
+  account: buyer,
+  orderHash,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  tokenId: BigInt(1),
 })
 ```
 
+```ts {{ title: 'config.ts' }}
+import { createConfig, networks, contracts } from '@arkproject/core'
+
+export const config = createConfig({
+  starknetNetwork: networks.mainnet,
+  starknetExecutorContract: contracts.executor,
+  starknetCurrencyContract: contracts.eth,
+})
+
+const buyer = new Account(config.starknetProvider, '0x', '0x')
+
+export const brokerAddress = '0x'
+```
+
+</CodeGroup>
+
+## Returns
+
+[`CancelOrderResult`](https://github.com/ArkProjectNFTs/ark-project/core/src/actions/order/cancel.ts)
+
+The result of the cancel order action.
+
 ## Parameters
 
-### starknetAccount
-
-`AccountInterface`
-
-The Starknet account used for the transaction.
-
-### cancelInfo
-
-`CancelInfo`
-
-Informations about the order to cancel, includes :
-
-- `orderHash: bigint`
-- `tokenAddress: string`
-- `tokenId: bigint`
-
-## Function Description
-
-`cancelOrder` begins by extracting details from the provided parameters, including Starknet and Arkchain accounts, and cancellation information. It then compiles the cancellation details into a `FullCancelInfo` object, compiles and signs the order data, and constructs the calldata for the cancellation. The function executes the transaction and waits for its completion. An error is thrown if the contract ABI is not found or the transaction fails.
+<Properties>
+  <Property name="account" type="AccountInterface">
+    The account responsible for executing the transaction.
+  </Property>
+  <Property name="orderHash" type="bigint">
+    The `orderHash` of the order.
+  </Property>
+  <Property name="tokenAddress" type="string">
+    The contract address of the token.
+  </Property>
+  <Property name="tokenId" type="bigint">
+    The ID of the token.
+  </Property>
+  <Property name="waitForTransaction (optional)" type="boolean">
+    If `false`, the function will return immediately after sending the
+    transaction. Defaults to `true`.
+  </Property>
+</Properties>

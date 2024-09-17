@@ -15,64 +15,77 @@ import { useCreateOffer } from '@ark-project/react'
 
 ## Usage
 
-```typescript
-import { useCreateOffer } from '@ark-project/react';
+```tsx
+import { useCreateOffer } from '@ark-project/react'
+import { useAccount } from '@starknet-react/core'
 
-const CreateOfferComponent = ({ tokenAddress, tokenId, startAmount, brokerId, currencyAddress, currencyChainId, startDate, endDate }) => {
-  const { createOffer, status, response } = useCreateOffer();
-
-  const handleCreateOffer = async () => {
-    await createOffer({
-      starknetAccount: /* account info */,
-      startAmount: startAmount,
-      tokenAddress: tokenAddress,
-      tokenId: tokenId,
-      brokerId: brokerId,
-      currencyAddress: currencyAddress,
-      currencyChainId: currencyChainId,
-      startDate: startDate,
-      endDate: endDate
-    });
-  };
+function App({
+  tokenAddress,
+  tokenId,
+  amount,
+  brokerId,
+  currencyAddress,
+  currencyChainId,
+  startDate,
+  endDate,
+}) {
+  const { account } = useAccount()
+  const { createOffer, data, isLoading, isSuccess } = useCreateOffer()
 
   return (
-    <div>
-      <button onClick={handleCreateOffer}>Create Offer</button>
-      <div>Status: {status}</div>
-      {response && <div>Response: {response.toString()}</div>}
-    </div>
-  );
-};
+    <>
+      <button
+        onClick={async () => {
+          await createOffer({
+            account,
+            tokenAddress,
+            tokenId,
+            amount: BigInt(amount),
+          })
+        }}
+      >
+        Create Offer
+      </button>
+      {isLoading && <p>Loading...</p>}
+      {isSuccess && <div>{data.orderHash}</div>}
+    </>
+  )
+}
 ```
 
 ## Return Type
 
-### createListing
+```ts
+import { type useCreateOfferReturnType } from '@ark-project/react'
+```
 
-`(variables: CreateOfferParameters) => void`
+<Properties>
+  <Property
+    name="createOffer"
+    type="(params: CreateOfferParams) => CreateOfferResult"
+  >
+    Mutation to create an offer. See
+    [CreateOfferParams](/sdk-core/create-offer).
+  </Property>
+  <Property
+    name="createOfferAsync"
+    type="(params: CreateOfferParams) => Promise<CreateOfferResult>"
+  >
+    Async mutation to create an offer. See
+    [CreateOfferParams](/sdk-core/create-offer).
+  </Property>
+  <Property name="data" type="CreateOfferResult">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-- variables
-
-  `CreateOfferParameters`
-
-  The variables object to pass to the [createAuction](/sdk-core/create-offer#parameters) action.
-
-### status
-
-`'idle' | 'loading' | 'success' | 'error'`
-
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
-
-### response
-
-`BigNumber`
-
-Order hash of the created offer.
+<Properties>
+  <Property name="config (optional)" type="Config | undefined">
+    Config to use instead of retrieving from the nearest ArkProvider.
+  </Property>
+</Properties>
 
 ## Actions
 

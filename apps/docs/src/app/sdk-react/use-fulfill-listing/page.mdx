@@ -15,68 +15,80 @@ import { useFulfillListing } from '@ark-project/react'
 
 ## Usage
 
-```typescript
-import React from 'react'
+```tsx
+import { useAccount } from '@starknet-react/core'
 import { useFulfillListing } from '@ark-project/react'
 
-const FulfillListingComponent = ({
-  starknetAccount,
+function FulfillListing({
   orderHash,
   tokenAddress,
   tokenId,
   brokerId,
   startAmount,
   currencyAddress,
-}) => {
+}) {
+  const { account } = useAccount()
   const { fulfillListing, status } = useFulfillListing()
 
-  const handleFulfillListing = async () => {
-    await fulfillListing({
-      starknetAccount: starknetAccount,
-      orderHash: orderHash,
-      tokenAddress: tokenAddress,
-      tokenId: tokenId,
-      brokerId: brokerId,
-      startAmount: startAmount,
-      currencyAddress: currencyAddress,
-      // Additional parameters...
-    })
-  }
-
   return (
-    <div>
-      <button onClick={handleFulfillListing}>Fulfill Listing</button>
+    <>
+      <button
+        onClick={async () => {
+          await fulfillListing({
+            starknetAccount: account,
+            orderHash,
+            tokenAddress,
+            tokenId,
+            brokerId,
+            amount: BigInt(startAmount),
+            currencyAddress,
+          })
+        }}
+      >
+        Fulfill Listing
+      </button>
       <div>Status: {status}</div>
-    </div>
+    </>
   )
 }
 ```
 
 ## Return Type
 
-### fulfillListing
+```ts
+import { type useFulfillListingReturnType } from '@ark-project/react'
+```
 
-`(variables: FulfillListingParameters) => void`
+<Properties>
+  <Property
+    name="fulfillListing"
+    type="(params: FulfillListingParams) => FulfillListingResult"
+  >
+    Mutation to fulfill a listing. See
+    [FulfillListingParams](/sdk-core/fulfill-listing).
+  </Property>
+  <Property
+    name="fulfillListingAsync"
+    type="(params: FulfillListingParams) => Promise<FulfillListingResult>"
+  >
+    Async mutation to fulfill a listing. See
+    [FulfillListingParams](/sdk-core/fulfill-listing).
+  </Property>
+  <Property name="data" type="FulfillListingResult">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-- variables
-
-  `CreateOfferParameters`
-
-  The variables object to pass to the [fulfillListing](/sdk-core/fulfill-listing#parameters) action.
-
-### status
-
-`'idle' | 'loading' | 'success' | 'error'`
-
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
+<Properties>
+  <Property name="config (optional)" type="Config | undefined">
+    Config to use instead of retrieving from the nearest ArkProvider.
+  </Property>
+</Properties>
 
 ## Actions
 
 - [fulfillListing](/sdk-core/fulfill-listing)
 
-[CreateOfferParameters](/sdk-core/fulfill-listing#parameters) and [CreateOfferResponse](/sdk-core/fulfill-listing#response) for more details.
+[FulfillListingParameters](/sdk-core/fulfill-listing#parameters) and [FulfillListingResponse](/sdk-core/fulfill-listing#response) for more details.

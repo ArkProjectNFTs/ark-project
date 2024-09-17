@@ -40,10 +40,10 @@ Create and export a new ArkProject config using [createConfig](/sdk-core/configu
 ```typescript
 import { createConfig, networks } from '@arkproject/core'
 
-// Create the Ark SDK configuration
 export const config = createConfig({
-  starknetNetwork: networks.mainnet,
-  arkchainNetwork: Network.mainnet,
+  starknetNetwork: 'dev',
+  starknetExecutorContract: contracts.executor,
+  starknetCurrencyContract: contracts.eth,
 })
 ```
 
@@ -53,7 +53,14 @@ Now that everything is set up, you can pass the `config` to use actions.
 
 ```typescript
 import { createOffer } from '@arkproject/core'
-import { config } from './config'
+import { config, account, brokerAddress } from './config'
 
-const orderHash = await createOffer(config, parameters)
+const { orderHash } = await createOffer(config, {
+  account,
+  brokerAddress,
+  tokenAddress:
+    '0x02acee8c430f62333cf0e0e7a94b2347b5513b4c25f699461dd8d7b23c072478',
+  tokenId: BigInt(1),
+  amount: BigInt(1000),
+})
 ```

@@ -15,30 +15,30 @@ import useCancel from '@ark-project/react'
 
 ## Usage
 
-```typescript
+```tsx
 import { useAccount } from '@starknet-react/core'
 import { useCancel } from '@ark-project/react'
 
-function CancelListing({ orderHash, tokenAddress, tokenId }) {
-  const { cancel, status } = useCancel()
+function App({ orderHash, tokenAddress, tokenId }) {
   const { account } = useAccount()
+  const { cancel, data, isLoading, isSuccess } = useCancel()
 
   return (
     <>
       <button
-        onClick={() =>
-          cancel({
-            starknetAccount: account,
-            orderHash: orderHash,
-            tokenAddress: tokenAddress,
-            tokenId: tokenId,
+        onClick={async () => {
+          await cancel({
+            account,
+            orderHash,
+            tokenAddress,
+            tokenId,
           })
-        }
+        }}
       >
         Cancel listing
       </button>
-      {status === 'loading' && <p>Cancelling...</p>}
-      {status === 'success' && <p>Cancelled</p>}
+      {isLoading && <p>Loading...</p>}
+      {isSuccess && <p>{data.transactionHash}</p>}
     </>
   )
 }
@@ -46,20 +46,37 @@ function CancelListing({ orderHash, tokenAddress, tokenId }) {
 
 ## Return Type
 
-### cancel
+```ts
+import { type UseCancelReturnType } from '@ark-project/react'
+```
 
-`(variables: CancelParameters) => void`
+<Properties>
+  <Property name="cancel" type="(params: CancelParams) => CancelResult">
+    Mutation to cancel the order. See [CancelParams](/sdk-core/cancel-order).
+  </Property>
+  <Property
+    name="cancelAsync"
+    type="(params: CancelParams) => Promise<CancelResult>"
+  >
+    Async mutation to cancel the order. See
+    [CancelParams](/sdk-core/cancel-order).
+  </Property>
+  <Property name="data" type="Object">
+    The data returned from the mutation.
+  </Property>
+</Properties>
 
-The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+## Parameters
 
-### status
+```typescript
+import { type CancelParams } from '@ark-project/core'
+```
 
-`'idle' | 'loading' | 'success' | 'error'`
+### config (optional)
 
-- `idle` if the mutation has not been executed yet.
-- `loading` if the mutation is currently executing.
-- `error` if the last mutation attempt resulted in an error.
-- `success` if the last mutation attempt was successful.
+`Config | undefined`
+
+Config to use instead of retrieving from the from nearest ArkProvider.
 
 ## Actions
 

@@ -15,18 +15,12 @@ import { useConfig } from '@ark-project/react'
 
 ## Usage
 
-```typescript
+```tsx
 import React from 'react'
 import { useConfig } from '@ark-project/react'
 
 function App = () => {
   const config = useConfig()
-
-  return (
-    <div>
-      {config && <pre>{JSON.stringify(config, null, 2)}</pre>}
-    </div>
-  )
 }
 ```
 
@@ -34,4 +28,4 @@ function App = () => {
 
 `Config | undefined`
 
-[Config](/sdk-core/configuration) or `undefined` if no provider found.
+Config to use instead of retrieving from the from nearest ArkProvider.

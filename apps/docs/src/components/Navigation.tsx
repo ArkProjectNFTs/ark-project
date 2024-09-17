@@ -1,10 +1,10 @@
 'use client'
 
-import { useRef } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 import { AnimatePresence, motion, useIsPresent } from 'framer-motion'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useRef } from 'react'
 
 import { Button } from '@/components/Button'
 import { useIsInsideMobileNavigation } from '@/components/MobileNavigation'
@@ -304,10 +304,6 @@ export const navigation: Array<NavGroup> = [
       { title: 'Getting started', href: '/sdk-core/getting-started' },
       { title: 'Configuration', href: '/sdk-core/configuration' },
       {
-        title: 'cancelCollectionOffer',
-        href: '/sdk-core/cancel-collection-offer',
-      },
-      {
         title: 'cancelOrder',
         href: '/sdk-core/cancel-order',
       },
@@ -374,10 +370,6 @@ export const navigation: Array<NavGroup> = [
     links: [
       { title: 'Getting started', href: '/sdk-react/getting-started' },
       { title: 'useCancel', href: '/sdk-react/use-cancel' },
-      {
-        title: 'useCancelCollectionOffer',
-        href: '/sdk-react/use-cancel-collection-offer',
-      },
       { title: 'useConfig', href: '/sdk-react/use-config' },
       { title: 'useCreateAuction', href: '/sdk-react/use-create-auction' },
       { title: 'useCreateListing', href: '/sdk-react/use-create-listing' },
@@ -387,31 +379,10 @@ export const navigation: Array<NavGroup> = [
       },
       { title: 'useCreateOffer', href: '/sdk-react/use-create-offer' },
       { title: 'useFulfillAuction', href: '/sdk-react/use-fulfill-auction' },
-      {
-        title: 'useFulfillCollectionOffer',
-        href: '/sdk-react/use-fulfill-collection-offer',
-      },
       { title: 'useFulfillListing', href: '/sdk-react/use-fulfill-listing' },
       { title: 'useFulfillOffer', href: '/sdk-react/use-fulfill-offer' },
     ],
   },
-
-  // {
-  //   title: 'Trading API',
-  //   links: [
-  //     { title: 'Introduction', href: '/tradingapi' },
-  //   ],
-  // },
-  // {
-  //   title: 'NFT Indexer',
-  //   links: [{ title: 'Introduction', href: '/nftindexer' }],
-  // },
-  // {
-  //   title: 'NFT Bridge',
-  //   links: [
-  //     { title: 'Introduction', href: '/nftbridge' },
-  //   ],
-  // },
 ]
 
 export function Navigation(props: React.ComponentPropsWithoutRef<'nav'>) {
