@@ -1,0 +1,76 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "ignore": [
+      "CHANGELOG.md",
+      "pnpm-lock.yaml",
+      "tsconfig.json",
+      ".scripts",
+      "contracts.json",
+      "contracts.dev.json",
+      ".vscode"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "linter": {
+    "ignore": [],
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "a11y": {
+        "useButtonType": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "error"
+      },
+      "performance": {
+        "noBarrelFile": "error",
+        "noReExportAll": "error",
+        "noDelete": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "useShorthandArrayType": "error"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noConfusingVoidType": "off",
+        "noConsoleLog": "error",
+        "noExplicitAny": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "trailingCommas": "none",
+      "semicolons": "always"
+    }
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "overrides": [
+    {
+      "include": ["./scripts/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsoleLog": "off"
+          }
+        }
+      }
+    }
+  ],
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  }
+}

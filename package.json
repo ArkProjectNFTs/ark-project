@@ -17,9 +17,9 @@
     "changeset:publish": "pnpm changeset:prepublish && changeset publish",
     "changeset:version": "changeset version && pnpm version:update",
     "dev": "dotenv -- turbo run dev --parallel",
-    "lint": "dotenv -- turbo run lint",
-    "lint:fix": "dotenv -- turbo run lint:fix",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "lint": "dotenv -- biome check",
+    "lint:fix": "dotenv -- biome check --write",
+    "format": "dotenv -- biome format --write",
     "accounts:new": "dotenv -- turbo run accounts:new",
     "accounts:deploy": "dotenv -- turbo run accounts:deploy",
     "deploy:starknet": "dotenv -- turbo run deploy:starknet",
@@ -28,16 +28,13 @@
     "version:update": "bun .scripts/updateVersion.ts"
   },
   "dependencies": {
-    "@ark-project/eslint-config": "workspace:*",
     "@ark-project/typescript-config": "workspace:*",
-    "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
+    "@biomejs/biome": "^1.8.3",
     "@changesets/cli": "^2.27.1",
     "bun": "^1.0.26",
     "bun-types": "^1.0.26",
     "dotenv-cli": "^7.3.0",
     "glob": "^10.3.10",
-    "prettier": "^3.1.0",
-    "prettier-plugin-sort-imports": "^1.8.1",
     "turbo": "^1.13.3"
   },
   "peerDependencies": {
