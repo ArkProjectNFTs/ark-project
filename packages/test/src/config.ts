@@ -1,9 +1,10 @@
-import { createConfig } from "@ark-project/core";
-
 import contracts from "../../../contracts.dev.json";
+import { createConfig } from "../../core/src/createConfig.js";
 
-export default createConfig({
+const config = createConfig({
   starknetNetwork: "dev",
   starknetExecutorContract: contracts.executor,
   starknetCurrencyContract: contracts.eth
 });
+
+export { config };

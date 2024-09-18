@@ -1,12 +1,11 @@
 {
-  "extends": "@ark-project/typescript-config/react-library.json",
-  "include": ["."],
-  "exclude": ["dist", "build", "node_modules"],
+  "extends": "@ark-project/typescript-config/base.json",
+  "include": ["src/**/*.ts"],
+  "exclude": [],
   "compilerOptions": {
     "jsx": "react",
-    "declarationDir": "types",
-    "sourceMap": true,
-    "outDir": "dist",
-    "allowSyntheticDefaultImports": true
+    "lib": ["dom", "esnext"],
+    "module": "esnext",
+    "esModuleInterop": true
   }
 }
