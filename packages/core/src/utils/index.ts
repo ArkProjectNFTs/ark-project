@@ -11,5 +11,5 @@ export const getOrderHashFromOrderV1 = (order: OrderV1) => {
 };
 
 export function validateFeesRatio(numerator: number, denominator: number) {
-  return numerator >= 0 && denominator > 0 && numerator < denominator
+  return numerator >= 0 && denominator > 0 && numerator < denominator;
 }

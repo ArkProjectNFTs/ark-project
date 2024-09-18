@@ -8,7 +8,10 @@
       ".scripts",
       "contracts.json",
       "contracts.dev.json",
-      ".vscode"
+      "contracts.ts",
+      ".vscode",
+      "version.ts",
+      "tsconfig.build.json"
     ]
   },
   "formatter": {
