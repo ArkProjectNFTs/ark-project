@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderHook, waitFor } from "@ark-project/test/src/react";
-
+import { renderHook, waitFor } from "../../test/react";
 import { useDefaultCreatorFees } from "./useDefaultCreatorFees";
 
 describe("useDefaultCreatorFees", () => {

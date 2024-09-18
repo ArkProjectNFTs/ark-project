@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import { createListing } from "@ark-project/core";
 import { accounts, defaultConnector, mintERC721 } from "@ark-project/test";
-import config from "@ark-project/test/src/config";
-import { act, renderHook, waitFor } from "@ark-project/test/src/react";
+import { config } from "@ark-project/test/src/config";
 
+import { act, renderHook, waitFor } from "../../test/react";
 import { useCreateListing } from "./useCreateListing";
 import { useFulfillListing } from "./useFulfillListing";
 
