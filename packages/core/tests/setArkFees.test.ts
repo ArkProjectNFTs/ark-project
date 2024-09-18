@@ -1,5 +1,9 @@
+import { Account } from "starknet";
+import { describe, expect, it } from "vitest";
+
+import { accounts, config, mintERC721 } from "@ark-project/test";
+
 import { getFeesAmount, setArkFees } from "../src/index.js";
-import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("setArkFees", () => {
   it("default", async () => {
@@ -10,7 +14,7 @@ describe("setArkFees", () => {
     const denominator = 100;
 
     await setArkFees(config, {
-      account: admin,
+      account: admin as Account,
       numerator,
       denominator
     });
@@ -33,7 +37,7 @@ describe("setArkFees", () => {
 
     await expect(
       setArkFees(config, {
-        account: admin,
+        account: admin as Account,
         numerator,
         denominator
       })

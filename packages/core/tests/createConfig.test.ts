@@ -1,3 +1,5 @@
+import { describe, expect } from "vitest";
+
 import { createConfig, networks } from "../src/index.js";
 
 describe("createconfig", () => {

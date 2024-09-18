@@ -1,13 +1,14 @@
+import { describe, expect, it } from "vitest";
+
+import { accounts, config, mintERC20 } from "@ark-project/test";
+
 import {
   createCollectionOffer,
   getOrderStatus,
   getOrderType
 } from "../src/index.js";
 import {
-  accounts,
-  config,
   getTypeFromCairoCustomEnum,
-  mintERC20,
   STARKNET_NFT_ADDRESS
 } from "./utils/index.js";
 
@@ -17,16 +18,10 @@ describe("createCollectionOffer", () => {
     await mintERC20({ account: buyer, amount: 10000000 });
 
     const { orderHash } = await createCollectionOffer(config, {
-      starknetAccount: buyer,
-      offer: {
-        brokerId: listingBroker.address,
-        tokenAddress: STARKNET_NFT_ADDRESS,
-        startAmount: BigInt(10)
-      },
-      approveInfo: {
-        currencyAddress: config.starknetCurrencyContract,
-        amount: BigInt(10)
-      }
+      account: buyer,
+      brokerAddress: listingBroker.address,
+      tokenAddress: STARKNET_NFT_ADDRESS,
+      amount: BigInt(10)
     });
     const orderTypeCairo = await getOrderType(config, { orderHash });
     const orderType = getTypeFromCairoCustomEnum(orderTypeCairo.orderType);
@@ -44,17 +39,11 @@ describe("createCollectionOffer", () => {
 
     await expect(
       createCollectionOffer(config, {
-        starknetAccount: buyer,
-        offer: {
-          brokerId: listingBroker.address,
-          tokenAddress: STARKNET_NFT_ADDRESS,
-          startAmount: BigInt(10),
-          startDate: Math.floor(Date.now() / 1000) - 1000
-        },
-        approveInfo: {
-          currencyAddress: config.starknetCurrencyContract,
-          amount: BigInt(10)
-        }
+        account: buyer,
+        brokerAddress: listingBroker.address,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        amount: BigInt(10),
+        startDate: Math.floor(Date.now() / 1000) - 1000
       })
     ).rejects.toThrow();
   }, 50_000);
@@ -65,18 +54,12 @@ describe("createCollectionOffer", () => {
 
     await expect(
       createCollectionOffer(config, {
-        starknetAccount: buyer,
-        offer: {
-          brokerId: listingBroker.address,
-          tokenAddress: STARKNET_NFT_ADDRESS,
-          startAmount: BigInt(10),
-          startDate: Math.floor(Date.now() / 1000) + 1000,
-          endDate: Math.floor(Date.now() / 1000) + 500
-        },
-        approveInfo: {
-          currencyAddress: config.starknetCurrencyContract,
-          amount: BigInt(10)
-        }
+        account: buyer,
+        brokerAddress: listingBroker.address,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        amount: BigInt(10),
+        startDate: Math.floor(Date.now() / 1000) + 1000,
+        endDate: Math.floor(Date.now() / 1000) + 500
       })
     ).rejects.toThrow();
   }, 50_000);
@@ -87,17 +70,11 @@ describe("createCollectionOffer", () => {
 
     await expect(
       createCollectionOffer(config, {
-        starknetAccount: buyer,
-        offer: {
-          brokerId: listingBroker.address,
-          tokenAddress: STARKNET_NFT_ADDRESS,
-          startAmount: BigInt(10),
-          endDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 + 1
-        },
-        approveInfo: {
-          currencyAddress: config.starknetCurrencyContract,
-          amount: BigInt(10)
-        }
+        account: buyer,
+        brokerAddress: listingBroker.address,
+        tokenAddress: STARKNET_NFT_ADDRESS,
+        amount: BigInt(10),
+        endDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 + 1
       })
     ).rejects.toThrow();
   }, 50_000);

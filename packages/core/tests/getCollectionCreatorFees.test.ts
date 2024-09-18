@@ -1,5 +1,8 @@
+import { describe, expect, it } from "vitest";
+
+import { accounts, config, mintERC721 } from "@ark-project/test";
+
 import { getCollectionCreatorFees } from "../src/index.js";
-import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("getCollectionCreatorFees", () => {
   it("default", async () => {

@@ -1,9 +1,12 @@
+import { describe, expect, it } from "vitest";
+
+import { accounts, config, mintERC721 } from "@ark-project/test";
+
 import {
   cancelCollectionOffer,
   createCollectionOffer,
   getOrderStatus
 } from "../src/index.js";
-import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("cancelCollectionOffer", () => {
   it("default", async () => {
@@ -11,16 +14,10 @@ describe("cancelCollectionOffer", () => {
     const { tokenAddress } = await mintERC721({ account: buyer });
 
     const { orderHash } = await createCollectionOffer(config, {
-      starknetAccount: buyer,
-      offer: {
-        brokerId: listingBroker.address,
-        tokenAddress,
-        startAmount: BigInt(10)
-      },
-      approveInfo: {
-        currencyAddress: config.starknetCurrencyContract,
-        amount: BigInt(10)
-      }
+      account: buyer,
+      brokerAddress: listingBroker.address,
+      tokenAddress,
+      amount: BigInt(10)
     });
 
     await cancelCollectionOffer(config, {

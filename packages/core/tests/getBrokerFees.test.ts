@@ -1,5 +1,8 @@
+import { describe, expect, it } from "vitest";
+
+import { accounts, config } from "@ark-project/test";
+
 import { getBrokerFees } from "../src/index.js";
-import { accounts, config } from "./utils/index.js";
 
 describe("getBrokerFees", () => {
   it("default", async () => {
