@@ -1,6 +1,6 @@
-import { Config } from "@ark-project/core";
+import type { Config } from "@ark-project/core";
 
-import { Accounts } from "../types/accounts.js";
+import type { Accounts } from "../types/accounts.js";
 import { getCurrentTokenId } from "./getCurrentTokenId.js";
 import { logger } from "./logger.js";
 import { mintERC20 } from "./mintERC20.js";
@@ -14,7 +14,6 @@ export async function mintTokens(
 ): Promise<{ tokenId: bigint; orderAmount: bigint }> {
   logger.info("Minting tokens...");
 
-  let tokenId: bigint;
   const orderAmount = BigInt(10000000000000000);
 
   if (isOffer) {
@@ -45,7 +44,7 @@ export async function mintTokens(
     }
   }
 
-  tokenId = await getCurrentTokenId(config, nftContract);
+  const tokenId = await getCurrentTokenId(config, nftContract);
   logger.info("Token minted with tokenId:", tokenId);
 
   logger.info("Token minting complete.");

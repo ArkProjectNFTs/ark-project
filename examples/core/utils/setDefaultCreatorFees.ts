@@ -1,7 +1,7 @@
 import { cairo } from "starknet";
 import * as sn from "starknet";
 
-import { Config } from "@ark-project/core";
+import type { Config } from "@ark-project/core";
 
 export const setDefaultCreatorFees = async (
   config: Config,

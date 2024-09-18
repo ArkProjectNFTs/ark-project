@@ -1,6 +1,6 @@
-import { Account, RpcProvider } from "starknet";
+import { Account, type RpcProvider } from "starknet";
 
-import { ProviderNetwork } from "../types";
+import type { ProviderNetwork } from "../types";
 
 export const getNetworkVarName = (
   network: ProviderNetwork,

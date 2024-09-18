@@ -1,13 +1,13 @@
 "use client";
 
-import React, { createContext, PropsWithChildren, useMemo } from "react";
+import React, { createContext, type PropsWithChildren, useMemo } from "react";
 
 import { useNetwork, useProvider } from "@starknet-react/core";
 
 import {
-  Config,
+  type Config,
   createConfig,
-  CreateConfigParameters
+  type CreateConfigParameters
 } from "@ark-project/core";
 
 const ArkContext = createContext<Config | undefined>(undefined);

@@ -2,7 +2,10 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { fulfillAuction, FulfillAuctionParameters } from "@ark-project/core";
+import {
+  fulfillAuction,
+  type FulfillAuctionParameters
+} from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 

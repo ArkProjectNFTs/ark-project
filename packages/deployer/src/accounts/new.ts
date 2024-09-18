@@ -13,7 +13,7 @@ export async function createNewAccounts(
   const accountsFilePath = join(__dirname, `../../accounts/${network}.json`);
   try {
     await fs.access(join(__dirname, "../../accounts"));
-  } catch (error) {
+  } catch (_error) {
     await fs.mkdir(join(__dirname, "../../accounts"));
   }
 
@@ -68,7 +68,7 @@ program
 program.parse(process.argv);
 
 const options = program.opts();
-const numberOfAccounts = parseInt(options.accounts || 1, 10);
+const numberOfAccounts = Number.parseInt(options.accounts || 1, 10);
 const network = options.network;
 
 createNewAccounts(numberOfAccounts, network).catch(console.error);

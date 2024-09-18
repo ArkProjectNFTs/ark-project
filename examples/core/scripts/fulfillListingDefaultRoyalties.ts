@@ -1,15 +1,15 @@
 import "dotenv/config";
 
 import {
-  Config,
+  type Config,
   createListing,
   fulfillListing,
   getOrderStatus,
-  ListingV1
+  type ListingV1
 } from "@ark-project/core";
 
 import { config, contracts } from "../config/index.js";
-import { Accounts } from "../types/accounts.js";
+import type { Accounts } from "../types/accounts.js";
 import { displayBalances } from "../utils/displayBalances.js";
 import { logger } from "../utils/logger.js";
 import { mintTokens } from "../utils/mintTokens.js";

@@ -1,6 +1,6 @@
-import { Config, fetchOrCreateAccount } from "@ark-project/core";
+import { type Config, fetchOrCreateAccount } from "@ark-project/core";
 
-import { Accounts } from "../types/accounts.js";
+import type { Accounts } from "../types/accounts.js";
 import { logger } from "./logger.js";
 
 export async function setupAccounts(config: Config): Promise<Accounts> {

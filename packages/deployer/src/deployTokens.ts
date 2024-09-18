@@ -6,7 +6,7 @@ import { CallData, Contract } from "starknet";
 import { ARTIFACTS_PATH } from "./constants";
 import { loadArtifacts } from "./contracts/common";
 import { getStarknetProvider } from "./providers";
-import { ProviderNetwork } from "./types";
+import type { ProviderNetwork } from "./types";
 import {
   getContractsFilePath,
   getExistingContracts,

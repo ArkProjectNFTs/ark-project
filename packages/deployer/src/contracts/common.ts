@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { CairoAssembly, CompiledContract } from "starknet";
+import type { CairoAssembly, CompiledContract } from "starknet";
 
 /**
  * Reads a file and parse it's content to a JSON.

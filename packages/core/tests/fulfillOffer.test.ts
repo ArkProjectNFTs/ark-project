@@ -8,7 +8,7 @@ import {
 } from "./utils/index.js";
 
 describe("fulfillOffer", () => {
-  it("default", async function () {
+  it("default", async () => {
     const { seller, buyer, listingBroker, saleBroker } = accounts;
     const amount = BigInt(1000);
     await mintERC20({ account: buyer, amount: 100000 });
@@ -43,7 +43,7 @@ describe("fulfillOffer", () => {
     expect(sellerBalance).toEqual(initialSellerBalance + profit);
   }, 50_000);
 
-  it("default: with custom fees", async function () {
+  it("default: with custom fees", async () => {
     const { seller, buyer, listingBroker, saleBroker } = accounts;
     const amount = BigInt(1000);
     await mintERC20({ account: buyer, amount: 100000 });

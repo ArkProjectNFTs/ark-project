@@ -1,18 +1,18 @@
 import "dotenv/config";
 
 import {
-  AuctionV1,
-  Config,
+  type AuctionV1,
+  type Config,
   createAuction,
   createOffer,
   fulfillAuction,
-  FulfillAuctionInfo,
+  type FulfillAuctionInfo,
   getOrderStatus,
-  OfferV1
+  type OfferV1
 } from "@ark-project/core";
 
 import { config, nftContract } from "../config/index.js";
-import { Accounts } from "../types/accounts.js";
+import type { Accounts } from "../types/accounts.js";
 import { displayBalances } from "../utils/displayBalances.js";
 import { logger } from "../utils/logger.js";
 import { mintTokens } from "../utils/mintTokens.js";

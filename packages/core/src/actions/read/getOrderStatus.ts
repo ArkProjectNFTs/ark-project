@@ -1,6 +1,6 @@
-import { CairoCustomEnum, CallData, Contract } from "starknet";
+import { type CairoCustomEnum, CallData, Contract } from "starknet";
 
-import { Config } from "../../createConfig.js";
+import type { Config } from "../../createConfig.js";
 
 interface GetOrderStatusParameters {
   orderHash: bigint;

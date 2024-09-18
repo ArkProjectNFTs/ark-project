@@ -1,14 +1,14 @@
 import "dotenv/config";
 
 import {
-  Config,
+  type Config,
   createOffer,
   getOrderStatus,
-  OfferV1
+  type OfferV1
 } from "@ark-project/core";
 
 import { config, nftContract } from "../config/index.js";
-import { Accounts } from "../types/accounts.js";
+import type { Accounts } from "../types/accounts.js";
 import { logger } from "../utils/logger.js";
 import { mintTokens } from "../utils/mintTokens.js";
 import { setupAccounts } from "../utils/setupAccounts.js";

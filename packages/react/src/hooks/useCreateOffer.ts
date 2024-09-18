@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { createOffer, CreateOfferParameters } from "@ark-project/core";
+import { createOffer, type CreateOfferParameters } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 

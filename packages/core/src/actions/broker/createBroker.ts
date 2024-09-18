@@ -1,6 +1,6 @@
-import { Account, cairo, CallData } from "starknet";
+import { type Account, cairo, CallData } from "starknet";
 
-import { Config } from "../../createConfig.js";
+import type { Config } from "../../createConfig.js";
 
 interface Params {
   brokenAccount: Account;

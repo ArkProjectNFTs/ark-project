@@ -1,4 +1,10 @@
-import { Account, cairo, Call, CallData, ProviderInterface } from "starknet";
+import {
+  type Account,
+  cairo,
+  type Call,
+  CallData,
+  type ProviderInterface
+} from "starknet";
 
 import { config } from "../config/index.js";
 

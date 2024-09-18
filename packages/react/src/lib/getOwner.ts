@@ -1,4 +1,4 @@
-import { Contract, ProviderInterface } from "starknet";
+import { Contract, type ProviderInterface } from "starknet";
 
 import { argentAbi } from "../../abi/argentAbi";
 import { braavosAbi } from "../../abi/braavosAbi";

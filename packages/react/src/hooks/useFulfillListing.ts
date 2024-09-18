@@ -2,7 +2,10 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { fulfillListing, FulfillListingParameters } from "@ark-project/core";
+import {
+  fulfillListing,
+  type FulfillListingParameters
+} from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 

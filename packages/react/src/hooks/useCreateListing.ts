@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { createListing, CreateListingParameters } from "@ark-project/core";
+import { createListing, type CreateListingParameters } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 

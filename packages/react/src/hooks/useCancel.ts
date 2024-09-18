@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { cancelOrder, CancelOrderParameters } from "@ark-project/core";
+import { cancelOrder, type CancelOrderParameters } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 

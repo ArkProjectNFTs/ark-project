@@ -1,6 +1,6 @@
 import { join } from "path";
 
-import { ProviderNetwork } from "../types";
+import type { ProviderNetwork } from "../types";
 
 export function getMessagingFilePath(network: ProviderNetwork): string {
   switch (network) {

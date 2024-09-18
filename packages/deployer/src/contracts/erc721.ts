@@ -1,4 +1,4 @@
-import { Account, CallData, Contract, RpcProvider } from "starknet";
+import { type Account, CallData, Contract, type RpcProvider } from "starknet";
 
 import { loadArtifacts } from "../contracts/common";
 

@@ -1,4 +1,9 @@
-import { Account, Call, CallData, ProviderInterface } from "starknet";
+import {
+  type Account,
+  type Call,
+  CallData,
+  type ProviderInterface
+} from "starknet";
 
 import "dotenv/config";
 

@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 
-import { AccountInterface } from "starknet";
+import type { AccountInterface } from "starknet";
 
 import {
   cancelCollectionOffer,
-  CancelCollectionOfferInfo,
-  Config
+  type CancelCollectionOfferInfo,
+  type Config
 } from "@ark-project/core";
 
-import { Status } from "../types";
+import type { Status } from "../types";
 import { useConfig } from "./useConfig";
 
 type CancelParameters = {

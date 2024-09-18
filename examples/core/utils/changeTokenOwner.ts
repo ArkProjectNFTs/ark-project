@@ -1,6 +1,6 @@
-import { AccountInterface, cairo, CallData } from "starknet";
+import { type AccountInterface, cairo, CallData } from "starknet";
 
-import { Config } from "@ark-project/core";
+import type { Config } from "@ark-project/core";
 
 export const changeTokenOwner = async (
   config: Config,

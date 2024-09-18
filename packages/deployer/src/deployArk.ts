@@ -2,12 +2,13 @@ import { promises as fs } from "fs";
 
 import { program } from "commander";
 
-import { ProviderNetwork } from "./types";
+import type { ProviderNetwork } from "./types";
 
 import "dotenv/config";
 
 import loading from "loading-cli";
 
+import type { Contract } from "starknet";
 import { ARTIFACTS_PATH } from "./constants";
 import { deployExecutor, upgradeExecutor } from "./contracts/executor";
 import { setArkFees, setDefaultCreatorFees } from "./contracts/setFees";
@@ -32,7 +33,7 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   console.log(`| Admin account |  ${starknetAdminAccount.address}`);
   const starknetSpinner = loading("💅 Deploying Starknet Contracts...").start();
 
-  let executorContract;
+  let executorContract: Contract;
   if (existingContracts[starknetNetwork].executor) {
     console.log("⚡ Upgrading Executor Contract..");
     starknetSpinner.text = "⚡ Upgrading Executor Contract...";

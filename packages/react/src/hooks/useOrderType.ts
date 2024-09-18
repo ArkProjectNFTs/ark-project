@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CairoCustomEnum } from "starknet";
+import type { CairoCustomEnum } from "starknet";
 
 import { getOrderType } from "@ark-project/core";
 

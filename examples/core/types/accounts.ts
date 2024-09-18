@@ -1,4 +1,4 @@
-import * as sn from "starknet";
+import type * as sn from "starknet";
 
 export interface Accounts {
   arkDefaultFeesReceiver: sn.Account;

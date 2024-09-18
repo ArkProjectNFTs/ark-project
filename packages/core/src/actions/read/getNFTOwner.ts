@@ -1,6 +1,6 @@
 import { cairo, CallData, Contract } from "starknet";
 
-import { Config } from "../../createConfig.js";
+import type { Config } from "../../createConfig.js";
 
 export const getNftOwner = async (
   config: Config,

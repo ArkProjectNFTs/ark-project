@@ -1,18 +1,18 @@
-import React from "react";
+import type React from "react";
 
 import { devnet, mainnet } from "@starknet-react/chains";
 import {
   jsonRpcProvider,
-  MockConnectorOptions,
+  type MockConnectorOptions,
   StarknetConfig as OgStarknetConfig
 } from "@starknet-react/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   render,
   renderHook,
-  RenderHookOptions,
-  RenderOptions,
-  RenderResult
+  type RenderHookOptions,
+  type RenderOptions,
+  type RenderResult
 } from "@testing-library/react";
 
 import { ArkProvider } from "../../react/src/components";

@@ -1,6 +1,6 @@
 import { Contract } from "starknet";
 
-import { Config } from "@ark-project/core";
+import type { Config } from "@ark-project/core";
 
 export const getCurrentTokenId = async (
   config: Config,

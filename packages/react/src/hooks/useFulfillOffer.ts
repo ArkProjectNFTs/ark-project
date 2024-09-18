@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { fulfillOffer, FulfillOfferParameters } from "@ark-project/core";
+import { fulfillOffer, type FulfillOfferParameters } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 

@@ -6,6 +6,7 @@
       "pnpm-lock.yaml",
       "tsconfig.json",
       ".scripts",
+      "scripts",
       "contracts.json",
       "contracts.dev.json",
       "contracts.ts",
@@ -31,21 +32,24 @@
       },
       "correctness": {
         "noUnusedVariables": "error",
-        "useExhaustiveDependencies": "error"
+        "useExhaustiveDependencies": "off"
       },
       "performance": {
-        "noBarrelFile": "error",
-        "noReExportAll": "error",
+        "noBarrelFile": "off",
+        "noReExportAll": "off",
         "noDelete": "off"
       },
       "style": {
         "noNonNullAssertion": "off",
-        "useShorthandArrayType": "error"
+        "useShorthandArrayType": "error",
+        "noUselessElse": "off",
+        "useNodejsImportProtocol": "off",
+        "noUnusedTemplateLiteral": "off"
       },
       "suspicious": {
         "noArrayIndexKey": "off",
         "noConfusingVoidType": "off",
-        "noConsoleLog": "error",
+        "noConsoleLog": "off",
         "noExplicitAny": "off"
       }
     }

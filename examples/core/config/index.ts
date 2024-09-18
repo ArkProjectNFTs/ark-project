@@ -1,4 +1,8 @@
-import { createConfig, Network, starknetEthContract } from "@ark-project/core";
+import {
+  type Network,
+  createConfig,
+  starknetEthContract
+} from "@ark-project/core";
 
 import contractsDev from "../../../contracts.dev.json";
 import contractsDeployed from "../../../contracts.json";
@@ -17,11 +21,11 @@ interface DevContracts extends BaseContracts {
   eth: string;
 }
 
-interface DeployedContracts extends BaseContracts {
-  nftContract: string;
-  nftContractFixedFees: string;
-  nftContractRoyalties: string;
-}
+// interface DeployedContracts extends BaseContracts {
+//   nftContract: string;
+//   nftContractFixedFees: string;
+//   nftContractRoyalties: string;
+// }
 
 interface DeployedContracts {
   sepolia: DeployedContracts;

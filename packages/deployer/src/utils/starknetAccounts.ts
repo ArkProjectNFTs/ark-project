@@ -1,5 +1,5 @@
 import { getStarknetProvider } from "../providers";
-import { ProviderNetwork } from "../types";
+import type { ProviderNetwork } from "../types";
 import { buildAccounts, filterAccounts } from "./accounts";
 
 import "dotenv/config";

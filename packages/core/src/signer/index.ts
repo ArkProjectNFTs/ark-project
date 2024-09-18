@@ -1,4 +1,4 @@
-import { AccountInterface, Signature, TypedData } from "starknet";
+import type { AccountInterface, Signature, TypedData } from "starknet";
 
 const getSignInfos = async (
   TypedOrderData: TypedData,

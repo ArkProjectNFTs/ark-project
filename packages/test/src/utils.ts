@@ -1,8 +1,8 @@
 import {
-  Account,
-  AccountInterface,
+  type Account,
+  type AccountInterface,
   cairo,
-  Call,
+  type Call,
   CallData,
   Contract
 } from "starknet";

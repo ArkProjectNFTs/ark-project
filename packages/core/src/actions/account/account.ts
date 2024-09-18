@@ -1,9 +1,10 @@
 import {
   Account,
   CallData,
+  type DeployContractResponse,
+  type ProviderInterface,
   ec,
   hash,
-  ProviderInterface,
   stark
 } from "starknet";
 
@@ -44,7 +45,7 @@ export const createAccount = async (provider: ProviderInterface) => {
   );
   const account = new Account(provider, address, privateKey, "1");
 
-  let response;
+  let response: DeployContractResponse;
 
   try {
     response = await account.deployAccount({
@@ -52,7 +53,7 @@ export const createAccount = async (provider: ProviderInterface) => {
       constructorCalldata: CallData.compile({ publicKey }),
       addressSalt: publicKey
     });
-  } catch (e) {
+  } catch (_error) {
     throw new Error(`Account deploy failed for ${address}`);
   }
 

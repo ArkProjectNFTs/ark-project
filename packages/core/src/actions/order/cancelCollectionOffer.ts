@@ -1,13 +1,13 @@
 import {
-  AccountInterface,
+  type AccountInterface,
   CairoOption,
   CairoOptionVariant,
   CallData,
-  Uint256
+  type Uint256
 } from "starknet";
 
-import { Config } from "../../createConfig.js";
-import {
+import type { Config } from "../../createConfig.js";
+import type {
   CancelCollectionOfferInfo,
   FullCancelInfo
 } from "../../types/index.js";

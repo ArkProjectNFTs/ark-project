@@ -1,14 +1,14 @@
 import {
-  AccountInterface,
+  type AccountInterface,
   cairo,
   CairoOption,
   CairoOptionVariant,
   CallData,
-  Uint256
+  type Uint256
 } from "starknet";
 
-import { Config } from "../../createConfig.js";
-import { FulfillInfo } from "../../types/index.js";
+import type { Config } from "../../createConfig.js";
+import type { FulfillInfo } from "../../types/index.js";
 
 export interface FulfillOfferParameters {
   account: AccountInterface;

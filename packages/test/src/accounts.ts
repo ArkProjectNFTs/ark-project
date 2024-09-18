@@ -1,5 +1,9 @@
 import { MockConnector } from "@starknet-react/core";
-import { Account, AccountInterface, ProviderInterface } from "starknet";
+import {
+  Account,
+  type AccountInterface,
+  type ProviderInterface
+} from "starknet";
 
 import config from "./config";
 

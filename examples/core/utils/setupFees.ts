@@ -1,7 +1,7 @@
-import { Config, createBroker } from "@ark-project/core";
+import { type Config, createBroker } from "@ark-project/core";
 
 import { contracts, isDev } from "../config/index.js";
-import { Accounts } from "../types/accounts.js";
+import type { Accounts } from "../types/accounts.js";
 import { logger } from "./logger.js";
 import { setArkFees } from "./setArkFees.js";
 import { setCollectionCreatorFees } from "./setCollectionCreatorFees.js";

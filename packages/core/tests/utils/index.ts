@@ -1,13 +1,13 @@
 import {
   Account,
   cairo,
-  CairoCustomEnum,
+  type CairoCustomEnum,
   Contract,
-  ProviderInterface
+  type ProviderInterface
 } from "starknet";
 
 import contracts from "../../../../contracts.dev.json";
-import { Config, createConfig } from "../../src/createConfig.js";
+import { type Config, createConfig } from "../../src/createConfig.js";
 
 type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
 

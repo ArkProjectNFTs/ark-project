@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { createAuction, CreateAuctionParameters } from "@ark-project/core";
+import { createAuction, type CreateAuctionParameters } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";
 

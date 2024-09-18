@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import {
   createCollectionOffer,
-  CreateCollectionOfferParameters
+  type CreateCollectionOfferParameters
 } from "@ark-project/core";
 
 import { useConfig } from "./useConfig";

@@ -1,6 +1,6 @@
-import { Config } from "@ark-project/core";
+import type { Config } from "@ark-project/core";
 
-import { Accounts } from "../types/accounts.js";
+import type { Accounts } from "../types/accounts.js";
 import { getBalance } from "./getBalance.js";
 import { logger } from "./logger.js";
 
