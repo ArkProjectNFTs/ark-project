@@ -268,8 +268,8 @@ impl Storage for PostgresStorage {
             return Ok(());
         }
 
-        let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
+        let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address, amount)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (token_event_id) DO NOTHING";
 
         let event_type = self.to_title_case(&event.event_type.to_string().to_lowercase());
 
@@ -284,6 +284,7 @@ impl Storage for PostgresStorage {
             .bind(event.transaction_hash.clone())
             .bind(event.to_address.clone())
             .bind(event.from_address.clone())
+            .bind(event.price.clone())
             .execute(&self.pool)
             .await?;
 
