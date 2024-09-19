@@ -38,10 +38,6 @@ async fn main() -> Result<()> {
         HttpTransport::new(rpc_url_converted.clone()),
     )));
 
-    // Quick launch locally:
-    // docker-compose up -d arkchain_postgres
-    // cd ark-sqlx
-    // sqlx database reset --database-url postgres://postgres:123@localhost:5432/arkchain-marketplace --source marketplace
     let storage = FakeStorage {};
     let handler = DefaultEventHandler {};
 
@@ -51,12 +47,30 @@ async fn main() -> Result<()> {
         Arc::new(handler),
     ));
 
-    let sleep_secs = 1;
-    let mut from = 0;
-    let range = 1;
+    let sleep_msecs = match env::var("SLEEP_PERIOD") {
+        Ok(s) => s
+            .parse::<u64>()
+            .expect("Failed to parse SLEEP_PERIOD as u64"),
+        Err(_) => 500,
+    };
+    let mut from = match env::var("BLOCK_START") {
+        Ok(s) => s
+            .parse::<u64>()
+            .expect("Failed to parse BLOCK_START as u64"),
+        Err(_) => 0,
+    };
+    let range = match env::var("BLOCK_RANGE") {
+        Ok(s) => s
+            .parse::<u64>()
+            .expect("Failed to parse BLOCK_RANGE as u64"),
+        Err(_) => 0,
+    };
 
     // Set to None to keep polling the head of chain.
-    let to = None;
+    let to = match env::var("BLOCK_END") {
+        Ok(s) => Some(s.parse::<u64>().expect("Failed to parse BLOCK_END as u64")),
+        Err(_) => None,
+    };
 
     info!(
         "Starting arkchain indexer: from:{} to:{:?} range:{}",
@@ -68,7 +82,7 @@ async fn main() -> Result<()> {
             Ok(block_number) => block_number,
             Err(e) => {
                 error!("Can't get arkchain block number: {}", e);
-                tokio::time::sleep(tokio::time::Duration::from_secs(sleep_secs)).await;
+                tokio::time::sleep(tokio::time::Duration::from_millis(sleep_msecs)).await;
                 continue;
             }
         };
@@ -85,7 +99,7 @@ async fn main() -> Result<()> {
 
         if start > end {
             trace!("Nothing to fetch at block {start}");
-            tokio::time::sleep(tokio::time::Duration::from_secs(sleep_secs)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(sleep_msecs)).await;
             continue;
         }
 
@@ -117,7 +131,7 @@ async fn main() -> Result<()> {
             }
         };
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(sleep_secs)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(sleep_msecs)).await;
     }
 }
 
