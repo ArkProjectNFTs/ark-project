@@ -7,6 +7,13 @@ Diri is a library / binary related to the
 indexation of Solis data (orderbook smart contracts).
 """
 
+[lib]
+path = "src/lib.rs"
+
+[[example]]
+name = "display-events"
+path = "examples/display-events.rs"
+
 [dependencies]
 futures = "0.3.28"
 serde = { version = "1.0", features = ["derive"] }
@@ -22,15 +29,19 @@ dotenv = "0.15.0"
 thiserror = "1.0.32"
 # For now, Diri can't use the ark-starknet due to the dependency
 # on ArkProjectNFTs for of starknet-rs.
-starknet = "0.8.0"
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "2ddc694" }
+starknet-types-core = { git = "https://github.com/starknet-io/types-rs", rev = "f98f048" }
 tracing = "0.1"
 num-bigint = "0.4.4"
-num-traits = "0.2.17"
+num-traits = "0.2.19"
 
-cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.1.8", features = [
+cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.4.0", features = [
   "abigen-rs",
 ] }
 
 anyhow.workspace = true
 async-trait.workspace = true
 tokio.workspace = true
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

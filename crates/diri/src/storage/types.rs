@@ -1,10 +1,10 @@
 use num_bigint::BigUint;
 
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use starknet::core::utils::parse_cairo_short_string;
 use std::fmt::LowerHex;
 
-use crate::orderbook::{
+use crate::orderbook::events::{
     OrderCancelled, OrderExecuted, OrderFulfilled, OrderPlaced, RollbackStatus, U256,
 };
 
@@ -33,25 +33,27 @@ pub struct PlacedData {
 
 impl From<OrderPlaced> for PlacedData {
     fn from(value: OrderPlaced) -> Self {
-        Self {
-            order_hash: to_hex_str(&value.order_hash),
-            order_version: to_hex_str(&value.order_version),
-            order_type: format!("{:?}", value.order_type),
-            cancelled_order_hash: to_hex_str_opt(&value.cancelled_order_hash),
-            route: format!("{:?}", value.order.route),
-            currency_address: to_hex_str(&FieldElement::from(value.order.currency_address)),
-            currency_chain_id: to_hex_str(&value.order.currency_chain_id),
-            salt: to_hex_str(&value.order.salt),
-            offerer: to_hex_str(&FieldElement::from(value.order.offerer)),
-            token_chain_id: format!("0x{:x}", value.order.token_chain_id),
-            token_address: to_hex_str(&FieldElement::from(value.order.token_address)),
-            token_id: u256_to_hex_opt(&value.order.token_id),
-            quantity: u256_to_hex(&value.order.quantity),
-            start_amount: u256_to_hex(&value.order.start_amount),
-            end_amount: u256_to_hex(&value.order.end_amount),
-            start_date: value.order.start_date,
-            end_date: value.order.end_date,
-            broker_id: to_hex_str(&FieldElement::from(value.order.broker_id)),
+        match value {
+            OrderPlaced::V1(value) => Self {
+                order_hash: to_hex_str(&value.order_hash),
+                order_version: to_hex_str(&value.order_version),
+                order_type: format!("{:?}", value.order_type),
+                cancelled_order_hash: to_hex_str_opt(&value.cancelled_order_hash),
+                route: format!("{:?}", value.order.route),
+                currency_address: to_hex_str(&Felt::from(value.order.currency_address)),
+                currency_chain_id: to_hex_str(&value.order.currency_chain_id),
+                salt: to_hex_str(&value.order.salt),
+                offerer: to_hex_str(&Felt::from(value.order.offerer)),
+                token_chain_id: format!("0x{:x}", value.order.token_chain_id),
+                token_address: to_hex_str(&Felt::from(value.order.token_address)),
+                token_id: u256_to_hex_opt(&value.order.token_id),
+                quantity: u256_to_hex(&value.order.quantity),
+                start_amount: u256_to_hex(&value.order.start_amount),
+                end_amount: u256_to_hex(&value.order.end_amount),
+                start_date: value.order.start_date,
+                end_date: value.order.end_date,
+                broker_id: to_hex_str(&Felt::from(value.order.broker_id)),
+            },
         }
     }
 }
@@ -64,9 +66,12 @@ pub struct CancelledData {
 
 impl From<OrderCancelled> for CancelledData {
     fn from(value: OrderCancelled) -> Self {
-        Self {
-            order_hash: to_hex_str(&value.order_hash),
-            reason: parse_cairo_short_string(&value.reason).unwrap_or(to_hex_str(&value.reason)),
+        match value {
+            OrderCancelled::V1(value) => Self {
+                order_hash: to_hex_str(&value.order_hash),
+                reason: parse_cairo_short_string(&value.reason)
+                    .unwrap_or(to_hex_str(&value.reason)),
+            },
         }
     }
 }
@@ -79,9 +84,12 @@ pub struct RollbackStatusData {
 
 impl From<RollbackStatus> for RollbackStatusData {
     fn from(value: RollbackStatus) -> Self {
-        Self {
-            order_hash: to_hex_str(&value.order_hash),
-            reason: parse_cairo_short_string(&value.reason).unwrap_or(to_hex_str(&value.reason)),
+        match value {
+            RollbackStatus::V1(value) => Self {
+                order_hash: to_hex_str(&value.order_hash),
+                reason: parse_cairo_short_string(&value.reason)
+                    .unwrap_or(to_hex_str(&value.reason)),
+            },
         }
     }
 }
@@ -95,12 +103,16 @@ pub struct FulfilledData {
 
 impl From<OrderFulfilled> for FulfilledData {
     fn from(value: OrderFulfilled) -> Self {
-        let related_order_hash = value.related_order_hash.map(FieldElement::from);
+        match value {
+            OrderFulfilled::V1(value) => {
+                let related_order_hash = value.related_order_hash.map(Felt::from);
 
-        Self {
-            order_hash: to_hex_str(&value.order_hash),
-            fulfiller: to_hex_str(&FieldElement::from(value.fulfiller)),
-            related_order_hash: to_hex_str_opt(&related_order_hash),
+                Self {
+                    order_hash: to_hex_str(&value.order_hash),
+                    fulfiller: to_hex_str(&Felt::from(value.fulfiller)),
+                    related_order_hash: to_hex_str_opt(&related_order_hash),
+                }
+            }
         }
     }
 }
@@ -127,9 +139,16 @@ impl From<OrderExecuted> for ExecutedData {
             OrderExecuted::V1(v) => Self {
                 version: 1,
                 order_hash: to_hex_str(&v.order_hash),
-                transaction_hash: Some(to_hex_str(&FieldElement::from(v.transaction_hash))),
-                from: Some(to_hex_str(&FieldElement::from(v.from))),
-                to: Some(to_hex_str(&FieldElement::from(v.to))),
+                transaction_hash: Some(to_hex_str(&v.transaction_hash)),
+                from: Some(to_hex_str(&Felt::from(v.from))),
+                to: Some(to_hex_str(&Felt::from(v.to))),
+            },
+            OrderExecuted::V2(v) => Self {
+                version: 1,
+                order_hash: to_hex_str(&v.order_hash),
+                transaction_hash: Some(to_hex_str(&v.transaction_hash)),
+                from: Some(to_hex_str(&Felt::from(v.from))),
+                to: Some(to_hex_str(&Felt::from(v.to))),
             },
         }
     }

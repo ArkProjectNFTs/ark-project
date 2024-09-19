@@ -7,7 +7,7 @@ use event_handler::EventHandler;
 mod orderbook;
 
 use starknet::core::types::{
-    BlockId, EmittedEvent, EventFilter, FieldElement, MaybePendingBlockWithTxHashes,
+    BlockId, EmittedEvent, EventFilter, Felt, MaybePendingBlockWithTxHashes,
 };
 use starknet::macros::selector;
 use starknet::providers::{AnyProvider, Provider, ProviderError};
@@ -80,6 +80,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
             let block_timestamp = self.block_time(BlockId::Number(block_number)).await?;
 
             for any_event in events {
+                trace!("Event: {:?}", any_event.clone());
                 let orderbook_event: Event = match any_event.try_into() {
                     Ok(ev) => ev,
                     Err(e) => {
@@ -119,7 +120,9 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                             .status_back_to_open(block_number, block_timestamp, &ev.into())
                             .await?;
                     }
-                    _ => warn!("Orderbook event not handled: {:?}", orderbook_event),
+                    _ => {
+                        warn!("Orderbook event not handled: {:?}", orderbook_event)
+                    }
                 };
             }
 
@@ -145,7 +148,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         &self,
         from_block: BlockId,
         to_block: BlockId,
-        keys: Option<Vec<Vec<FieldElement>>>,
+        keys: Option<Vec<Vec<Felt>>>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, IndexerError> {
         // TODO: setup key filtering here.
 
@@ -169,7 +172,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
 
             event_page.events.iter().for_each(|e| {
                 events
-                    .entry(e.block_number)
+                    .entry(e.block_number.unwrap())
                     .and_modify(|v| v.push(e.clone()))
                     .or_insert(vec![e.clone()]);
             });
