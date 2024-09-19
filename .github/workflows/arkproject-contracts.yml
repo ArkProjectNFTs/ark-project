@@ -12,7 +12,7 @@ on:
 
 env:
   SCARB_VERSION: 2.7.1
-  STARKNET_DEVNET_VERSION: 0.2.0-rc3
+  STARKNET_DEVNET_VERSION: 0.2.0
   DEVNET_DUMP_PATH: /devnet-dump.json
 jobs:
   fmt:
@@ -61,7 +61,7 @@ jobs:
         run: |
           docker run -d --rm --name starknet-devnet \
             -p 5050:5050 \
-            ptisserand/starknet-devnet-rs:${STARKNET_DEVNET_VERSION} \
+            shardlabs/starknet-devnet-rs:${STARKNET_DEVNET_VERSION} \
             --seed 0 --dump-path $DEVNET_DUMP_PATH --state-archive-capacity full
             sleep 3  # Wait for 3 seconds for the Docker container to initialize
 
