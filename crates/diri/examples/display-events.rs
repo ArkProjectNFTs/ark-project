@@ -1,5 +1,6 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use clap::Parser;
 use diri::event_handler::EventHandler;
 use diri::storage::types::CancelledData;
 use diri::storage::types::ExecutedData;
@@ -23,22 +24,59 @@ use tracing::{error, info, trace, warn};
 use tracing_subscriber::fmt;
 use tracing_subscriber::EnvFilter;
 
+#[derive(Parser, Debug)]
+#[clap(about = "display-events")]
+struct Args {
+    #[clap(long, help = "Starknet RPC", env = "STARKNET_RPC")]
+    rpc: String,
+
+    #[clap(long, help = "Sleep period in milliseconds", default_value = "500")]
+    sleep_msecs: u64,
+
+    #[clap(
+        long,
+        help = "Starting block number",
+        env = "BLOCK_START",
+        default_value = "0"
+    )]
+    block_start: u64,
+
+    #[clap(long, help = "Ending block number", env = "BLOCK_END")]
+    block_end: Option<u64>,
+
+    #[clap(long, help = "Block range", env = "BLOCK_RANGE", default_value = "0")]
+    block_range: u64,
+
+    #[clap(long, help = "JSON output", env = "JSON_OUTPUT")]
+    output: Option<String>,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
 
+    let args = Args::parse();
+
     init_logging();
 
-    info!("Starting.....!");
-
-    let rpc_url = env::var("STARKNET_RPC").expect("STARKNET_RPC not set");
+    let rpc_url = args.rpc;
     let rpc_url_converted = Url::parse(&rpc_url).unwrap();
 
     let provider = Arc::new(AnyProvider::JsonRpcHttp(JsonRpcClient::new(
         HttpTransport::new(rpc_url_converted.clone()),
     )));
 
+    let sleep_msecs = args.sleep_msecs;
+    let mut from = args.block_start;
+    let range = args.block_range;
+
+    // Set to None to keep polling the head of chain.
+    let to = args.block_end;
+
+    info!("Starting.....!");
+
     let storage = FakeStorage {};
+
     let handler = DefaultEventHandler {};
 
     let indexer = Arc::new(Diri::new(
@@ -46,31 +84,6 @@ async fn main() -> Result<()> {
         Arc::new(storage),
         Arc::new(handler),
     ));
-
-    let sleep_msecs = match env::var("SLEEP_PERIOD") {
-        Ok(s) => s
-            .parse::<u64>()
-            .expect("Failed to parse SLEEP_PERIOD as u64"),
-        Err(_) => 500,
-    };
-    let mut from = match env::var("BLOCK_START") {
-        Ok(s) => s
-            .parse::<u64>()
-            .expect("Failed to parse BLOCK_START as u64"),
-        Err(_) => 0,
-    };
-    let range = match env::var("BLOCK_RANGE") {
-        Ok(s) => s
-            .parse::<u64>()
-            .expect("Failed to parse BLOCK_RANGE as u64"),
-        Err(_) => 0,
-    };
-
-    // Set to None to keep polling the head of chain.
-    let to = match env::var("BLOCK_END") {
-        Ok(s) => Some(s.parse::<u64>().expect("Failed to parse BLOCK_END as u64")),
-        Err(_) => None,
-    };
 
     info!(
         "Starting arkchain indexer: from:{} to:{:?} range:{}",
@@ -162,6 +175,7 @@ impl Storage for FakeStorage {
         block_timestamp: u64,
         order: &PlacedData,
     ) -> StorageResult<()> {
+        info!("PLACED {} {:?}", block_id, order);
         Ok(())
     }
 
@@ -171,6 +185,7 @@ impl Storage for FakeStorage {
         block_timestamp: u64,
         order: &CancelledData,
     ) -> StorageResult<()> {
+        info!("CANCELLED {} {:?}", block_id, order);
         Ok(())
     }
 
@@ -180,6 +195,7 @@ impl Storage for FakeStorage {
         block_timestamp: u64,
         order: &FulfilledData,
     ) -> StorageResult<()> {
+        info!("FULFILLED {} {:?}", block_id, order);
         Ok(())
     }
 
@@ -189,6 +205,61 @@ impl Storage for FakeStorage {
         block_timestamp: u64,
         order: &ExecutedData,
     ) -> StorageResult<()> {
+        info!("EXECUTED {} {:?}", block_id, order);
+        Ok(())
+    }
+
+    async fn status_back_to_open(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &RollbackStatusData,
+    ) -> StorageResult<()> {
+        Ok(())
+    }
+}
+
+struct JSONStorage;
+
+#[async_trait]
+impl Storage for JSONStorage {
+    async fn register_placed(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &PlacedData,
+    ) -> StorageResult<()> {
+        info!("PLACED {} {:?}", block_id, order);
+        Ok(())
+    }
+
+    async fn register_cancelled(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &CancelledData,
+    ) -> StorageResult<()> {
+        info!("CANCELLED {} {:?}", block_id, order);
+        Ok(())
+    }
+
+    async fn register_fulfilled(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &FulfilledData,
+    ) -> StorageResult<()> {
+        info!("FULFILLED {} {:?}", block_id, order);
+        Ok(())
+    }
+
+    async fn register_executed(
+        &self,
+        block_id: u64,
+        block_timestamp: u64,
+        order: &ExecutedData,
+    ) -> StorageResult<()> {
+        info!("EXECUTED {} {:?}", block_id, order);
         Ok(())
     }
 
