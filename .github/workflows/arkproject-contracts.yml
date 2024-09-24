@@ -15,6 +15,7 @@ env:
   STARKNET_DEVNET_VERSION: 0.2.0
   DEVNET_DUMP_PATH: /devnet-dump.json
   DEVNET_DEPLOYMENT_DUMP_PATH: /tmp/devnet-deployment-dump.json
+  DEVNET_SET_FEES_DUMP_PATH: /tmp/devnet-set-fees-dump.json
 jobs:
   fmt:
     runs-on: ubuntu-latest
@@ -84,20 +85,27 @@ jobs:
       - name: Setup environment
         run: cp .env.devnet .env
 
+      - name: Run set Ark fees test
+        run: pnpm test --filter=core -- tests/setArkFees.test.ts
+
+      - name: Store devnet state after set ark fees
+        run: |
+          curl -H "Content-type: application/json" \
+              -X POST http://localhost:5050/dump \
+              -d '{"path": "$DEVNET_SET_FEES_DUMP_PATH"}'
+
       - name: Run fulfill auction test
         run: |
-          pnpm test --filter=core -- tests/setArkFees.test.ts
           pnpm test --filter=core -- tests/fulfillAuction.test.ts
       
       - name: Restore devnet state
         run: |
           curl -H "Content-type: application/json" \
               -X POST http://localhost:5050/load \
-              -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
+              -d '{"path": "$DEVNET_SET_FEES_DUMP_PATH"}'
       
       - name: Run SDK test
         run: |
-          cp .env.devnet .env
           pnpm test --filter=core
 
       - name: Stop starknet-devnet container
