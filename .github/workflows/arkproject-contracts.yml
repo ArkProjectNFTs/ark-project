@@ -81,6 +81,20 @@ jobs:
               -X POST http://localhost:5050/dump \
               -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
       
+      - name: Setup environment
+        run: cp .env.devnet .env
+
+      - name: Run fulfill auction test
+        run: |
+          pnpm test --filter=core -- tests/setArkFees.test.ts
+          pnpm test --filter=core -- tests/fulfillAuction.test.ts
+      
+      - name: Restore devnet state
+        run: |
+          curl -H "Content-type: application/json" \
+              -X POST http://localhost:5050/load \
+              -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
+      
       - name: Run SDK test
         run: |
           cp .env.devnet .env
