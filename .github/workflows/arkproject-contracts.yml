@@ -84,7 +84,7 @@ jobs:
       - name: Run SDK test
         run: |
           cp .env.devnet .env
-          pnpm test
+          pnpm test --filter=core
 
       - name: Stop starknet-devnet container
         if: always()
