@@ -11,6 +11,8 @@ use diri::storage::Storage;
 use diri::storage::StorageResult;
 use diri::Diri;
 use dotenv::dotenv;
+use serde::ser::SerializeStruct;
+use serde::Serialize;
 use starknet::core::types::BlockId;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::AnyProvider;
@@ -18,7 +20,9 @@ use starknet::providers::JsonRpcClient;
 use starknet::providers::Provider;
 use url::Url;
 
-use std::{env, sync::Arc};
+use std::fs::File;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use tracing::{error, info, trace, warn};
 use tracing_subscriber::fmt;
@@ -75,13 +79,13 @@ async fn main() -> Result<()> {
 
     info!("Starting.....!");
 
-    let storage = FakeStorage {};
+    let storage = Arc::new(JSONStorage::new(args.output, from));
 
     let handler = DefaultEventHandler {};
 
     let indexer = Arc::new(Diri::new(
         provider.clone(),
-        Arc::new(storage),
+        storage.clone(),
         Arc::new(handler),
     ));
 
@@ -127,7 +131,7 @@ async fn main() -> Result<()> {
                 if let Some(to) = to {
                     if end >= to {
                         trace!("`to` block was reached, exit.");
-                        return Ok(());
+                        break; // return Ok(());
                     }
                 }
 
@@ -146,6 +150,8 @@ async fn main() -> Result<()> {
 
         tokio::time::sleep(tokio::time::Duration::from_millis(sleep_msecs)).await;
     }
+    storage.write();
+    Ok(())
 }
 
 /// Initializes the logging, ensuring that the `RUST_LOG` environment
@@ -165,61 +171,158 @@ fn init_logging() {
     .expect("Failed to set the global tracing subscriber");
 }
 
-struct FakeStorage;
+#[derive(Clone, Debug)]
+enum OrderbookEventType {
+    Placed(PlacedData),
+    Cancelled(CancelledData),
+    Fulfilled(FulfilledData),
+    Executed(ExecutedData),
+    RollbackStatus(RollbackStatusData),
+}
 
-#[async_trait]
-impl Storage for FakeStorage {
-    async fn register_placed(
-        &self,
-        block_id: u64,
-        block_timestamp: u64,
-        order: &PlacedData,
-    ) -> StorageResult<()> {
-        info!("PLACED {} {:?}", block_id, order);
-        Ok(())
-    }
+struct SerializablePlacedData(PlacedData);
+struct SerializableCancelledData(CancelledData);
+struct SerializableFulfilledData(FulfilledData);
+struct SerializableExecutedData(ExecutedData);
+struct SerializableRollbackStatus(RollbackStatusData);
 
-    async fn register_cancelled(
-        &self,
-        block_id: u64,
-        block_timestamp: u64,
-        order: &CancelledData,
-    ) -> StorageResult<()> {
-        info!("CANCELLED {} {:?}", block_id, order);
-        Ok(())
-    }
-
-    async fn register_fulfilled(
-        &self,
-        block_id: u64,
-        block_timestamp: u64,
-        order: &FulfilledData,
-    ) -> StorageResult<()> {
-        info!("FULFILLED {} {:?}", block_id, order);
-        Ok(())
-    }
-
-    async fn register_executed(
-        &self,
-        block_id: u64,
-        block_timestamp: u64,
-        order: &ExecutedData,
-    ) -> StorageResult<()> {
-        info!("EXECUTED {} {:?}", block_id, order);
-        Ok(())
-    }
-
-    async fn status_back_to_open(
-        &self,
-        block_id: u64,
-        block_timestamp: u64,
-        order: &RollbackStatusData,
-    ) -> StorageResult<()> {
-        Ok(())
+impl Serialize for SerializablePlacedData {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("data", 3)?;
+        state.serialize_field("order_hash", &self.0.order_hash)?;
+        state.serialize_field("order_type", &self.0.order_type)?;
+        state.serialize_field("route", &self.0.route)?;
+        state.end()
     }
 }
 
-struct JSONStorage;
+impl Serialize for SerializableCancelledData {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("data", 3)?;
+        state.serialize_field("order_hash", &self.0.order_hash)?;
+        state.serialize_field("order_type", &self.0.order_type)?;
+        state.serialize_field("reason", &self.0.reason)?;
+        state.end()
+    }
+}
+
+impl Serialize for SerializableFulfilledData {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("data", 4)?;
+        state.serialize_field("order_hash", &self.0.order_hash)?;
+        state.serialize_field("order_type", &self.0.order_type)?;
+        state.serialize_field("fulfiller", &self.0.fulfiller)?;
+        state.serialize_field("related_order_hash", &self.0.related_order_hash)?;
+        state.end()
+    }
+}
+
+impl Serialize for SerializableExecutedData {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("data", 4)?;
+        state.serialize_field("order_hash", &self.0.order_hash)?;
+        state.serialize_field("order_type", &self.0.order_type)?;
+        state.serialize_field("from", &self.0.from)?;
+        state.serialize_field("to", &self.0.to)?;
+        state.end()
+    }
+}
+
+impl Serialize for SerializableRollbackStatus {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("data", 3)?;
+        state.serialize_field("order_hash", &self.0.order_hash)?;
+        state.serialize_field("order_type", &self.0.order_type)?;
+        state.serialize_field("reason", &self.0.reason)?;
+        state.end()
+    }
+}
+
+impl Serialize for OrderbookEventType {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let type_key = "type";
+        let data_key = "data";
+
+        let mut state = serializer.serialize_struct("event", 2)?;
+        match self {
+            OrderbookEventType::Placed(data) => {
+                state.serialize_field(type_key, "PLACED")?;
+                state.serialize_field(data_key, &SerializablePlacedData(data.clone()))?;
+            }
+            OrderbookEventType::Cancelled(data) => {
+                state.serialize_field(type_key, "CANCELLED")?;
+                state.serialize_field(data_key, &SerializableCancelledData(data.clone()))?;
+            }
+            OrderbookEventType::Fulfilled(data) => {
+                state.serialize_field(type_key, "FULFILLED")?;
+                state.serialize_field(data_key, &SerializableFulfilledData(data.clone()))?;
+            }
+            OrderbookEventType::Executed(data) => {
+                state.serialize_field(type_key, "EXECUTED")?;
+                state.serialize_field(data_key, &SerializableExecutedData(data.clone()))?;
+            }
+            OrderbookEventType::RollbackStatus(data) => {
+                state.serialize_field(type_key, "ROLLBACK")?;
+                state.serialize_field(data_key, &SerializableRollbackStatus(data.clone()))?;
+            }
+        };
+        state.end()
+    }
+}
+
+#[derive(Clone, Serialize, Debug)]
+struct OrderbookEvent {
+    #[serde(rename = "event")]
+    event_type: OrderbookEventType,
+    block_id: u64,
+    block_timestamp: u64,
+}
+
+#[derive(Serialize, Debug)]
+struct JSONStorage {
+    start: u64,
+    end: u64,
+    output: Option<String>,
+    events: Mutex<Vec<OrderbookEvent>>,
+}
+
+impl JSONStorage {
+    fn new(output: Option<String>, start: u64) -> Self {
+        Self {
+            output,
+            start,
+            end: 0,
+            events: Mutex::new(Vec::new()),
+        }
+    }
+
+    fn write(&self) {
+        if self.output.is_none() {
+            println!("{}", serde_json::to_string_pretty(self).unwrap());
+        } else {
+            let mut file = File::create(self.output.clone().unwrap()).unwrap();
+            serde_json::to_writer_pretty(&mut file, &self).unwrap();
+        }
+    }
+}
 
 #[async_trait]
 impl Storage for JSONStorage {
@@ -229,7 +332,16 @@ impl Storage for JSONStorage {
         block_timestamp: u64,
         order: &PlacedData,
     ) -> StorageResult<()> {
-        info!("PLACED {} {:?}", block_id, order);
+        trace!("PLACED {} {:?}", block_id, order);
+        if let Ok(mut events) = self.events.lock() {
+            events.push(OrderbookEvent {
+                block_id,
+                block_timestamp,
+                event_type: OrderbookEventType::Placed(order.clone()),
+            });
+        } else {
+            error!("Failed to append Placed event");
+        }
         Ok(())
     }
 
@@ -239,7 +351,16 @@ impl Storage for JSONStorage {
         block_timestamp: u64,
         order: &CancelledData,
     ) -> StorageResult<()> {
-        info!("CANCELLED {} {:?}", block_id, order);
+        trace!("CANCELLED {} {:?}", block_id, order);
+        if let Ok(mut events) = self.events.lock() {
+            events.push(OrderbookEvent {
+                block_id,
+                block_timestamp,
+                event_type: OrderbookEventType::Cancelled(order.clone()),
+            });
+        } else {
+            error!("Failed to append Cancelled event");
+        }
         Ok(())
     }
 
@@ -249,7 +370,16 @@ impl Storage for JSONStorage {
         block_timestamp: u64,
         order: &FulfilledData,
     ) -> StorageResult<()> {
-        info!("FULFILLED {} {:?}", block_id, order);
+        trace!("FULFILLED {} {:?}", block_id, order);
+        if let Ok(mut events) = self.events.lock() {
+            events.push(OrderbookEvent {
+                block_id,
+                block_timestamp,
+                event_type: OrderbookEventType::Fulfilled(order.clone()),
+            });
+        } else {
+            error!("Failed to append Fulfilled event");
+        }
         Ok(())
     }
 
@@ -259,7 +389,16 @@ impl Storage for JSONStorage {
         block_timestamp: u64,
         order: &ExecutedData,
     ) -> StorageResult<()> {
-        info!("EXECUTED {} {:?}", block_id, order);
+        trace!("EXECUTED {} {:?}", block_id, order);
+        if let Ok(mut events) = self.events.lock() {
+            events.push(OrderbookEvent {
+                block_id,
+                block_timestamp,
+                event_type: OrderbookEventType::Executed(order.clone()),
+            });
+        } else {
+            error!("Failed to append Executed event");
+        }
         Ok(())
     }
 
@@ -269,6 +408,16 @@ impl Storage for JSONStorage {
         block_timestamp: u64,
         order: &RollbackStatusData,
     ) -> StorageResult<()> {
+        trace!("ROLLBACK {} {:?}", block_id, order);
+        if let Ok(mut events) = self.events.lock() {
+            events.push(OrderbookEvent {
+                block_id,
+                block_timestamp,
+                event_type: OrderbookEventType::RollbackStatus(order.clone()),
+            });
+        } else {
+            error!("Failed to append Executed event");
+        }
         Ok(())
     }
 }
