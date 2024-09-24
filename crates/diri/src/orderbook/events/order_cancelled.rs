@@ -1,7 +1,12 @@
 use cainome::rs::abigen;
-use starknet::core::types::{EmittedEvent, Felt};
+use starknet::core::{
+    types::{EmittedEvent, Felt},
+    utils::parse_cairo_short_string,
+};
 
-use super::{OrderbookParseError, ORDER_CANCELLED_SELECTOR};
+use crate::types::CancelledData;
+
+use super::{common::to_hex_str, OrderbookParseError, ORDER_CANCELLED_SELECTOR};
 
 abigen!(
     V1,
@@ -103,6 +108,19 @@ impl TryFrom<EmittedEvent> for OrderCancelled {
             }
         } else {
             Err(OrderbookParseError::Selector)
+        }
+    }
+}
+
+impl From<OrderCancelled> for CancelledData {
+    fn from(value: OrderCancelled) -> Self {
+        match value {
+            OrderCancelled::V1(value) => Self {
+                order_hash: to_hex_str(&value.order_hash),
+                order_type: format!("{:?}", value.order_type),
+                reason: parse_cairo_short_string(&value.reason)
+                    .unwrap_or(to_hex_str(&value.reason)),
+            },
         }
     }
 }

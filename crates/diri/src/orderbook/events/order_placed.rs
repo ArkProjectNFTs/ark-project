@@ -1,9 +1,12 @@
 use cainome::rs::abigen;
 use starknet::core::types::{EmittedEvent, Felt};
 
-use crate::types::{to_hex_str, to_hex_str_opt, u256_to_hex, u256_to_hex_opt, PlacedData};
+use crate::types::PlacedData;
 
-use super::{OrderbookParseError, ORDER_PLACED_SELECTOR};
+use super::{
+    common::{to_hex_str, to_hex_str_opt, u256_to_hex, u256_to_hex_opt},
+    OrderbookParseError, ORDER_PLACED_SELECTOR,
+};
 
 abigen!(
     V1,

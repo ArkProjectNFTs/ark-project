@@ -1,7 +1,12 @@
 use cainome::rs::abigen;
 use starknet::core::types::{EmittedEvent, Felt};
 
-use super::{OrderbookParseError, ORDER_FULFILLED_SELECTOR};
+use crate::types::FulfilledData;
+
+use super::{
+    common::{to_hex_str, to_hex_str_opt},
+    OrderbookParseError, ORDER_FULFILLED_SELECTOR,
+};
 
 abigen!(
     V1,
@@ -108,6 +113,23 @@ impl TryFrom<EmittedEvent> for OrderFulfilled {
             }
         } else {
             Err(OrderbookParseError::Selector)
+        }
+    }
+}
+
+impl From<OrderFulfilled> for FulfilledData {
+    fn from(value: OrderFulfilled) -> Self {
+        match value {
+            OrderFulfilled::V1(value) => {
+                let related_order_hash = value.related_order_hash.map(Felt::from);
+
+                Self {
+                    order_hash: to_hex_str(&value.order_hash),
+                    order_type: format!("{:?}", value.order_type),
+                    fulfiller: to_hex_str(&Felt::from(value.fulfiller)),
+                    related_order_hash: to_hex_str_opt(&related_order_hash),
+                }
+            }
         }
     }
 }

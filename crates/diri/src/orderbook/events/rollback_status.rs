@@ -1,7 +1,12 @@
 use cainome::rs::abigen;
-use starknet::core::types::{EmittedEvent, Felt};
+use starknet::core::{
+    types::{EmittedEvent, Felt},
+    utils::parse_cairo_short_string,
+};
 
-use super::{OrderbookParseError, ROLLBACK_STATUS_SELECTOR};
+use crate::types::RollbackStatusData;
+
+use super::{common::to_hex_str, OrderbookParseError, ROLLBACK_STATUS_SELECTOR};
 
 abigen!(
   V1,
@@ -104,6 +109,19 @@ impl TryFrom<EmittedEvent> for RollbackStatus {
             }
         } else {
             Err(OrderbookParseError::Selector)
+        }
+    }
+}
+
+impl From<RollbackStatus> for RollbackStatusData {
+    fn from(value: RollbackStatus) -> Self {
+        match value {
+            RollbackStatus::V1(value) => Self {
+                order_hash: to_hex_str(&value.order_hash),
+                order_type: format!("{:?}", value.order_type),
+                reason: parse_cairo_short_string(&value.reason)
+                    .unwrap_or(to_hex_str(&value.reason)),
+            },
         }
     }
 }
