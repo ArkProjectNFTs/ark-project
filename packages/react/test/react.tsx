@@ -15,9 +15,9 @@ import {
   RenderResult
 } from "@testing-library/react";
 
-import { ArkProvider } from "../../react/src/components";
-import { defaultConnector } from "./accounts";
-import config from "./config";
+import { config, defaultConnector } from "@ark-project/test";
+
+import { ArkProvider } from "../src/components/ArkProvider";
 
 function rpc() {
   return {
@@ -91,7 +91,7 @@ function customRender(
 }
 
 function customRenderHook<RenderResult, Props>(
-  render: (initialProps: Props) => RenderResult,
+  render: () => RenderResult,
   options: Omit<RenderHookOptions<Props>, "wrapper"> & {
     connectorOptions?: Partial<MockConnectorOptions>;
   } = {}

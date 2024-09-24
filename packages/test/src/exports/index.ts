@@ -1,5 +1,3 @@
-export * from "../accounts";
-export * from "../config";
-export * from "../react";
-export * from "../setup";
-export * from "../utils";
+export * from "../accounts.js";
+export { config } from "../config.js";
+export { getBalance, mintERC20, mintERC721 } from "../utils.js";

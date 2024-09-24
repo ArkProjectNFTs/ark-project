@@ -1,5 +1,9 @@
+import { Account } from "starknet";
+import { describe, expect, it } from "vitest";
+
+import { accounts, config, mintERC721 } from "@ark-project/test";
+
 import { getFeesAmount, setBrokerFees } from "../src/index.js";
-import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("setBrokerFees", () => {
   it("default", async () => {
@@ -18,7 +22,7 @@ describe("setBrokerFees", () => {
     }
 
     await setBrokerFees(config, {
-      brokerAccount: listingBroker,
+      brokerAccount: listingBroker as Account,
       numerator,
       denominator
     });
@@ -43,7 +47,7 @@ describe("setBrokerFees", () => {
 
     await expect(
       setBrokerFees(config, {
-        brokerAccount: listingBroker,
+        brokerAccount: listingBroker as Account,
         numerator,
         denominator
       })

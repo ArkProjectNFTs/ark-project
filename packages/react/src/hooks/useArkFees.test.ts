@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderHook, waitFor } from "../../../test/src/react";
+import { renderHook, waitFor } from "../../test/react";
 import { useArkFees } from "./useArkFees";
 
 describe("useArkFees", () => {

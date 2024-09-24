@@ -1,8 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
-  "globalDotEnv": [".env"],
-  "pipeline": {
+  "tasks": {
     "build:packages": {
       "dependsOn": ["^build"],
       "outputs": [
@@ -78,20 +77,11 @@
   },
   "globalEnv": [
     "ACCOUNT_CLASS_HASH",
-    "ARKCHAIN_RPC_URL",
-    "BROKER_ID",
     "CI",
-    "NEXT_PUBLIC_BROKER_ID",
-    "NEXT_PUBLIC_NFT_API_KEY",
-    "NEXT_PUBLIC_NFT_API_URL",
-    "NEXT_PUBLIC_ORDERBOOK_API_URL",
-    "NEXT_PUBLIC_STARKNET_NFT_CONTRACT",
-    "ORDERBOOK_CONTRACT",
     "SOLIS_ACCOUNT_CLASS_HASH",
     "SOLIS_ADMIN_ADDRESS",
     "SOLIS_ADMIN_ADDRESS_DEV",
     "SOLIS_ADMIN_PRIVATE_KEY",
-    "SOLIS_NETWORK_ID",
     "SOLIS_NODE_URL",
     "STARKNET_ACCOUNT1_ADDRESS",
     "STARKNET_ACCOUNT1_PRIVATE_KEY",
@@ -106,12 +96,6 @@
     "STARKNET_NFT_ADDRESS_DEV",
     "STARKNET_RPC_URL",
     "STARKNET_ADMIN_PRIVATE_KEY",
-    "STARKNET_ADMIN_ADDRESS",
-    "SOLIS_ADMIN_PUBLIC_KEY_DEV",
-    "SOLIS_ADMIN_ADDRESS_SEPOLIA",
-    "SOLIS_ADMIN_PRIVATE_KEY_SEPOLIA",
-    "SOLIS_ADMIN_PUBLIC_KEY_SEPOLIA",
-    "SOLIS_ADMIN_PUBLIC_KEY_MAINNET",
-    "SOLIS_NODE_URL_SEPOLIA"
+    "STARKNET_ADMIN_ADDRESS"
   ]
 }

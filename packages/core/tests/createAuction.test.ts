@@ -1,11 +1,9 @@
+import { describe, expect, it } from "vitest";
+
+import { accounts, config, mintERC721 } from "@ark-project/test";
+
 import { createAuction, getOrderType } from "../src/index.js";
-import {
-  accounts,
-  config,
-  FEE_TOKEN,
-  getTypeFromCairoCustomEnum,
-  mintERC721
-} from "./utils/index.js";
+import { FEE_TOKEN, getTypeFromCairoCustomEnum } from "./utils/index.js";
 
 describe("createAuction", () => {
   it("default", async () => {

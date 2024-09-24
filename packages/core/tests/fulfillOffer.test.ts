@@ -1,11 +1,14 @@
-import { createOffer, fulfillOffer, getOrderStatus } from "../src/index.js";
+import { describe, expect, it } from "vitest";
+
 import {
   accounts,
   config,
   getBalance,
   mintERC20,
   mintERC721
-} from "./utils/index.js";
+} from "@ark-project/test";
+
+import { createOffer, fulfillOffer, getOrderStatus } from "../src/index.js";
 
 describe("fulfillOffer", () => {
   it("default", async function () {

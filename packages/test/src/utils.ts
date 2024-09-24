@@ -2,13 +2,13 @@ import {
   Account,
   AccountInterface,
   cairo,
-  Call,
   CallData,
-  Contract
+  Contract,
+  type Call
 } from "starknet";
 
 import contracts from "../../../contracts.dev.json";
-import config from "./config";
+import { config } from "./config.js";
 
 export async function wait(time: number) {
   return new Promise((res) => setTimeout(res, time));

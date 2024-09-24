@@ -2,8 +2,8 @@ import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import { describe, expect, it } from "vitest";
 
 import { accounts, defaultConnector, mintERC721 } from "@ark-project/test";
-import { act, renderHook, waitFor } from "@ark-project/test/src/react";
 
+import { act, renderHook, waitFor } from "../../test/react";
 import { useCreateListing } from "./useCreateListing";
 
 function useCreateListingWithConnect() {

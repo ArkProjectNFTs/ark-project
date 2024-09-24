@@ -1,5 +1,9 @@
+import { Account } from "starknet";
+import { describe, expect, it } from "vitest";
+
+import { accounts, config, mintERC721 } from "@ark-project/test";
+
 import { getFeesAmount, setDefaultCreatorFees } from "../src/index.js";
-import { accounts, config, mintERC721 } from "./utils/index.js";
 
 describe("setDefaultCreatorFees", () => {
   it("default", async () => {
@@ -16,7 +20,7 @@ describe("setDefaultCreatorFees", () => {
     const denominator = 100;
 
     await setDefaultCreatorFees(config, {
-      account: admin,
+      account: admin as Account,
       receiver: arkSetbyAdminCollectionReceiver.address,
       numerator,
       denominator
@@ -42,7 +46,7 @@ describe("setDefaultCreatorFees", () => {
 
     await expect(
       setDefaultCreatorFees(config, {
-        account: admin,
+        account: admin as Account,
         receiver: arkSetbyAdminCollectionReceiver.address,
         numerator,
         denominator

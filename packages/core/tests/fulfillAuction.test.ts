@@ -1,13 +1,16 @@
-import { fulfillAuction } from "../src/actions/order/fulfillAuction.js";
-import { createAuction, createOffer } from "../src/actions/order/index.js";
-import { getOrderStatus } from "../src/actions/read/index.js";
+import { describe, expect, it } from "vitest";
+
 import {
   accounts,
   config,
   getBalance,
   mintERC20,
   mintERC721
-} from "./utils/index.js";
+} from "@ark-project/test";
+
+import { fulfillAuction } from "../src/actions/order/fulfillAuction.js";
+import { createAuction, createOffer } from "../src/actions/order/index.js";
+import { getOrderStatus } from "../src/actions/read/index.js";
 
 describe("fulfillAuction", () => {
   it("default", async () => {

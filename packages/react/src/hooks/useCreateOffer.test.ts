@@ -8,7 +8,7 @@ import {
   mintERC721
 } from "@ark-project/test";
 
-import { act, renderHook, waitFor } from "../../../test/src/react";
+import { act, renderHook, waitFor } from "../../test/react";
 import useCreateOffer from "./useCreateOffer";
 
 function useCreateOfferWithConnect() {

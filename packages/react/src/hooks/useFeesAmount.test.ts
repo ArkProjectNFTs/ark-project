@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { accounts, mintERC721 } from "@ark-project/test";
-import { renderHook, waitFor } from "@ark-project/test/src/react";
 
+import { renderHook, waitFor } from "../../test/react";
 import { useFeesAmount } from "./useFeesAmount";
 
 describe("useFeesAmount", () => {

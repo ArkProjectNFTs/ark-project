@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { accounts } from "@ark-project/test";
 
-import { renderHook, waitFor } from "../../../test/src/react";
+import { renderHook, waitFor } from "../../test/react";
 import { useBrokerFees } from "./useBrokerFees";
 
 describe("useBrokerFees", () => {

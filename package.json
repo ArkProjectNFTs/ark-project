@@ -38,7 +38,7 @@
     "glob": "^10.3.10",
     "prettier": "^3.1.0",
     "prettier-plugin-sort-imports": "^1.8.1",
-    "turbo": "^1.13.3"
+    "turbo": "^2.1.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
