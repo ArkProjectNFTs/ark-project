@@ -14,6 +14,7 @@ env:
   SCARB_VERSION: 2.7.1
   STARKNET_DEVNET_VERSION: 0.2.0
   DEVNET_DUMP_PATH: /devnet-dump.json
+  DEVNET_DEPLOYMENT_DUMP_PATH: /tmp/devnet-deployment-dump.json
 jobs:
   fmt:
     runs-on: ubuntu-latest
@@ -62,7 +63,7 @@ jobs:
           docker run -d --rm --name starknet-devnet \
             -p 5050:5050 \
             shardlabs/starknet-devnet-rs:${STARKNET_DEVNET_VERSION} \
-            --seed 0 --dump-path $DEVNET_DUMP_PATH --state-archive-capacity full
+            --seed 0 --dump-path $DEVNET_DUMP_PATH --dump-on exit --state-archive-capacity full
             sleep 3  # Wait for 3 seconds for the Docker container to initialize
 
       - name: Install SDK dependencies
@@ -73,6 +74,12 @@ jobs:
       
       - name: Deploy smart contract
         run: pnpm deploy:starknet:local
+      
+      - name: Store devnet state after contract deployment
+        run: |
+          curl -H "Content-type: application/json" \
+              -X POST http://localhost:5050/dump \
+              -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
       
       - name: Run SDK test
         run: |
