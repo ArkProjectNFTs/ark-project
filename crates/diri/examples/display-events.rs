@@ -21,6 +21,8 @@ use starknet::providers::Provider;
 use url::Url;
 
 use std::fs::File;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -131,6 +133,7 @@ async fn main() -> Result<()> {
                 if let Some(to) = to {
                     if end >= to {
                         trace!("`to` block was reached, exit.");
+                        storage.end.store(end, Ordering::SeqCst);
                         break; // return Ok(());
                     }
                 }
@@ -191,10 +194,16 @@ impl Serialize for SerializablePlacedData {
     where
         S: serde::Serializer,
     {
-        let mut state = serializer.serialize_struct("data", 3)?;
+        let mut state = serializer.serialize_struct("data", 9)?;
         state.serialize_field("order_hash", &self.0.order_hash)?;
         state.serialize_field("order_type", &self.0.order_type)?;
-        state.serialize_field("route", &self.0.route)?;
+        state.serialize_field("broker_id", &self.0.broker_id)?;
+        state.serialize_field("offerer", &self.0.offerer)?;
+        state.serialize_field("token_address", &self.0.token_address)?;
+        state.serialize_field("token_id", &self.0.token_id)?;
+        state.serialize_field("quantity", &self.0.quantity)?;
+        state.serialize_field("start_amount", &self.0.start_amount)?;
+        state.serialize_field("end_amount", &self.0.end_amount)?;
         state.end()
     }
 }
@@ -299,7 +308,8 @@ struct OrderbookEvent {
 #[derive(Serialize, Debug)]
 struct JSONStorage {
     start: u64,
-    end: u64,
+    end: AtomicU64,
+    #[serde(skip)]
     output: Option<String>,
     events: Mutex<Vec<OrderbookEvent>>,
 }
@@ -309,7 +319,7 @@ impl JSONStorage {
         Self {
             output,
             start,
-            end: 0,
+            end: AtomicU64::new(0),
             events: Mutex::new(Vec::new()),
         }
     }
