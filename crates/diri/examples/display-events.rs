@@ -53,6 +53,9 @@ struct Args {
     #[clap(long, help = "Block range", env = "BLOCK_RANGE", default_value = "0")]
     block_range: u64,
 
+    #[clap(long, help = "Nb limit of retries")]
+    limit_wait_retries: Option<u64>,
+
     #[clap(long, help = "JSON output", env = "JSON_OUTPUT")]
     output: Option<String>,
 }
@@ -78,6 +81,8 @@ async fn main() -> Result<()> {
 
     // Set to None to keep polling the head of chain.
     let to = args.block_end;
+    let limit_wait_retries = args.limit_wait_retries;
+    let mut nb_retries = 0_u64;
 
     info!("Starting.....!");
 
@@ -118,10 +123,18 @@ async fn main() -> Result<()> {
 
         if start > end {
             trace!("Nothing to fetch at block {start}");
+            if let Some(limit_wait_retries) = limit_wait_retries {
+                if nb_retries > limit_wait_retries {
+                    info!("Wait limit reached");
+                    storage.end.store(latest_block, Ordering::SeqCst);
+                    break;
+                }
+                nb_retries += 1;
+            }
             tokio::time::sleep(tokio::time::Duration::from_millis(sleep_msecs)).await;
             continue;
         }
-
+        nb_retries = 0;
         trace!("Fetching blocks {start} - {end}");
         match indexer
             .index_block_range(BlockId::Number(start), BlockId::Number(end))
@@ -134,7 +147,7 @@ async fn main() -> Result<()> {
                     if end >= to {
                         trace!("`to` block was reached, exit.");
                         storage.end.store(end, Ordering::SeqCst);
-                        break; // return Ok(());
+                        break;
                     }
                 }
 
