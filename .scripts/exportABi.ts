@@ -16,6 +16,8 @@ const contracts = fs.readdirSync(deploymentsDir).filter((file) =>
     file.endsWith(".contract_class.json")
 );
 console.log('\x1b[32m Generating ABI export... \x1b[0m')
+
+//export all contract abi
 contracts.forEach(async (contract) => {
     const contractPath = path.join(deploymentsDir, contract);
     const contractContent = fs.readFileSync(contractPath, "utf8");
@@ -28,6 +30,8 @@ contracts.forEach(async (contract) => {
 
     const targetPath = path.join(TARGET_DIR, `${contract.replace(".contract_class.json", ".ts")}`);
     const fileContent = `${generatedContractComment}\n\nexport default ${abi} as const;`;
+   
+    //save abi
     fs.writeFileSync(targetPath, await prettier.format(fileContent, { parser: "typescript" }));
 });
 
