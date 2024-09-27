@@ -28,7 +28,8 @@
     "deploy:starknet": "dotenv -- turbo run deploy:starknet",
     "deploy:starknet:local": "dotenv -- turbo run deploy:starknet:local --log-prefix=none",
     "deploy:starknet:tokens": "dotenv -- turbo run deploy:starknet:tokens --log-prefix=none",
-    "version:update": "bun .scripts/updateVersion.ts"
+    "version:update": "bun .scripts/updateVersion.ts",
+    "build:contracts": "cd contracts && scarb build && bun ../.scripts/exportABi.ts"
   },
   "dependencies": {
     "@ark-project/eslint-config": "workspace:*",
@@ -40,6 +41,7 @@
     "dotenv-cli": "^7.3.0",
     "glob": "^10.3.10",
     "prettier": "^3.1.0",
+    "starknet": "6.7.0",
     "prettier-plugin-sort-imports": "^1.8.1",
     "turbo": "^1.13.3"
   },
