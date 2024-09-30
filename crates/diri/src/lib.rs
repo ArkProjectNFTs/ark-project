@@ -61,11 +61,13 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         &self,
         from_block: BlockId,
         to_block: BlockId,
+        address: Option<Felt>,
     ) -> IndexerResult<()> {
         let blocks_events = self
             .fetch_events(
                 from_block,
                 to_block,
+                address,
                 Some(vec![vec![
                     selector!("OrderPlaced"),
                     selector!("OrderFulfilled"),
@@ -151,6 +153,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         &self,
         from_block: BlockId,
         to_block: BlockId,
+        address: Option<Felt>,
         keys: Option<Vec<Vec<Felt>>>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, IndexerError> {
         // TODO: setup key filtering here.
@@ -160,7 +163,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         let filter = EventFilter {
             from_block: Some(from_block),
             to_block: Some(to_block),
-            address: None,
+            address,
             keys,
         };
 

@@ -14,6 +14,7 @@ use dotenv::dotenv;
 use serde::ser::SerializeStruct;
 use serde::Serialize;
 use starknet::core::types::BlockId;
+use starknet::core::types::Felt;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::AnyProvider;
 use starknet::providers::JsonRpcClient;
@@ -53,6 +54,9 @@ struct Args {
     #[clap(long, help = "Block range", env = "BLOCK_RANGE", default_value = "0")]
     block_range: u64,
 
+    #[clap(long, help = "Contract address", env = "CONTRACT_ADDRESS")]
+    contract: Option<String>,
+
     #[clap(long, help = "Nb limit of retries")]
     limit_wait_retries: Option<u64>,
 
@@ -78,6 +82,16 @@ async fn main() -> Result<()> {
     let sleep_msecs = args.sleep_msecs;
     let mut from = args.block_start;
     let range = args.block_range;
+    let contract_address = match args.contract {
+        Some(v) => match Felt::from_hex(&v) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                error!("Failed to parse contract address: {}", e);
+                None
+            }
+        },
+        None => None,
+    };
 
     // Set to None to keep polling the head of chain.
     let to = args.block_end;
@@ -137,7 +151,11 @@ async fn main() -> Result<()> {
         nb_retries = 0;
         trace!("Fetching blocks {start} - {end}");
         match indexer
-            .index_block_range(BlockId::Number(start), BlockId::Number(end))
+            .index_block_range(
+                BlockId::Number(start),
+                BlockId::Number(end),
+                contract_address,
+            )
             .await
         {
             Ok(_) => {
