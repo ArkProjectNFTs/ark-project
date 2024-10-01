@@ -1,13 +1,11 @@
 use ark_common::protocol::order_types::OrderTrait;
 use ark_common::protocol::order_types::OrderType;
 
-use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-use core::serde::Serde;
 
 use starknet::ContractAddress;
 
 
-#[derive(Drop, Copy, Debug, Serde, starknet::Store)]
+#[derive(Drop, Copy, Debug)]
 struct OrderInfo {
     order_type: OrderType,
     // Contract address of the currency used on Starknet for the transfer.
@@ -23,24 +21,6 @@ struct OrderInfo {
     offerer: ContractAddress,
 }
 
-
-impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
-    fn into(self: OrderV1) -> OrderInfo {
-        let order_type = self.validate_order_type().expect('Unsupported Order');
-        let token_id = match self.token_id {
-            Option::Some(token_id) => token_id,
-            Option::None => 0,
-        };
-        OrderInfo {
-            order_type,
-            currency_address: self.currency_address,
-            token_address: self.token_address,
-            token_id: token_id,
-            start_amount: self.start_amount,
-            offerer: self.offerer,
-        }
-    }
-}
 
 //! Executor contract on Starknet
 //!
@@ -89,7 +69,7 @@ mod executor {
 
     use starknet::{ContractAddress, ClassHash};
 
-    use super::{OrderInfo, OrderV1IntoOrderInfo};
+    use super::OrderInfo;
 
     component!(path: OrderbookComponent, storage: orderbook, event: OrderbookEvent);
 
@@ -100,8 +80,6 @@ mod executor {
         chain_id: felt252,
         broker_fees: Map<ContractAddress, FeesRatio>,
         ark_fees: FeesRatio,
-        // order hash -> OrderInfo
-        orders: Map<felt252, OrderInfo>,
         // fallback when collection doesn't implement ERC2981
         default_receiver: ContractAddress,
         default_fees: FeesRatio,
@@ -279,10 +257,6 @@ mod executor {
             let vinfo = CreateOrderInfo { order: order.clone() };
             _verify_create_order(@self, @vinfo);
 
-            let order_hash = order.compute_order_hash();
-            let order_info = order.into();
-            self.orders.write(order_hash, order_info);
-
             self.orderbook.create_order(order);
         }
 
@@ -359,7 +333,8 @@ mod executor {
         let canceller = *(cancel_info.canceller);
         assert!(caller == canceller, "Caller is not the canceller");
 
-        let order_info = self.orders.read(*cancel_info.order_hash);
+        let order_info = _get_order_info(self, *cancel_info.order_hash);
+
         // default value for ContractAddress is zero
         // and an order's currency address shall not be zero
         assert!(order_info.currency_address.is_non_zero(), "Order not found");
@@ -372,7 +347,8 @@ mod executor {
         let fulfiller = *(fulfill_info.fulfiller);
         assert!(caller == fulfiller, "Caller is not the fulfiller");
 
-        let order_info = self.orders.read(*fulfill_info.order_hash);
+        let order_info = _get_order_info(self, *fulfill_info.order_hash);
+
         // default value for ContractAddress is zero
         // and an order's currency address shall not be zero
         if order_info.currency_address.is_zero() {
@@ -487,7 +463,7 @@ mod executor {
     ) {
         let related_order_info = match *(fulfill_info.related_order_hash) {
             Option::None => panic!("Fulfill auction order require a related order"),
-            Option::Some(related_order_hash) => self.orders.read(related_order_hash),
+            Option::Some(related_order_hash) => _get_order_info(self, related_order_hash),
         };
         assert!(
             @order_info.currency_address == @related_order_info.currency_address,
@@ -770,5 +746,22 @@ mod executor {
             ark_fees_amount,
             creator_fees_amount,
         )
+    }
+
+    fn _get_order_info(self: @ContractState, order_hash: felt252) -> OrderInfo {
+        let order = self.orderbook.get_order(order_hash);
+        let order_type = self.orderbook.get_order_type(order_hash);
+        let token_id = match order.token_id {
+            Option::Some(token_id) => token_id,
+            Option::None => 0,
+        };
+        OrderInfo {
+            order_type,
+            currency_address: order.currency_address,
+            token_address: order.token_address,
+            token_id,
+            start_amount: order.start_amount,
+            offerer: order.offerer,
+        }
     }
 }

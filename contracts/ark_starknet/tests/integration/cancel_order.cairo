@@ -256,7 +256,7 @@ fn test_cancel_offer_order_already_cancelled() {
 }
 
 #[test]
-#[should_panic(expected: "Order not found")]
+#[should_panic(expected: 'OB: order not found')]
 fn test_cancel_offer_order_bad_order_hash() {
     let (executor_address, erc20_address, nft_address) = setup();
     let token_id = 10;

@@ -143,7 +143,7 @@ fn test_fulfill_offer_order_fulfiller_not_owner() {
 }
 
 #[test]
-#[should_panic(expected: "Order not found")]
+#[should_panic(expected: 'OB: order not found')]
 fn test_fulfill_order_not_found() {
     let (executor_address, _erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
