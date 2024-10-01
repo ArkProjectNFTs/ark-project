@@ -12,7 +12,7 @@
     "contracts:generate": "tsx scripts/contracts-generate.ts",
     "contracts:check": "tsx scripts/contracts-check.ts",
     "dev": "nodemon --watch ../../contracts.json --exec 'npm run contracts:generate' & tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "jest tests -i"
+    "test": "jest"
   },
   "type": "module",
   "main": "./dist/esm/index.js",
