@@ -1,25 +1,24 @@
-import { cancelOrder, createAuction } from "../src/actions/order/index.js";
-import { getOrderStatus } from "../src/actions/read/index.js";
+import { cancelOrder, createListing } from "./index.js";
+import { getOrderStatus } from "../read/index.js";
 import {
   accounts,
   config,
   mintERC721,
   STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+} from "../../../tests/utils/index.js";
 
-describe("cancelAuction", () => {
+describe("cancelListing", () => {
   it("default", async () => {
     const { seller, listingBroker } = accounts;
     const tokenId = await mintERC721({ account: seller });
 
-    const orderHash = await createAuction(config, {
+    const orderHash = await createListing(config, {
       starknetAccount: seller,
       order: {
         brokerId: listingBroker.address,
         tokenAddress: STARKNET_NFT_ADDRESS,
         tokenId,
-        startAmount: BigInt(1),
-        endAmount: BigInt(10)
+        startAmount: BigInt(1)
       },
       approveInfo: {
         tokenAddress: STARKNET_NFT_ADDRESS,
@@ -30,7 +29,7 @@ describe("cancelAuction", () => {
     await cancelOrder(config, {
       starknetAccount: seller,
       cancelInfo: {
-        orderHash: orderHash,
+        orderHash,
         tokenAddress: STARKNET_NFT_ADDRESS,
         tokenId
       }
@@ -39,7 +38,6 @@ describe("cancelAuction", () => {
     const { orderStatus } = await getOrderStatus(config, {
       orderHash
     });
-
     expect(orderStatus).toBe("CancelledUser");
   }, 50_000);
 });

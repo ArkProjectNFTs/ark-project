@@ -3,7 +3,7 @@ import {
   fulfillOffer,
   getOrderStatus,
   OfferV1
-} from "../src/index.js";
+} from "../../index.js";
 import {
   accounts,
   config,
@@ -11,7 +11,7 @@ import {
   mintERC20,
   mintERC721,
   STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+} from "../../../tests/utils/index.js";
 
 describe("fulfillOffer", () => {
   it("default", async function () {

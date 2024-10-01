@@ -1,11 +1,11 @@
-import { cancelOrder, createOffer, getOrderStatus } from "../src/index.js";
+import { cancelOrder, createOffer, getOrderStatus } from "../../index.js";
 import {
   accounts,
   config,
   mintERC20,
   mintERC721,
   STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+} from "../../../tests/utils/index.js";
 
 describe("cancelOffer", () => {
   it("default", async () => {

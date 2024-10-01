@@ -1,11 +1,11 @@
-import { getOrderStatus } from "../src/actions/read/index.js";
-import { createListing, fulfillListing } from "../src/index.js";
+import { getOrderStatus } from "../read/index.js";
+import { createListing, fulfillListing } from "./index.js";
 import {
   accounts,
   config,
   mintERC721,
   STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+} from "../../../tests/utils/index.js";
 
 describe("fulfillOffer", () => {
   it("default", async () => {

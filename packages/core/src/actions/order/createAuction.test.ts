@@ -1,11 +1,11 @@
-import { AuctionV1, createAuction, getOrderType } from "../src/index.js";
+import { AuctionV1, createAuction, getOrderType } from "../../index.js";
 import {
   accounts,
   config,
   getTypeFromCairoCustomEnum,
   mintERC721,
   STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+} from "../../../tests/utils/index.js";
 
 describe("createAuction", () => {
   it("default", async () => {

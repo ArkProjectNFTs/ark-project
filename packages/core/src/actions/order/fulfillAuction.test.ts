@@ -1,6 +1,6 @@
-import { fulfillAuction } from "../src/actions/order/fulfillAuction.js";
-import { createAuction, createOffer } from "../src/actions/order/index.js";
-import { getOrderStatus } from "../src/actions/read/index.js";
+import { fulfillAuction } from "./fulfillAuction.js";
+import { createAuction, createOffer } from "./index.js";
+import { getOrderStatus } from "../read/index.js";
 import {
   accounts,
   config,
@@ -8,7 +8,7 @@ import {
   mintERC20,
   mintERC721,
   STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+} from "../../../tests/utils/index.js";
 
 describe("fulfillAuction", () => {
   it("default", async () => {
