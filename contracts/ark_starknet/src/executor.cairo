@@ -80,8 +80,9 @@ mod executor {
     use openzeppelin::introspection::interface::{ISRC5, ISRC5Dispatcher, ISRC5DispatcherTrait};
 
     use openzeppelin::token::{
-        erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
-        erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
+        erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait, IERC721_ID},
+        erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait},
+        erc1155::interface::{IERC1155, IERC1155Dispatcher, IERC1155DispatcherTrait, IERC1155_ID},
     };
     use starknet::contract_address_to_felt252;
     use starknet::get_contract_address;
@@ -671,11 +672,25 @@ mod executor {
                 );
         }
 
-        let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
-        nft_contract
-            .transfer_from(
-                execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
-            );
+        // Check if contract implements erc721 or erc1155
+        // TODO: work on the namings
+        let src5_dispatcher = ISRC5Dispatcher { contract_address: execution_info.nft_address };
+        if src5_dispatcher.supports_interface(IERC721_ID) {
+            let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
+            nft_contract
+                .transfer_from(
+                    execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
+                );
+        } else if src5_dispatcher.supports_interface(IERC1155_ID) {
+            let _erc1155_contract = IERC1155Dispatcher {
+                contract_address: execution_info.nft_address
+            };
+            // TODO: add token quantity to execution_info
+            // erc1155_contract
+            //     .safe_transfer_from(
+            //         execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
+            //     );
+        }
 
         let tx_info = starknet::get_tx_info().unbox();
         let transaction_hash = tx_info.transaction_hash;
