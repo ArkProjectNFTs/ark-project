@@ -333,5 +333,19 @@ mod orderbook {
         ) {
             self.orderbook._create_collection_offer(order, order_type, order_hash)
         }
+
+        /// Creates a market order
+        fn _create_limit_order(
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+        ) {
+            self.orderbook._create_limit_order(order, order_type, order_hash)
+        }
+
+        /// Creates a limit order
+        fn _create_market_order(
+            ref self: ContractState, order: OrderV1, order_type: OrderType, order_hash: felt252
+        ) {
+            self.orderbook._create_market_order(order, order_type, order_hash)
+        }
     }
 }

@@ -11,6 +11,8 @@ enum OrderType {
     Auction,
     Offer,
     CollectionOffer,
+    Limit,
+    Market
 }
 
 impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
@@ -20,6 +22,8 @@ impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
             OrderType::Auction => 'AUCTION',
             OrderType::Offer => 'OFFER',
             OrderType::CollectionOffer => 'COLLECTION_OFFER',
+            OrderType::Limit => 'LIMIT',
+            OrderType::Market => 'MARKET'
         }
     }
 }
@@ -34,6 +38,10 @@ impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
             Option::Some(OrderType::Offer)
         } else if self == 'COLLECTION_OFFER' {
             Option::Some(OrderType::CollectionOffer)
+        } else if self == 'LIMIT'{
+            Option::Some(OrderType::Limit)
+        } else if self == 'MARKET'{
+            Option::Some(OrderType::Market)
         } else {
             Option::None
         }
@@ -262,6 +270,8 @@ enum RouteType {
     #[default]
     Erc20ToErc721,
     Erc721ToErc20,
+    Erc20ToErc20Buy,
+    Erc20ToErc20Sell
 }
 
 impl RouteIntoFelt252 of Into<RouteType, felt252> {
@@ -269,6 +279,8 @@ impl RouteIntoFelt252 of Into<RouteType, felt252> {
         match self {
             RouteType::Erc20ToErc721 => 'ERC20TOERC721',
             RouteType::Erc721ToErc20 => 'ERC721TOERC20',
+            RouteType::Erc20ToErc20Buy => 'ERC20TOERC20BUY',
+            RouteType::Erc20ToErc20Sell => 'ERC20TOERC20SELL'
         }
     }
 }
@@ -279,6 +291,10 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
             Option::Some(RouteType::Erc20ToErc721)
         } else if self == 'ERC721TOERC20' {
             Option::Some(RouteType::Erc721ToErc20)
+        } else if self == 'ERC20TOERC20BUY'{
+            Option::Some(RouteType::Erc20ToErc20Buy)
+        } else if self == 'ERC20TOERC20SELL'{
+            Option::Some(RouteType::Erc20ToErc20Sell)
         } else {
             Option::None
         }

@@ -324,6 +324,22 @@ mod executor {
                     Option::None => panic!("Invalid token id"),
                 }
             },
+            RouteType::Erc20ToErc20Buy => {
+                assert!(
+                    _check_erc20_amount(
+                        order.currency_address, *(order.start_amount), order.offerer
+                    ),
+                    "Oferrer does not own enough ERC20 tokens to buy"
+                )
+            },
+            RouteType::Erc20ToErc20Sell => {
+                assert!(
+                    _check_erc20_amount(
+                        order.token_address, *(order.quantity), order.offerer
+                    ),
+                    "Oferrer does not own enough ERC20 tokens to sell"
+                )
+            }
         }
     }
 
@@ -374,7 +390,8 @@ mod executor {
                 _verify_fulfill_collection_offer_order(
                     self, order_info, fulfill_info, contract_address
                 );
-            }
+            },
+            _ => panic!("Order not supported")
         }
     }
 

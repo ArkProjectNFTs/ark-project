@@ -19,10 +19,9 @@ const ORDER_VERSION_V1: felt252 = 'v1';
 
 #[derive(Serde, Drop, Copy)]
 struct OrderV1 {
-    // Route ERC20->ERC721 (buy) ERC721->ERC20 (sell)
+    // Route ERC20->ERC721 (buy) ERC721->ERC20 (sell) ERC20BUY ERC20SELL
     route: RouteType,
-    // Contract address of the currency used on Starknet for the transfer.
-    // For now ERC20 -> ETH Starkgate.
+    // Contract address of the payment currency used on Starknet for the transfer.
     currency_address: ContractAddress,
     currency_chain_id: felt252,
     // Salt.
@@ -31,7 +30,7 @@ struct OrderV1 {
     offerer: ContractAddress,
     // Chain id.
     token_chain_id: felt252,
-    // The token contract address.
+    // The token contract address. // exchange token
     token_address: ContractAddress,
     // The token id.
     token_id: Option<u256>,
@@ -121,6 +120,20 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
                 && (*self.end_amount).is_zero()
                 && (*self.route) == RouteType::Erc20ToErc721 {
                 return Result::Ok(OrderType::CollectionOffer);
+            }
+
+            // Limit Order 
+            if(*self.quantity) > 0 
+                && (*self.start_amount) > 0 // price is set
+                && (*self.route == RouteType::Erc20ToErc20Buy || *self.route == RouteType::Erc20ToErc20Sell) {
+                return Result::Ok(OrderType::Limit);
+            }
+
+            // Market Order 
+            if(*self.quantity) > 0 
+                && (*self.start_amount) == 0  // no price
+                && (*self.route == RouteType::Erc20ToErc20Buy || *self.route == RouteType::Erc20ToErc20Sell) {
+                return Result::Ok(OrderType::Limit);
             }
         }
 

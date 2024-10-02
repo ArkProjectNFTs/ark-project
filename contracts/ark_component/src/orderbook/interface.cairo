@@ -33,6 +33,7 @@ pub mod orderbook_errors {
     const ORDER_NOT_AN_OFFER: felt252 = 'OB: order is not an offer';
     const ORDER_NOT_OPEN: felt252 = 'OB: order is not open';
     const ORDER_OPEN: felt252 = 'OB: order is not open';
+    const ORDER_NOT_SUPPORTED: felt252 = 'OB: order not supported';
     const USE_FULFILL_AUCTION: felt252 = 'OB: must use fulfill auction';
     const OFFER_NOT_STARTED: felt252 = 'OB: offer is not started';
     const INVALID_BROKER: felt252 = 'OB: broker is not whitelisted';

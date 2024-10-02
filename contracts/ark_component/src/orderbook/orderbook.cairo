@@ -275,6 +275,12 @@ pub mod OrderbookComponent {
                 OrderType::CollectionOffer => {
                     self._create_collection_offer(order, order_type, order_hash);
                 },
+                OrderType::Limit => {
+                    self._create_limit_order(order, order_type, order_hash);
+                },
+                OrderType::Market => {
+                    self._create_market_order(order, order_type, order_hash);
+                }
             };
 
             HooksCreateOrder::after_create_order(ref self, order);
@@ -352,6 +358,7 @@ pub mod OrderbookComponent {
                 OrderType::Auction => self._fulfill_auction_order(fulfill_info, order),
                 OrderType::Offer => self._fulfill_offer(fulfill_info, order),
                 OrderType::CollectionOffer => self._fulfill_offer(fulfill_info, order),
+                _ => panic_with_felt252(orderbook_errors::ORDER_NOT_SUPPORTED)
             };
 
             self
@@ -799,6 +806,49 @@ pub mod OrderbookComponent {
                         order_version: order.get_version(),
                         order_type,
                         version: ORDER_PLACED_EVENT_VERSION,
+                        cancelled_order_hash: Option::None,
+                        order: order,
+                    }
+                );
+        }
+
+        /// Creates a limit order
+        fn _create_limit_order(
+            ref self: ComponentState<TContractState>, 
+            order: OrderV1, 
+            order_type: OrderType, 
+            order_hash: felt252
+        ) {
+            // todo add matching logic
+            order_write(order_hash, order_type, order);
+            self
+                .emit(
+                    OrderPlaced {
+                        order_hash: order_hash,
+                        order_version: order.get_version(),
+                        order_type: order_type,
+                        cancelled_order_hash: Option::None,
+                        order: order,
+                    }
+                );
+        }
+
+        /// Creates a market order
+        fn _create_market_order(
+            ref self:  ComponentState<TContractState>, 
+            order: OrderV1, 
+            order_type: 
+            OrderType, 
+            order_hash: felt252
+        ) {
+            // todo add matching logic
+            order_write(order_hash, order_type, order);
+            self
+                .emit(
+                    OrderPlaced {
+                        order_hash: order_hash,
+                        order_version: order.get_version(),
+                        order_type: order_type,
                         cancelled_order_hash: Option::None,
                         order: order,
                     }
