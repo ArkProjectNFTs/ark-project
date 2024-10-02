@@ -306,6 +306,7 @@ fn test_create_listing_order_and_fulfill_the_order() {
         token_chain_id: order_listing_1.token_chain_id,
         token_address: order_listing_1.token_address,
         token_id: order_listing_1.token_id,
+        quantity: 1_u256,
         fulfill_broker_address: test_address()
     };
 
@@ -342,6 +343,7 @@ fn test_create_listing_order_and_fulfill_the_order_expired() {
         token_chain_id: order_listing_1.token_chain_id,
         token_address: order_listing_1.token_address,
         token_id: order_listing_1.token_id,
+        quantity: 1_u256,
         fulfill_broker_address: test_address()
     };
 
@@ -368,6 +370,7 @@ fn test_fulfill_classic_token_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: order_listing.token_id,
+        quantity: 1_u256,
         fulfill_broker_address: fulfill_broker_address
     };
 
@@ -413,6 +416,7 @@ fn test_fulfill_classic_collection_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: Option::Some(1),
+        quantity: 1_u256,
         fulfill_broker_address: test_address()
     };
 
@@ -456,6 +460,7 @@ fn test_fulfill_expired_offer() {
         token_chain_id: order_listing.token_chain_id,
         token_address: order_listing.token_address,
         token_id: order_listing.token_id,
+        quantity: 1_u256,
         fulfill_broker_address: fulfill_broker_address
     };
 
