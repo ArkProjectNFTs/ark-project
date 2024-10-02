@@ -40,7 +40,7 @@ impl From<OrderPlaced> for PlacedData {
             cancelled_order_hash: to_hex_str_opt(&value.cancelled_order_hash),
             route: format!("{:?}", value.order.route),
             currency_address: to_hex_str(&FieldElement::from(value.order.currency_address)),
-            currency_chain_id: to_hex_str(&value.order.currency_chain_id),
+            currency_chain_id: format!("0x{:x}", value.order.currency_chain_id),
             salt: to_hex_str(&value.order.salt),
             offerer: to_hex_str(&FieldElement::from(value.order.offerer)),
             token_chain_id: format!("0x{:x}", value.order.token_chain_id),
