@@ -6,11 +6,11 @@ import {
   createCollectionOffer,
   getOrderStatus,
   getOrderType
-} from "../src/index.js";
+} from "../../index.js";
 import {
   getTypeFromCairoCustomEnum,
   STARKNET_NFT_ADDRESS
-} from "./utils/index.js";
+} from "../../../tests/utils/index.js";
 
 describe("createCollectionOffer", () => {
   it("default", async () => {

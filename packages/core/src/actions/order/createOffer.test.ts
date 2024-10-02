@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { accounts, config, mintERC20, mintERC721 } from "@ark-project/test";
 
-import { createOffer, getOrderStatus } from "../src/index.js";
+import { createOffer, getOrderStatus } from "../../index.js";
 
 describe("createOffer", () => {
   it("default", async () => {

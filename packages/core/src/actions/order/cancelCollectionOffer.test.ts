@@ -6,7 +6,7 @@ import {
   cancelCollectionOffer,
   createCollectionOffer,
   getOrderStatus
-} from "../src/index.js";
+} from "../../index.js";
 
 describe("cancelCollectionOffer", () => {
   it("default", async () => {
