@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { config } from "@ark-project/test";
 
-import { getDefaultCreatorFees } from "../src/index.js";
+import { getDefaultCreatorFees } from "../../index.js";
 
 describe("getDefaultCreatorFees", () => {
   it("default", async () => {

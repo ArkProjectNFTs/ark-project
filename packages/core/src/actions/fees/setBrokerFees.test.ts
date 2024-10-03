@@ -3,26 +3,26 @@ import { describe, expect, it } from "vitest";
 
 import { accounts, config, mintERC721 } from "@ark-project/test";
 
-import { getFeesAmount, setCollectionCreatorFees } from "../src/index.js";
+import { getFeesAmount, setBrokerFees } from "../../index.js";
 
-describe("setCollectionCreatorFees", () => {
+describe("setBrokerFees", () => {
   it("default", async () => {
-    const {
-      admin,
-      seller,
-      listingBroker,
-      saleBroker,
-      arkSetbyAdminCollectionReceiver
-    } = accounts;
+    const { seller, listingBroker, saleBroker } = accounts;
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const amount = BigInt(10000);
     const numerator = 1;
     const denominator = 100;
 
-    await setCollectionCreatorFees(config, {
-      account: admin as Account,
-      tokenAddress,
-      receiver: arkSetbyAdminCollectionReceiver.address,
+    const { abi } = await config.starknetProvider.getClassAt(
+      config.starknetExecutorContract
+    );
+
+    if (abi === undefined) {
+      throw new Error("no abi.");
+    }
+
+    await setBrokerFees(config, {
+      brokerAccount: listingBroker as Account,
       numerator,
       denominator
     });
@@ -35,22 +35,19 @@ describe("setCollectionCreatorFees", () => {
       paymentAmount: amount
     });
 
-    expect(fees.creator).toBe(
+    expect(fees.listingBroker).toBe(
       (amount * BigInt(numerator)) / BigInt(denominator)
     );
   }, 50_000);
 
   it("error: invalid fees ratio", async () => {
-    const { admin, seller, arkSetbyAdminCollectionReceiver } = accounts;
-    const { tokenAddress } = await mintERC721({ account: seller });
+    const { listingBroker } = accounts;
     const numerator = 100;
     const denominator = 1;
 
     await expect(
-      setCollectionCreatorFees(config, {
-        account: admin as Account,
-        tokenAddress,
-        receiver: arkSetbyAdminCollectionReceiver.address,
+      setBrokerFees(config, {
+        brokerAccount: listingBroker as Account,
         numerator,
         denominator
       })

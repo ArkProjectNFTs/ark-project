@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { config } from "@ark-project/test";
+import { accounts, config } from "@ark-project/test";
 
-import { getArkFees } from "../src/index.js";
+import { getBrokerFees } from "../../index.js";
 
-describe("getArkFees", () => {
+describe("getBrokerFees", () => {
   it("default", async () => {
-    const fees = await getArkFees(config);
+    const { listingBroker } = accounts;
+    const fees = await getBrokerFees(config, listingBroker.address);
 
     expect(fees).toMatchObject({
       formatted: expect.any(String),

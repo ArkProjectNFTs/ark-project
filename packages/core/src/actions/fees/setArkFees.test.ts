@@ -3,25 +3,18 @@ import { describe, expect, it } from "vitest";
 
 import { accounts, config, mintERC721 } from "@ark-project/test";
 
-import { getFeesAmount, setDefaultCreatorFees } from "../src/index.js";
+import { getFeesAmount, setArkFees } from "../../index.js";
 
-describe("setDefaultCreatorFees", () => {
+describe("setArkFees", () => {
   it("default", async () => {
-    const {
-      admin,
-      seller,
-      listingBroker,
-      saleBroker,
-      arkSetbyAdminCollectionReceiver
-    } = accounts;
+    const { admin, seller, listingBroker, saleBroker } = accounts;
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const amount = BigInt(10000);
     const numerator = 1;
     const denominator = 100;
 
-    await setDefaultCreatorFees(config, {
+    await setArkFees(config, {
       account: admin as Account,
-      receiver: arkSetbyAdminCollectionReceiver.address,
       numerator,
       denominator
     });
@@ -34,20 +27,17 @@ describe("setDefaultCreatorFees", () => {
       paymentAmount: amount
     });
 
-    expect(fees.creator).toBe(
-      (amount * BigInt(numerator)) / BigInt(denominator)
-    );
+    expect(fees.ark).toBe((amount * BigInt(numerator)) / BigInt(denominator));
   }, 50_000);
 
   it("error: invalid fees ratio", async () => {
-    const { admin, arkSetbyAdminCollectionReceiver } = accounts;
+    const { admin } = accounts;
     const numerator = 100;
     const denominator = 1;
 
     await expect(
-      setDefaultCreatorFees(config, {
+      setArkFees(config, {
         account: admin as Account,
-        receiver: arkSetbyAdminCollectionReceiver.address,
         numerator,
         denominator
       })

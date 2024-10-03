@@ -8,7 +8,7 @@ import {
   mintERC721
 } from "@ark-project/test";
 
-import { createOffer, fulfillOffer, getOrderStatus } from "../src/index.js";
+import { createOffer, fulfillOffer, getOrderStatus } from "../../index.js";
 
 describe("fulfillOffer", () => {
   it("default", async function () {
