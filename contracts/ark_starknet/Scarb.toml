@@ -8,6 +8,9 @@ openzeppelin.workspace = true
 ark_common = { path = "../ark_common" }
 ark_component = { path = "../ark_component" }
 
+# Should be in dev-dependencies but scarb 2.7.1 complains:
+# warn: external contracts not found for selectors:
+# `ark_tokens::erc20::FreeMintERC20`, `ark_tokens::erc721::FreeMintNFT`, `ark_tokens::erc721_royalty::FreeMintNFTRoyalty`
 ark_tokens = { path = "../ark_tokens" }
 ark_oz = { path = "../ark_oz" }
 
