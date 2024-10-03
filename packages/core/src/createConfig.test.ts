@@ -1,9 +1,9 @@
-import { describe, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createConfig, networks } from "./index.js";
 
 describe("createconfig", () => {
-  test("default", async () => {
+  it("default", async () => {
     const config = createConfig({
       starknetNetwork: networks.mainnet
     });
@@ -11,7 +11,7 @@ describe("createconfig", () => {
     expect(config).toBeDefined();
   });
 
-  test("error: missing dev starknetExecutorContract", async () => {
+  it("error: missing dev starknetExecutorContract", async () => {
     expect(() => {
       createConfig({
         starknetNetwork: networks.dev
