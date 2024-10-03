@@ -6,6 +6,8 @@ use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, IMaintenanceDispatcher,
     IMaintenanceDispatcherTrait
 };
+use ark_tokens::erc1155::IFreeMintDispatcher as Erc1155Dispatcher;
+use ark_tokens::erc1155::IFreeMintDispatcherTrait as Erc1155DispatcherTrait;
 
 use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
@@ -17,7 +19,7 @@ use openzeppelin::token::erc721::interface::{IERC721Dispatcher, IERC721Dispatche
 use snforge_std::{cheat_caller_address, CheatSpan};
 use starknet::{ContractAddress, contract_address_const};
 
-use super::super::common::setup::{setup, setup_order};
+use super::super::common::setup::{setup, setup_order, setup_erc1155, setup_order_erc1155};
 
 fn create_offer_order(
     executor_address: ContractAddress,
@@ -31,6 +33,30 @@ fn create_offer_order(
     IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
     let mut order = setup_order(erc20_address, nft_address);
+    order.offerer = offerer;
+    order.start_amount = start_amount;
+    order.token_id = Option::Some(token_id);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, start_amount)
+}
+
+fn create_offer_order_erc1155(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    erc1155_address: ContractAddress,
+    token_id: u256,
+    quantity: u256,
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let mut order = setup_order_erc1155(erc20_address, erc1155_address, quantity);
+    order.route = RouteType::Erc20ToErc1155.into();
     order.offerer = offerer;
     order.start_amount = start_amount;
     order.token_id = Option::Some(token_id);
@@ -127,6 +153,25 @@ fn create_fulfill_info(
     }
 }
 
+fn create_fulfill_info_erc1155(
+    order_hash: felt252,
+    fulfiller: ContractAddress,
+    token_address: ContractAddress,
+    token_id: u256,
+    quantity: u256
+) -> FulfillInfo {
+    FulfillInfo {
+        order_hash: order_hash,
+        related_order_hash: Option::None,
+        fulfiller: fulfiller,
+        token_chain_id: 'SN_MAIN',
+        token_address: token_address,
+        token_id: Option::Some(token_id),
+        quantity: quantity,
+        fulfill_broker_address: contract_address_const::<'broker'>()
+    }
+}
+
 #[test]
 fn test_fulfill_offer_order_ok() {
     let (executor_address, erc20_address, nft_address) = setup();
@@ -212,7 +257,7 @@ fn test_fulfill_listing_order_fulfiller_not_enough_erc20_token() {
 
 #[test]
 #[should_panic(expected: "Fulfiller does not own the specified ERC721 token")]
-fn test_fulfill_offer_order_fulfiller_not_owner() {
+fn test_fulfill_offer_order_fulfiller_not_owner_for_erc721() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
     let other = contract_address_const::<'other'>();
@@ -226,6 +271,28 @@ fn test_fulfill_offer_order_fulfiller_not_owner() {
     );
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+}
+
+#[test]
+#[should_panic(expected: "Fulfiller does not own the specified amount of ERC1155 token")]
+fn test_fulfill_offer_order_fulfiller_not_owner_for_erc1155() {
+    let (executor_address, erc20_address, erc1155_address) = setup_erc1155();
+    let fulfiller = contract_address_const::<'fulfiller'>();
+    let other = contract_address_const::<'other'>();
+    let quantity = 50_u256;
+
+    let token_id = Erc1155Dispatcher { contract_address: erc1155_address }.mint(other, quantity);
+
+    let (order_hash, _, _) = create_offer_order_erc1155(
+        executor_address, erc20_address, erc1155_address, token_id, quantity
+    );
+
+    let fulfill_info = create_fulfill_info_erc1155(
+        order_hash, fulfiller, erc1155_address, token_id, quantity
+    );
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
