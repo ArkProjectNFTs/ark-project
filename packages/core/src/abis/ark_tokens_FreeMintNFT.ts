@@ -7,7 +7,7 @@ export default [
   {
     type: "impl",
     name: "ImplFreeMint",
-    interface_name: "ark_tokens::erc721::IFreeMint",
+    interface_name: "ark_tokens::erc721::IFreeMint"
   },
   {
     type: "interface",
@@ -19,49 +19,49 @@ export default [
         inputs: [
           {
             name: "recipient",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "token_uri", type: "core::felt252" },
+          { name: "token_uri", type: "core::felt252" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
         name: "get_current_token_id",
         inputs: [],
         outputs: [{ type: "core::felt252" }],
-        state_mutability: "view",
-      },
-    ],
+        state_mutability: "view"
+      }
+    ]
   },
   {
     type: "impl",
     name: "ERC721MixinImpl",
-    interface_name: "openzeppelin::token::erc721::interface::ERC721ABI",
+    interface_name: "openzeppelin::token::erc721::interface::ERC721ABI"
   },
   {
     type: "struct",
     name: "core::integer::u256",
     members: [
       { name: "low", type: "core::integer::u128" },
-      { name: "high", type: "core::integer::u128" },
-    ],
+      { name: "high", type: "core::integer::u128" }
+    ]
   },
   {
     type: "struct",
     name: "core::array::Span::<core::felt252>",
     members: [
-      { name: "snapshot", type: "@core::array::Array::<core::felt252>" },
-    ],
+      { name: "snapshot", type: "@core::array::Array::<core::felt252>" }
+    ]
   },
   {
     type: "enum",
     name: "core::bool",
     variants: [
       { name: "False", type: "()" },
-      { name: "True", type: "()" },
-    ],
+      { name: "True", type: "()" }
+    ]
   },
   {
     type: "struct",
@@ -69,8 +69,8 @@ export default [
     members: [
       { name: "data", type: "core::array::Array::<core::bytes_31::bytes31>" },
       { name: "pending_word", type: "core::felt252" },
-      { name: "pending_word_len", type: "core::integer::u32" },
-    ],
+      { name: "pending_word_len", type: "core::integer::u32" }
+    ]
   },
   {
     type: "interface",
@@ -82,20 +82,20 @@ export default [
         inputs: [
           {
             name: "account",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "core::integer::u256" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "owner_of",
         inputs: [{ name: "token_id", type: "core::integer::u256" }],
         outputs: [
-          { type: "core::starknet::contract_address::ContractAddress" },
+          { type: "core::starknet::contract_address::ContractAddress" }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -103,17 +103,17 @@ export default [
         inputs: [
           {
             name: "from",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "to",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           { name: "token_id", type: "core::integer::u256" },
-          { name: "data", type: "core::array::Span::<core::felt252>" },
+          { name: "data", type: "core::array::Span::<core::felt252>" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -121,16 +121,16 @@ export default [
         inputs: [
           {
             name: "from",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "to",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "token_id", type: "core::integer::u256" },
+          { name: "token_id", type: "core::integer::u256" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -138,12 +138,12 @@ export default [
         inputs: [
           {
             name: "to",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "token_id", type: "core::integer::u256" },
+          { name: "token_id", type: "core::integer::u256" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -151,21 +151,21 @@ export default [
         inputs: [
           {
             name: "operator",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "approved", type: "core::bool" },
+          { name: "approved", type: "core::bool" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
         name: "get_approved",
         inputs: [{ name: "token_id", type: "core::integer::u256" }],
         outputs: [
-          { type: "core::starknet::contract_address::ContractAddress" },
+          { type: "core::starknet::contract_address::ContractAddress" }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -173,43 +173,43 @@ export default [
         inputs: [
           {
             name: "owner",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "operator",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "supports_interface",
         inputs: [{ name: "interface_id", type: "core::felt252" }],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "name",
         inputs: [],
         outputs: [{ type: "core::byte_array::ByteArray" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "symbol",
         inputs: [],
         outputs: [{ type: "core::byte_array::ByteArray" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "token_uri",
         inputs: [{ name: "token_id", type: "core::integer::u256" }],
         outputs: [{ type: "core::byte_array::ByteArray" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -217,20 +217,20 @@ export default [
         inputs: [
           {
             name: "account",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "core::integer::u256" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "ownerOf",
         inputs: [{ name: "tokenId", type: "core::integer::u256" }],
         outputs: [
-          { type: "core::starknet::contract_address::ContractAddress" },
+          { type: "core::starknet::contract_address::ContractAddress" }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -238,17 +238,17 @@ export default [
         inputs: [
           {
             name: "from",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "to",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           { name: "tokenId", type: "core::integer::u256" },
-          { name: "data", type: "core::array::Span::<core::felt252>" },
+          { name: "data", type: "core::array::Span::<core::felt252>" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -256,16 +256,16 @@ export default [
         inputs: [
           {
             name: "from",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "to",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "tokenId", type: "core::integer::u256" },
+          { name: "tokenId", type: "core::integer::u256" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -273,21 +273,21 @@ export default [
         inputs: [
           {
             name: "operator",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "approved", type: "core::bool" },
+          { name: "approved", type: "core::bool" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
         name: "getApproved",
         inputs: [{ name: "tokenId", type: "core::integer::u256" }],
         outputs: [
-          { type: "core::starknet::contract_address::ContractAddress" },
+          { type: "core::starknet::contract_address::ContractAddress" }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -295,24 +295,24 @@ export default [
         inputs: [
           {
             name: "owner",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "operator",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "tokenURI",
         inputs: [{ name: "tokenId", type: "core::integer::u256" }],
         outputs: [{ type: "core::byte_array::ByteArray" }],
-        state_mutability: "view",
-      },
-    ],
+        state_mutability: "view"
+      }
+    ]
   },
   {
     type: "constructor",
@@ -320,8 +320,8 @@ export default [
     inputs: [
       { name: "name", type: "core::byte_array::ByteArray" },
       { name: "symbol", type: "core::byte_array::ByteArray" },
-      { name: "base_uri", type: "core::byte_array::ByteArray" },
-    ],
+      { name: "base_uri", type: "core::byte_array::ByteArray" }
+    ]
   },
   {
     type: "event",
@@ -331,15 +331,15 @@ export default [
       {
         name: "from",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "to",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
-      { name: "token_id", type: "core::integer::u256", kind: "key" },
-    ],
+      { name: "token_id", type: "core::integer::u256", kind: "key" }
+    ]
   },
   {
     type: "event",
@@ -349,15 +349,15 @@ export default [
       {
         name: "owner",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "approved",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
-      { name: "token_id", type: "core::integer::u256", kind: "key" },
-    ],
+      { name: "token_id", type: "core::integer::u256", kind: "key" }
+    ]
   },
   {
     type: "event",
@@ -367,15 +367,15 @@ export default [
       {
         name: "owner",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "operator",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
-      { name: "approved", type: "core::bool", kind: "data" },
-    ],
+      { name: "approved", type: "core::bool", kind: "data" }
+    ]
   },
   {
     type: "event",
@@ -385,25 +385,25 @@ export default [
       {
         name: "Transfer",
         type: "openzeppelin::token::erc721::erc721::ERC721Component::Transfer",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "Approval",
         type: "openzeppelin::token::erc721::erc721::ERC721Component::Approval",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "ApprovalForAll",
         type: "openzeppelin::token::erc721::erc721::ERC721Component::ApprovalForAll",
-        kind: "nested",
-      },
-    ],
+        kind: "nested"
+      }
+    ]
   },
   {
     type: "event",
     name: "openzeppelin::introspection::src5::SRC5Component::Event",
     kind: "enum",
-    variants: [],
+    variants: []
   },
   {
     type: "event",
@@ -413,13 +413,13 @@ export default [
       {
         name: "ERC721Event",
         type: "openzeppelin::token::erc721::erc721::ERC721Component::Event",
-        kind: "flat",
+        kind: "flat"
       },
       {
         name: "SRC5Event",
         type: "openzeppelin::introspection::src5::SRC5Component::Event",
-        kind: "flat",
-      },
-    ],
-  },
+        kind: "flat"
+      }
+    ]
+  }
 ] as const;

@@ -7,7 +7,7 @@ export default [
   {
     type: "impl",
     name: "AppchainMessagingUpgradeImpl",
-    interface_name: "ark_starknet::appchain_messaging::IUpgradeable",
+    interface_name: "ark_starknet::appchain_messaging::IUpgradeable"
   },
   {
     type: "interface",
@@ -17,24 +17,24 @@ export default [
         type: "function",
         name: "upgrade",
         inputs: [
-          { name: "class_hash", type: "core::starknet::class_hash::ClassHash" },
+          { name: "class_hash", type: "core::starknet::class_hash::ClassHash" }
         ],
         outputs: [],
-        state_mutability: "external",
-      },
-    ],
+        state_mutability: "external"
+      }
+    ]
   },
   {
     type: "impl",
     name: "AppchainMessagingImpl",
-    interface_name: "ark_starknet::appchain_messaging::IAppchainMessaging",
+    interface_name: "ark_starknet::appchain_messaging::IAppchainMessaging"
   },
   {
     type: "struct",
     name: "core::array::Span::<core::felt252>",
     members: [
-      { name: "snapshot", type: "@core::array::Array::<core::felt252>" },
-    ],
+      { name: "snapshot", type: "@core::array::Array::<core::felt252>" }
+    ]
   },
   {
     type: "interface",
@@ -46,11 +46,11 @@ export default [
         inputs: [
           {
             name: "appchain_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -58,13 +58,13 @@ export default [
         inputs: [
           {
             name: "to_address",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           { name: "selector", type: "core::felt252" },
-          { name: "payload", type: "core::array::Span::<core::felt252>" },
+          { name: "payload", type: "core::array::Span::<core::felt252>" }
         ],
         outputs: [{ type: "(core::felt252, core::felt252)" }],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -72,11 +72,11 @@ export default [
         inputs: [
           {
             name: "messages_hashes",
-            type: "core::array::Span::<core::felt252>",
-          },
+            type: "core::array::Span::<core::felt252>"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -84,12 +84,12 @@ export default [
         inputs: [
           {
             name: "from_address",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "payload", type: "core::array::Span::<core::felt252>" },
+          { name: "payload", type: "core::array::Span::<core::felt252>" }
         ],
         outputs: [{ type: "core::felt252" }],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -97,19 +97,19 @@ export default [
         inputs: [
           {
             name: "from_address",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "to_address",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           { name: "selector", type: "core::felt252" },
-          { name: "payload", type: "core::array::Span::<core::felt252>" },
+          { name: "payload", type: "core::array::Span::<core::felt252>" }
         ],
         outputs: [],
-        state_mutability: "external",
-      },
-    ],
+        state_mutability: "external"
+      }
+    ]
   },
   {
     type: "constructor",
@@ -117,13 +117,13 @@ export default [
     inputs: [
       {
         name: "owner",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
         name: "appchain_account",
-        type: "core::starknet::contract_address::ContractAddress",
-      },
-    ],
+        type: "core::starknet::contract_address::ContractAddress"
+      }
+    ]
   },
   {
     type: "event",
@@ -134,21 +134,21 @@ export default [
       {
         name: "from",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "to",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       { name: "selector", type: "core::felt252", kind: "data" },
       { name: "nonce", type: "core::felt252", kind: "data" },
       {
         name: "payload",
         type: "core::array::Span::<core::felt252>",
-        kind: "data",
-      },
-    ],
+        kind: "data"
+      }
+    ]
   },
   {
     type: "event",
@@ -158,9 +158,9 @@ export default [
       {
         name: "messages_hashes",
         type: "core::array::Span::<core::felt252>",
-        kind: "data",
-      },
-    ],
+        kind: "data"
+      }
+    ]
   },
   {
     type: "event",
@@ -171,19 +171,19 @@ export default [
       {
         name: "from",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "to",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "payload",
         type: "core::array::Span::<core::felt252>",
-        kind: "data",
-      },
-    ],
+        kind: "data"
+      }
+    ]
   },
   {
     type: "event",
@@ -193,20 +193,20 @@ export default [
       {
         name: "from_address",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "to_address",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       { name: "selector", type: "core::felt252", kind: "key" },
       {
         name: "payload",
         type: "core::array::Span::<core::felt252>",
-        kind: "data",
-      },
-    ],
+        kind: "data"
+      }
+    ]
   },
   {
     type: "event",
@@ -216,9 +216,9 @@ export default [
       {
         name: "class_hash",
         type: "core::starknet::class_hash::ClassHash",
-        kind: "data",
-      },
-    ],
+        kind: "data"
+      }
+    ]
   },
   {
     type: "event",
@@ -228,28 +228,28 @@ export default [
       {
         name: "MessageSentToAppchain",
         type: "ark_starknet::appchain_messaging::appchain_messaging::MessageSentToAppchain",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "MessagesRegisteredFromAppchain",
         type: "ark_starknet::appchain_messaging::appchain_messaging::MessagesRegisteredFromAppchain",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "MessageConsumed",
         type: "ark_starknet::appchain_messaging::appchain_messaging::MessageConsumed",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "MessageExecuted",
         type: "ark_starknet::appchain_messaging::appchain_messaging::MessageExecuted",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "Upgraded",
         type: "ark_starknet::appchain_messaging::appchain_messaging::Upgraded",
-        kind: "nested",
-      },
-    ],
-  },
+        kind: "nested"
+      }
+    ]
+  }
 ] as const;

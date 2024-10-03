@@ -7,15 +7,15 @@ export default [
   {
     type: "impl",
     name: "ImplFreeMint",
-    interface_name: "ark_tokens::erc20::IFreeMint",
+    interface_name: "ark_tokens::erc20::IFreeMint"
   },
   {
     type: "struct",
     name: "core::integer::u256",
     members: [
       { name: "low", type: "core::integer::u128" },
-      { name: "high", type: "core::integer::u128" },
-    ],
+      { name: "high", type: "core::integer::u128" }
+    ]
   },
   {
     type: "interface",
@@ -27,27 +27,27 @@ export default [
         inputs: [
           {
             name: "recipient",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "amount", type: "core::integer::u256" },
+          { name: "amount", type: "core::integer::u256" }
         ],
         outputs: [],
-        state_mutability: "external",
-      },
-    ],
+        state_mutability: "external"
+      }
+    ]
   },
   {
     type: "impl",
     name: "ERC20Impl",
-    interface_name: "openzeppelin::token::erc20::interface::IERC20",
+    interface_name: "openzeppelin::token::erc20::interface::IERC20"
   },
   {
     type: "enum",
     name: "core::bool",
     variants: [
       { name: "False", type: "()" },
-      { name: "True", type: "()" },
-    ],
+      { name: "True", type: "()" }
+    ]
   },
   {
     type: "interface",
@@ -58,7 +58,7 @@ export default [
         name: "total_supply",
         inputs: [],
         outputs: [{ type: "core::integer::u256" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -66,11 +66,11 @@ export default [
         inputs: [
           {
             name: "account",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "core::integer::u256" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -78,15 +78,15 @@ export default [
         inputs: [
           {
             name: "owner",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "spender",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "core::integer::u256" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -94,12 +94,12 @@ export default [
         inputs: [
           {
             name: "recipient",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "amount", type: "core::integer::u256" },
+          { name: "amount", type: "core::integer::u256" }
         ],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -107,16 +107,16 @@ export default [
         inputs: [
           {
             name: "sender",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "recipient",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "amount", type: "core::integer::u256" },
+          { name: "amount", type: "core::integer::u256" }
         ],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -124,19 +124,19 @@ export default [
         inputs: [
           {
             name: "spender",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "amount", type: "core::integer::u256" },
+          { name: "amount", type: "core::integer::u256" }
         ],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "external",
-      },
-    ],
+        state_mutability: "external"
+      }
+    ]
   },
   {
     type: "impl",
     name: "ERC20MetadataImpl",
-    interface_name: "openzeppelin::token::erc20::interface::IERC20Metadata",
+    interface_name: "openzeppelin::token::erc20::interface::IERC20Metadata"
   },
   {
     type: "struct",
@@ -144,8 +144,8 @@ export default [
     members: [
       { name: "data", type: "core::array::Array::<core::bytes_31::bytes31>" },
       { name: "pending_word", type: "core::felt252" },
-      { name: "pending_word_len", type: "core::integer::u32" },
-    ],
+      { name: "pending_word_len", type: "core::integer::u32" }
+    ]
   },
   {
     type: "interface",
@@ -156,28 +156,28 @@ export default [
         name: "name",
         inputs: [],
         outputs: [{ type: "core::byte_array::ByteArray" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "symbol",
         inputs: [],
         outputs: [{ type: "core::byte_array::ByteArray" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "decimals",
         inputs: [],
         outputs: [{ type: "core::integer::u8" }],
-        state_mutability: "view",
-      },
-    ],
+        state_mutability: "view"
+      }
+    ]
   },
   {
     type: "impl",
     name: "ERC20CamelOnlyImpl",
-    interface_name: "openzeppelin::token::erc20::interface::IERC20CamelOnly",
+    interface_name: "openzeppelin::token::erc20::interface::IERC20CamelOnly"
   },
   {
     type: "interface",
@@ -188,7 +188,7 @@ export default [
         name: "totalSupply",
         inputs: [],
         outputs: [{ type: "core::integer::u256" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -196,11 +196,11 @@ export default [
         inputs: [
           {
             name: "account",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "core::integer::u256" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -208,18 +208,18 @@ export default [
         inputs: [
           {
             name: "sender",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "recipient",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "amount", type: "core::integer::u256" },
+          { name: "amount", type: "core::integer::u256" }
         ],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "external",
-      },
-    ],
+        state_mutability: "external"
+      }
+    ]
   },
   {
     type: "constructor",
@@ -227,8 +227,8 @@ export default [
     inputs: [
       { name: "initial_supply", type: "core::integer::u256" },
       { name: "name", type: "core::byte_array::ByteArray" },
-      { name: "symbol", type: "core::byte_array::ByteArray" },
-    ],
+      { name: "symbol", type: "core::byte_array::ByteArray" }
+    ]
   },
   {
     type: "event",
@@ -238,15 +238,15 @@ export default [
       {
         name: "from",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "to",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
-      { name: "value", type: "core::integer::u256", kind: "data" },
-    ],
+      { name: "value", type: "core::integer::u256", kind: "data" }
+    ]
   },
   {
     type: "event",
@@ -256,15 +256,15 @@ export default [
       {
         name: "owner",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "spender",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
-      { name: "value", type: "core::integer::u256", kind: "data" },
-    ],
+      { name: "value", type: "core::integer::u256", kind: "data" }
+    ]
   },
   {
     type: "event",
@@ -274,14 +274,14 @@ export default [
       {
         name: "Transfer",
         type: "openzeppelin::token::erc20::erc20::ERC20Component::Transfer",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "Approval",
         type: "openzeppelin::token::erc20::erc20::ERC20Component::Approval",
-        kind: "nested",
-      },
-    ],
+        kind: "nested"
+      }
+    ]
   },
   {
     type: "event",
@@ -291,8 +291,8 @@ export default [
       {
         name: "ERC20Event",
         type: "openzeppelin::token::erc20::erc20::ERC20Component::Event",
-        kind: "flat",
-      },
-    ],
-  },
+        kind: "flat"
+      }
+    ]
+  }
 ] as const;

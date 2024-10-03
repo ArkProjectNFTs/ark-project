@@ -7,31 +7,31 @@ export default [
   {
     type: "impl",
     name: "ExecutorImpl",
-    interface_name: "ark_starknet::interfaces::IExecutor",
+    interface_name: "ark_starknet::interfaces::IExecutor"
   },
   {
     type: "enum",
     name: "core::option::Option::<core::felt252>",
     variants: [
       { name: "Some", type: "core::felt252" },
-      { name: "None", type: "()" },
-    ],
+      { name: "None", type: "()" }
+    ]
   },
   {
     type: "struct",
     name: "core::integer::u256",
     members: [
       { name: "low", type: "core::integer::u128" },
-      { name: "high", type: "core::integer::u128" },
-    ],
+      { name: "high", type: "core::integer::u128" }
+    ]
   },
   {
     type: "enum",
     name: "core::option::Option::<core::integer::u256>",
     variants: [
       { name: "Some", type: "core::integer::u256" },
-      { name: "None", type: "()" },
-    ],
+      { name: "None", type: "()" }
+    ]
   },
   {
     type: "struct",
@@ -40,23 +40,23 @@ export default [
       { name: "order_hash", type: "core::felt252" },
       {
         name: "related_order_hash",
-        type: "core::option::Option::<core::felt252>",
+        type: "core::option::Option::<core::felt252>"
       },
       {
         name: "fulfiller",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "token_chain_id", type: "core::felt252" },
       {
         name: "token_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "token_id", type: "core::option::Option::<core::integer::u256>" },
       {
         name: "fulfill_broker_address",
-        type: "core::starknet::contract_address::ContractAddress",
-      },
-    ],
+        type: "core::starknet::contract_address::ContractAddress"
+      }
+    ]
   },
   {
     type: "struct",
@@ -65,30 +65,30 @@ export default [
       { name: "order_hash", type: "core::felt252" },
       {
         name: "canceller",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "token_chain_id", type: "core::felt252" },
       {
         name: "token_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
-      { name: "token_id", type: "core::option::Option::<core::integer::u256>" },
-    ],
+      { name: "token_id", type: "core::option::Option::<core::integer::u256>" }
+    ]
   },
   {
     type: "enum",
     name: "ark_common::protocol::order_types::RouteType",
     variants: [
       { name: "Erc20ToErc721", type: "()" },
-      { name: "Erc721ToErc20", type: "()" },
-    ],
+      { name: "Erc721ToErc20", type: "()" }
+    ]
   },
   {
     type: "struct",
     name: "core::array::Span::<core::felt252>",
     members: [
-      { name: "snapshot", type: "@core::array::Array::<core::felt252>" },
-    ],
+      { name: "snapshot", type: "@core::array::Array::<core::felt252>" }
+    ]
   },
   {
     type: "struct",
@@ -97,18 +97,18 @@ export default [
       { name: "route", type: "ark_common::protocol::order_types::RouteType" },
       {
         name: "currency_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "currency_chain_id", type: "core::felt252" },
       { name: "salt", type: "core::felt252" },
       {
         name: "offerer",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "token_chain_id", type: "core::felt252" },
       {
         name: "token_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "token_id", type: "core::option::Option::<core::integer::u256>" },
       { name: "quantity", type: "core::integer::u256" },
@@ -118,10 +118,10 @@ export default [
       { name: "end_date", type: "core::integer::u64" },
       {
         name: "broker_id",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
-      { name: "additional_data", type: "core::array::Span::<core::felt252>" },
-    ],
+      { name: "additional_data", type: "core::array::Span::<core::felt252>" }
+    ]
   },
   {
     type: "struct",
@@ -130,48 +130,48 @@ export default [
       { name: "order_hash", type: "core::felt252" },
       {
         name: "nft_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
         name: "nft_from",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
         name: "nft_to",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "nft_token_id", type: "core::integer::u256" },
       {
         name: "payment_from",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
         name: "payment_to",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "payment_amount", type: "core::integer::u256" },
       {
         name: "payment_currency_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "payment_currency_chain_id", type: "core::felt252" },
       {
         name: "listing_broker_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
         name: "fulfill_broker_address",
-        type: "core::starknet::contract_address::ContractAddress",
-      },
-    ],
+        type: "core::starknet::contract_address::ContractAddress"
+      }
+    ]
   },
   {
     type: "struct",
     name: "ark_oz::erc2981::fees::FeesRatio",
     members: [
       { name: "numerator", type: "core::integer::u256" },
-      { name: "denominator", type: "core::integer::u256" },
-    ],
+      { name: "denominator", type: "core::integer::u256" }
+    ]
   },
   {
     type: "struct",
@@ -180,8 +180,8 @@ export default [
       { name: "fulfill_broker", type: "core::integer::u256" },
       { name: "listing_broker", type: "core::integer::u256" },
       { name: "ark", type: "core::integer::u256" },
-      { name: "creator", type: "core::integer::u256" },
-    ],
+      { name: "creator", type: "core::integer::u256" }
+    ]
   },
   {
     type: "interface",
@@ -193,11 +193,11 @@ export default [
         inputs: [
           {
             name: "fulfillInfo",
-            type: "ark_common::protocol::order_types::FulfillInfo",
-          },
+            type: "ark_common::protocol::order_types::FulfillInfo"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -205,20 +205,20 @@ export default [
         inputs: [
           {
             name: "cancelInfo",
-            type: "ark_common::protocol::order_types::CancelInfo",
-          },
+            type: "ark_common::protocol::order_types::CancelInfo"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
         name: "create_order",
         inputs: [
-          { name: "order", type: "ark_common::protocol::order_v1::OrderV1" },
+          { name: "order", type: "ark_common::protocol::order_v1::OrderV1" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -226,11 +226,11 @@ export default [
         inputs: [
           {
             name: "execution_info",
-            type: "ark_common::protocol::order_types::ExecutionInfo",
-          },
+            type: "ark_common::protocol::order_types::ExecutionInfo"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -238,11 +238,11 @@ export default [
         inputs: [
           {
             name: "admin_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -250,11 +250,11 @@ export default [
         inputs: [
           {
             name: "orderbook_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -262,11 +262,11 @@ export default [
         inputs: [
           {
             name: "eth_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -274,29 +274,29 @@ export default [
         inputs: [
           {
             name: "msger_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
         name: "get_messaging_address",
         inputs: [],
         outputs: [
-          { type: "core::starknet::contract_address::ContractAddress" },
+          { type: "core::starknet::contract_address::ContractAddress" }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "get_orderbook_address",
         inputs: [],
         outputs: [
-          { type: "core::starknet::contract_address::ContractAddress" },
+          { type: "core::starknet::contract_address::ContractAddress" }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -304,20 +304,20 @@ export default [
         inputs: [
           {
             name: "orderbook_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
         name: "set_broker_fees",
         inputs: [
-          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" },
+          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -325,27 +325,27 @@ export default [
         inputs: [
           {
             name: "broker_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [{ type: "ark_oz::erc2981::fees::FeesRatio" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "set_ark_fees",
         inputs: [
-          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" },
+          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
         name: "get_ark_fees",
         inputs: [],
         outputs: [{ type: "ark_oz::erc2981::fees::FeesRatio" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -353,10 +353,10 @@ export default [
         inputs: [],
         outputs: [
           {
-            type: "(core::starknet::contract_address::ContractAddress, ark_oz::erc2981::fees::FeesRatio)",
-          },
+            type: "(core::starknet::contract_address::ContractAddress, ark_oz::erc2981::fees::FeesRatio)"
+          }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -364,12 +364,12 @@ export default [
         inputs: [
           {
             name: "receiver",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" },
+          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -377,15 +377,15 @@ export default [
         inputs: [
           {
             name: "nft_address",
-            type: "core::starknet::contract_address::ContractAddress",
-          },
+            type: "core::starknet::contract_address::ContractAddress"
+          }
         ],
         outputs: [
           {
-            type: "(core::starknet::contract_address::ContractAddress, ark_oz::erc2981::fees::FeesRatio)",
-          },
+            type: "(core::starknet::contract_address::ContractAddress, ark_oz::erc2981::fees::FeesRatio)"
+          }
         ],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
@@ -393,16 +393,16 @@ export default [
         inputs: [
           {
             name: "nft_address",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "receiver",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
-          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" },
+          { name: "fees_ratio", type: "ark_oz::erc2981::fees::FeesRatio" }
         ],
         outputs: [],
-        state_mutability: "external",
+        state_mutability: "external"
       },
       {
         type: "function",
@@ -410,28 +410,28 @@ export default [
         inputs: [
           {
             name: "fulfill_broker",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "listing_broker",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           {
             name: "nft_address",
-            type: "core::starknet::contract_address::ContractAddress",
+            type: "core::starknet::contract_address::ContractAddress"
           },
           { name: "nft_token_id", type: "core::integer::u256" },
-          { name: "payment_amount", type: "core::integer::u256" },
+          { name: "payment_amount", type: "core::integer::u256" }
         ],
         outputs: [{ type: "ark_starknet::interfaces::FeesAmount" }],
-        state_mutability: "view",
-      },
-    ],
+        state_mutability: "view"
+      }
+    ]
   },
   {
     type: "impl",
     name: "ExecutorUpgradeImpl",
-    interface_name: "ark_starknet::interfaces::IUpgradable",
+    interface_name: "ark_starknet::interfaces::IUpgradable"
   },
   {
     type: "interface",
@@ -441,25 +441,25 @@ export default [
         type: "function",
         name: "upgrade",
         inputs: [
-          { name: "class_hash", type: "core::starknet::class_hash::ClassHash" },
+          { name: "class_hash", type: "core::starknet::class_hash::ClassHash" }
         ],
         outputs: [],
-        state_mutability: "external",
-      },
-    ],
+        state_mutability: "external"
+      }
+    ]
   },
   {
     type: "impl",
     name: "ExecutorMaintenanceImpl",
-    interface_name: "ark_starknet::interfaces::IMaintenance",
+    interface_name: "ark_starknet::interfaces::IMaintenance"
   },
   {
     type: "enum",
     name: "core::bool",
     variants: [
       { name: "False", type: "()" },
-      { name: "True", type: "()" },
-    ],
+      { name: "True", type: "()" }
+    ]
   },
   {
     type: "interface",
@@ -470,16 +470,16 @@ export default [
         name: "is_in_maintenance",
         inputs: [],
         outputs: [{ type: "core::bool" }],
-        state_mutability: "view",
+        state_mutability: "view"
       },
       {
         type: "function",
         name: "set_maintenance_mode",
         inputs: [{ name: "on", type: "core::bool" }],
         outputs: [],
-        state_mutability: "external",
-      },
-    ],
+        state_mutability: "external"
+      }
+    ]
   },
   {
     type: "constructor",
@@ -487,18 +487,18 @@ export default [
     inputs: [
       {
         name: "admin_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
         name: "eth_contract_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       {
         name: "messaging_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
-      { name: "chain_id", type: "core::felt252" },
-    ],
+      { name: "chain_id", type: "core::felt252" }
+    ]
   },
   {
     type: "event",
@@ -507,8 +507,8 @@ export default [
     members: [
       { name: "order_hash", type: "core::felt252", kind: "key" },
       { name: "transaction_hash", type: "core::felt252", kind: "key" },
-      { name: "block_timestamp", type: "core::integer::u64", kind: "data" },
-    ],
+      { name: "block_timestamp", type: "core::integer::u64", kind: "data" }
+    ]
   },
   {
     type: "event",
@@ -518,26 +518,26 @@ export default [
       {
         name: "collection",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       { name: "amount", type: "core::integer::u256", kind: "key" },
       {
         name: "currency_contract",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "data",
+        kind: "data"
       },
       {
         name: "receiver",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "data",
-      },
-    ],
+        kind: "data"
+      }
+    ]
   },
   {
     type: "event",
     name: "ark_starknet::executor::executor::ExecutorInMaintenance",
     kind: "struct",
-    members: [{ name: "on", type: "core::bool", kind: "data" }],
+    members: [{ name: "on", type: "core::bool", kind: "data" }]
   },
   {
     type: "event",
@@ -547,18 +547,18 @@ export default [
       {
         name: "OrderExecuted",
         type: "ark_starknet::executor::executor::OrderExecuted",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "CollectionFallbackFees",
         type: "ark_starknet::executor::executor::CollectionFallbackFees",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "ExecutorInMaintenance",
         type: "ark_starknet::executor::executor::ExecutorInMaintenance",
-        kind: "nested",
-      },
-    ],
-  },
+        kind: "nested"
+      }
+    ]
+  }
 ] as const;

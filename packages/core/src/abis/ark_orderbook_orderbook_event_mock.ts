@@ -11,47 +11,47 @@ export default [
       { name: "Listing", type: "()" },
       { name: "Auction", type: "()" },
       { name: "Offer", type: "()" },
-      { name: "CollectionOffer", type: "()" },
-    ],
+      { name: "CollectionOffer", type: "()" }
+    ]
   },
   {
     type: "enum",
     name: "core::option::Option::<core::felt252>",
     variants: [
       { name: "Some", type: "core::felt252" },
-      { name: "None", type: "()" },
-    ],
+      { name: "None", type: "()" }
+    ]
   },
   {
     type: "enum",
     name: "ark_common::protocol::order_types::RouteType",
     variants: [
       { name: "Erc20ToErc721", type: "()" },
-      { name: "Erc721ToErc20", type: "()" },
-    ],
+      { name: "Erc721ToErc20", type: "()" }
+    ]
   },
   {
     type: "struct",
     name: "core::integer::u256",
     members: [
       { name: "low", type: "core::integer::u128" },
-      { name: "high", type: "core::integer::u128" },
-    ],
+      { name: "high", type: "core::integer::u128" }
+    ]
   },
   {
     type: "enum",
     name: "core::option::Option::<core::integer::u256>",
     variants: [
       { name: "Some", type: "core::integer::u256" },
-      { name: "None", type: "()" },
-    ],
+      { name: "None", type: "()" }
+    ]
   },
   {
     type: "struct",
     name: "core::array::Span::<core::felt252>",
     members: [
-      { name: "snapshot", type: "@core::array::Array::<core::felt252>" },
-    ],
+      { name: "snapshot", type: "@core::array::Array::<core::felt252>" }
+    ]
   },
   {
     type: "struct",
@@ -60,18 +60,18 @@ export default [
       { name: "route", type: "ark_common::protocol::order_types::RouteType" },
       {
         name: "currency_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "currency_chain_id", type: "core::felt252" },
       { name: "salt", type: "core::felt252" },
       {
         name: "offerer",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "token_chain_id", type: "core::felt252" },
       {
         name: "token_address",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
       { name: "token_id", type: "core::option::Option::<core::integer::u256>" },
       { name: "quantity", type: "core::integer::u256" },
@@ -81,10 +81,10 @@ export default [
       { name: "end_date", type: "core::integer::u64" },
       {
         name: "broker_id",
-        type: "core::starknet::contract_address::ContractAddress",
+        type: "core::starknet::contract_address::ContractAddress"
       },
-      { name: "additional_data", type: "core::array::Span::<core::felt252>" },
-    ],
+      { name: "additional_data", type: "core::array::Span::<core::felt252>" }
+    ]
   },
   {
     type: "event",
@@ -96,25 +96,25 @@ export default [
       {
         name: "order_type",
         type: "ark_common::protocol::order_types::OrderType",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "cancelled_order_hash",
         type: "core::option::Option::<core::felt252>",
-        kind: "data",
+        kind: "data"
       },
       {
         name: "order",
         type: "ark_common::protocol::order_v1::OrderV1",
-        kind: "data",
-      },
-    ],
+        kind: "data"
+      }
+    ]
   },
   {
     type: "event",
     name: "ark_orderbook::orderbook_event_mock::orderbook_event_mock::OrderExecuted",
     kind: "struct",
-    members: [{ name: "order_hash", type: "core::felt252", kind: "key" }],
+    members: [{ name: "order_hash", type: "core::felt252", kind: "key" }]
   },
   {
     type: "event",
@@ -122,8 +122,8 @@ export default [
     kind: "struct",
     members: [
       { name: "order_hash", type: "core::felt252", kind: "key" },
-      { name: "reason", type: "core::felt252", kind: "key" },
-    ],
+      { name: "reason", type: "core::felt252", kind: "key" }
+    ]
   },
   {
     type: "event",
@@ -131,8 +131,8 @@ export default [
     kind: "struct",
     members: [
       { name: "order_hash", type: "core::felt252", kind: "key" },
-      { name: "reason", type: "core::felt252", kind: "key" },
-    ],
+      { name: "reason", type: "core::felt252", kind: "key" }
+    ]
   },
   {
     type: "event",
@@ -143,14 +143,14 @@ export default [
       {
         name: "fulfiller",
         type: "core::starknet::contract_address::ContractAddress",
-        kind: "key",
+        kind: "key"
       },
       {
         name: "related_order_hash",
         type: "core::option::Option::<core::felt252>",
-        kind: "key",
-      },
-    ],
+        kind: "key"
+      }
+    ]
   },
   {
     type: "event",
@@ -160,28 +160,28 @@ export default [
       {
         name: "OrderPlaced",
         type: "ark_orderbook::orderbook_event_mock::orderbook_event_mock::OrderPlaced",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "OrderExecuted",
         type: "ark_orderbook::orderbook_event_mock::orderbook_event_mock::OrderExecuted",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "OrderCancelled",
         type: "ark_orderbook::orderbook_event_mock::orderbook_event_mock::OrderCancelled",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "RollbackStatus",
         type: "ark_orderbook::orderbook_event_mock::orderbook_event_mock::RollbackStatus",
-        kind: "nested",
+        kind: "nested"
       },
       {
         name: "OrderFulfilled",
         type: "ark_orderbook::orderbook_event_mock::orderbook_event_mock::OrderFulfilled",
-        kind: "nested",
-      },
-    ],
-  },
+        kind: "nested"
+      }
+    ]
+  }
 ] as const;

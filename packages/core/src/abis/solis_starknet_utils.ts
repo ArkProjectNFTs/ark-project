@@ -8,6 +8,6 @@ export default [
     type: "event",
     name: "solis::starknet_utils::starknet_utils::Event",
     kind: "enum",
-    variants: [],
-  },
+    variants: []
+  }
 ] as const;
