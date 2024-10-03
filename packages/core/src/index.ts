@@ -47,3 +47,5 @@ export {
   networks,
   starknetEthContract
 } from "./constants.js";
+
+export * as abis from "./abis/index.js";

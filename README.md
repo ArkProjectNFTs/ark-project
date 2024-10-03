@@ -130,7 +130,7 @@ Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](http
 3. **Build Contracts**
 
    ```bash
-   cd contracts && scarb build --workspace
+   pnpm run build:contracts
    ```
 
 4. **Launch Katana**
