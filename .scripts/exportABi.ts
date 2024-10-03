@@ -3,7 +3,7 @@ import path from "path";
 import prettier from "prettier";
 import type { CompiledSierra } from "starknet";
 
-const TARGET_DIR = path.join(__dirname, "../artifacts");
+const TARGET_DIR = path.join(__dirname, "../packages/core/src/abis");
 const deploymentsDir = path.join(__dirname, "../contracts/target/dev");
 
 const generatedContractComment = `/**
@@ -17,6 +17,8 @@ const contracts = fs.readdirSync(deploymentsDir).filter((file) =>
 );
 console.log('\x1b[32m Generating ABI export... \x1b[0m')
 
+const exportedContracts: string[] = [];
+
 //export all contract abi
 contracts.forEach(async (contract) => {
     const contractPath = path.join(deploymentsDir, contract);
@@ -28,11 +30,28 @@ contracts.forEach(async (contract) => {
         fs.mkdirSync(TARGET_DIR);
     }
 
-    const targetPath = path.join(TARGET_DIR, `${contract.replace(".contract_class.json", ".ts")}`);
+    const contractName = contract.replace(".contract_class.json", "");
+    exportedContracts.push(contractName);
+
+    const targetPath = path.join(TARGET_DIR, `${contractName}.ts`);
     const fileContent = `${generatedContractComment}\n\nexport default ${abi} as const;`;
    
     //save abi
     fs.writeFileSync(targetPath, await prettier.format(fileContent, { parser: "typescript" }));
 });
 
+// Create index.ts file
+const indexPath = path.join(TARGET_DIR, "index.ts");
+const indexContent = `${generatedContractComment}
+
+${exportedContracts.map(contract => `import ${contract} from './${contract}.js';`).join('\n')}
+
+export {
+  ${exportedContracts.join(',\n  ')}
+};
+`;
+
+fs.writeFileSync(indexPath, await prettier.format(indexContent, { parser: "typescript" }));
+
 console.log(`\x1b[32m exported contract abi's to ${TARGET_DIR} \x1b[0m`);
+console.log(`\x1b[32m created index.ts file in ${TARGET_DIR} \x1b[0m`);
