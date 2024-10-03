@@ -1,13 +1,6 @@
 [workspace]
 
-members = [
-    "ark_common",
-    "ark_component",
-    "ark_orderbook",
-    "ark_starknet",
-    "ark_tokens",
-    "solis",
-]
+members = ["ark_common", "ark_component", "ark_starknet", "ark_tokens"]
 
 [workspace.dependencies]
 starknet = "2.7.1"
