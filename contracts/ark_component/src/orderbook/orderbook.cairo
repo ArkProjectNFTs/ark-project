@@ -5,7 +5,7 @@ pub mod OrderbookComponent {
     };
     use ark_common::protocol::order_types::{
         OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo,
-        ExecutionInfo, RouteType, PriceLevel
+        ExecutionInfo, RouteType, OptionU256
     };
     use ark_common::protocol::order_v1::OrderV1;
     use core::debug::PrintTrait;
@@ -17,7 +17,7 @@ pub mod OrderbookComponent {
     use core::zeroable::Zeroable;
     use starknet::ContractAddress;
     use starknet::storage::Map;
-    use starknet::contract_address_to_felt252;
+
     use super::super::interface::{IOrderbook, IOrderbookAction, orderbook_errors};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
@@ -466,7 +466,7 @@ pub mod OrderbookComponent {
                     token_address: order.token_address,
                     token_from: order.offerer,
                     token_to: related_order.offerer,
-                    token_id: order.token_id.unwrap(),
+                    token_id: OptionU256 { is_some: 1, value: order.token_id.unwrap()},
                     token_quantity: 1,
                     payment_from: related_order.offerer,
                     payment_to: fulfill_info.fulfiller,
@@ -513,7 +513,7 @@ pub mod OrderbookComponent {
                 token_address: order.token_address,
                 token_from: fulfill_info.fulfiller,
                 token_to: order.offerer,
-                token_id: fulfill_info.token_id.unwrap(),
+                token_id: OptionU256 { is_some: 1, value: fulfill_info.token_id.unwrap()},
                 token_quantity: 1,
                 payment_from: order.offerer,
                 payment_to: fulfill_info.fulfiller,
@@ -547,7 +547,7 @@ pub mod OrderbookComponent {
                     token_address: order.token_address,
                     token_from: order.offerer,
                     token_to: fulfill_info.fulfiller,
-                    token_id: order.token_id.unwrap(),
+                    token_id: OptionU256 { is_some: 1, value: order.token_id.unwrap()},
                     token_quantity: 1,
                     payment_from: fulfill_info.fulfiller,
                     payment_to: order.offerer,
@@ -855,24 +855,25 @@ pub mod OrderbookComponent {
             cancelled_order_hash
         }
 
-        fn _create_execution_info(
+        fn _create_listing_execution_info(
             order_hash: felt252,
             buy_order: OrderV1,
             sell_order: OrderV1,
             fulfill_info: FulfillInfo,
-            token_quantity: u64,
+            token_quantity: u256,
             listing_broker_address: ContractAddress,
+            price: u256
         ) -> ExecutionInfo {
             ExecutionInfo {
                 order_hash,
                 token_address: buy_order.token_address,
                 token_from: sell_order.offerer,
                 token_to: buy_order.offerer,
-                token_id: 0,
+                token_id:  OptionU256 { is_some: 0, value: 0},
                 token_quantity,
                 payment_from: buy_order.offerer,
                 payment_to: sell_order.offerer,
-                payment_amount: buy_order.start_amount * token_quantity,
+                payment_amount: price * token_quantity,
                 payment_currency_address: buy_order.currency_address,
                 payment_currency_chain_id: buy_order.currency_chain_id,
                 listing_broker_address: listing_broker_address,
@@ -930,8 +931,10 @@ pub mod OrderbookComponent {
             );
 
             // check that the price is the same
+            let order_price = order.start_amount / order.quantity;
+            let related_order_price = related_order.start_amount / related_order.quantity;
             assert(
-                related_order.start_amount == order.start_amount,
+                order_price == related_order_price,
                 orderbook_errors::ORDER_PRICE_NOT_MATCH
             )
 
@@ -942,7 +945,7 @@ pub mod OrderbookComponent {
                 // fulfilling a sell order with a buy order (related-order)
                 RouteType::Erc20ToErc20Sell => {
                     assert(
-                        related_order.route == Erc20ToErc20Buy, 
+                        related_order.route == RouteType::Erc20ToErc20Buy, 
                         orderbook_errors::ORDER_ROUTE_NOT_VALID
                     );
                     if order_quantity > related_order_quantity {
@@ -959,13 +962,14 @@ pub mod OrderbookComponent {
                         // set buy order as fufilled
                         order_status_write(related_order_hash, OrderStatus::Fulfilled);
                         // set execute info
-                        let execute_info = self._create_execution_info(
+                        let execute_info = self._create_listing_execution_info(
                             related_order_hash,
                             related_order,
                             order,
                             fulfill_info,
                             related_order_quantity,
-                            related_order_hash.broker_id
+                            related_order_hash.broker_id,
+                            order_price
                         );
                         (Option::Some(execute_info), Option::Some(related_order_hash))
                     }else if related_order_quantity > order_quantity {
@@ -982,13 +986,14 @@ pub mod OrderbookComponent {
                         // set sell order as fulfilled
                         order_status_write(order_hash, OrderStatus::Fulfilled);
                         // generate execution info
-                        let execute_info = self._create_execution_info(
+                        let execute_info = self._create_listing_execution_info(
                             order_hash,
                             related_order,
                             order,
                             fulfill_info,
                             order_quantity,
-                            order.broker_id
+                            order.broker_id,
+                            order_price
                         );
                         (Option::Some(execute_info), Option::Some(related_order_hash))
                     }else{
@@ -998,13 +1003,14 @@ pub mod OrderbookComponent {
 
                         // passing any of them as the order hash will fulfill both orders,
                         // so just one executioninfo will be sent.
-                        let execute_info = self._create_execution_info(
+                        let execute_info = self._create_listing_execution_info(
                             order_hash,
                             related_order,
                             order,
                             fulfill_info,
                             order_quantity,
-                            order.broker_id
+                            order.broker_id,
+                            order_price
                         );
                         // return 
                         (Option::Some(execute_info), Option::Some(related_order_hash))
@@ -1013,7 +1019,7 @@ pub mod OrderbookComponent {
                 // fulfilling a buy order with a sell order (related-order)
                 RouteType::Erc20ToErc20Buy => {
                     assert(
-                        related_order.route == Erc20ToErc20Sell, 
+                        related_order.route == RouteType::Erc20ToErc20Sell, 
                         orderbook_errors::ORDER_ROUTE_NOT_VALID
                     );
 
@@ -1030,13 +1036,14 @@ pub mod OrderbookComponent {
                         );
                         // set sell order as fufilled
                         order_status_write(related_order_hash, OrderStatus::Fulfilled);
-                        let execute_info = self._create_execution_info(
+                        let execute_info = self._create_listing_execution_info(
                             related_order_hash,
                             order,
                             related_order,
                             fulfill_info,
                             related_order_quantity,
-                            related_order.broker_id
+                            related_order.broker_id,
+                            order_price
                         );
                         // return 
                         (Option::Some(execute_info), Option::Some(related_order_hash))
@@ -1054,13 +1061,14 @@ pub mod OrderbookComponent {
                         // set buy order as fulfilled
                         order_status_write(order_hash, OrderStatus::Fulfilled);
 
-                        let execute_info = self._create_execution_info(
+                        let execute_info = self._create_listing_execution_info(
                             order_hash,
                             order,
                             related_order,
                             fulfill_info,
                             order_quantity,
-                            order.broker_id
+                            order.broker_id,
+                            order_price
                         );
                         // return 
                         (Option::Some(execute_info), Option::Some(related_order_hash))
@@ -1071,13 +1079,14 @@ pub mod OrderbookComponent {
 
                         // passing any of them as the order hash will fulfill both orders,
                         // so just one executioninfo will be sent
-                        let execute_info = self._create_execution_info(
+                        let execute_info = self._create_listing_execution_info(
                             order_hash,
                             order,
                             related_order,
                             fulfill_info,
                             order_quantity,
-                            order.broker_id
+                            order.broker_id,
+                            order_price
                         );
                         
                         (Option::Some(execute_info), Option::Some(related_order_hash))

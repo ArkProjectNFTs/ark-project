@@ -225,7 +225,7 @@ struct ExecutionInfo {
     token_from: ContractAddress,
     token_to: ContractAddress,
     token_quantity: u256,
-    token_id: u256,
+    token_id: OptionU256,
     payment_from: ContractAddress,
     payment_to: ContractAddress,
     payment_amount: u256,
@@ -295,6 +295,30 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
             Option::Some(RouteType::Erc20ToErc20Sell)
         } else {
             Option::None
+        }
+    }
+}
+
+#[derive(Drop, Copy)]
+struct OptionU256 {
+    is_some: felt252, 
+    value: u256,    
+}
+
+trait OptionU256Trait<T, +Serde<T>, +Drop<T>> {
+    fn get_some(self: @T, value: u256) -> (felt252, u256);
+    fn is_some(self: @T) -> bool;
+}
+
+impl OptionU256Impl of OptionU256Trait<OptionU256> {
+    fn get_some(self: @OptionU256) -> (felt252, u256) {
+        (*self.is_some, *self.value)
+    }
+    fn is_some(self: @OptionU256) -> bool {
+        if *self.is_some == 1 {
+            true 
+        } else {
+            false
         }
     }
 }

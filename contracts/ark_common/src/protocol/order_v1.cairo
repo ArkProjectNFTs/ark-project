@@ -37,7 +37,7 @@ struct OrderV1 {
     // The quantity of the token_id to be offerred (1 for NFTs).
     quantity: u256,
     // in wei. --> 10 | 10 | 10 |
-    start_amount: u256,
+    start_amount: u256, // amount to pay.
     // in wei. --> 0  | 10 | 20 |
     end_amount: u256,
     // Start validity date of the offer, seconds since unix epoch.

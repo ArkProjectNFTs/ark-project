@@ -1,14 +1,7 @@
 use ark_common::protocol::order_types::OrderTrait;
-use ark_common::protocol::order_types::OrderType;
-
+use ark_common::protocol::order_types::{OrderType, RouteType, OptionU256};
 
 use starknet::ContractAddress;
-
-#[derive(Drop, Copy, Debug)]
-struct OptionU256 {
-    is_some: felt252,  // 1 if Some, 0 if None
-    value: u256,    // Valid only if is_some == 1
-}
 
 #[derive(Drop, Copy, Debug)]
 struct OrderInfo {
@@ -18,15 +11,16 @@ struct OrderInfo {
     // The token contract address.
     token_address: ContractAddress,
     // The token id.
-    token_id: OptionU256,
+    token_id: u256,
     // in wei. --> 10 | 10 | 10 |
-    start_amount: u256,
+    start_amount: u256, // amount to pay
     // address making the order
     offerer: ContractAddress,
     // number of tokens
-    quantity: u256 // 0 for ERC721
+    quantity: u256,// 0 for ERC721,
+    // route type
+    route: RouteType
 }
-
 
 //! Executor contract on Starknet
 //!
@@ -397,6 +391,11 @@ mod executor {
                     self, order_info, fulfill_info, contract_address
                 );
             },
+            OrderType::Limit => {
+                _verify_limit_order(
+                    self, order_info, fulfill_info, contract_address
+                )
+            },
             _ => panic!("Order not supported")
         }
     }
@@ -525,6 +524,83 @@ mod executor {
             "Executor not approved by offerer"
         );
     }
+
+
+    fn _verify_limit_order(
+        self: @ContractState,
+        order_info: OrderInfo,
+        fulfill_info: @FulfillInfo,
+        contract_address: ContractAddress
+    ) {
+        let related_order_info = match *(fulfill_info.related_order_hash) {
+            Option::None => panic!("Fulfill limit order require a related order"),
+            Option::Some(related_order_hash) => _get_order_info(self, related_order_hash),
+        };
+        assert!(
+            @order_info.currency_address == @related_order_info.currency_address,
+            "Order and related order use different currency"
+        );
+
+        let (buyer_order, seller_order) =  match order.route {
+            RouteType::Erc20ToErc20Sell => {
+                assert(
+                    related_order_info.route == RouteType::Erc20ToErc20Buy, 
+                    'Order route not valid'
+                );
+                (related_order_info, order_info)
+            },
+
+            RouteType::Erc20ToErc20Buy => {
+                assert(
+                    related_order_info.route == RouteType::Erc20ToErc20Sell, 
+                    'Order route not valid'
+                );
+                (order_info, related_order_info)
+            },
+            _ => panic!('route not supported')
+        };
+
+        let buyer = buyer_order.offerer;
+
+        // checks for buyer
+        assert!(
+            _check_erc20_amount(
+                @buyer_order.currency_address, buyer_order.start_amount, @buyer
+            ),
+            "Buyer does not own enough ERC20 tokens"
+        );
+
+        assert!(
+            _check_erc20_allowance(
+                @buyer_order.currency_address,
+                buyer_order.start_amount,
+                @buyer,
+                @get_contract_address()
+            ),
+            "Buyer's allowance of executor is not enough"
+        );
+
+        let seller = seller_order.offerer;
+
+        // checks for seller
+        assert!(
+            _check_erc20_amount(
+                @seller_order.token_address, seller_order.quantity, @seller
+            ),
+            "Seller does not own enough ERC20 tokens"
+        );
+
+        assert!(
+            _check_erc20_allowance(
+                @seller_order.token_address,
+                seller_order.quantity,
+                @seller,
+                @get_contract_address()
+            ),
+            "Seller's allowance of executor is not enough"
+        );
+    }
+
 
     fn _verify_fulfill_collection_offer_order(
         self: @ContractState,
@@ -658,23 +734,47 @@ mod executor {
                 );
         }
 
-        let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
-        nft_contract
-            .transfer_from(
-                execution_info.token_from, execution_info.token_to, execution_info.token_id
-            );
+        let (is_some, token_id) = execution_info.token_id.get_some();
 
-        let tx_info = starknet::get_tx_info().unbox();
-        let transaction_hash = tx_info.transaction_hash;
-        let block_timestamp = starknet::info::get_block_timestamp();
+        if is_some == 1 {
+            let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
+            nft_contract
+                .transfer_from(
+                    execution_info.token_from, execution_info.token_to, token_id
+                );
+    
+            let tx_info = starknet::get_tx_info().unbox();
+            let transaction_hash = tx_info.transaction_hash;
+            let block_timestamp = starknet::info::get_block_timestamp();
+    
+            let vinfo = ExecutionValidationInfo {
+                order_hash: execution_info.order_hash,
+                transaction_hash,
+                starknet_block_timestamp: block_timestamp,
+                from: execution_info.token_from,
+                to: execution_info.token_to,
+            };
 
-        let vinfo = ExecutionValidationInfo {
-            order_hash: execution_info.order_hash,
-            transaction_hash,
-            starknet_block_timestamp: block_timestamp,
-            from: execution_info.token_from,
-            to: execution_info.token_to,
-        };
+        } else {
+            let erc20_contract = IERC20Dispatcher { contract_address: execution_info.token_address };
+            erc20_contract
+                .transfer_from(
+                    execution_info.token_from, execution_info.token_to, execution_info.token_quantity
+                );
+    
+            let tx_info = starknet::get_tx_info().unbox();
+            let transaction_hash = tx_info.transaction_hash;
+            let block_timestamp = starknet::info::get_block_timestamp();
+    
+            let vinfo = ExecutionValidationInfo {
+                order_hash: execution_info.order_hash,
+                transaction_hash,
+                starknet_block_timestamp: block_timestamp,
+                from: execution_info.token_from,
+                to: execution_info.token_to,
+            };
+            
+        }
 
         self.orderbook.validate_order_execution(vinfo);
     }
@@ -785,7 +885,8 @@ mod executor {
             token_id,
             start_amount: order.start_amount,
             offerer: order.offerer,
-            quantity: order.quantity
+            quantity: order.quantity,
+            route: order.route,
         }
     }
 }
