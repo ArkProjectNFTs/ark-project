@@ -183,9 +183,9 @@ mod executor {
         }
 
         fn get_collection_creator_fees(
-            self: @ContractState, nft_address: ContractAddress
+            self: @ContractState, token_address: ContractAddress
         ) -> (ContractAddress, FeesRatio) {
-            let (receiver, fees_ratio) = self.creator_fees.read(nft_address);
+            let (receiver, fees_ratio) = self.creator_fees.read(token_address);
             if fees_ratio.denominator.is_zero() {
                 self.get_default_creator_fees()
             } else {
@@ -195,21 +195,21 @@ mod executor {
 
         fn set_collection_creator_fees(
             ref self: ContractState,
-            nft_address: ContractAddress,
+            token_address: ContractAddress,
             receiver: ContractAddress,
             fees_ratio: FeesRatio
         ) {
             _ensure_admin(@self);
             assert(fees_ratio.is_valid(), Errors::FEES_RATIO_INVALID);
-            self.creator_fees.write(nft_address, (receiver, fees_ratio));
+            self.creator_fees.write(token_address, (receiver, fees_ratio));
         }
 
         fn get_fees_amount(
             self: @ContractState,
             fulfill_broker: ContractAddress,
             listing_broker: ContractAddress,
-            nft_address: ContractAddress,
-            nft_token_id: u256,
+            token_address: ContractAddress,
+            token_id: OptionU256,
             payment_amount: u256
         ) -> FeesAmount {
             let (
@@ -219,7 +219,7 @@ mod executor {
                 creator_fees_amount
             ) =
                 _compute_fees_amount(
-                self, fulfill_broker, listing_broker, nft_address, nft_token_id, payment_amount
+                self, fulfill_broker, listing_broker, token_address, token_id, payment_amount
             );
 
             FeesAmount {
@@ -650,7 +650,6 @@ mod executor {
             'Chain ID is not SN_MAIN'
         );
 
-        let (is_some, token_id) = execution_info.token_id.get_some();
 
         let currency_contract = IERC20Dispatcher {
             contract_address: execution_info.payment_currency_address.try_into().unwrap()
@@ -660,7 +659,7 @@ mod executor {
             @self,
             @execution_info.token_address,
             execution_info.payment_amount,
-            token_id
+            execution_info.token_id,
         );
         let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
             _compute_fees_amount(
@@ -668,7 +667,7 @@ mod executor {
             execution_info.fulfill_broker_address,
             execution_info.listing_broker_address,
             execution_info.token_address,
-            token_id,
+            execution_info.token_id,
             execution_info.payment_amount
         );
         assert!(
@@ -735,6 +734,8 @@ mod executor {
                     execution_info.payment_from, execution_info.payment_to, seller_amount
                 );
         }
+
+        let (is_some, token_id) = execution_info.token_id.get_some();
 
         let vinfo = if is_some == 1 {
             let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
@@ -814,22 +815,27 @@ mod executor {
     }
 
     fn _compute_creator_fees_amount(
-        self: @ContractState, nft_address: @ContractAddress, payment_amount: u256, token_id: u256
+        self: @ContractState, token_address: @ContractAddress, payment_amount: u256, token_id: OptionU256
     ) -> (ContractAddress, u256) {
-        // check if nft support 2981 interface
-        let dispatcher = ISRC5Dispatcher { contract_address: *nft_address };
-        if dispatcher.supports_interface(IERC2981_ID) {
-            IERC2981Dispatcher { contract_address: *nft_address }
-                .royalty_info(token_id, payment_amount)
-        } else {
-            _fallback_compute_creator_fees_amount(self, nft_address, payment_amount)
-        }
+        let (is_some, token_id) = token_id.get_some();
+        if is_some == 0 {
+            _fallback_compute_creator_fees_amount(self, token_address, payment_amount)
+        }else{
+             // check if nft support 2981 interface
+            let dispatcher = ISRC5Dispatcher { contract_address: *token_address };
+            if dispatcher.supports_interface(IERC2981_ID) {
+                IERC2981Dispatcher { contract_address: *token_address }
+                    .royalty_info(token_id, payment_amount)
+            } else {
+                _fallback_compute_creator_fees_amount(self, token_address, payment_amount)
+            }
+        }   
     }
 
     fn _fallback_compute_creator_fees_amount(
-        self: @ContractState, nft_address: @ContractAddress, payment_amount: u256
+        self: @ContractState, token_address: @ContractAddress, payment_amount: u256
     ) -> (ContractAddress, u256) {
-        let (receiver, fees_ratio) = self.get_collection_creator_fees(*nft_address);
+        let (receiver, fees_ratio) = self.get_collection_creator_fees(*token_address);
         let amount = fees_ratio.compute_amount(payment_amount);
         (receiver, amount)
     }
@@ -848,8 +854,8 @@ mod executor {
         self: @ContractState,
         fulfill_broker_address: ContractAddress,
         listing_broker_address: ContractAddress,
-        nft_address: ContractAddress,
-        nft_token_id: u256,
+        token_address: ContractAddress,
+        token_id: OptionU256,
         payment_amount: u256
     ) -> (u256, u256, u256, u256) {
         let fulfill_broker_fees = self.get_broker_fees(fulfill_broker_address);
@@ -859,7 +865,7 @@ mod executor {
         let fulfill_broker_fees_amount = fulfill_broker_fees.compute_amount(payment_amount);
         let listing_broker_fees_amount = listing_broker_fees.compute_amount(payment_amount);
         let (_, creator_fees_amount) = _compute_creator_fees_amount(
-            self, @nft_address, payment_amount, nft_token_id
+            self, @token_address, payment_amount, token_id, 
         );
         let ark_fees_amount = ark_fees.compute_amount(payment_amount);
         (

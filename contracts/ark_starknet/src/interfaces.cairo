@@ -1,5 +1,5 @@
 use ark_common::protocol::order_types::ExecutionInfo;
-use ark_common::protocol::order_types::OrderV1;
+use ark_common::protocol::order_types::{OrderV1, OptionU256, OptionU256Trait};
 use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
 use ark_oz::erc2981::FeesRatio;
 //! Interfaces for arkchain operator.
@@ -29,18 +29,18 @@ trait IExecutor<T> {
     fn get_default_creator_fees(self: @T) -> (ContractAddress, FeesRatio);
     fn set_default_creator_fees(ref self: T, receiver: ContractAddress, fees_ratio: FeesRatio);
     fn get_collection_creator_fees(
-        self: @T, nft_address: ContractAddress
+        self: @T, token_address: ContractAddress
     ) -> (ContractAddress, FeesRatio);
     fn set_collection_creator_fees(
-        ref self: T, nft_address: ContractAddress, receiver: ContractAddress, fees_ratio: FeesRatio
+        ref self: T, token_address: ContractAddress, receiver: ContractAddress, fees_ratio: FeesRatio
     );
 
     fn get_fees_amount(
         self: @T,
         fulfill_broker: ContractAddress,
         listing_broker: ContractAddress,
-        nft_address: ContractAddress,
-        nft_token_id: u256,
+        token_address: ContractAddress,
+        token_id: OptionU256,
         payment_amount: u256
     ) -> FeesAmount;
 }
