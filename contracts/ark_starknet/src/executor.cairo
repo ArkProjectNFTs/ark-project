@@ -391,7 +391,12 @@ mod executor {
                     self, order_info, fulfill_info, contract_address
                 );
             },
-            OrderType::Limit => {
+            OrderType::LimitBuy => {
+                _verify_limit_order(
+                    self, order_info, fulfill_info, contract_address
+                )
+            },
+            OrderType::LimitSell => {
                 _verify_limit_order(
                     self, order_info, fulfill_info, contract_address
                 )
@@ -543,10 +548,7 @@ mod executor {
 
         let (buyer_order, seller_order) =  match order_info.route {
             RouteType::Erc20ToErc20Sell => {
-                assert(
-                    related_order_info.route == RouteType::Erc20ToErc20Buy, 
-                    'Order route not valid'
-                );
+   
                 (related_order_info, order_info)
             },
 

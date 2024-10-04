@@ -23,7 +23,8 @@ use snforge_std::{
 use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{
-    setup, setup_auction_order, setup_collection_offer_order, setup_listing_order, setup_offer_order
+    setup, setup_erc20_order, setup_auction_order, setup_collection_offer_order, setup_listing_order, setup_offer_order,
+    setup_sell_limit_order, setup_buy_limit_order
 };
 
 
@@ -220,6 +221,104 @@ fn test_create_collection_offer_order_ok() {
     assert_eq!(
         IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
         OrderType::CollectionOffer,
+        "Wrong order type"
+    );
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_status(order_hash),
+        OrderStatus::Open,
+        "Wrong order status"
+    );
+}
+
+#[test]
+fn test_create_buy_limit_order_ok() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let quantity = 5_000_000;
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_buy_limit_order(erc20_address, token_address, offerer, start_amount, quantity);
+    let order_hash = order.compute_order_hash();
+    let order_version = order.get_version();
+
+    let mut spy = spy_events();
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    executor_address,
+                    executor::Event::OrderbookEvent(
+                        OrderbookComponent::Event::OrderPlaced(
+                            OrderbookComponent::OrderPlaced {
+                                order_hash,
+                                order_version,
+                                order_type: OrderType::LimitBuy,
+                                version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
+                                cancelled_order_hash: Option::None,
+                                order,
+                            }
+                        )
+                    )
+                )
+            ]
+        );
+
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
+        OrderType::LimitBuy,
+        "Wrong order type"
+    );
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_status(order_hash),
+        OrderStatus::Open,
+        "Wrong order status"
+    );
+}
+
+#[test]
+fn test_create_sell_limit_order_ok() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let quantity = 5_000_000;
+    Erc20Dispatcher { contract_address: token_address }.mint(offerer, quantity);
+
+    let order = setup_sell_limit_order(erc20_address, token_address, offerer, start_amount, quantity);
+    let order_hash = order.compute_order_hash();
+    let order_version = order.get_version();
+
+    let mut spy = spy_events();
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    executor_address,
+                    executor::Event::OrderbookEvent(
+                        OrderbookComponent::Event::OrderPlaced(
+                            OrderbookComponent::OrderPlaced {
+                                order_hash,
+                                order_version,
+                                order_type: OrderType::LimitSell,
+                                version: OrderbookComponent::ORDER_PLACED_EVENT_VERSION,
+                                cancelled_order_hash: Option::None,
+                                order,
+                            }
+                        )
+                    )
+                )
+            ]
+        );
+
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
+        OrderType::LimitSell,
         "Wrong order type"
     );
     assert_eq!(

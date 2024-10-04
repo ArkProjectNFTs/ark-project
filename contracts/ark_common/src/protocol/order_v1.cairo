@@ -37,9 +37,9 @@ struct OrderV1 {
     // The quantity of the token_id to be offerred (1 for NFTs).
     quantity: u256,
     // in wei. --> 10 | 10 | 10 |
-    start_amount: u256, // amount to pay.
+    start_amount: u256, // amount to pay for buy order.
     // in wei. --> 0  | 10 | 20 |
-    end_amount: u256,
+    end_amount: u256, // amount to receive for sell order
     // Start validity date of the offer, seconds since unix epoch.
     start_date: u64,
     // Expiry date of the order, seconds since unix epoch.
@@ -125,11 +125,20 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
                 return Result::Ok(OrderType::CollectionOffer);
             }
 
-            // Limit Order 
+            // Limit Buy Order 
             if(*self.quantity) > 0 
-                && (*self.start_amount) > 0 // price is set
-                && (*self.route == RouteType::Erc20ToErc20Buy || *self.route == RouteType::Erc20ToErc20Sell) {
-                return Result::Ok(OrderType::Limit);
+                && (*self.start_amount) > 0 // amount to pay
+                && (*self.end_amount).is_zero()
+                && (*self.route == RouteType::Erc20ToErc20Buy) {
+                return Result::Ok(OrderType::LimitBuy);
+            }
+
+            // Limit Sell Order 
+            if(*self.quantity) > 0 
+                && (*self.start_amount).is_zero()
+                && (*self.end_amount) > 0 // amount to receive
+                && (*self.route == RouteType::Erc20ToErc20Sell) {
+                return Result::Ok(OrderType::LimitSell);
             }
         }
 

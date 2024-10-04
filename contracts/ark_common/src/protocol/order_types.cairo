@@ -11,7 +11,8 @@ enum OrderType {
     Auction,
     Offer,
     CollectionOffer,
-    Limit,
+    LimitBuy,
+    LimitSell
 }
 
 impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
@@ -21,7 +22,8 @@ impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
             OrderType::Auction => 'AUCTION',
             OrderType::Offer => 'OFFER',
             OrderType::CollectionOffer => 'COLLECTION_OFFER',
-            OrderType::Limit => 'LIMIT'
+            OrderType::LimitBuy => 'LIMIT_BUY',
+            OrderType::LimitSell => 'LIMIT_SELL'
         }
     }
 }
@@ -36,8 +38,10 @@ impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
             Option::Some(OrderType::Offer)
         } else if self == 'COLLECTION_OFFER' {
             Option::Some(OrderType::CollectionOffer)
-        } else if self == 'LIMIT'{
-            Option::Some(OrderType::Limit)
+        } else if self == 'LIMIT_BUY'{
+            Option::Some(OrderType::LimitBuy)
+        }else if self == 'LIMIT_SELL'{
+            Option::Some(OrderType::LimitSell)
         } else {
             Option::None
         }

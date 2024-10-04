@@ -69,6 +69,13 @@ fn setup() -> (ContractAddress, ContractAddress, ContractAddress) {
     (executor_address, erc20_address, nft_address)
 }
 
+fn setup_erc20_order() -> (ContractAddress, ContractAddress, ContractAddress) {
+    let erc20_address = deploy_erc20();
+    let token_address = deploy_erc20();
+    let executor_address = deploy_executor();
+    (executor_address, erc20_address, token_address)
+}
+
 fn setup_royalty() -> (ContractAddress, ContractAddress, ContractAddress) {
     let erc20_address = deploy_erc20();
     let nft_address = deploy_nft(true);
@@ -84,6 +91,7 @@ fn setup_order(
     token_id: Option<u256>,
     start_amount: u256,
     end_amount: u256,
+    quantity: u256,
 ) -> OrderV1 {
     let chain_id = 'SN_MAIN';
     let block_timestamp = starknet::get_block_timestamp();
@@ -99,7 +107,7 @@ fn setup_order(
         token_chain_id: chain_id,
         token_address: nft_address,
         token_id,
-        quantity: 1,
+        quantity: quantity,
         start_amount,
         end_amount,
         start_date: block_timestamp,
@@ -123,7 +131,8 @@ fn setup_offer_order(
         offerer,
         Option::Some(token_id),
         start_amount,
-        0
+        0,
+        1
     )
 }
 
@@ -141,7 +150,8 @@ fn setup_listing_order(
         offerer,
         Option::Some(token_id),
         start_amount,
-        0
+        0,
+        1
     )
 }
 
@@ -160,7 +170,8 @@ fn setup_auction_order(
         offerer,
         Option::Some(token_id),
         start_amount,
-        end_amount
+        end_amount,
+        1
     )
 }
 
@@ -177,7 +188,46 @@ fn setup_collection_offer_order(
         offerer,
         Option::None,
         start_amount,
-        0
+        0,
+        1
+    )
+}
+
+fn setup_buy_limit_order(
+    currency_address: ContractAddress,
+    token_address: ContractAddress,
+    offerer: ContractAddress,
+    start_amount: u256,
+    quantity: u256
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        token_address,
+        RouteType::Erc20ToErc20Buy,
+        offerer,
+        Option::None,
+        start_amount,
+        0,
+        quantity
+    )
+}
+
+fn setup_sell_limit_order(
+    currency_address: ContractAddress,
+    token_address: ContractAddress,
+    offerer: ContractAddress,
+    start_amount: u256,
+    quantity: u256
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        nft_address,
+        RouteType::Erc20ToErc20Sell,
+        offerer,
+        Option::None,
+        start_amount,
+        0,
+        quantity
     )
 }
 
@@ -284,4 +334,47 @@ fn create_collection_offer_order(
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
 
     (order.compute_order_hash(), offerer, start_amount)
+}
+
+
+fn create_buy_limit_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    token_address: ContractAddress,
+    start_amount: u256,
+    quantity: u256
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_buy_limit_order(
+        erc20_address, token_address, offerer, start_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, start_amount)
+}
+
+fn create_sell_limit_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    token_address: ContractAddress,
+    start_amount: u256,
+    quantity: u256
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+
+    IFreeMintDispatcher { contract_address: token_address }.mint(offerer, quantity);
+
+    let order = setup_sell_limit_order(
+        erc20_address, token_address, offerer, start_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, quantity)
 }
