@@ -24,7 +24,7 @@ use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{
     setup, setup_erc20_order, setup_auction_order, setup_collection_offer_order, setup_listing_order, setup_offer_order,
-    setup_sell_limit_order, setup_buy_limit_order
+    setup_limit_sell_order, setup_limit_buy_order
 };
 
 
@@ -231,14 +231,14 @@ fn test_create_collection_offer_order_ok() {
 }
 
 #[test]
-fn test_create_buy_limit_order_ok() {
+fn test_create_limit_buy_order_ok() {
     let (executor_address, erc20_address, token_address) = setup_erc20_order();
     let offerer = contract_address_const::<'offerer'>();
     let start_amount = 10_000_000;
     let quantity = 5_000_000;
     Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
-    let order = setup_buy_limit_order(erc20_address, token_address, offerer, start_amount, quantity);
+    let order = setup_limit_buy_order(erc20_address, token_address, offerer, start_amount, quantity);
     let order_hash = order.compute_order_hash();
     let order_version = order.get_version();
 
@@ -280,14 +280,14 @@ fn test_create_buy_limit_order_ok() {
 }
 
 #[test]
-fn test_create_sell_limit_order_ok() {
+fn test_create_limit_sell_order_ok() {
     let (executor_address, erc20_address, token_address) = setup_erc20_order();
     let offerer = contract_address_const::<'offerer'>();
-    let start_amount = 10_000_000;
+    let end_amount = 10_000_000;
     let quantity = 5_000_000;
     Erc20Dispatcher { contract_address: token_address }.mint(offerer, quantity);
 
-    let order = setup_sell_limit_order(erc20_address, token_address, offerer, start_amount, quantity);
+    let order = setup_limit_sell_order(erc20_address, token_address, offerer, end_amount, quantity);
     let order_hash = order.compute_order_hash();
     let order_version = order.get_version();
 

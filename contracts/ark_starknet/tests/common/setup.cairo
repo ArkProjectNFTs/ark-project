@@ -28,6 +28,20 @@ fn deploy_erc20() -> ContractAddress {
     erc20_address
 }
 
+fn deploy_erc20_2() -> ContractAddress {
+    let contract = declare("FreeMintERC202").unwrap().contract_class();
+    let initial_supply: u256 = 10_000_000_000_u256;
+    let name: ByteArray = "DummyERC202";
+    let symbol: ByteArray = "DUMMY2";
+
+    let mut calldata: Array<felt252> = array![];
+    initial_supply.serialize(ref calldata);
+    name.serialize(ref calldata);
+    symbol.serialize(ref calldata);
+    let (erc20_address, _) = contract.deploy(@calldata).unwrap();
+    erc20_address
+}
+
 fn deploy_nft(royalty: bool) -> ContractAddress {
     let name: ByteArray = "DummyNFT";
     let symbol: ByteArray = "DUMNFT";
@@ -71,7 +85,7 @@ fn setup() -> (ContractAddress, ContractAddress, ContractAddress) {
 
 fn setup_erc20_order() -> (ContractAddress, ContractAddress, ContractAddress) {
     let erc20_address = deploy_erc20();
-    let token_address = deploy_erc20();
+    let token_address = deploy_erc20_2();
     let executor_address = deploy_executor();
     (executor_address, erc20_address, token_address)
 }
@@ -193,7 +207,7 @@ fn setup_collection_offer_order(
     )
 }
 
-fn setup_buy_limit_order(
+fn setup_limit_buy_order(
     currency_address: ContractAddress,
     token_address: ContractAddress,
     offerer: ContractAddress,
@@ -212,11 +226,11 @@ fn setup_buy_limit_order(
     )
 }
 
-fn setup_sell_limit_order(
+fn setup_limit_sell_order(
     currency_address: ContractAddress,
     token_address: ContractAddress,
     offerer: ContractAddress,
-    start_amount: u256,
+    end_amount: u256,
     quantity: u256
 ) -> OrderV1 {
     setup_order(
@@ -225,8 +239,8 @@ fn setup_sell_limit_order(
         RouteType::Erc20ToErc20Sell,
         offerer,
         Option::None,
-        start_amount,
         0,
+        end_amount,
         quantity
     )
 }
@@ -337,7 +351,7 @@ fn create_collection_offer_order(
 }
 
 
-fn create_buy_limit_order(
+fn create_limit_buy_order(
     executor_address: ContractAddress,
     erc20_address: ContractAddress,
     token_address: ContractAddress,
@@ -348,7 +362,7 @@ fn create_buy_limit_order(
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
-    let order = setup_buy_limit_order(
+    let order = setup_limit_buy_order(
         erc20_address, token_address, offerer, start_amount, quantity
     );
 
@@ -358,19 +372,19 @@ fn create_buy_limit_order(
     (order.compute_order_hash(), offerer, start_amount)
 }
 
-fn create_sell_limit_order(
+fn create_limit_sell_order(
     executor_address: ContractAddress,
     erc20_address: ContractAddress,
     token_address: ContractAddress,
-    start_amount: u256,
+    end_amount: u256,
     quantity: u256
 ) -> (felt252, ContractAddress, u256) {
     let offerer = contract_address_const::<'offerer'>();
 
     IFreeMintDispatcher { contract_address: token_address }.mint(offerer, quantity);
 
-    let order = setup_sell_limit_order(
-        erc20_address, token_address, offerer, start_amount, quantity
+    let order = setup_limit_sell_order(
+        erc20_address, token_address, offerer, end_amount, quantity
     );
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));

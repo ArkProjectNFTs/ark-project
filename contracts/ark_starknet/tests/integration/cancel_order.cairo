@@ -15,8 +15,8 @@ use snforge_std::{cheat_caller_address, CheatSpan, spy_events, EventSpyAssertion
 use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::{
     create_auction_order, create_collection_offer_order, create_listing_order, create_offer_order,
-    setup, setup_default_order, setup_auction_order, setup_collection_offer_order,
-    setup_listing_order, setup_offer_order
+    setup, setup_erc20_order, setup_default_order, setup_auction_order, setup_collection_offer_order,
+    setup_listing_order, setup_offer_order, create_limit_buy_order, create_limit_sell_order
 };
 
 #[test]
@@ -216,6 +216,112 @@ fn test_cancel_collection_offer_order() {
     assert_eq!(
         IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
         OrderType::CollectionOffer,
+        "Wrong order type"
+    );
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_status(order_hash),
+        OrderStatus::CancelledUser,
+        "Wrong order status"
+    );
+}
+
+#[test]
+fn test_cancel_limit_buy_order() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let start_amount = 10_000_000;
+    let quantity = 5000;
+
+    let (order_hash, offerer, start_amount) = create_limit_buy_order(
+        executor_address, erc20_address, token_address, start_amount, quantity
+    );
+
+    let cancel_info = CancelInfo {
+        order_hash,
+        canceller: offerer,
+        token_chain_id: 'SN_MAIN',
+        token_address: nft_address,
+        token_id: Option::None,
+    };
+
+    let mut spy = spy_events();
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.cancel_order(cancel_info);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    executor_address,
+                    executor::Event::OrderbookEvent(
+                        OrderbookComponent::Event::OrderCancelled(
+                            OrderbookComponent::OrderCancelled {
+                                order_hash,
+                                reason: OrderStatus::CancelledUser.into(),
+                                order_type: OrderType::LimitBuy,
+                                version: OrderbookComponent::ORDER_CANCELLED_EVENT_VERSION,
+                            }
+                        )
+                    )
+                )
+            ]
+        );
+
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
+        OrderType::LimitBuy,
+        "Wrong order type"
+    );
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_status(order_hash),
+        OrderStatus::CancelledUser,
+        "Wrong order status"
+    );
+}
+
+#[test]
+fn test_cancel_limit_sell_order() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let end_amount = 10_000_000;
+    let quantity = 5000;
+
+    let (order_hash, offerer, start_amount) = create_limit_sell_order(
+        executor_address, erc20_address, token_address, end_amount, quantity
+    );
+
+    let cancel_info = CancelInfo {
+        order_hash,
+        canceller: offerer,
+        token_chain_id: 'SN_MAIN',
+        token_address: nft_address,
+        token_id: Option::None,
+    };
+
+    let mut spy = spy_events();
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.cancel_order(cancel_info);
+
+    spy
+        .assert_emitted(
+            @array![
+                (
+                    executor_address,
+                    executor::Event::OrderbookEvent(
+                        OrderbookComponent::Event::OrderCancelled(
+                            OrderbookComponent::OrderCancelled {
+                                order_hash,
+                                reason: OrderStatus::CancelledUser.into(),
+                                order_type: OrderType::LimitSell,
+                                version: OrderbookComponent::ORDER_CANCELLED_EVENT_VERSION,
+                            }
+                        )
+                    )
+                )
+            ]
+        );
+
+    assert_eq!(
+        IOrderbookDispatcher { contract_address: executor_address }.get_order_type(order_hash),
+        OrderType::LimitSell,
         "Wrong order type"
     );
     assert_eq!(
