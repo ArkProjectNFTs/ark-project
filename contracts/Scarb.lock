@@ -17,15 +17,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark_orderbook"
-version = "0.1.0"
-dependencies = [
- "ark_common",
- "ark_component",
- "snforge_std",
-]
-
-[[package]]
 name = "ark_oz"
 version = "0.1.0"
 dependencies = [
@@ -150,7 +141,3 @@ source = "git+https://github.com/foundry-rs/starknet-foundry.git?tag=v0.30.0#196
 dependencies = [
  "snforge_scarb_plugin",
 ]
-
-[[package]]
-name = "solis"
-version = "0.1.0"

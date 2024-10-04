@@ -8,19 +8,21 @@ This repository contains the smart contracts for the Ark Project, a comprehensiv
 
 A shared library utilized by both `ark_orderbook` and `ark_starknet` contracts, ensuring consistency and efficiency in operations.
 
-### `ark_orderbook`
+### `ark_component` (Component)
 
-- **Description**: The central orderbook smart contract for the Ark Project.
-- **Network**: Operates on the Solis L3 network.
+- **Description**: Provide Orderbook smart contract component for the Ark Project.
 - **Functionality**: Manages and processes asset orders within the Ark protocol.
 
 ### `ark_starknet`
 
 - **Description**: Starknet's primary smart contract for the Ark Project.
 - **Network**: Designed to run on the Starknet L2 network.
-- **Components**:
-  - **Messaging**: Facilitates communication between Solis, the orderbook and the executor smart contract.
-  - **Executor**: Executes asset swap orders.
+- **Functionality**: delegate assets orders management to `Orderbook` component and executes asset swap orders.
+
+### `ark_oz` (Component)
+
+- **Description**: Provide ERC2981 implementation.
+- **Functionality**: Fees for a given collection/token
 
 ### `ark_tokens` (Testing Only)
 
@@ -28,11 +30,7 @@ A shared library utilized by both `ark_orderbook` and `ark_starknet` contracts, 
 - **Tokens**:
   - `ERC20`: Standard ERC20 token implementation.
   - `ERC721`: Standard ERC721 token implementation.
-
-### `solis`
-
-- **Role**: Acts as a utility contract for Starknet on the Solis platform.
-- **Key Feature**: Generates an ABI that enables Solis to interact seamlessly with Starknet contracts.
+  - `ERC721Royalty`: ERC721 token implementation with ERC2981 support (`ark_oz` component)
 
 ## Build Instructions
 
