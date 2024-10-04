@@ -855,6 +855,31 @@ pub mod OrderbookComponent {
             cancelled_order_hash
         }
 
+        fn _create_execution_info(
+            order_hash: felt252,
+            buy_order: OrderV1,
+            sell_order: OrderV1,
+            fulfill_info: FulfillInfo,
+            token_quantity: u64,
+            listing_broker_address: ContractAddress,
+        ) -> ExecutionInfo {
+            ExecutionInfo {
+                order_hash,
+                token_address: buy_order.token_address,
+                token_from: sell_order.offerer,
+                token_to: buy_order.offerer,
+                token_id: 0,
+                token_quantity,
+                payment_from: buy_order.offerer,
+                payment_to: sell_order.offerer,
+                payment_amount: buy_order.start_amount * token_quantity,
+                payment_currency_address: buy_order.currency_address,
+                payment_currency_chain_id: buy_order.currency_chain_id,
+                listing_broker_address: listing_broker_address,
+                fulfill_broker_address: fulfill_info.fulfill_broker_address,
+            }
+        }
+
         /// Fulfill limit order
         fn _fulfill_limit_order(
             ref self: ComponentState<TContractState>, 
@@ -931,25 +956,18 @@ pub mod OrderbookComponent {
                                 order_quantity - related_order_quantity
                             )
                         );
-
                         // set buy order as fufilled
                         order_status_write(related_order_hash, OrderStatus::Fulfilled);
-
-                        let execute_info = ExecutionInfo {
-                            order_hash: related_order_hash,
-                            token_address: order.token_address,
-                            token_from: order.offerer,
-                            token_to: related_order.offerer,
-                            token_id: 0,
-                            token_quantity: related_order_quantity,
-                            payment_from: related_order.offerer,
-                            payment_to: fulfill_info.fulfiller,
-                            payment_amount: related_order.start_amount * related_order_quantity,
-                            payment_currency_address: related_order.currency_address,
-                            payment_currency_chain_id: related_order.currency_chain_id,
-                            listing_broker_address: related_order.broker_id,
-                            fulfill_broker_address: fulfill_info.fulfill_broker_address
-                        };
+                        // set execute info
+                        let execute_info = self._create_execution_info(
+                            related_order_hash,
+                            related_order,
+                            order,
+                            fulfill_info,
+                            related_order_quantity,
+                            related_order_hash.broker_id
+                        );
+                        (Option::Some(execute_info), Option::Some(related_order_hash))
                     }else if related_order_quantity > order_quantity {
                         // reduce buy quantity, and execute sell quantity
                         self
@@ -963,22 +981,16 @@ pub mod OrderbookComponent {
                         );
                         // set sell order as fulfilled
                         order_status_write(order_hash, OrderStatus::Fulfilled);
-
-                        let execute_info = ExecutionInfo {
-                            order_hash: order_hash,
-                            token_address: order.token_address,
-                            token_from: order.offerer,
-                            token_to: related_order.offerer,
-                            token_id: 0,
-                            token_quantity: order_quantity,
-                            payment_from: related_order.offerer,
-                            payment_to: fulfill_info.fulfiller,
-                            payment_amount: related_order.start_amount * order.quantity,
-                            payment_currency_address: order.currency_address,
-                            payment_currency_chain_id: order.currency_chain_id,
-                            listing_broker_address: order.broker_id,
-                            fulfill_broker_address: fulfill_info.fulfill_broker_address
-                        };
+                        // generate execution info
+                        let execute_info = self._create_execution_info(
+                            order_hash,
+                            related_order,
+                            order,
+                            fulfill_info,
+                            order_quantity,
+                            order.broker_id
+                        );
+                        (Option::Some(execute_info), Option::Some(related_order_hash))
                     }else{
                         // execute both orders
                         order_status_write(order_hash, OrderStatus::Fulfilled);
@@ -986,21 +998,16 @@ pub mod OrderbookComponent {
 
                         // passing any of them as the order hash will fulfill both orders,
                         // so just one executioninfo will be sent.
-                        let execute_info = ExecutionInfo {
-                            order_hash: order_hash,
-                            token_address: order.token_address,
-                            token_from: order.offerer,
-                            token_to: related_order.offerer,
-                            token_id: 0,
-                            token_quantity: order_quantity,
-                            payment_from: related_order.offerer,
-                            payment_to: fulfill_info.fulfiller,
-                            payment_amount: related_order.start_amount * order.quantity,
-                            payment_currency_address: order.currency_address,
-                            payment_currency_chain_id: order.currency_chain_id,
-                            listing_broker_address: order.broker_id,
-                            fulfill_broker_address: fulfill_info.fulfill_broker_address
-                        };
+                        let execute_info = self._create_execution_info(
+                            order_hash,
+                            related_order,
+                            order,
+                            fulfill_info,
+                            order_quantity,
+                            order.broker_id
+                        );
+                        // return 
+                        (Option::Some(execute_info), Option::Some(related_order_hash))
                     }
                 },
                 // fulfilling a buy order with a sell order (related-order)
@@ -1021,25 +1028,18 @@ pub mod OrderbookComponent {
                                 order_quantity - related_order_quantity
                             )
                         );
-
                         // set sell order as fufilled
                         order_status_write(related_order_hash, OrderStatus::Fulfilled);
-
-                        let execute_info = ExecutionInfo {
-                            order_hash: related_order_hash,
-                            address: order.token_address,
-                            token_from: related_order.offerer,
-                            token_to: order.offerer,
-                            token_id: 0,
-                            token_quantity: related_order_quantity,
-                            payment_from: order.offerer,
-                            payment_to: related_order.offerer,
-                            payment_amount: related_order.start_amount * related_order_quantity,
-                            payment_currency_address: related_order.currency_address,
-                            payment_currency_chain_id: related_order.currency_chain_id,
-                            listing_broker_address: related_order.broker_id,
-                            fulfill_broker_address: fulfill_info.fulfill_broker_address
-                        };
+                        let execute_info = self._create_execution_info(
+                            related_order_hash,
+                            order,
+                            related_order,
+                            fulfill_info,
+                            related_order_quantity,
+                            related_order.broker_id
+                        );
+                        // return 
+                        (Option::Some(execute_info), Option::Some(related_order_hash))
                     }else if related_order_quantity > order_quantity {
                         // reduce sell quantity, and execute buy order
                         self
@@ -1054,43 +1054,33 @@ pub mod OrderbookComponent {
                         // set buy order as fulfilled
                         order_status_write(order_hash, OrderStatus::Fulfilled);
 
-                        let execute_info = ExecutionInfo {
-                            order_hash: order_hash,
-                            token_address: order.token_address,
-                            token_from: related_order.offerer,
-                            token_to: order.offerer,
-                            token_id: 0,
-                            token_quantity: order_quantity,
-                            payment_from: order.offerer,
-                            payment_to: related_order.offerer,
-                            payment_amount: related_order.start_amount * order.quantity,
-                            payment_currency_address: order.currency_address,
-                            payment_currency_chain_id: order.currency_chain_id,
-                            listing_broker_address: order.broker_id,
-                            fulfill_broker_address: fulfill_info.fulfill_broker_address
-                        };
+                        let execute_info = self._create_execution_info(
+                            order_hash,
+                            order,
+                            related_order,
+                            fulfill_info,
+                            order_quantity,
+                            order.broker_id
+                        );
+                        // return 
+                        (Option::Some(execute_info), Option::Some(related_order_hash))
                     }else{
                         // execute both orders
                         order_status_write(order_hash, OrderStatus::Fulfilled);
                         order_status_write(related_order_hash, OrderStatus::Fulfilled);
 
                         // passing any of them as the order hash will fulfill both orders,
-                        // so just one executioninfo will be sent.
-                        let execute_info = ExecutionInfo {
-                            order_hash: order_hash,
-                            token_address: order.token_address,
-                            token_from: related_order.offerer,
-                            token_to: order.offerer,
-                            token_id: 0,
-                            token_quantity: order_quantity,
-                            payment_from: order.offerer,
-                            payment_to: related_order.offerer,
-                            payment_amount: related_order.start_amount * order.quantity,
-                            payment_currency_address: related_order.currency_address,
-                            payment_currency_chain_id: related_order.currency_chain_id,
-                            listing_broker_address: order.broker_id,
-                            fulfill_broker_address: fulfill_info.fulfill_broker_address
-                        };
+                        // so just one executioninfo will be sent
+                        let execute_info = self._create_execution_info(
+                            order_hash,
+                            order,
+                            related_order,
+                            fulfill_info,
+                            order_quantity,
+                            order.broker_id
+                        );
+                        
+                        (Option::Some(execute_info), Option::Some(related_order_hash))
                     }
                 },
                 _ =>  orderbook_errors::ORDER_ROUTE_NOT_ERC20
