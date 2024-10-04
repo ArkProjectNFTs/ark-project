@@ -1,13 +1,11 @@
 use ark_common::protocol::order_types::OrderTrait;
 use ark_common::protocol::order_types::OrderType;
 
-use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
-use core::serde::Serde;
 
 use starknet::ContractAddress;
 
 
-#[derive(Drop, Copy, Debug, Serde, starknet::Store)]
+#[derive(Drop, Copy, Debug)]
 struct OrderInfo {
     order_type: OrderType,
     // Contract address of the currency used on Starknet for the transfer.
@@ -23,26 +21,6 @@ struct OrderInfo {
     start_amount: u256,
     //
     offerer: ContractAddress,
-}
-
-
-impl OrderV1IntoOrderInfo of Into<OrderV1, OrderInfo> {
-    fn into(self: OrderV1) -> OrderInfo {
-        let order_type = self.validate_order_type().expect('Unsupported Order');
-        let token_id = match self.token_id {
-            Option::Some(token_id) => token_id,
-            Option::None => 0,
-        };
-        OrderInfo {
-            order_type,
-            currency_address: self.currency_address,
-            token_address: self.token_address,
-            token_id: token_id,
-            quantity: self.quantity,
-            start_amount: self.start_amount,
-            offerer: self.offerer,
-        }
-    }
 }
 
 //! Executor contract on Starknet
@@ -93,20 +71,17 @@ mod executor {
 
     use starknet::{ContractAddress, ClassHash};
 
-    use super::{OrderInfo, OrderV1IntoOrderInfo};
+    use super::OrderInfo;
 
     component!(path: OrderbookComponent, storage: orderbook, event: OrderbookEvent);
 
     #[storage]
     struct Storage {
         admin_address: ContractAddress,
-        arkchain_orderbook_address: ContractAddress,
         eth_contract_address: ContractAddress,
         chain_id: felt252,
         broker_fees: Map<ContractAddress, FeesRatio>,
         ark_fees: FeesRatio,
-        // order hash -> OrderInfo
-        orders: Map<felt252, OrderInfo>,
         // fallback when collection doesn't implement ERC2981
         default_receiver: ContractAddress,
         default_fees: FeesRatio,
@@ -120,20 +95,10 @@ mod executor {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        OrderExecuted: OrderExecuted,
         CollectionFallbackFees: CollectionFallbackFees,
         ExecutorInMaintenance: ExecutorInMaintenance,
-        // #[flat] // OrderExecuted conflict
+        #[flat]
         OrderbookEvent: OrderbookComponent::Event,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    struct OrderExecuted {
-        #[key]
-        order_hash: felt252,
-        #[key]
-        transaction_hash: felt252,
-        block_timestamp: u64
     }
 
     #[derive(Drop, starknet::Event)]
@@ -267,28 +232,10 @@ mod executor {
             }
         }
 
-        fn get_orderbook_address(self: @ContractState) -> ContractAddress {
-            self.arkchain_orderbook_address.read()
-        }
-
-        fn update_arkchain_orderbook_address(
-            ref self: ContractState, orderbook_address: ContractAddress
-        ) {
-            _ensure_admin(@self);
-
-            self.arkchain_orderbook_address.write(orderbook_address);
-        }
-
         fn update_eth_address(ref self: ContractState, eth_address: ContractAddress) {
             _ensure_admin(@self);
 
             self.eth_contract_address.write(eth_address);
-        }
-
-        fn update_orderbook_address(ref self: ContractState, orderbook_address: ContractAddress) {
-            _ensure_admin(@self);
-
-            self.arkchain_orderbook_address.write(orderbook_address);
         }
 
         fn update_admin_address(ref self: ContractState, admin_address: ContractAddress) {
@@ -299,6 +246,10 @@ mod executor {
 
         fn cancel_order(ref self: ContractState, cancelInfo: CancelInfo) {
             _ensure_is_not_in_maintenance(@self);
+
+            let vinfo = CancelOrderInfo { cancelInfo: cancelInfo.clone() };
+            _verify_cancel_order(@self, @vinfo);
+
             self.orderbook.cancel_order(cancelInfo);
         }
 
@@ -307,10 +258,6 @@ mod executor {
 
             let vinfo = CreateOrderInfo { order: order.clone() };
             _verify_create_order(@self, @vinfo);
-
-            let order_hash = order.compute_order_hash();
-            let order_info = order.into();
-            self.orders.write(order_hash, order_info);
 
             self.orderbook.create_order(order);
         }
@@ -396,13 +343,28 @@ mod executor {
         }
     }
 
+    fn _verify_cancel_order(self: @ContractState, vinfo: @CancelOrderInfo) {
+        let cancel_info = vinfo.cancelInfo;
+        let caller = starknet::get_caller_address();
+        let canceller = *(cancel_info.canceller);
+        assert!(caller == canceller, "Caller is not the canceller");
+
+        let order_info = _get_order_info(self, *cancel_info.order_hash);
+
+        // default value for ContractAddress is zero
+        // and an order's currency address shall not be zero
+        assert!(order_info.currency_address.is_non_zero(), "Order not found");
+        assert!(order_info.offerer == canceller, "Canceller is not the offerer");
+    }
+
     fn _verify_fulfill_order(self: @ContractState, vinfo: @FulfillOrderInfo) {
         let fulfill_info = vinfo.fulfillInfo;
         let caller = starknet::get_caller_address();
         let fulfiller = *(fulfill_info.fulfiller);
         assert!(caller == fulfiller, "Caller is not the fulfiller");
 
-        let order_info = self.orders.read(*fulfill_info.order_hash);
+        let order_info = _get_order_info(self, *fulfill_info.order_hash);
+
         // default value for ContractAddress is zero
         // and an order's currency address shall not be zero
         if order_info.currency_address.is_zero() {
@@ -554,7 +516,7 @@ mod executor {
     ) {
         let related_order_info = match *(fulfill_info.related_order_hash) {
             Option::None => panic!("Fulfill auction order require a related order"),
-            Option::Some(related_order_hash) => self.orders.read(related_order_hash),
+            Option::Some(related_order_hash) => _get_order_info(self, related_order_hash),
         };
         assert!(
             @order_info.currency_address == @related_order_info.currency_address,
@@ -788,13 +750,6 @@ mod executor {
         let transaction_hash = tx_info.transaction_hash;
         let block_timestamp = starknet::info::get_block_timestamp();
 
-        self
-            .emit(
-                OrderExecuted {
-                    order_hash: execution_info.order_hash, transaction_hash, block_timestamp,
-                }
-            );
-
         let vinfo = ExecutionValidationInfo {
             order_hash: execution_info.order_hash,
             transaction_hash,
@@ -920,5 +875,23 @@ mod executor {
             ark_fees_amount,
             creator_fees_amount,
         )
+    }
+
+    fn _get_order_info(self: @ContractState, order_hash: felt252) -> OrderInfo {
+        let order = self.orderbook.get_order(order_hash);
+        let order_type = self.orderbook.get_order_type(order_hash);
+        let token_id = match order.token_id {
+            Option::Some(token_id) => token_id,
+            Option::None => 0,
+        };
+        OrderInfo {
+            order_type,
+            currency_address: order.currency_address,
+            token_address: order.token_address,
+            token_id,
+            quantity: order.quantity,
+            start_amount: order.start_amount,
+            offerer: order.offerer,
+        }
     }
 }

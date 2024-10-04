@@ -1,18 +1,11 @@
 [workspace]
 
-members = [
-    "ark_common",
-    "ark_component",
-    "ark_orderbook",
-    "ark_starknet",
-    "ark_tokens",
-    "solis",
-]
+members = ["ark_common", "ark_component", "ark_starknet", "ark_tokens"]
 
 [workspace.dependencies]
 starknet = "2.7.1"
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.15.1" }
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
 assert_macros = "0.1.0"
 
 [workspace.scripts]

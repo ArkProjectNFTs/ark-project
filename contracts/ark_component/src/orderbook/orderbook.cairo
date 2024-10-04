@@ -42,7 +42,7 @@ pub mod OrderbookComponent {
     /// Events emitted by the Orderbook contract.
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         OrderPlaced: OrderPlaced,
         OrderExecuted: OrderExecuted,
         OrderCancelled: OrderCancelled,
@@ -51,10 +51,10 @@ pub mod OrderbookComponent {
     }
 
     // must be increased when `OrderPlaced` content change
-    const ORDER_PLACED_EVENT_VERSION: u8 = 1;
+    pub const ORDER_PLACED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is placed.
     #[derive(Drop, starknet::Event)]
-    struct OrderPlaced {
+    pub struct OrderPlaced {
         #[key]
         order_hash: felt252,
         #[key]
@@ -70,10 +70,10 @@ pub mod OrderbookComponent {
     }
 
     // must be increased when `OrderExecuted` content change
-    const ORDER_EXECUTED_EVENT_VERSION: u8 = 2;
+    pub const ORDER_EXECUTED_EVENT_VERSION: u8 = 2;
     /// Event for when an order is executed.
     #[derive(Drop, starknet::Event)]
-    struct OrderExecuted {
+    pub struct OrderExecuted {
         #[key]
         order_hash: felt252,
         #[key]
@@ -88,10 +88,10 @@ pub mod OrderbookComponent {
     }
 
     // must be increased when `OrderPlaced` content change
-    const ORDER_CANCELLED_EVENT_VERSION: u8 = 1;
+    pub const ORDER_CANCELLED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is cancelled.
     #[derive(Drop, starknet::Event)]
-    struct OrderCancelled {
+    pub struct OrderCancelled {
         #[key]
         order_hash: felt252,
         #[key]
@@ -102,10 +102,10 @@ pub mod OrderbookComponent {
     }
 
     // must be increased when `RollbackStatus` content change
-    const ROLLBACK_STATUS_EVENT_VERSION: u8 = 1;
+    pub const ROLLBACK_STATUS_EVENT_VERSION: u8 = 1;
     /// Event for when an order has been rollbacked to placed.
     #[derive(Drop, starknet::Event)]
-    struct RollbackStatus {
+    pub struct RollbackStatus {
         #[key]
         order_hash: felt252,
         #[key]
@@ -117,10 +117,10 @@ pub mod OrderbookComponent {
     }
 
     // must be increased when `OrderFulfilled` content change
-    const ORDER_FULFILLED_EVENT_VERSION: u8 = 1;
+    pub const ORDER_FULFILLED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is fulfilled.
     #[derive(Drop, starknet::Event)]
-    struct OrderFulfilled {
+    pub struct OrderFulfilled {
         #[key]
         order_hash: felt252,
         #[key]
@@ -265,21 +265,12 @@ pub mod OrderbookComponent {
                 .validate_order_type()
                 .expect(orderbook_errors::ORDER_INVALID_DATA);
             let order_hash = order.compute_order_hash();
+            assert(order_status_read(order_hash).is_none(), orderbook_errors::ORDER_ALREADY_EXISTS);
             match order_type {
                 OrderType::Listing => {
-                    assert(
-                        order_status_read(order_hash).is_none(),
-                        orderbook_errors::ORDER_ALREADY_EXISTS
-                    );
                     let _ = self._create_listing_order(order, order_type, order_hash);
                 },
-                OrderType::Auction => {
-                    assert(
-                        order_status_read(order_hash).is_none(),
-                        orderbook_errors::ORDER_ALREADY_EXISTS
-                    );
-                    self._create_auction(order, order_type, order_hash);
-                },
+                OrderType::Auction => { self._create_auction(order, order_type, order_hash); },
                 OrderType::Offer => { self._create_offer(order, order_type, order_hash); },
                 OrderType::CollectionOffer => {
                     self._create_collection_offer(order, order_type, order_hash);

@@ -7,7 +7,7 @@ use event_handler::EventHandler;
 mod orderbook;
 
 use starknet::core::types::{
-    BlockId, EmittedEvent, EventFilter, FieldElement, MaybePendingBlockWithTxHashes,
+    BlockId, EmittedEvent, EventFilter, Felt, MaybePendingBlockWithTxHashes,
 };
 use starknet::macros::selector;
 use starknet::providers::{AnyProvider, Provider, ProviderError};
@@ -61,11 +61,13 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         &self,
         from_block: BlockId,
         to_block: BlockId,
+        address: Option<Felt>,
     ) -> IndexerResult<()> {
         let blocks_events = self
             .fetch_events(
                 from_block,
                 to_block,
+                address,
                 Some(vec![vec![
                     selector!("OrderPlaced"),
                     selector!("OrderFulfilled"),
@@ -76,11 +78,15 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
             )
             .await?;
 
-        for (block_number, events) in blocks_events {
-            let block_timestamp = self.block_time(BlockId::Number(block_number)).await?;
+        // Handle events sorted by block number
+        let mut block_numbers: Vec<&u64> = blocks_events.keys().collect();
+        block_numbers.sort();
 
+        for block_number in block_numbers {
+            let block_timestamp = self.block_time(BlockId::Number(*block_number)).await?;
+            let events = blocks_events.get(block_number).unwrap();
             for any_event in events {
-                let orderbook_event: Event = match any_event.try_into() {
+                let orderbook_event: Event = match any_event.clone().try_into() {
                     Ok(ev) => ev,
                     Err(e) => {
                         trace!("Event can't be deserialized: {e}");
@@ -92,38 +98,40 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                     Event::OrderPlaced(ev) => {
                         trace!("OrderPlaced found: {:?}", ev);
                         self.storage
-                            .register_placed(block_number, block_timestamp, &ev.into())
+                            .register_placed(*block_number, block_timestamp, &ev.into())
                             .await?;
                     }
                     Event::OrderCancelled(ev) => {
                         trace!("OrderCancelled found: {:?}", ev);
                         self.storage
-                            .register_cancelled(block_number, block_timestamp, &ev.into())
+                            .register_cancelled(*block_number, block_timestamp, &ev.into())
                             .await?;
                     }
                     Event::OrderFulfilled(ev) => {
                         trace!("OrderFulfilled found: {:?}", ev);
                         self.storage
-                            .register_fulfilled(block_number, block_timestamp, &ev.into())
+                            .register_fulfilled(*block_number, block_timestamp, &ev.into())
                             .await?;
                     }
                     Event::OrderExecuted(ev) => {
                         trace!("OrderExecuted found: {:?}", ev);
                         self.storage
-                            .register_executed(block_number, block_timestamp, &ev.into())
+                            .register_executed(*block_number, block_timestamp, &ev.into())
                             .await?;
                     }
                     Event::RollbackStatus(ev) => {
                         trace!("RollbackStatus found: {:?}", ev);
                         self.storage
-                            .status_back_to_open(block_number, block_timestamp, &ev.into())
+                            .status_back_to_open(*block_number, block_timestamp, &ev.into())
                             .await?;
                     }
-                    _ => warn!("Orderbook event not handled: {:?}", orderbook_event),
+                    _ => {
+                        warn!("Orderbook event not handled: {:?}", orderbook_event)
+                    }
                 };
             }
 
-            self.event_handler.on_block_processed(block_number).await;
+            self.event_handler.on_block_processed(*block_number).await;
         }
 
         Ok(())
@@ -145,7 +153,8 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         &self,
         from_block: BlockId,
         to_block: BlockId,
-        keys: Option<Vec<Vec<FieldElement>>>,
+        address: Option<Felt>,
+        keys: Option<Vec<Vec<Felt>>>,
     ) -> Result<HashMap<u64, Vec<EmittedEvent>>, IndexerError> {
         // TODO: setup key filtering here.
 
@@ -154,7 +163,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
         let filter = EventFilter {
             from_block: Some(from_block),
             to_block: Some(to_block),
-            address: None,
+            address,
             keys,
         };
 
@@ -169,7 +178,7 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
 
             event_page.events.iter().for_each(|e| {
                 events
-                    .entry(e.block_number)
+                    .entry(e.block_number.unwrap())
                     .and_modify(|v| v.push(e.clone()))
                     .or_insert(vec![e.clone()]);
             });

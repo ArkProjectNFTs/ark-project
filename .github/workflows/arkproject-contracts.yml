@@ -10,47 +10,106 @@ on:
     paths:
       - "contracts/**"
 
+env:
+  SCARB_VERSION: 2.7.1
+  STARKNET_DEVNET_VERSION: 0.2.0
+  DEVNET_DUMP_PATH: /devnet-dump.json
+  DEVNET_DEPLOYMENT_DUMP_PATH: /tmp/devnet-deployment-dump.json
+  DEVNET_SET_FEES_DUMP_PATH: /tmp/devnet-set-fees-dump.json
 jobs:
   fmt:
     runs-on: ubuntu-latest
     name: Cairo formatting
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Install universal sierra compiler
-        run: curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+        uses: actions/checkout@v4
+      
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: 2.7.1
+          scarb-version: ${{ env.SCARB_VERSION }}
+
       - name: Check Scarb Formatting
         run: cd contracts && scarb fmt --check
-  test:
+
+  forge-test:
     runs-on: ubuntu-latest
     name: Cairo starknet foundry tests
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Install universal sierra compiler
-        run: curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
-      - name: Setup Scarb
-        uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: 2.7.1
+        uses: actions/checkout@v4
 
-      - name: Setup Starknet Foundry
-        uses: foundry-rs/setup-snfoundry@v2
-        with:
-          starknet-foundry-version: 0.28.0
+      - name: Install starknet foundry & dependencies
+        uses: ./.github/actions/install-snforge
+      
+      - name: Test contracts
+        run: cd contracts && snforge test
+  
+  devnet-test:
+    runs-on: ubuntu-latest
+    name: Running SDK test with starknet-devnet
+    # needs: forge-test
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Test ark_common contracts
-        run: cd contracts/ark_common && snforge test
+      - name: Install starknet foundry & dependencies
+        uses: ./.github/actions/install-snforge
 
-      - name: Test ark_orderbook contracts
-        run: cd contracts/ark_orderbook && snforge test
+      - name: Build smart contracts
+        run: cd contracts && scarb build --workspace
+      
+      - name: Run starknet-devnet as a background process
+        run: |
+          docker run -d --rm --name starknet-devnet \
+            -p 5050:5050 \
+            shardlabs/starknet-devnet-rs:${STARKNET_DEVNET_VERSION} \
+            --seed 0 --dump-path $DEVNET_DUMP_PATH --dump-on exit --state-archive-capacity full
+            sleep 3  # Wait for 3 seconds for the Docker container to initialize
 
-      - name: Test ark_starknet contracts
-        run: cd contracts/ark_starknet && snforge test
+      - name: Install SDK dependencies
+        uses: ./.github/actions/install-dependencies
+      
+      - name: Setup environment for devnet
+        run: cp .env.devnet .env
+      
+      - name: Deploy smart contract
+        run: pnpm deploy:starknet:local
+      
+      - name: Store devnet state after contract deployment
+        run: |
+          curl -H "Content-type: application/json" \
+              -X POST http://localhost:5050/dump \
+              -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
+      
+      - name: Setup environment
+        run: cp .env.devnet .env
 
-      - name: Test ark_tokens contracts
-        run: cd contracts/ark_tokens && snforge test
+      - name: Run set Ark fees test
+        run: pnpm test --filter=core -- tests/setArkFees.test.ts
+
+      - name: Store devnet state after set ark fees
+        run: |
+          curl -H "Content-type: application/json" \
+              -X POST http://localhost:5050/dump \
+              -d '{"path": "$DEVNET_SET_FEES_DUMP_PATH"}'
+
+      - name: Run fulfill auction test
+        run: |
+          pnpm test --filter=core -- tests/fulfillAuction.test.ts
+      
+      - name: Restore devnet state
+        run: |
+          curl -H "Content-type: application/json" \
+              -X POST http://localhost:5050/load \
+              -d '{"path": "$DEVNET_SET_FEES_DUMP_PATH"}'
+      
+      - name: Run SDK test
+        run: |
+          pnpm test --filter=core
+
+      - name: Stop starknet-devnet container
+        if: always()
+        run: docker stop starknet-devnet
+
+
