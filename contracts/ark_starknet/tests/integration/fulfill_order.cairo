@@ -169,7 +169,7 @@ fn test_fulfill_offer_order_fulfiller_not_owner_for_erc721() {
 fn test_fulfill_offer_order_fulfiller_not_owner_for_erc1155() {
     let (executor_address, erc20_address, erc1155_address) = setup_erc1155();
     let fulfiller = contract_address_const::<'fulfiller'>();
-    let other = contract_address_const::<'other'>();
+    let other = erc1155_address;
     let quantity = 50_u256;
 
     let token_id = Erc1155Dispatcher { contract_address: erc1155_address }.mint(other, quantity);

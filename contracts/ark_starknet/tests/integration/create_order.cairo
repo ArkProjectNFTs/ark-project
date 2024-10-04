@@ -504,7 +504,7 @@ fn test_create_order_erc20_to_erc1155_ok() {
 #[test]
 fn test_create_order_erc1155_to_erc20_ok() {
     let (executor_address, erc20_address, erc1155_address) = setup_erc1155();
-    let offerer = contract_address_const::<'offerer'>();
+    let offerer = erc1155_address;
     let quantity = 50_u256;
 
     let token_id = Erc1155Dispatcher { contract_address: erc1155_address }.mint(offerer, quantity);
@@ -522,7 +522,7 @@ fn test_create_order_erc1155_to_erc20_ok() {
 #[should_panic(expected: "Offerer does not own enough of the specified ERC1155 token")]
 fn test_create_order_offerer_not_own_enough_erc1155_token() {
     let (executor_address, erc20_address, erc1155_address) = setup_erc1155();
-    let offerer = contract_address_const::<'offerer'>();
+    let offerer = erc1155_address;
     let other = contract_address_const::<'other'>();
     let quantity = 50_u256;
 
@@ -565,7 +565,7 @@ fn test_create_order_erc20_to_erc1155_disabled() {
 fn test_create_order_erc1155_to_erc20_disabled() {
     let (executor_address, erc20_address, erc1155_address) = setup_erc1155();
     let admin = contract_address_const::<'admin'>();
-    let offerer = contract_address_const::<'offerer'>();
+    let offerer = erc1155_address;
     let quantity = 50_u256;
 
     let token_id = Erc1155Dispatcher { contract_address: erc1155_address }.mint(offerer, quantity);
