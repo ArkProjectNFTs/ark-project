@@ -31,9 +31,14 @@ pub mod orderbook_errors {
     const ORDER_TOKEN_ID_IS_MISSING: felt252 = 'OB: token id is missing';
     const ORDER_TOKEN_HASH_DOES_NOT_MATCH: felt252 = 'OB: token hash does not match';
     const ORDER_NOT_AN_OFFER: felt252 = 'OB: order is not an offer';
+    const ORDER_NOT_AN_ERC20_ORDER: felt252 = 'OB: order is not an erc 20 order';
+    const ORDER_ROUTE_NOT_ERC20: felt252 = 'OB: order route is not an erc 20 route';
+    const ORDER_ROUTE_NOT_VALID: felt252 = 'OB: order route is not a valid erc 20 route';
+    const ORDER_PRICE_NOT_MATCH: felt252 = 'OB: erc 20 order price not match';
     const ORDER_NOT_OPEN: felt252 = 'OB: order is not open';
     const ORDER_OPEN: felt252 = 'OB: order is not open';
     const ORDER_NOT_SUPPORTED: felt252 = 'OB: order not supported';
+    const ORDER_IS_FILLED: felt252 = 'OB: order is filled';
     const USE_FULFILL_AUCTION: felt252 = 'OB: must use fulfill auction';
     const OFFER_NOT_STARTED: felt252 = 'OB: offer is not started';
     const INVALID_BROKER: felt252 = 'OB: broker is not whitelisted';

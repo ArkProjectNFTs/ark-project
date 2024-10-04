@@ -12,7 +12,6 @@ enum OrderType {
     Offer,
     CollectionOffer,
     Limit,
-    Market
 }
 
 impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
@@ -22,8 +21,7 @@ impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
             OrderType::Auction => 'AUCTION',
             OrderType::Offer => 'OFFER',
             OrderType::CollectionOffer => 'COLLECTION_OFFER',
-            OrderType::Limit => 'LIMIT',
-            OrderType::Market => 'MARKET'
+            OrderType::Limit => 'LIMIT'
         }
     }
 }
@@ -40,8 +38,6 @@ impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
             Option::Some(OrderType::CollectionOffer)
         } else if self == 'LIMIT'{
             Option::Some(OrderType::Limit)
-        } else if self == 'MARKET'{
-            Option::Some(OrderType::Market)
         } else {
             Option::None
         }
@@ -224,10 +220,12 @@ struct FulfillInfo {
 #[derive(Drop, Serde, Copy)]
 struct ExecutionInfo {
     order_hash: felt252,
-    nft_address: ContractAddress,
-    nft_from: ContractAddress,
-    nft_to: ContractAddress,
-    nft_token_id: u256,
+    route: RouteType,
+    token_address: ContractAddress,
+    token_from: ContractAddress,
+    token_to: ContractAddress,
+    token_quantity: u256,
+    token_id: u256,
     payment_from: ContractAddress,
     payment_to: ContractAddress,
     payment_amount: u256,
@@ -298,52 +296,5 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
         } else {
             Option::None
         }
-    }
-}
-
-
-/// A trait to describe order capability.
-trait PriceLevelTrait<T, +Serde<T>, +Drop<T>> {
-    /// get order version.
-    fn get_version(self: @T) -> felt252;
-
-    /// returns route type i.e Erc20Buy or Erc20Sell
-    fn get_type(self: @T) -> RouteType;
-
-    /// returns contract address of price level
-    fn get_token(self: @T) -> ContractAddress;
-
-    /// Returns the hash of the pricelevel's data.
-    /// Every field of the order that must be signed
-    /// must be considered in the computation of this hash.
-    fn compute_price_level_hash(self: @T) -> felt252;
-}
-
-
-#[derive(Serde, Drop, Copy)]
-struct PriceLevel {
-    route: RouteType,
-    token_address: ContractAddress,
-    token_chain_id: felt252,
-    price: u256
-}
-
-impl PriceLevelTraitV1 of PriceLevelTrait<PriceLevel> {
-    fn get_token(self: @PriceLevel) -> ContractAddress {
-        self.token_address
-    }
-
-    fn get_route_type(self: @PriceLevel) -> RouteType {
-        self.route
-    }
-
-    fn get_token_chain_id(self: @PriceLevel) -> felt252 {
-        self.token_chain_id
-    }
-
-    fn compute_price_level_hash(self: @PriceLevel) -> felt252 {
-        let mut buf = array![];
-        self.serialize(ref buf);
-        poseidon_hash_span(buf.span())
     }
 }

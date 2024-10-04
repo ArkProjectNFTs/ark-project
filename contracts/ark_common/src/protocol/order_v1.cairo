@@ -63,16 +63,19 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             return Result::Err(OrderValidationError::InvalidSalt);
         }
 
-        let end_date = *self.end_date;
+        // check for expiry only if not erc20 buys or sells
+        if (*self.route != RouteType::Erc20ToErc20Buy || *self.route != RouteType::Erc20ToErc20Sell) {
+            let end_date = *self.end_date;
 
-        if end_date < block_timestamp {
-            return Result::Err(OrderValidationError::EndDateInThePast);
-        }
-
-        // End date -> block_timestamp + 30 days.
-        let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
-        if end_date > max_end_date {
-            return Result::Err(OrderValidationError::EndDateTooFar);
+            if end_date < block_timestamp {
+                return Result::Err(OrderValidationError::EndDateInThePast);
+            }
+    
+            // End date -> block_timestamp + 30 days.
+            let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
+            if end_date > max_end_date {
+                return Result::Err(OrderValidationError::EndDateTooFar);
+            }
         }
 
         // TODO: define a real value here. 20 is an example and
@@ -128,13 +131,6 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
                 && (*self.route == RouteType::Erc20ToErc20Buy || *self.route == RouteType::Erc20ToErc20Sell) {
                 return Result::Ok(OrderType::Limit);
             }
-
-            // Market Order 
-            if(*self.quantity) > 0 
-                && (*self.start_amount) == 0  // no price
-                && (*self.route == RouteType::Erc20ToErc20Buy || *self.route == RouteType::Erc20ToErc20Sell) {
-                return Result::Ok(OrderType::Limit);
-            }
         }
 
         // Other order types are not supported.
@@ -142,14 +138,21 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
     }
 
     fn compute_token_hash(self: @OrderV1) -> felt252 {
-        assert(OptionTrait::is_some(self.token_id), 'Token ID expected');
-        let token_id = (*self.token_id).unwrap();
-        let mut buf: Array<felt252> = array![];
-        buf.append((token_id.low).into());
-        buf.append((token_id.high).into());
-        buf.append((*self.token_address).into());
-        buf.append(*self.token_chain_id);
-        poseidon_hash_span(buf.span())
+        if (self.route == RouteType::Erc20ToErc20Buy || self.route == RouteType::Erc20ToErc20Sell) {
+            // used quantity, start_date and the offerer as the identifiers
+            buf.append((*self.token_address).into());
+            buf.append(*self.token_chain_id);
+            poseidon_hash_span(buf.span())
+        }else{
+            assert(OptionTrait::is_some(self.token_id), 'Token ID expected');
+            let token_id = (*self.token_id).unwrap();
+            let mut buf: Array<felt252> = array![];
+            buf.append((token_id.low).into());
+            buf.append((token_id.high).into());
+            buf.append((*self.token_address).into());
+            buf.append(*self.token_chain_id);
+            poseidon_hash_span(buf.span())
+        }
     }
 
     fn compute_order_hash(self: @OrderV1) -> felt252 {

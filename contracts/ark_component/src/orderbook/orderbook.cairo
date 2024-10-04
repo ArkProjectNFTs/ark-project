@@ -17,6 +17,7 @@ pub mod OrderbookComponent {
     use core::zeroable::Zeroable;
     use starknet::ContractAddress;
     use starknet::storage::Map;
+    use starknet::contract_address_to_felt252;
     use super::super::interface::{IOrderbook, IOrderbookAction, orderbook_errors};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
@@ -33,8 +34,8 @@ pub mod OrderbookComponent {
         auctions: Map<felt252, (felt252, u64, u256)>,
         /// Mapping of auction offer order_hash to auction listing order_hash.
         auction_offers: Map<felt252, felt252>,
-        /// Mapping of price level hash to price level data.
-        price_levels: Map<felt252, PriceLevel>
+        /// Mapping of erc20s orderhash to the order (price, quantity)
+        erc20_orders: Map<felt252, (u256, u256)>
     }
 
     // *************************************************************************
@@ -279,9 +280,6 @@ pub mod OrderbookComponent {
                 },
                 OrderType::Limit => {
                     self._create_limit_order(order, order_type, order_hash);
-                },
-                OrderType::Market => {
-                    self._create_market_order(order, order_type, order_hash);
                 }
             };
 
@@ -310,6 +308,12 @@ pub mod OrderbookComponent {
                             block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
                         );
                         self.auctions.write(auction_token_hash, (0, 0, 0));
+                    }else if order_type = OrderType::Limit {
+                        let (_, quantity) = self.erc20_orders.read(order_hash);
+                        assert(
+                            quantity > 0, orderbook_errors::ORDER_IS_FILLED
+                        );
+                        self.erc20_orders.write(order_hash, (0, 0, 0))
                     } else {
                         assert(block_ts < order.end_date, orderbook_errors::ORDER_IS_EXPIRED);
                         if order_type == OrderType::Listing {
@@ -360,7 +364,7 @@ pub mod OrderbookComponent {
                 OrderType::Auction => self._fulfill_auction_order(fulfill_info, order),
                 OrderType::Offer => self._fulfill_offer(fulfill_info, order),
                 OrderType::CollectionOffer => self._fulfill_offer(fulfill_info, order),
-                _ => panic_with_felt252(orderbook_errors::ORDER_NOT_SUPPORTED)
+                OrderType::Limit => self._fulfill_limit_order(fulfill_info, order),
             };
 
             self
@@ -459,10 +463,11 @@ pub mod OrderbookComponent {
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
                     order_hash: order.compute_order_hash(),
-                    nft_address: order.token_address,
-                    nft_from: order.offerer,
-                    nft_to: related_order.offerer,
-                    nft_token_id: order.token_id.unwrap(),
+                    token_address: order.token_address,
+                    token_from: order.offerer,
+                    token_to: related_order.offerer,
+                    token_id: order.token_id.unwrap(),
+                    token_quantity: 1,
                     payment_from: related_order.offerer,
                     payment_to: fulfill_info.fulfiller,
                     payment_amount: related_order.start_amount,
@@ -505,10 +510,11 @@ pub mod OrderbookComponent {
 
             let execute_info = ExecutionInfo {
                 order_hash: order.compute_order_hash(),
-                nft_address: order.token_address,
-                nft_from: fulfill_info.fulfiller,
-                nft_to: order.offerer,
-                nft_token_id: fulfill_info.token_id.unwrap(),
+                token_address: order.token_address,
+                token_from: fulfill_info.fulfiller,
+                token_to: order.offerer,
+                token_id: fulfill_info.token_id.unwrap(),
+                token_quantity: 1,
                 payment_from: order.offerer,
                 payment_to: fulfill_info.fulfiller,
                 payment_amount: order.start_amount,
@@ -538,10 +544,11 @@ pub mod OrderbookComponent {
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
                     order_hash: order.compute_order_hash(),
-                    nft_address: order.token_address,
-                    nft_from: order.offerer,
-                    nft_to: fulfill_info.fulfiller,
-                    nft_token_id: order.token_id.unwrap(),
+                    token_address: order.token_address,
+                    token_from: order.offerer,
+                    token_to: fulfill_info.fulfiller,
+                    token_id: order.token_id.unwrap(),
+                    token_quantity: 1,
                     payment_from: fulfill_info.fulfiller,
                     payment_to: order.offerer,
                     payment_amount: order.start_amount,
@@ -821,18 +828,273 @@ pub mod OrderbookComponent {
             order_type: OrderType, 
             order_hash: felt252
         ) {
-            // todo add matching logic
+            let token_hash = order.compute_token_hash();
+            // revert if order is fulfilled or Open
+            let current_order_hash = self.erc20_orders.read(token_hash);
+            if (current_order_hash.is_non_zero()) {
+                assert(
+                    order_status_read(current_order_hash) != Option::Some(OrderStatus::Fulfilled),
+                    orderbook_errors::ORDER_FULFILLED
+                );
+            }
+            let current_order: Option<OrderV1> = order_read(current_order_hash);
+            let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
             order_write(order_hash, order_type, order);
+            self.erc20_orders.write(order_hash, (order.start_amount, order.quantity));
             self
                 .emit(
                     OrderPlaced {
                         order_hash: order_hash,
                         order_version: order.get_version(),
                         order_type: order_type,
-                        cancelled_order_hash: Option::None,
-                        order: order,
+                        version: ORDER_PLACED_EVENT_VERSION,
+                        cancelled_order_hash,
+                        order: order
                     }
                 );
+            cancelled_order_hash
+        }
+
+        /// Fulfill limit order
+        fn _fulfill_limit_order(
+            ref self: ComponentState<TContractState>, 
+            fulfill_info: FulfillInfo, 
+            order: OrderV1
+        ) {
+            assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
+            let order_hash = order.compute_order_hash();
+            
+            assert(
+                order_hash == fulfill_info.order_hash, 
+                orderbook_errors::ORDER_HASH_DOES_NOT_MATCH
+            );
+
+            let related_order_hash = fulfill_info
+                .related_order_hash
+                .expect(orderbook_errors::ORDER_MISSING_RELATED_ORDER);
+
+            match order_type_read(related_order_hash) {
+                Option::Some(order_type) => {
+                    assert(
+                        order_type == OrderType::Limit,
+                        orderbook_errors::ORDER_NOT_AN_ERC20_ORDER
+                    );
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            }
+
+            match order_status_read(related_order_hash) {
+                Option::Some(s) => {
+                    assert(s == OrderStatus::Open, orderbook_errors::ORDER_NOT_OPEN);
+                    s
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+
+            let related_order = match order_read::<OrderV1>(related_order_hash) {
+                Option::Some(o) => o,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+
+            let related_order_token_hash = related_order.compute_token_hash();
+
+            // check that they are both the same token
+            assert(
+                related_order_token_hash == order.compute_token_hash(),
+                orderbook_errors::ORDER_TOKEN_HASH_DOES_NOT_MATCH
+            );
+
+            // check that the price is the same
+            assert(
+                related_order.start_amount == order.start_amount,
+                orderbook_errors::ORDER_PRICE_NOT_MATCH
+            )
+
+            let (_, related_order_quantity) = self.erc20_orders.read(related_order_hash);
+            let (_, order_quantity) = self.erc20_orders.read(order_hash);
+
+            match order.route{
+                // fulfilling a sell order with a buy order (related-order)
+                RouteType::Erc20ToErc20Sell => {
+                    assert(
+                        related_order.route == Erc20ToErc20Buy, 
+                        orderbook_errors::ORDER_ROUTE_NOT_VALID
+                    );
+                    if order_quantity > related_order_quantity {
+                        // reduce sell quantity order and execute buy order
+                        self
+                        .erc20_orders
+                        .write(
+                            order_hash,
+                            (
+                                order.start_amount,
+                                order_quantity - related_order_quantity
+                            )
+                        );
+
+                        // set buy order as fufilled
+                        order_status_write(related_order_hash, OrderStatus::Fulfilled);
+
+                        let execute_info = ExecutionInfo {
+                            order_hash: related_order_hash,
+                            token_address: order.token_address,
+                            token_from: order.offerer,
+                            token_to: related_order.offerer,
+                            token_id: 0,
+                            token_quantity: related_order_quantity,
+                            payment_from: related_order.offerer,
+                            payment_to: fulfill_info.fulfiller,
+                            payment_amount: related_order.start_amount * related_order_quantity,
+                            payment_currency_address: related_order.currency_address,
+                            payment_currency_chain_id: related_order.currency_chain_id,
+                            listing_broker_address: related_order.broker_id,
+                            fulfill_broker_address: fulfill_info.fulfill_broker_address
+                        };
+                    }else if related_order_quantity > order_quantity {
+                        // reduce buy quantity, and execute sell quantity
+                        self
+                        .erc20_orders
+                        .write(
+                            related_order_hash,
+                            (
+                                order.start_amount,
+                                related_order_quantity - order_quantity
+                            )
+                        );
+                        // set sell order as fulfilled
+                        order_status_write(order_hash, OrderStatus::Fulfilled);
+
+                        let execute_info = ExecutionInfo {
+                            order_hash: order_hash,
+                            token_address: order.token_address,
+                            token_from: order.offerer,
+                            token_to: related_order.offerer,
+                            token_id: 0,
+                            token_quantity: order_quantity,
+                            payment_from: related_order.offerer,
+                            payment_to: fulfill_info.fulfiller,
+                            payment_amount: related_order.start_amount * order.quantity,
+                            payment_currency_address: order.currency_address,
+                            payment_currency_chain_id: order.currency_chain_id,
+                            listing_broker_address: order.broker_id,
+                            fulfill_broker_address: fulfill_info.fulfill_broker_address
+                        };
+                    }else{
+                        // execute both orders
+                        order_status_write(order_hash, OrderStatus::Fulfilled);
+                        order_status_write(related_order_hash, OrderStatus::Fulfilled);
+
+                        // passing any of them as the order hash will fulfill both orders,
+                        // so just one executioninfo will be sent.
+                        let execute_info = ExecutionInfo {
+                            order_hash: order_hash,
+                            token_address: order.token_address,
+                            token_from: order.offerer,
+                            token_to: related_order.offerer,
+                            token_id: 0,
+                            token_quantity: order_quantity,
+                            payment_from: related_order.offerer,
+                            payment_to: fulfill_info.fulfiller,
+                            payment_amount: related_order.start_amount * order.quantity,
+                            payment_currency_address: order.currency_address,
+                            payment_currency_chain_id: order.currency_chain_id,
+                            listing_broker_address: order.broker_id,
+                            fulfill_broker_address: fulfill_info.fulfill_broker_address
+                        };
+                    }
+                },
+                // fulfilling a buy order with a sell order (related-order)
+                RouteType::Erc20ToErc20Buy => {
+                    assert(
+                        related_order.route == Erc20ToErc20Sell, 
+                        orderbook_errors::ORDER_ROUTE_NOT_VALID
+                    );
+
+                    if order_quantity > related_order_quantity {
+                        // reduce buy quantity order and execute sell order
+                        self
+                        .erc20_orders
+                        .write(
+                            order_hash,
+                            (
+                                order.start_amount,
+                                order_quantity - related_order_quantity
+                            )
+                        );
+
+                        // set sell order as fufilled
+                        order_status_write(related_order_hash, OrderStatus::Fulfilled);
+
+                        let execute_info = ExecutionInfo {
+                            order_hash: related_order_hash,
+                            address: order.token_address,
+                            token_from: related_order.offerer,
+                            token_to: order.offerer,
+                            token_id: 0,
+                            token_quantity: related_order_quantity,
+                            payment_from: order.offerer,
+                            payment_to: related_order.offerer,
+                            payment_amount: related_order.start_amount * related_order_quantity,
+                            payment_currency_address: related_order.currency_address,
+                            payment_currency_chain_id: related_order.currency_chain_id,
+                            listing_broker_address: related_order.broker_id,
+                            fulfill_broker_address: fulfill_info.fulfill_broker_address
+                        };
+                    }else if related_order_quantity > order_quantity {
+                        // reduce sell quantity, and execute buy order
+                        self
+                        .erc20_orders
+                        .write(
+                            related_order_hash,
+                            (
+                                order.start_amount,
+                                related_order_quantity - order_quantity
+                            )
+                        );
+                        // set buy order as fulfilled
+                        order_status_write(order_hash, OrderStatus::Fulfilled);
+
+                        let execute_info = ExecutionInfo {
+                            order_hash: order_hash,
+                            token_address: order.token_address,
+                            token_from: related_order.offerer,
+                            token_to: order.offerer,
+                            token_id: 0,
+                            token_quantity: order_quantity,
+                            payment_from: order.offerer,
+                            payment_to: related_order.offerer,
+                            payment_amount: related_order.start_amount * order.quantity,
+                            payment_currency_address: order.currency_address,
+                            payment_currency_chain_id: order.currency_chain_id,
+                            listing_broker_address: order.broker_id,
+                            fulfill_broker_address: fulfill_info.fulfill_broker_address
+                        };
+                    }else{
+                        // execute both orders
+                        order_status_write(order_hash, OrderStatus::Fulfilled);
+                        order_status_write(related_order_hash, OrderStatus::Fulfilled);
+
+                        // passing any of them as the order hash will fulfill both orders,
+                        // so just one executioninfo will be sent.
+                        let execute_info = ExecutionInfo {
+                            order_hash: order_hash,
+                            token_address: order.token_address,
+                            token_from: related_order.offerer,
+                            token_to: order.offerer,
+                            token_id: 0,
+                            token_quantity: order_quantity,
+                            payment_from: order.offerer,
+                            payment_to: related_order.offerer,
+                            payment_amount: related_order.start_amount * order.quantity,
+                            payment_currency_address: related_order.currency_address,
+                            payment_currency_chain_id: related_order.currency_chain_id,
+                            listing_broker_address: order.broker_id,
+                            fulfill_broker_address: fulfill_info.fulfill_broker_address
+                        };
+                    }
+                },
+                _ =>  orderbook_errors::ORDER_ROUTE_NOT_ERC20
+            }
         }
     }
 }
