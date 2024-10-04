@@ -220,7 +220,6 @@ struct FulfillInfo {
 #[derive(Drop, Serde, Copy)]
 struct ExecutionInfo {
     order_hash: felt252,
-    route: RouteType,
     token_address: ContractAddress,
     token_from: ContractAddress,
     token_to: ContractAddress,
@@ -299,14 +298,14 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
     }
 }
 
-#[derive(Drop, Copy)]
+#[derive(starknet::Store, Serde, Drop, PartialEq, Copy, Debug)]
 struct OptionU256 {
     is_some: felt252, 
     value: u256,    
 }
 
 trait OptionU256Trait<T, +Serde<T>, +Drop<T>> {
-    fn get_some(self: @T, value: u256) -> (felt252, u256);
+    fn get_some(self: @T) -> (felt252, u256);
     fn is_some(self: @T) -> bool;
 }
 

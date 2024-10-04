@@ -1,5 +1,5 @@
 use ark_common::protocol::order_types::OrderTrait;
-use ark_common::protocol::order_types::{OrderType, RouteType, OptionU256};
+use ark_common::protocol::order_types::{OrderType, RouteType};
 
 use starknet::ContractAddress;
 
@@ -34,7 +34,7 @@ struct OrderInfo {
 mod executor {
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
-        FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
+        FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType, OptionU256, OptionU256Trait
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 
@@ -541,7 +541,7 @@ mod executor {
             "Order and related order use different currency"
         );
 
-        let (buyer_order, seller_order) =  match order.route {
+        let (buyer_order, seller_order) =  match order_info.route {
             RouteType::Erc20ToErc20Sell => {
                 assert(
                     related_order_info.route == RouteType::Erc20ToErc20Buy, 
@@ -557,7 +557,7 @@ mod executor {
                 );
                 (order_info, related_order_info)
             },
-            _ => panic!('route not supported')
+            _ => panic!("route not supported")
         };
 
         let buyer = buyer_order.offerer;
@@ -650,6 +650,8 @@ mod executor {
             'Chain ID is not SN_MAIN'
         );
 
+        let (is_some, token_id) = execution_info.token_id.get_some();
+
         let currency_contract = IERC20Dispatcher {
             contract_address: execution_info.payment_currency_address.try_into().unwrap()
         };
@@ -658,7 +660,7 @@ mod executor {
             @self,
             @execution_info.token_address,
             execution_info.payment_amount,
-            execution_info.token_id
+            token_id
         );
         let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
             _compute_fees_amount(
@@ -666,7 +668,7 @@ mod executor {
             execution_info.fulfill_broker_address,
             execution_info.listing_broker_address,
             execution_info.token_address,
-            execution_info.token_id,
+            token_id,
             execution_info.payment_amount
         );
         assert!(
@@ -734,9 +736,7 @@ mod executor {
                 );
         }
 
-        let (is_some, token_id) = execution_info.token_id.get_some();
-
-        if is_some == 1 {
+        let vinfo = if is_some == 1 {
             let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
             nft_contract
                 .transfer_from(
@@ -747,13 +747,13 @@ mod executor {
             let transaction_hash = tx_info.transaction_hash;
             let block_timestamp = starknet::info::get_block_timestamp();
     
-            let vinfo = ExecutionValidationInfo {
+            ExecutionValidationInfo {
                 order_hash: execution_info.order_hash,
                 transaction_hash,
                 starknet_block_timestamp: block_timestamp,
                 from: execution_info.token_from,
                 to: execution_info.token_to,
-            };
+            }
 
         } else {
             let erc20_contract = IERC20Dispatcher { contract_address: execution_info.token_address };
@@ -766,15 +766,14 @@ mod executor {
             let transaction_hash = tx_info.transaction_hash;
             let block_timestamp = starknet::info::get_block_timestamp();
     
-            let vinfo = ExecutionValidationInfo {
+            ExecutionValidationInfo {
                 order_hash: execution_info.order_hash,
                 transaction_hash,
                 starknet_block_timestamp: block_timestamp,
                 from: execution_info.token_from,
                 to: execution_info.token_to,
-            };
-            
-        }
+            }
+        };
 
         self.orderbook.validate_order_execution(vinfo);
     }

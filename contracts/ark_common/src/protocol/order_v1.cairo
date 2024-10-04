@@ -138,7 +138,8 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
     }
 
     fn compute_token_hash(self: @OrderV1) -> felt252 {
-        if (self.route == RouteType::Erc20ToErc20Buy || self.route == RouteType::Erc20ToErc20Sell) {
+        if (*self.route == RouteType::Erc20ToErc20Buy || *self.route == RouteType::Erc20ToErc20Sell) {
+            let mut buf: Array<felt252> = array![];
             // used quantity, start_date and the offerer as the identifiers
             buf.append((*self.token_address).into());
             buf.append(*self.token_chain_id);

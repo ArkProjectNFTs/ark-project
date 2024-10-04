@@ -288,41 +288,38 @@ pub mod OrderbookComponent {
 
         fn cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {
             HooksCancelOrder::before_cancel_order(ref self, cancel_info);
-
             let order_hash = cancel_info.order_hash;
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
             assert(order.offerer == cancel_info.canceller, 'not the same offerrer');
             match order_status_read(order_hash) {
-                Option::Some(s) => s,
+                Option::Some(s) => assert(s == OrderStatus::Open, orderbook_errors::ORDER_FULFILLED),
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
             let block_ts = starknet::get_block_timestamp();
             let order_type = match order_type_read(order_hash) {
                 Option::Some(order_type) => {
-                    if order_type == OrderType::Auction {
+                    if order_type ==  OrderType::Auction {
                         let auction_token_hash = order.compute_token_hash();
                         let (_, auction_end_date, _) = self.auctions.read(auction_token_hash);
                         assert(
                             block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
                         );
                         self.auctions.write(auction_token_hash, (0, 0, 0));
-                    }else if order_type = OrderType::Limit {
-                        let (_, quantity) = self.erc20_orders.read(order_hash);
-                        assert(
-                            quantity > 0, orderbook_errors::ORDER_IS_FILLED
-                        );
-                        self.erc20_orders.write(order_hash, (0, 0, 0))
+                    } else if order_type == OrderType::Limit {
+                        self.erc20_orders.write(order_hash, (0, 0));
                     } else {
                         assert(block_ts < order.end_date, orderbook_errors::ORDER_IS_EXPIRED);
                         if order_type == OrderType::Listing {
-                            self.token_listings.write(order.compute_token_hash(), 0);
+                            let order_hash = order.compute_token_hash();
+                            self.token_listings.write(order_hash, 0);
                         }
-                    }
+                    };
+
                     order_type
                 },
-                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND)
             };
 
             // Cancel order
@@ -828,17 +825,15 @@ pub mod OrderbookComponent {
             order_type: OrderType, 
             order_hash: felt252
         ) {
-            let token_hash = order.compute_token_hash();
             // revert if order is fulfilled or Open
-            let current_order_hash = self.erc20_orders.read(token_hash);
-            if (current_order_hash.is_non_zero()) {
+            let (price, _) = self.erc20_orders.read(order_hash);
+            if (price.is_non_zero()) {
                 assert(
-                    order_status_read(current_order_hash) != Option::Some(OrderStatus::Fulfilled),
-                    orderbook_errors::ORDER_FULFILLED
+                    order_status_read(order_hash) != Option::Some(OrderStatus::Fulfilled),
+                    panic_with_felt252(orderbook_errors::ORDER_FULFILLED)
                 );
             }
-            let current_order: Option<OrderV1> = order_read(current_order_hash);
-            let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
+            let cancelled_order_hash = self._process_previous_order(order_hash, order.offerer);
             order_write(order_hash, order_type, order);
             self.erc20_orders.write(order_hash, (order.start_amount, order.quantity));
             self
@@ -852,10 +847,10 @@ pub mod OrderbookComponent {
                         order: order
                     }
                 );
-            cancelled_order_hash
         }
 
         fn _create_listing_execution_info(
+            ref self: ComponentState<TContractState>,
             order_hash: felt252,
             buy_order: OrderV1,
             sell_order: OrderV1,
@@ -886,7 +881,7 @@ pub mod OrderbookComponent {
             ref self: ComponentState<TContractState>, 
             fulfill_info: FulfillInfo, 
             order: OrderV1
-        ) {
+        ) -> (Option<ExecutionInfo>, Option<felt252>) {
             assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
             let order_hash = order.compute_order_hash();
             
@@ -933,10 +928,11 @@ pub mod OrderbookComponent {
             // check that the price is the same
             let order_price = order.start_amount / order.quantity;
             let related_order_price = related_order.start_amount / related_order.quantity;
+            
             assert(
                 order_price == related_order_price,
                 orderbook_errors::ORDER_PRICE_NOT_MATCH
-            )
+            );
 
             let (_, related_order_quantity) = self.erc20_orders.read(related_order_hash);
             let (_, order_quantity) = self.erc20_orders.read(order_hash);
@@ -968,7 +964,7 @@ pub mod OrderbookComponent {
                             order,
                             fulfill_info,
                             related_order_quantity,
-                            related_order_hash.broker_id,
+                            related_order.broker_id,
                             order_price
                         );
                         (Option::Some(execute_info), Option::Some(related_order_hash))
@@ -1092,7 +1088,7 @@ pub mod OrderbookComponent {
                         (Option::Some(execute_info), Option::Some(related_order_hash))
                     }
                 },
-                _ =>  orderbook_errors::ORDER_ROUTE_NOT_ERC20
+                _ =>  panic_with_felt252(orderbook_errors::ORDER_ROUTE_NOT_ERC20)
             }
         }
     }
