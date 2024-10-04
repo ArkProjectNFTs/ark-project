@@ -4,6 +4,11 @@ use ark_common::protocol::order_types::OrderType;
 
 use starknet::ContractAddress;
 
+#[derive(Drop, Copy, Debug)]
+struct OptionU256 {
+    is_some: felt252,  // 1 if Some, 0 if None
+    value: u256,    // Valid only if is_some == 1
+}
 
 #[derive(Drop, Copy, Debug)]
 struct OrderInfo {
@@ -13,12 +18,13 @@ struct OrderInfo {
     // The token contract address.
     token_address: ContractAddress,
     // The token id.
-    // TODO: how to store Option<u256> ?
-    token_id: u256,
+    token_id: OptionU256,
     // in wei. --> 10 | 10 | 10 |
     start_amount: u256,
-    //
+    // address making the order
     offerer: ContractAddress,
+    // number of tokens
+    quantity: u256 // 0 for ERC721
 }
 
 
@@ -779,6 +785,7 @@ mod executor {
             token_id,
             start_amount: order.start_amount,
             offerer: order.offerer,
+            quantity: order.quantity
         }
     }
 }

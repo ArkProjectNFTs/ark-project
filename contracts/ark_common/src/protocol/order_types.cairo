@@ -300,3 +300,50 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
         }
     }
 }
+
+
+/// A trait to describe order capability.
+trait PriceLevelTrait<T, +Serde<T>, +Drop<T>> {
+    /// get order version.
+    fn get_version(self: @T) -> felt252;
+
+    /// returns route type i.e Erc20Buy or Erc20Sell
+    fn get_type(self: @T) -> RouteType;
+
+    /// returns contract address of price level
+    fn get_token(self: @T) -> ContractAddress;
+
+    /// Returns the hash of the pricelevel's data.
+    /// Every field of the order that must be signed
+    /// must be considered in the computation of this hash.
+    fn compute_price_level_hash(self: @T) -> felt252;
+}
+
+
+#[derive(Serde, Drop, Copy)]
+struct PriceLevel {
+    route: RouteType,
+    token_address: ContractAddress,
+    token_chain_id: felt252,
+    price: u256
+}
+
+impl PriceLevelTraitV1 of PriceLevelTrait<PriceLevel> {
+    fn get_token(self: @PriceLevel) -> ContractAddress {
+        self.token_address
+    }
+
+    fn get_route_type(self: @PriceLevel) -> RouteType {
+        self.route
+    }
+
+    fn get_token_chain_id(self: @PriceLevel) -> felt252 {
+        self.token_chain_id
+    }
+
+    fn compute_price_level_hash(self: @PriceLevel) -> felt252 {
+        let mut buf = array![];
+        self.serialize(ref buf);
+        poseidon_hash_span(buf.span())
+    }
+}

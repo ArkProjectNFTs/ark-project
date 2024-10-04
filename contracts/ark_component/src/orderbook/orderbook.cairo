@@ -5,7 +5,7 @@ pub mod OrderbookComponent {
     };
     use ark_common::protocol::order_types::{
         OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo,
-        ExecutionInfo, RouteType
+        ExecutionInfo, RouteType, PriceLevel
     };
     use ark_common::protocol::order_v1::OrderV1;
     use core::debug::PrintTrait;
@@ -33,6 +33,8 @@ pub mod OrderbookComponent {
         auctions: Map<felt252, (felt252, u64, u256)>,
         /// Mapping of auction offer order_hash to auction listing order_hash.
         auction_offers: Map<felt252, felt252>,
+        /// Mapping of price level hash to price level data.
+        price_levels: Map<felt252, PriceLevel>
     }
 
     // *************************************************************************
@@ -817,28 +819,6 @@ pub mod OrderbookComponent {
             ref self: ComponentState<TContractState>, 
             order: OrderV1, 
             order_type: OrderType, 
-            order_hash: felt252
-        ) {
-            // todo add matching logic
-            order_write(order_hash, order_type, order);
-            self
-                .emit(
-                    OrderPlaced {
-                        order_hash: order_hash,
-                        order_version: order.get_version(),
-                        order_type: order_type,
-                        cancelled_order_hash: Option::None,
-                        order: order,
-                    }
-                );
-        }
-
-        /// Creates a market order
-        fn _create_market_order(
-            ref self:  ComponentState<TContractState>, 
-            order: OrderV1, 
-            order_type: 
-            OrderType, 
             order_hash: felt252
         ) {
             // todo add matching logic
