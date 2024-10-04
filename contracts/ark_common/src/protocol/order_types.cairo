@@ -218,11 +218,11 @@ struct FulfillInfo {
 #[derive(Drop, Serde, Copy)]
 struct ExecutionInfo {
     order_hash: felt252,
-    nft_address: ContractAddress,
-    nft_from: ContractAddress,
-    nft_to: ContractAddress,
-    nft_token_id: u256,
-    nft_quantity: u256,
+    token_address: ContractAddress,
+    token_from: ContractAddress,
+    token_to: ContractAddress,
+    token_id: u256,
+    token_quantity: u256,
     payment_from: ContractAddress,
     payment_to: ContractAddress,
     payment_amount: u256,

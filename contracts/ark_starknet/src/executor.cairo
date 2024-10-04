@@ -646,17 +646,17 @@ mod executor {
 
         let (creator_address, creator_fees_amount) = _compute_creator_fees_amount(
             @self,
-            @execution_info.nft_address,
+            @execution_info.token_address,
             execution_info.payment_amount,
-            execution_info.nft_token_id
+            execution_info.token_id
         );
         let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
             _compute_fees_amount(
             @self,
             execution_info.fulfill_broker_address,
             execution_info.listing_broker_address,
-            execution_info.nft_address,
-            execution_info.nft_token_id,
+            execution_info.token_address,
+            execution_info.token_id,
             execution_info.payment_amount
         );
         assert!(
@@ -699,7 +699,7 @@ mod executor {
                 self
                     .emit(
                         CollectionFallbackFees {
-                            collection: execution_info.nft_address,
+                            collection: execution_info.token_address,
                             amount: creator_fees_amount,
                             currency_contract: currency_contract.contract_address,
                             receiver: default_receiver_creator,
@@ -724,24 +724,24 @@ mod executor {
                 );
         }
 
-        if _is_erc721(execution_info.nft_address) {
-            let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
+        if _is_erc721(execution_info.token_address) {
+            let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
             nft_contract
                 .transfer_from(
-                    execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
+                    execution_info.token_from, execution_info.token_to, execution_info.token_id
                 );
         }
 
-        if _is_erc1155(execution_info.nft_address) {
+        if _is_erc1155(execution_info.token_address) {
             let erc1155_contract = IERC1155Dispatcher {
-                contract_address: execution_info.nft_address
+                contract_address: execution_info.token_address
             };
             erc1155_contract
                 .safe_transfer_from(
-                    execution_info.nft_from,
-                    execution_info.nft_to,
-                    execution_info.nft_token_id,
-                    execution_info.nft_quantity,
+                    execution_info.token_from,
+                    execution_info.token_to,
+                    execution_info.token_id,
+                    execution_info.token_quantity,
                     array![].span()
                 );
         }
@@ -754,8 +754,8 @@ mod executor {
             order_hash: execution_info.order_hash,
             transaction_hash,
             starknet_block_timestamp: block_timestamp,
-            from: execution_info.nft_from,
-            to: execution_info.nft_to,
+            from: execution_info.token_from,
+            to: execution_info.token_to,
         };
 
         self.orderbook.validate_order_execution(vinfo);
