@@ -231,7 +231,7 @@ fn test_cancel_limit_buy_order() {
     let start_amount = 10_000_000;
     let quantity = 5000;
 
-    let (order_hash, offerer, start_amount) = create_limit_buy_order(
+    let (order_hash, offerer, _) = create_limit_buy_order(
         executor_address, erc20_address, token_address, start_amount, quantity
     );
 
@@ -239,7 +239,7 @@ fn test_cancel_limit_buy_order() {
         order_hash,
         canceller: offerer,
         token_chain_id: 'SN_MAIN',
-        token_address: nft_address,
+        token_address: token_address,
         token_id: Option::None,
     };
 
@@ -284,7 +284,7 @@ fn test_cancel_limit_sell_order() {
     let end_amount = 10_000_000;
     let quantity = 5000;
 
-    let (order_hash, offerer, start_amount) = create_limit_sell_order(
+    let (order_hash, offerer, _) = create_limit_sell_order(
         executor_address, erc20_address, token_address, end_amount, quantity
     );
 
@@ -292,7 +292,7 @@ fn test_cancel_limit_sell_order() {
         order_hash,
         canceller: offerer,
         token_chain_id: 'SN_MAIN',
-        token_address: nft_address,
+        token_address: token_address,
         token_id: Option::None,
     };
 
@@ -332,7 +332,7 @@ fn test_cancel_limit_sell_order() {
 }
 
 #[test]
-// #[should_panic]
+#[should_panic(expected: 'OB: order fulfilled')]
 fn test_cancel_offer_order_already_cancelled() {
     let (executor_address, erc20_address, nft_address) = setup();
     let token_id = 10;

@@ -1,7 +1,6 @@
 use ark_common::protocol::order_types::{FulfillInfo, OrderTrait, RouteType};
 use ark_common::protocol::order_v1::OrderV1;
 
-
 use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, IMaintenanceDispatcher,
     IMaintenanceDispatcherTrait
@@ -20,7 +19,8 @@ use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::{
     create_auction_order, create_collection_offer_order, create_listing_order, create_offer_order,
     setup, setup_default_order, setup_auction_order, setup_collection_offer_order,
-    setup_listing_order, setup_offer_order, setup_erc20_order, create_limit_buy_order, create_limit_sell_order
+    setup_listing_order, setup_offer_order, setup_erc20_order, create_limit_buy_order, create_limit_sell_order, setup_limit_sell_order,
+    setup_limit_buy_order
 };
 
 
@@ -346,7 +346,7 @@ fn test_fulfill_auction_order_ok() {
 fn test_fulfill_limit_buy_order_ok() {
     let (executor_address, erc20_address, token_address) = setup_erc20_order();
     let start_amount = 10_000_000;
-    let quantity = 20_000_000;
+    let quantity = 20_000;
 
     let (order_hash, buyer, _) = create_limit_buy_order(
         executor_address, erc20_address, token_address, start_amount, quantity
@@ -358,10 +358,10 @@ fn test_fulfill_limit_buy_order_ok() {
 
     IFreeMintDispatcher { contract_address: token_address }.mint(seller, quantity);
 
-    let sell_order = setup_limit_sell_order(erc20_address, token_address, seller, start_amount, quantity);
+    let seller_order = setup_limit_sell_order(erc20_address, token_address, seller, start_amount, quantity);
 
     cheat_caller_address(executor_address, seller, CheatSpan::TargetCalls(1));
-    IExecutorDispatcher { contract_address: executor_address }.create_order(sell_order);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(seller_order);
 
     // approve executor
     cheat_caller_address(token_address, seller, CheatSpan::TargetCalls(1));
@@ -394,23 +394,23 @@ fn test_fulfill_limit_sell_order_ok() {
 
     let buyer = contract_address_const::<'buyer'>();
 
-    IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, end_amount);
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
 
-    let buy_order = setup_limit_buy_order(erc20_address, token_address, buyer, start_amount, quantity);
-
+    let buyer_order = setup_limit_buy_order(erc20_address, token_address, buyer, start_amount, quantity);
+    
     cheat_caller_address(executor_address, buyer, CheatSpan::TargetCalls(1));
-    IExecutorDispatcher { contract_address: executor_address }.create_order(buy_order);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
 
     // approve executor
-    cheat_caller_address(token_address, buyer, CheatSpan::TargetCalls(1));
+    cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
 
     // approve executor
-    cheat_caller_address(erc20_address, seller, CheatSpan::TargetCalls(1));
+    cheat_caller_address(token_address, seller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: token_address }.approve(executor_address, quantity);
 
     let mut fulfill_info = create_fulfill_info(order_hash, fulfiller, token_address, Option::None);
-    fulfill_info.related_order_hash = Option::Some(buy_order.compute_order_hash());
+    fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);

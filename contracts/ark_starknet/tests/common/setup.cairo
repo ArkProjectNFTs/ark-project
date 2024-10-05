@@ -29,10 +29,10 @@ fn deploy_erc20() -> ContractAddress {
 }
 
 fn deploy_erc20_2() -> ContractAddress {
-    let contract = declare("FreeMintERC202").unwrap().contract_class();
+    let contract = declare("TradeERC20").unwrap().contract_class();
     let initial_supply: u256 = 10_000_000_000_u256;
-    let name: ByteArray = "DummyERC202";
-    let symbol: ByteArray = "DUMMY2";
+    let name: ByteArray = "TradeERC20";
+    let symbol: ByteArray = "TRADE";
 
     let mut calldata: Array<felt252> = array![];
     initial_supply.serialize(ref calldata);
@@ -235,7 +235,7 @@ fn setup_limit_sell_order(
 ) -> OrderV1 {
     setup_order(
         currency_address,
-        nft_address,
+        token_address,
         RouteType::Erc20ToErc20Sell,
         offerer,
         Option::None,

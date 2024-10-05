@@ -64,7 +64,7 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         }
 
         // check for expiry only if not erc20 buys or sells
-        if (*self.route != RouteType::Erc20ToErc20Buy || *self.route != RouteType::Erc20ToErc20Sell) {
+        if (*self.route != RouteType::Erc20ToErc20Buy && *self.route != RouteType::Erc20ToErc20Sell) {
             let end_date = *self.end_date;
 
             if end_date < block_timestamp {
@@ -75,6 +75,10 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
             if end_date > max_end_date {
                 return Result::Err(OrderValidationError::EndDateTooFar);
+            }
+
+            if (*self.start_amount).is_zero(){
+                return Result::Err(OrderValidationError::InvalidContent);
             }
         }
 
@@ -87,10 +91,9 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         }
 
         if (*self.offerer).is_zero()
-            || (*self.token_address).is_zero()
-            || (*self.start_amount).is_zero()
-            || (*self.salt).is_zero()
-            || (*self.quantity).is_zero() {
+        || (*self.token_address).is_zero()
+        || (*self.salt).is_zero()
+        || (*self.quantity).is_zero() {
             return Result::Err(OrderValidationError::InvalidContent);
         }
 
@@ -138,6 +141,10 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
                 && (*self.start_amount).is_zero()
                 && (*self.end_amount) > 0 // amount to receive
                 && (*self.route == RouteType::Erc20ToErc20Sell) {
+                return Result::Ok(OrderType::LimitSell);
+            }
+
+            if (*self.route == RouteType::Erc20ToErc20Sell) {
                 return Result::Ok(OrderType::LimitSell);
             }
         }

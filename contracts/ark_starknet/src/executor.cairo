@@ -371,22 +371,21 @@ mod executor {
             panic!("Order not found");
         }
 
-        if order_info.order_type != OrderType::Auction {
-            assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
-        }
-
         let contract_address = get_contract_address();
         match order_info.order_type {
             OrderType::Listing => {
+                assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
                 _verify_fulfill_listing_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::Offer => {
+                assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
                 _verify_fulfill_offer_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::Auction => {
                 _verify_fulfill_auction_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::CollectionOffer => {
+                assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
                 _verify_fulfill_collection_offer_order(
                     self, order_info, fulfill_info, contract_address
                 );
@@ -548,6 +547,10 @@ mod executor {
 
         let (buyer_order, seller_order) =  match order_info.route {
             RouteType::Erc20ToErc20Sell => {
+                assert(
+                    related_order_info.route == RouteType::Erc20ToErc20Buy, 
+                    'Order route not valid'
+                );
    
                 (related_order_info, order_info)
             },
@@ -564,7 +567,7 @@ mod executor {
 
         let buyer = buyer_order.offerer;
 
-        // checks for buyer
+        //checks for buyer
         assert!(
             _check_erc20_amount(
                 @buyer_order.currency_address, buyer_order.start_amount, @buyer
@@ -672,6 +675,7 @@ mod executor {
             execution_info.token_id,
             execution_info.payment_amount
         );
+        
         assert!(
             execution_info
                 .payment_amount > (fulfill_broker_fees_amount

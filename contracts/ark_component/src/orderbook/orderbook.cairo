@@ -55,6 +55,9 @@ pub mod OrderbookComponent {
         OrderFulfilled: OrderFulfilled,
     }
 
+    // precision for erc20 price division
+    const PRECISION : u256 = 1000000000000000000;
+
     // must be increased when `OrderPlaced` content change
     pub const ORDER_PLACED_EVENT_VERSION: u8 = 1;
     /// Event for when an order is placed.
@@ -847,11 +850,11 @@ pub mod OrderbookComponent {
             
             match order_type {
                 OrderType::LimitBuy => {
-                    let price = order.start_amount / order.quantity;
+                    let price = order.start_amount / order.quantity * PRECISION;
                     self.buy_orders.write(order_hash, (price, order.quantity));
                 },
                 OrderType::LimitSell => {
-                    let price = order.end_amount / order.quantity;
+                    let price = order.end_amount / order.quantity * PRECISION;
                     self.sell_orders.write(order_hash, (price, order.quantity));
                 },
                 _ => ()
@@ -889,7 +892,7 @@ pub mod OrderbookComponent {
                 token_quantity,
                 payment_from: buy_order.offerer,
                 payment_to: sell_order.offerer,
-                payment_amount: price * token_quantity,
+                payment_amount: price * token_quantity / PRECISION,
                 payment_currency_address: buy_order.currency_address,
                 payment_currency_chain_id: buy_order.currency_chain_id,
                 listing_broker_address: listing_broker_address,
@@ -903,7 +906,6 @@ pub mod OrderbookComponent {
             fulfill_info: FulfillInfo, 
             order: OrderV1
         ) -> (Option<ExecutionInfo>, Option<felt252>) {
-            assert(order.offerer != fulfill_info.fulfiller, orderbook_errors::ORDER_SAME_OFFERER);
             let order_hash = order.compute_order_hash();
             
             assert(
@@ -965,9 +967,11 @@ pub mod OrderbookComponent {
                 _ => panic!("route not supported")
             };
 
+            // add 1e18 to the multiplication;
+
             // check that the price is the same
-            let buy_price = buy_order.start_amount / buy_order.quantity;
-            let sell_price = sell_order.end_amount / sell_order.quantity;
+            let buy_price = buy_order.start_amount / buy_order.quantity * PRECISION;
+            let sell_price = sell_order.end_amount / sell_order.quantity * PRECISION;
 
             let buy_order_hash = buy_order.compute_order_hash();
             let sell_order_hash = sell_order.compute_order_hash();
@@ -1032,7 +1036,6 @@ pub mod OrderbookComponent {
                 // execute both orders
                 order_status_write(buy_order_hash, OrderStatus::Fulfilled);
                 order_status_write(sell_order_hash, OrderStatus::Fulfilled);
-
                 // passing any of them as the order hash will fulfill both orders,
                 // so just one executioninfo will be sent.
                 let execute_info = self._create_listing_execution_info(
