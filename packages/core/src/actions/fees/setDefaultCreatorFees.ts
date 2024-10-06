@@ -1,6 +1,8 @@
+
 import { Account, cairo, CallData } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import { InvalidFeesRatioError } from "../../errors/actions.js";
 import { validateFeesRatio } from "../../utils/index.js";
 
 interface Params {
@@ -12,7 +14,7 @@ interface Params {
 
 export const setDefaultCreatorFees = async (config: Config, params: Params) => {
   if (!validateFeesRatio(params.numerator, params.denominator)) {
-    throw new Error("Invalid fees ratio");
+    throw new InvalidFeesRatioError();
   }
 
   const result = await params.account.execute({
