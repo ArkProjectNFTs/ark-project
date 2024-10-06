@@ -9,60 +9,54 @@ import {
   
   import { Config } from "../../createConfig.js";
   import {
-	EndDateTooFarError,
-	InvalidEndAmountError,
 	InvalidEndDateError,
-	InvalidStartAmountError,
 	InvalidStartDateError
   } from "../../errors/actions.js";
   import { OrderV1, RouteType } from "../../types/index.js";
   import { getOrderHashFromOrderV1 } from "../../utils/index.js";
+  import { getAllowance } from "../read/getAllowance.js";
   
-  export interface CreateAuctionParameters {
+  export interface CreateCollectionOfferParameters {
 	account: AccountInterface;
 	brokerAddress: string;
-	tokenAddress: string;
-	tokenId: bigint;
 	currencyAddress?: string;
-	startAmount: bigint;
-	endAmount?: bigint;
+	tokenAddress: string;
+	amount: bigint;
 	startDate?: number;
 	endDate?: number;
 	waitForTransaction?: boolean;
   }
   
-  export interface CreateAuctionResult {
+  export interface CreateCollectionOfferResult {
 	orderHash: bigint;
 	transactionHash: string;
   }
   
-  const docsPath = "/create-auction";
+  const docsPath = "/create-collection-offer";
   /**
-   * Creates an Auction on the ArkProject.
+   * Creates a collection offer on the ArkProject.
    *
    * This function takes a configuration object and listing parameters, builds a complete OrderV1 object
    * with default values for unspecified fields, compiles the order data, signs it, and then executes
    * the transaction to create a listing on the Arkchain using the specified Starknet and Arkchain accounts.
    *
    * @param {Config} config - The core SDK config, including network and contract information.
-   * @param {CreateAuctionParameters} parameters - The parameters for the listing, including Starknet account,
+   * @param {CreateCollectionOfferParameters} parameters - The parameters for the listing, including Starknet account,
    * Arkchain account, base order details, and an optional owner address.
    *
-   * @returns {Promise<string>} A promise that resolves with the hash of the created order.
+   * @returns {Promise<CreateCollectionOfferResult>} A promise that resolves with the hash of the created order.
    *
    */
-  export async function createAuction(
+  async function createCollectionOffer(
 	config: Config,
-	parameters: CreateAuctionParameters
-  ): Promise<CreateAuctionResult> {
+	parameters: CreateCollectionOfferParameters
+  ): Promise<CreateCollectionOfferResult> {
 	const {
 	  account,
 	  brokerAddress,
-	  tokenAddress,
-	  tokenId,
 	  currencyAddress = config.starknetCurrencyContract,
-	  startAmount,
-	  endAmount,
+	  tokenAddress,
+	  amount,
 	  startDate,
 	  endDate,
 	  waitForTransaction = true
@@ -73,9 +67,7 @@ import {
 	const maxEndedAt = now + 60 * 60 * 24 * 30;
   
 	if (startedAt < now) {
-	  throw new InvalidStartDateError(startDate, {
-		docsPath
-	  });
+	  throw new InvalidStartDateError(startDate, { docsPath });
 	}
   
 	if (endedAt < startedAt) {
@@ -83,34 +75,36 @@ import {
 	}
   
 	if (endedAt > maxEndedAt) {
-	  throw new EndDateTooFarError({ endDate, maxEndedAt }, { docsPath });
+	  throw new Error(
+		`End date too far in the future. End date (${endDate}) exceeds the maximum allowed (${maxEndedAt}).`
+	  );
 	}
   
-	if (startAmount === BigInt(0)) {
-	  throw new InvalidStartAmountError({ docsPath });
-	}
-  
-	if (endAmount && endAmount < startAmount) {
-	  throw new InvalidEndAmountError({ docsPath });
+	if (amount === BigInt(0)) {
+	  throw new Error(
+		"Invalid start amount. The start amount must be greater than zero."
+	  );
 	}
   
 	const chainId = await config.starknetProvider.getChainId();
-  
+	const currentAllowance = await getAllowance(
+	  config,
+	  currencyAddress,
+	  account.address
+	);
+	const allowance = currentAllowance + amount;
 	const order: OrderV1 = {
-	  route: RouteType.Erc721ToErc20,
+	  route: RouteType.Erc20ToErc721,
 	  currencyAddress,
 	  currencyChainId: chainId,
 	  salt: 1,
 	  offerer: account.address,
 	  tokenChainId: chainId,
 	  tokenAddress,
-	  tokenId: new CairoOption<Uint256>(
-		CairoOptionVariant.Some,
-		cairo.uint256(tokenId)
-	  ),
+	  tokenId: new CairoOption<Uint256>(CairoOptionVariant.None),
 	  quantity: cairo.uint256(1),
-	  startAmount: cairo.uint256(startAmount),
-	  endAmount: cairo.uint256(endAmount || 0),
+	  startAmount: cairo.uint256(amount),
+	  endAmount: cairo.uint256(0),
 	  startDate: startedAt,
 	  endDate: endedAt,
 	  brokerId: brokerAddress,
@@ -119,17 +113,19 @@ import {
   
 	const result = await account.execute([
 	  {
-		contractAddress: tokenAddress,
+		contractAddress: currencyAddress,
 		entrypoint: "approve",
 		calldata: CallData.compile({
-		  to: config.starknetExecutorContract,
-		  token_id: cairo.uint256(tokenId)
+		  spender: config.starknetExecutorContract,
+		  amount: cairo.uint256(allowance)
 		})
 	  },
 	  {
 		contractAddress: config.starknetExecutorContract,
 		entrypoint: "create_order",
-		calldata: CallData.compile({ order })
+		calldata: CallData.compile({
+		  order
+		})
 	  }
 	]);
   
@@ -146,4 +142,5 @@ import {
 	  transactionHash: result.transaction_hash
 	};
   }
- 
+  
+  export { createCollectionOffer };
