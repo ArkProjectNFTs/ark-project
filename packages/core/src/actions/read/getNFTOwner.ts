@@ -1,6 +1,7 @@
 import { cairo, CallData, Contract } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import { NoABIError } from "../../errors/actions.js";
 
 export const getNftOwner = async (
   config: Config,
@@ -9,7 +10,7 @@ export const getNftOwner = async (
 ) => {
   const { abi } = await config.starknetProvider.getClassAt(nftContractAddress);
   if (abi === undefined) {
-    throw new Error("no abi.");
+    throw new NoABIError({ docsPath: "/sdk-core/get-nft-owner" });
   }
 
   const nftContract = new Contract(

@@ -1,6 +1,7 @@
 import { CairoCustomEnum } from "starknet";
 
 import contracts from "../../../../contracts.dev.json";
+import { InvalidVariantCairoCustomEnumError } from "../../src/errors/config.js";
 
 type VariantKey = "Listing" | "Auction" | "Offer" | "CollectionOffer";
 
@@ -25,5 +26,5 @@ export function getTypeFromCairoCustomEnum(cairoCustomEnum: CairoCustomEnum) {
     }
   }
 
-  throw new Error("No valid variant found in CairoCustomEnum");
+  throw new InvalidVariantCairoCustomEnumError({ docsPath: "" });
 }

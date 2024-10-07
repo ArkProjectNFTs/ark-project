@@ -2,6 +2,7 @@ import * as starknet from "@scure/starknet";
 import { cairo, CallData, Contract, shortString } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import { NoABIError } from "../../errors/actions.js";
 
 interface GetOrderHashParameters {
   tokenId: bigint;
@@ -33,7 +34,7 @@ const getOrderHash = async (
     config.starknetExecutorContract
   );
   if (executorAbi === undefined) {
-    throw new Error("no abi.");
+    throw new NoABIError({ docsPath: "/sdk-core/get-order-hash" });
   }
 
   const orderbookContract = new Contract(
