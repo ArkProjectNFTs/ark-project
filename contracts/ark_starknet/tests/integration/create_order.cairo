@@ -571,3 +571,69 @@ fn test_create_collection_offer_order_expired() {
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
     stop_cheat_block_timestamp_global();
 }
+
+#[test]
+#[should_panic(expected: "Oferrer does not own enough ERC20 tokens to buy")]
+fn test_create_limit_buy_order_offerer_not_enough_erc20_tokens() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let minted = 10_000;
+    let quantity = 100_000;
+
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, minted);
+
+    let order = setup_limit_buy_order(erc20_address, token_address, offerer, start_amount, quantity);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: "Oferrer does not own enough ERC20 tokens to sell")]
+fn test_create_limit_sell_order_offerer_not_enough_erc20_tokens() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let offerer = contract_address_const::<'offerer'>();
+    let end_amount = 10_000_000;
+    let minted = 10_000;
+    let quantity = 100_000;
+
+    Erc20Dispatcher { contract_address: token_address }.mint(offerer, minted);
+
+    let order = setup_limit_sell_order(erc20_address, token_address, offerer, end_amount, quantity);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: 'OB: order already exists')]
+fn test_create_limit_buy_order_twice() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let offerer = contract_address_const::<'offerer'>();
+    let start_amount = 10_000_000;
+    let quantity = 5_000_000;
+    Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_limit_buy_order(erc20_address, token_address, offerer, start_amount, quantity);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}
+
+#[test]
+#[should_panic(expected: 'OB: order already exists')]
+fn test_create_limit_sell_order_twice() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let offerer = contract_address_const::<'offerer'>();
+    let end_amount = 10_000_000;
+    let quantity = 5_000_000;
+    Erc20Dispatcher { contract_address: token_address }.mint(offerer, quantity);
+
+    let order = setup_limit_sell_order(erc20_address, token_address, offerer, end_amount, quantity);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+}

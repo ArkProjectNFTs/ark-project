@@ -76,8 +76,15 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             if end_date > max_end_date {
                 return Result::Err(OrderValidationError::EndDateTooFar);
             }
+        }
 
+        // check that the start amount is not zero for sell erc20 orders
+        if(*self.route != RouteType::Erc20ToErc20Sell){
             if (*self.start_amount).is_zero(){
+                return Result::Err(OrderValidationError::InvalidContent);
+            }
+        }else{
+            if (*self.end_amount).is_zero(){
                 return Result::Err(OrderValidationError::InvalidContent);
             }
         }
