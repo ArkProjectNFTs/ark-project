@@ -6,7 +6,7 @@ import { loadArtifacts } from "./common";
  * Declare and deploys orderbook contract.
  * Returns the contract object.
  */
-export async function deployERC20(
+export async function deployERC20Trade(
   artifactsPath: string,
   account: sn.Account,
   provider: sn.RpcProvider,
