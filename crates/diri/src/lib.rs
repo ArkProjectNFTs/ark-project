@@ -88,29 +88,48 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                     }
                 };
 
+                let contract_address = ""; // TODO !
+                let broker_id = match self.storage.get_broker_id(contract_address).await {
+                    Ok(id) => Some(id),
+                    Err(e) => {
+                        error!("Can't get broker id: {e}");
+                        None
+                    }
+                };
+
                 match orderbook_event {
                     Event::OrderPlaced(ev) => {
                         trace!("OrderPlaced found: {:?}", ev);
                         self.storage
-                            .register_placed(block_number, block_timestamp, &ev.into())
+                            .register_placed(block_number, block_timestamp, &ev.into(), broker_id)
                             .await?;
                     }
                     Event::OrderCancelled(ev) => {
                         trace!("OrderCancelled found: {:?}", ev);
                         self.storage
-                            .register_cancelled(block_number, block_timestamp, &ev.into())
+                            .register_cancelled(
+                                block_number,
+                                block_timestamp,
+                                &ev.into(),
+                                broker_id,
+                            )
                             .await?;
                     }
                     Event::OrderFulfilled(ev) => {
                         trace!("OrderFulfilled found: {:?}", ev);
                         self.storage
-                            .register_fulfilled(block_number, block_timestamp, &ev.into())
+                            .register_fulfilled(
+                                block_number,
+                                block_timestamp,
+                                &ev.into(),
+                                broker_id,
+                            )
                             .await?;
                     }
                     Event::OrderExecuted(ev) => {
                         trace!("OrderExecuted found: {:?}", ev);
                         self.storage
-                            .register_executed(block_number, block_timestamp, &ev.into())
+                            .register_executed(block_number, block_timestamp, &ev.into(), broker_id)
                             .await?;
                     }
                     Event::RollbackStatus(ev) => {
