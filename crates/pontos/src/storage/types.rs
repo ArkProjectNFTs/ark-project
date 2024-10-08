@@ -144,6 +144,7 @@ pub struct TokenTransferEvent {
     pub to_address: String,
     pub contract_address: String,
     pub chain_id: String,
+    pub broker_id: Option<String>,
     pub contract_type: String,
     pub transaction_hash: String,
     pub token_id: String,
@@ -192,6 +193,7 @@ impl Default for TokenTransferEvent {
             block_number: None,
             updated_at: None,
             chain_id: "0x534e5f4d41494e".to_string(),
+            broker_id: None,
         }
     }
 }
@@ -345,6 +347,7 @@ mod tests {
             block_number: Some(123),
             updated_at: Some(1625101200),
             chain_id: "0x534e5f4d41494e".to_string(),
+            broker_id: None,
         });
 
         let serialized = serde_json::to_string(&event).expect("Failed to serialize TokenEvent");

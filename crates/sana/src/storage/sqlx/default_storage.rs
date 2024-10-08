@@ -198,6 +198,21 @@ impl PostgresStorage {
 
 #[async_trait]
 impl Storage for PostgresStorage {
+    async fn get_broker_id(&self, contract_address: &str) -> Result<Option<String>, StorageError> {
+        let query = "
+            SELECT id
+            FROM broker
+            WHERE contract_address = $1
+            LIMIT 1;";
+
+        let res = sqlx::query_scalar::<_, String>(query)
+            .bind(contract_address)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        Ok(res)
+    }
+
     async fn register_mint(
         &self,
         contract_address: &str,
@@ -268,8 +283,8 @@ impl Storage for PostgresStorage {
             return Ok(());
         }
 
-        let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address, amount)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (token_event_id) DO NOTHING";
+        let q = "INSERT INTO token_event (token_event_id, contract_address, chain_id, broker_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address, amount)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT (token_event_id) DO NOTHING";
 
         let event_type = self.to_title_case(&event.event_type.to_string().to_lowercase());
 
@@ -277,6 +292,7 @@ impl Storage for PostgresStorage {
             .bind(event.token_event_id.clone())
             .bind(event.nft_contract_address.clone())
             .bind(event.chain_id.clone())
+            .bind(event.broker_id.clone())
             .bind(event.token_id.clone())
             .bind(event.token_id_hex.clone())
             .bind(event_type)

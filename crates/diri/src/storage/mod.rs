@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 
 pub mod types;
-use starknet::contract;
 use types::{CancelledData, ExecutedData, FulfilledData, PlacedData, RollbackStatusData};
 
 pub type StorageResult<T> = Result<T, StorageError>;
@@ -55,5 +54,5 @@ pub trait Storage {
         order: &RollbackStatusData,
     ) -> StorageResult<()>;
 
-    async fn get_broker_id(&self, contract_address: &str) -> StorageResult<String>;
+    async fn get_broker_id(&self, contract_address: &str) -> StorageResult<Option<String>>;
 }

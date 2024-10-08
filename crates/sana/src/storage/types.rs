@@ -194,6 +194,7 @@ pub struct TokenSaleEvent {
     pub currency_address: Option<String>,
     pub price: String,
     pub chain_id: String,
+    pub broker_id: Option<String>,
 }
 
 impl Default for TokenTransferEvent {
