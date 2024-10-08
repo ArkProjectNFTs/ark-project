@@ -15,8 +15,9 @@ use snforge_std::{cheat_caller_address, CheatSpan, spy_events, EventSpyAssertion
 use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::{
     create_auction_order, create_collection_offer_order, create_listing_order, create_offer_order,
-    setup, setup_erc20_order, setup_default_order, setup_auction_order, setup_collection_offer_order,
-    setup_listing_order, setup_offer_order, create_limit_buy_order, create_limit_sell_order
+    setup, setup_erc20_order, setup_default_order, setup_auction_order,
+    setup_collection_offer_order, setup_listing_order, setup_offer_order, create_limit_buy_order,
+    create_limit_sell_order
 };
 
 #[test]

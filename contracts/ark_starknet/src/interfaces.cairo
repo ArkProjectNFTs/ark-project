@@ -1,6 +1,6 @@
 use ark_common::protocol::order_types::ExecutionInfo;
-use ark_common::protocol::order_types::{OrderV1, OptionU256, OptionU256Trait};
 use ark_common::protocol::order_types::{FulfillInfo, CancelInfo};
+use ark_common::protocol::order_types::{OrderV1, OptionU256, OptionU256Trait};
 use ark_oz::erc2981::FeesRatio;
 //! Interfaces for arkchain operator.
 use starknet::{ClassHash, ContractAddress};
@@ -32,7 +32,10 @@ trait IExecutor<T> {
         self: @T, token_address: ContractAddress
     ) -> (ContractAddress, FeesRatio);
     fn set_collection_creator_fees(
-        ref self: T, token_address: ContractAddress, receiver: ContractAddress, fees_ratio: FeesRatio
+        ref self: T,
+        token_address: ContractAddress,
+        receiver: ContractAddress,
+        fees_ratio: FeesRatio
     );
 
     fn get_fees_amount(

@@ -38,9 +38,9 @@ impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
             Option::Some(OrderType::Offer)
         } else if self == 'COLLECTION_OFFER' {
             Option::Some(OrderType::CollectionOffer)
-        } else if self == 'LIMIT_BUY'{
+        } else if self == 'LIMIT_BUY' {
             Option::Some(OrderType::LimitBuy)
-        }else if self == 'LIMIT_SELL'{
+        } else if self == 'LIMIT_SELL' {
             Option::Some(OrderType::LimitSell)
         } else {
             Option::None
@@ -292,9 +292,9 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
             Option::Some(RouteType::Erc20ToErc721)
         } else if self == 'ERC721TOERC20' {
             Option::Some(RouteType::Erc721ToErc20)
-        } else if self == 'ERC20TOERC20BUY'{
+        } else if self == 'ERC20TOERC20BUY' {
             Option::Some(RouteType::Erc20ToErc20Buy)
-        } else if self == 'ERC20TOERC20SELL'{
+        } else if self == 'ERC20TOERC20SELL' {
             Option::Some(RouteType::Erc20ToErc20Sell)
         } else {
             Option::None
@@ -304,8 +304,8 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
 
 #[derive(starknet::Store, Serde, Drop, PartialEq, Copy, Debug)]
 struct OptionU256 {
-    is_some: felt252, 
-    value: u256,    
+    is_some: felt252,
+    value: u256,
 }
 
 trait OptionU256Trait<T, +Serde<T>, +Drop<T>> {
@@ -319,7 +319,7 @@ impl OptionU256Impl of OptionU256Trait<OptionU256> {
     }
     fn is_some(self: @OptionU256) -> bool {
         if *self.is_some == 1 {
-            true 
+            true
         } else {
             false
         }

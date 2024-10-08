@@ -383,9 +383,7 @@ fn create_limit_sell_order(
 
     IFreeMintDispatcher { contract_address: token_address }.mint(offerer, quantity);
 
-    let order = setup_limit_sell_order(
-        erc20_address, token_address, offerer, end_amount, quantity
-    );
+    let order = setup_limit_sell_order(erc20_address, token_address, offerer, end_amount, quantity);
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);

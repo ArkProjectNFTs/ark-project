@@ -64,13 +64,14 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         }
 
         // check for expiry only if not erc20 buys or sells
-        if (*self.route != RouteType::Erc20ToErc20Buy && *self.route != RouteType::Erc20ToErc20Sell) {
+        if (*self.route != RouteType::Erc20ToErc20Buy
+            && *self.route != RouteType::Erc20ToErc20Sell) {
             let end_date = *self.end_date;
 
             if end_date < block_timestamp {
                 return Result::Err(OrderValidationError::EndDateInThePast);
             }
-    
+
             // End date -> block_timestamp + 30 days.
             let max_end_date = block_timestamp + (30 * 24 * 60 * 60);
             if end_date > max_end_date {
@@ -79,12 +80,12 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         }
 
         // check that the start amount is not zero for sell erc20 orders
-        if(*self.route != RouteType::Erc20ToErc20Sell){
-            if (*self.start_amount).is_zero(){
+        if (*self.route != RouteType::Erc20ToErc20Sell) {
+            if (*self.start_amount).is_zero() {
                 return Result::Err(OrderValidationError::InvalidContent);
             }
-        }else{
-            if (*self.end_amount).is_zero(){
+        } else {
+            if (*self.end_amount).is_zero() {
                 return Result::Err(OrderValidationError::InvalidContent);
             }
         }
@@ -98,9 +99,9 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
         }
 
         if (*self.offerer).is_zero()
-        || (*self.token_address).is_zero()
-        || (*self.salt).is_zero()
-        || (*self.quantity).is_zero() {
+            || (*self.token_address).is_zero()
+            || (*self.salt).is_zero()
+            || (*self.quantity).is_zero() {
             return Result::Err(OrderValidationError::InvalidContent);
         }
 
@@ -135,16 +136,16 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
                 return Result::Ok(OrderType::CollectionOffer);
             }
 
-            // Limit Buy Order 
-            if(*self.quantity) > 0 
+            // Limit Buy Order
+            if (*self.quantity) > 0
                 && (*self.start_amount) > 0 // amount to pay
                 && (*self.end_amount).is_zero()
                 && (*self.route == RouteType::Erc20ToErc20Buy) {
                 return Result::Ok(OrderType::LimitBuy);
             }
 
-            // Limit Sell Order 
-            if(*self.quantity) > 0 
+            // Limit Sell Order
+            if (*self.quantity) > 0
                 && (*self.start_amount).is_zero()
                 && (*self.end_amount) > 0 // amount to receive
                 && (*self.route == RouteType::Erc20ToErc20Sell) {
@@ -161,13 +162,14 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
     }
 
     fn compute_token_hash(self: @OrderV1) -> felt252 {
-        if (*self.route == RouteType::Erc20ToErc20Buy || *self.route == RouteType::Erc20ToErc20Sell) {
+        if (*self.route == RouteType::Erc20ToErc20Buy
+            || *self.route == RouteType::Erc20ToErc20Sell) {
             let mut buf: Array<felt252> = array![];
             // used quantity, start_date and the offerer as the identifiers
             buf.append((*self.token_address).into());
             buf.append(*self.token_chain_id);
             poseidon_hash_span(buf.span())
-        }else{
+        } else {
             assert(OptionTrait::is_some(self.token_id), 'Token ID expected');
             let token_id = (*self.token_id).unwrap();
             let mut buf: Array<felt252> = array![];

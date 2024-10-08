@@ -23,8 +23,8 @@ use snforge_std::{
 use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{
-    setup, setup_erc20_order, setup_auction_order, setup_collection_offer_order, setup_listing_order, setup_offer_order,
-    setup_limit_sell_order, setup_limit_buy_order
+    setup, setup_erc20_order, setup_auction_order, setup_collection_offer_order,
+    setup_listing_order, setup_offer_order, setup_limit_sell_order, setup_limit_buy_order
 };
 
 
@@ -238,7 +238,9 @@ fn test_create_limit_buy_order_ok() {
     let quantity = 5_000_000;
     Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
-    let order = setup_limit_buy_order(erc20_address, token_address, offerer, start_amount, quantity);
+    let order = setup_limit_buy_order(
+        erc20_address, token_address, offerer, start_amount, quantity
+    );
     let order_hash = order.compute_order_hash();
     let order_version = order.get_version();
 
@@ -583,7 +585,9 @@ fn test_create_limit_buy_order_offerer_not_enough_erc20_tokens() {
 
     Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, minted);
 
-    let order = setup_limit_buy_order(erc20_address, token_address, offerer, start_amount, quantity);
+    let order = setup_limit_buy_order(
+        erc20_address, token_address, offerer, start_amount, quantity
+    );
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -615,7 +619,9 @@ fn test_create_limit_buy_order_twice() {
     let quantity = 5_000_000;
     Erc20Dispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
 
-    let order = setup_limit_buy_order(erc20_address, token_address, offerer, start_amount, quantity);
+    let order = setup_limit_buy_order(
+        erc20_address, token_address, offerer, start_amount, quantity
+    );
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(2));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);

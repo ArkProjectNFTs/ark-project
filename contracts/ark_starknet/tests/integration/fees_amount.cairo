@@ -1,7 +1,7 @@
+use ark_common::protocol::order_types::{OptionU256, OptionU256Trait};
 use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, FeesAmount, FeesRatio
 };
-use ark_common::protocol::order_types::{OptionU256, OptionU256Trait};
 
 use snforge_std::{cheat_caller_address, CheatSpan};
 use starknet::{ContractAddress, contract_address_const};
@@ -35,7 +35,9 @@ fn test_get_fees_amount_default_creator() {
     executor.set_default_creator_fees(creator, default_creator_fees_ratio);
 
     let fees_amount = executor
-        .get_fees_amount(fulfill_broker, listing_broker, nft_address, OptionU256 {is_some: 0, value: 1}, amount);
+        .get_fees_amount(
+            fulfill_broker, listing_broker, nft_address, OptionU256 { is_some: 0, value: 1 }, amount
+        );
 
     assert_eq!(fees_amount.fulfill_broker, 1_000_000, "Wrong amount for fulfill broker");
     assert_eq!(fees_amount.listing_broker, 500_000, "Wrong amount for listing broker");
@@ -72,7 +74,9 @@ fn test_get_fees_amount_collection_creator() {
     executor.set_collection_creator_fees(nft_address, creator, collection_creator_fees_ratio);
 
     let fees_amount = executor
-        .get_fees_amount(fulfill_broker, listing_broker, nft_address, OptionU256 {is_some: 0, value: 1}, amount);
+        .get_fees_amount(
+            fulfill_broker, listing_broker, nft_address, OptionU256 { is_some: 0, value: 1 }, amount
+        );
 
     assert_eq!(fees_amount.fulfill_broker, 1_000_000, "Wrong amount for fulfill broker");
     assert_eq!(fees_amount.listing_broker, 500_000, "Wrong amount for listing broker");
