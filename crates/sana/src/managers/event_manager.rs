@@ -57,7 +57,15 @@ impl<S: Storage> EventManager<S> {
         &self,
         event: &EmittedEvent,
         block_timestamp: u64,
+        chain_id: &str,
     ) -> Result<TokenSaleEvent> {
+        let broker_contract_address: String = to_hex_str(&event.from_address);
+        let broker_id: Option<String> =
+            match self.storage.get_broker_id(&broker_contract_address).await {
+                Ok(id) => id,
+                Err(_) => None,
+            };
+
         let _listing_counter = event
             .data
             .first()
@@ -113,8 +121,9 @@ impl<S: Storage> EventManager<S> {
             currency_address: None,
             marketplace_contract_address: to_hex_str(&event.from_address),
             marketplace_name: "Ventory".to_string(),
-            price: price.to_big_decimal(0).to_string(),
-            chain_id: "0x534e5f4d41494e".to_string(),
+            price: to_hex_str(price),
+            chain_id: chain_id.to_string(),
+            broker_id,
         })
     }
 
@@ -127,6 +136,13 @@ impl<S: Storage> EventManager<S> {
         if event.keys.len() < 4 {
             return Err(anyhow!("Can't find event data into this event"));
         }
+
+        let broker_contract_address: String = to_hex_str(&event.from_address);
+        let broker_id: Option<String> =
+            match self.storage.get_broker_id(&broker_contract_address).await {
+                Ok(id) => id,
+                Err(_) => None,
+            };
 
         let maker_address = event
             .keys
@@ -226,8 +242,9 @@ impl<S: Storage> EventManager<S> {
             currency_address: Some(to_hex_str(currency_address)),
             marketplace_contract_address: to_hex_str(&event.from_address),
             marketplace_name: "Element".to_string(),
-            price: price.to_big_decimal(0).to_string(),
+            price: to_hex_str(price),
             chain_id: chain_id.to_string(),
+            broker_id,
         })
     }
 

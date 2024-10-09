@@ -376,7 +376,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
     ) -> Result<()> {
         let mut token_sale_event = self
             .event_manager
-            .format_element_sale_event(&event, block_timestamp)
+            .format_element_sale_event(&event, block_timestamp, chain_id)
             .await?;
 
         let contract_addr = FieldElement::from_hex_be(
@@ -430,7 +430,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Pontos<S, C, 
 
         let mut token_sale_event = self
             .event_manager
-            .format_ventory_sale_or_accepted_offer_event(&event, block_timestamp)
+            .format_ventory_sale_or_accepted_offer_event(&event, block_timestamp, chain_id)
             .await?;
 
         let contract_addr = FieldElement::from_hex_be(

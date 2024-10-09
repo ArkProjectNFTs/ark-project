@@ -30,6 +30,8 @@ pub trait Storage {
         block_timestamp: u64,
     ) -> Result<(), StorageError>;
 
+    async fn get_broker_id(&self, contract_address: &str) -> Result<Option<String>, StorageError>;
+
     async fn register_sale_event(
         &self,
         event: &TokenSaleEvent,

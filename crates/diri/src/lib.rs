@@ -14,6 +14,7 @@ use starknet::providers::{AnyProvider, Provider, ProviderError};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, trace, warn};
+use types::to_hex_str;
 
 use crate::orderbook::Event;
 
@@ -88,29 +89,36 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                     }
                 };
 
+                // let broker_contract_address = to_hex_str(&any_event.from_address.clone());
+                // let broker_id: Option<String> =
+                //     match self.storage.get_broker_id(&broker_contract_address).await {
+                //         Ok(id) => id,
+                //         Err(_) => None,
+                //     };
+
                 match orderbook_event {
                     Event::OrderPlaced(ev) => {
                         trace!("OrderPlaced found: {:?}", ev);
                         self.storage
-                            .register_placed(block_number, block_timestamp, &ev.into())
+                            .register_placed(block_number, block_timestamp, &ev.into(), None)
                             .await?;
                     }
                     Event::OrderCancelled(ev) => {
                         trace!("OrderCancelled found: {:?}", ev);
                         self.storage
-                            .register_cancelled(block_number, block_timestamp, &ev.into())
+                            .register_cancelled(block_number, block_timestamp, &ev.into(), None)
                             .await?;
                     }
                     Event::OrderFulfilled(ev) => {
                         trace!("OrderFulfilled found: {:?}", ev);
                         self.storage
-                            .register_fulfilled(block_number, block_timestamp, &ev.into())
+                            .register_fulfilled(block_number, block_timestamp, &ev.into(), None)
                             .await?;
                     }
                     Event::OrderExecuted(ev) => {
                         trace!("OrderExecuted found: {:?}", ev);
                         self.storage
-                            .register_executed(block_number, block_timestamp, &ev.into())
+                            .register_executed(block_number, block_timestamp, &ev.into(), None)
                             .await?;
                     }
                     Event::RollbackStatus(ev) => {

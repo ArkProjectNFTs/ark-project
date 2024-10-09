@@ -392,7 +392,7 @@ impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E>
 
         let mut token_sale_event = self
             .event_manager
-            .format_ventory_sale_event(&event, block_timestamp)
+            .format_ventory_sale_event(&event, block_timestamp, chain_id)
             .await?;
 
         let contract_addr = FieldElement::from_hex_be(

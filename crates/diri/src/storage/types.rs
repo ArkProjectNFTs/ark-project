@@ -28,7 +28,6 @@ pub struct PlacedData {
     pub end_amount: String,
     pub start_date: u64,
     pub end_date: u64,
-    pub broker_id: String,
 }
 
 impl From<OrderPlaced> for PlacedData {
@@ -51,7 +50,6 @@ impl From<OrderPlaced> for PlacedData {
             end_amount: u256_to_hex(&value.order.end_amount),
             start_date: value.order.start_date,
             end_date: value.order.end_date,
-            broker_id: to_hex_str(&FieldElement::from(value.order.broker_id)),
         }
     }
 }

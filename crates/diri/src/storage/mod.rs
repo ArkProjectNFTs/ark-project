@@ -20,6 +20,7 @@ pub trait Storage {
         block_id: u64,
         block_timestamp: u64,
         order: &PlacedData,
+        broker_id: Option<String>,
     ) -> StorageResult<()>;
 
     async fn register_cancelled(
@@ -27,6 +28,7 @@ pub trait Storage {
         block_id: u64,
         block_timestamp: u64,
         order: &CancelledData,
+        broker_id: Option<String>,
     ) -> StorageResult<()>;
 
     async fn register_fulfilled(
@@ -34,6 +36,7 @@ pub trait Storage {
         block_id: u64,
         block_timestamp: u64,
         order: &FulfilledData,
+        broker_id: Option<String>,
     ) -> StorageResult<()>;
 
     async fn register_executed(
@@ -41,6 +44,7 @@ pub trait Storage {
         block_id: u64,
         block_timestamp: u64,
         order: &ExecutedData,
+        broker_id: Option<String>,
     ) -> StorageResult<()>;
 
     async fn status_back_to_open(
@@ -49,4 +53,6 @@ pub trait Storage {
         block_timestamp: u64,
         order: &RollbackStatusData,
     ) -> StorageResult<()>;
+
+    async fn get_broker_id(&self, contract_address: &str) -> StorageResult<Option<String>>;
 }
