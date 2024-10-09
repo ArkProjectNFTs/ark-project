@@ -4,8 +4,6 @@ use storage::*;
 pub mod event_handler;
 use event_handler::EventHandler;
 
-mod orderbook;
-
 use starknet::core::types::{
     BlockId, EmittedEvent, EventFilter, Felt, MaybePendingBlockWithTxHashes,
 };
@@ -15,7 +13,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, trace, warn};
 
-use crate::orderbook::Event;
+use orderbook::Event;
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
