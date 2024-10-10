@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC721 } from "@ark-project/test";
+import { config, getAccounts, mintERC721 } from "@ark-project/test";
 
 import { getCollectionCreatorFees } from "../src/index.js";
 
 describe("getCollectionCreatorFees", () => {
   it("default", async () => {
-    const { seller } = accounts;
+    const { seller } = getAccounts();
     const { tokenAddress } = await mintERC721({ account: seller });
 
     const { creator, fees } = await getCollectionCreatorFees(

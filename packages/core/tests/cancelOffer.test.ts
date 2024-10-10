@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC20, mintERC721 } from "@ark-project/test";
+import { config, getAccounts, mintERC20, mintERC721 } from "@ark-project/test";
 
 import { cancelOrder, createOffer, getOrderStatus } from "../src/index.js";
 
 describe("cancelOffer", () => {
   it("default", async () => {
-    const { seller, buyer, listingBroker } = accounts;
+    const { seller, buyer, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     await mintERC20({ account: buyer, amount: 1000 });
 

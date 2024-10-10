@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC721 } from "@ark-project/test";
+import { config, getAccounts, mintERC721 } from "@ark-project/test";
 
 import { createListing } from "../src/actions/order/index.js";
 import { getOrderStatus } from "../src/actions/read/index.js";
 
 describe("createListing", () => {
   it("default", async () => {
-    const { seller } = accounts;
+    const { listingBroker, seller } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const { orderHash } = await createListing(config, {
       account: seller,
-      brokerAddress: accounts.listingBroker.address,
+      brokerAddress: listingBroker.address,
       tokenAddress,
       tokenId,
       amount: BigInt(1)
@@ -23,12 +23,12 @@ describe("createListing", () => {
   }, 50_000);
 
   it("default: with custom currency", async () => {
-    const { seller } = accounts;
+    const { seller, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const { orderHash } = await createListing(config, {
       account: seller,
-      brokerAddress: accounts.listingBroker.address,
+      brokerAddress: listingBroker.address,
       tokenAddress,
       tokenId,
       amount: BigInt(1)

@@ -8,7 +8,7 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "test": "dotenv -- turbo run test --filter='./packages/core'",
+    "test": "turbo run test --filter=@ark-project/core",
     "clean": "git clean -xdf node_modules",
     "clean:workspaces": "turbo clean",
     "build": "dotenv -- turbo run build",

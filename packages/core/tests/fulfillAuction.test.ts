@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  accounts,
   config,
+  getAccounts,
   getBalance,
   mintERC20,
   mintERC721
@@ -14,7 +14,7 @@ import { getOrderStatus } from "../src/actions/read/index.js";
 
 describe("fulfillAuction", () => {
   it("default", async () => {
-    const { seller, buyer, saleBroker, listingBroker } = accounts;
+    const { seller, buyer, saleBroker, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const initialSellerBalance = await getBalance({ account: seller });
     const amount = BigInt(1000);
@@ -30,7 +30,7 @@ describe("fulfillAuction", () => {
 
     const { orderHash: offerOrderHash } = await createOffer(config, {
       account: buyer,
-      brokerAddress: accounts.listingBroker.address,
+      brokerAddress: listingBroker.address,
       tokenAddress,
       tokenId,
       amount

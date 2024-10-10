@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
@@ -41,10 +41,10 @@ jobs:
 
       - name: Install starknet foundry & dependencies
         uses: ./.github/actions/install-snforge
-      
+
       - name: Test contracts
         run: cd contracts && snforge test
-  
+
   devnet-test:
     runs-on: ubuntu-latest
     name: Running SDK test with starknet-devnet
@@ -58,7 +58,7 @@ jobs:
 
       - name: Build smart contracts
         run: cd contracts && scarb build --workspace
-      
+
       - name: Run starknet-devnet as a background process
         run: |
           docker run -d --rm --name starknet-devnet \
@@ -69,19 +69,19 @@ jobs:
 
       - name: Install SDK dependencies
         uses: ./.github/actions/install-dependencies
-      
+
       - name: Setup environment for devnet
         run: cp .env.devnet .env
-      
+
       - name: Deploy smart contract
         run: pnpm deploy:starknet:local
-      
+
       - name: Store devnet state after contract deployment
         run: |
           curl -H "Content-type: application/json" \
               -X POST http://localhost:5050/dump \
               -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
-      
+
       - name: Setup environment
         run: cp .env.devnet .env
 
@@ -97,13 +97,13 @@ jobs:
       - name: Run fulfill auction test
         run: |
           pnpm test --filter=core -- tests/fulfillAuction.test.ts
-      
+
       - name: Restore devnet state
         run: |
           curl -H "Content-type: application/json" \
               -X POST http://localhost:5050/load \
               -d '{"path": "$DEVNET_SET_FEES_DUMP_PATH"}'
-      
+
       - name: Run SDK test
         run: |
           pnpm test --filter=core
@@ -111,5 +111,3 @@ jobs:
       - name: Stop starknet-devnet container
         if: always()
         run: docker stop starknet-devnet
-
-

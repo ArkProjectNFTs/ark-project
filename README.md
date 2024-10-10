@@ -117,9 +117,9 @@ Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](http
    cp .env.example .env
    ```
 
-1. **Install the latest Dojo version** (currently 0.0.7-alpha.1)
+1. **Install the latest Starknet Devnet version** (currently 0.2.0)
 
-   - Follow the guide: https://book.dojoengine.org/getting-started
+   - Follow the guide: https://0xspaceshard.github.io/starknet-devnet-rs/docs/running/install
 
 2. **Install Packages**
 
@@ -133,10 +133,12 @@ Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](http
    cd contracts && scarb build --workspace
    ```
 
-4. **Launch Katana**
+4. **Launch Starknet Devnet**
+
+   using the cmd line (or with the method you prefer, like docker)
 
    ```bash
-   katana
+   starknet-devnet
    ```
 
 5. **Deploy Starknet Contracts**
@@ -145,25 +147,13 @@ Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](http
    pnpm deploy:starknet:local
    ```
 
-6. **Launch Solis**
+6. **Build the Core and React SDKs**
 
    ```bash
-   cargo run -p solis -- --chain-id 0x736f6c6973 --messaging crates/solis/messaging.local.json --disable-fee -p 7777
+   pnpm build
    ```
 
-7. **Deploy Solis Contracts**
-
-   ```bash
-   pnpm deploy:solis:local
-   ```
-
-8. **Build the Core and React SDKs**
-
-   ```bash
-   pnpm build --filter=core --filter=react
-   ```
-
-9. **Try Core SDK Examples**
+7. **Try Core SDK Examples**
 
    ```bash
    cd examples/core

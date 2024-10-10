@@ -23,11 +23,12 @@ async function createAndFulfillAuction(
   accounts: Accounts,
   tokenId: bigint
 ): Promise<bigint> {
-  const brokerId = accounts.broker_listing.address;
+  const brokerAddressListing = accounts.broker_listing.address;
+  const brokerAddressSale = accounts.broker_sale.address;
 
   // Create auction
   const auction: AuctionV1 = {
-    brokerId,
+    brokerAddress: brokerAddressListing,
     tokenAddress: nftContract as string,
     tokenId,
     startAmount: BigInt(1000000000000000),
@@ -36,30 +37,26 @@ async function createAndFulfillAuction(
 
   logger.info("Creating auction...");
   const { orderHash: auctionOrderHash } = await createAuction(config, {
-    starknetAccount: accounts.fulfiller,
-    order: auction,
-    approveInfo: {
-      tokenAddress: nftContract as string,
-      tokenId
-    }
+    account: accounts.fulfiller,
+    ...auction,
+    tokenAddress: nftContract as string,
+    tokenId
   });
 
   // Create offer
   const offer: OfferV1 = {
-    brokerId,
+    brokerAddress: brokerAddressSale,
     tokenAddress: nftContract as string,
     tokenId,
-    startAmount: BigInt(10000000000000000)
+    amount: BigInt(10000000000000000)
   };
 
   logger.info("Creating offer...");
   const { orderHash: offerOrderHash } = await createOffer(config, {
-    starknetAccount: accounts.offerer,
-    offer,
-    approveInfo: {
-      currencyAddress: config.starknetCurrencyContract,
-      amount: offer.startAmount
-    }
+    account: accounts.offerer,
+    ...offer,
+    currencyAddress: config.starknetCurrencyContract,
+    amount: offer.amount
   });
 
   // Fulfill auction
@@ -68,13 +65,13 @@ async function createAndFulfillAuction(
     relatedOrderHash: offerOrderHash,
     tokenAddress: auction.tokenAddress,
     tokenId,
-    brokerId
+    brokerAddress: brokerAddressSale
   };
 
   logger.info("Fulfilling auction...");
   const { transactionHash } = await fulfillAuction(config, {
-    starknetAccount: accounts.fulfiller,
-    fulfillAuctionInfo
+    account: accounts.fulfiller,
+    ...fulfillAuctionInfo
   });
 
   logger.info("Auction fulfilled.");

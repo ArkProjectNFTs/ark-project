@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC20 } from "@ark-project/test";
+import { config, getAccounts, mintERC20 } from "@ark-project/test";
 
 import {
   createCollectionOffer,
@@ -14,7 +14,7 @@ import {
 
 describe("createCollectionOffer", () => {
   it("default", async () => {
-    const { buyer, listingBroker } = accounts;
+    const { buyer, listingBroker } = getAccounts();
     await mintERC20({ account: buyer, amount: 10000000 });
 
     const { orderHash } = await createCollectionOffer(config, {
@@ -34,7 +34,7 @@ describe("createCollectionOffer", () => {
   }, 50_000);
 
   it("error: invalid start date", async () => {
-    const { buyer, listingBroker } = accounts;
+    const { buyer, listingBroker } = getAccounts();
     await mintERC20({ account: buyer, amount: 10000000 });
 
     await expect(
@@ -49,7 +49,7 @@ describe("createCollectionOffer", () => {
   }, 50_000);
 
   it("error: invalid start date / end date", async () => {
-    const { buyer, listingBroker } = accounts;
+    const { buyer, listingBroker } = getAccounts();
     await mintERC20({ account: buyer, amount: 10000000 });
 
     await expect(
@@ -65,7 +65,7 @@ describe("createCollectionOffer", () => {
   }, 50_000);
 
   it("error: invalid end date", async () => {
-    const { buyer, listingBroker } = accounts;
+    const { buyer, listingBroker } = getAccounts();
     await mintERC20({ account: buyer, amount: 10000000 });
 
     await expect(
