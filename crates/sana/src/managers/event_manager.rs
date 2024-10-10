@@ -111,7 +111,9 @@ impl<S: Storage> EventManager<S> {
             block_timestamp,
             updated_at: Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
             quantity: 1,
-            currency_address: None,
+            currency_address: Some(
+                "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d".to_string(),
+            ), // STRK TOKEN
             marketplace_contract_address: to_hex_str(&event.from_address),
             marketplace_name: "Ventory".to_string(),
             price: to_hex_str(price),
