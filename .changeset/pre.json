@@ -7,7 +7,8 @@
     "@ark-project/deployer": "1.0.1",
     "@ark-project/eslint-config": "0.0.0",
     "@ark-project/react": "1.1.2",
-    "@ark-project/typescript-config": "0.0.0"
+    "@ark-project/typescript-config": "0.0.0",
+    "@ark-project/test": "1.0.0"
   },
   "changesets": [
     "flat-chefs-repair"

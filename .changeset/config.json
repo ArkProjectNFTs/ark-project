@@ -13,8 +13,6 @@
   "packages": [
     "@ark-project/react",
     "@ark-project/core",
-    "@ark-project/eslint-config",
-    "@ark-project/deployer",
-    "@ark-project/test"
+    "@ark-project/eslint-config"
   ]
 }
