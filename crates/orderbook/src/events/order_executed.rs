@@ -1,9 +1,7 @@
 use cainome::rs::abigen;
 use starknet::core::types::{EmittedEvent, Felt};
 
-use crate::types::ExecutedData;
-
-use super::{common::to_hex_str, OrderbookParseError, ORDER_EXECUTED_SELECTOR};
+use super::{OrderbookParseError, ORDER_EXECUTED_SELECTOR};
 
 abigen!(
     V0,
@@ -327,7 +325,7 @@ abigen!(
 );
 
 #[derive(Debug)]
-pub(crate) enum OrderExecuted {
+pub enum OrderExecuted {
     V0(OrderExecutedV0),
     V1(OrderExecutedV1),
     V2(OrderExecutedV2),
@@ -368,37 +366,6 @@ impl TryFrom<EmittedEvent> for OrderExecuted {
             }
         } else {
             Err(OrderbookParseError::Selector)
-        }
-    }
-}
-
-impl From<OrderExecuted> for ExecutedData {
-    fn from(value: OrderExecuted) -> Self {
-        match value {
-            OrderExecuted::V0(v) => Self {
-                version: 0,
-                order_hash: to_hex_str(&v.order_hash),
-                order_type: None,
-                transaction_hash: None,
-                from: None,
-                to: None,
-            },
-            OrderExecuted::V1(v) => Self {
-                version: 1,
-                order_hash: to_hex_str(&v.order_hash),
-                order_type: None,
-                transaction_hash: Some(to_hex_str(&v.transaction_hash)),
-                from: Some(to_hex_str(&Felt::from(v.from))),
-                to: Some(to_hex_str(&Felt::from(v.to))),
-            },
-            OrderExecuted::V2(v) => Self {
-                version: 2,
-                order_hash: to_hex_str(&v.order_hash),
-                order_type: Some(format!("{:?}", v.order_type)),
-                transaction_hash: Some(to_hex_str(&v.transaction_hash)),
-                from: Some(to_hex_str(&Felt::from(v.from))),
-                to: Some(to_hex_str(&Felt::from(v.to))),
-            },
         }
     }
 }

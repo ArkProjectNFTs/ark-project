@@ -1,6 +1,8 @@
 use cainome::cairo_serde::U256;
 use num_bigint::BigUint;
 
+pub use starknet::core::utils::parse_cairo_short_string;
+
 use std::fmt::LowerHex;
 
 /// Returns the padded hex of '0x' prefixed

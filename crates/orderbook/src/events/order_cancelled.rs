@@ -1,18 +1,13 @@
 use cainome::rs::abigen;
-use starknet::core::{
-    types::{EmittedEvent, Felt},
-    utils::parse_cairo_short_string,
-};
+use starknet::core::types::{EmittedEvent, Felt};
 
-use crate::types::RollbackStatusData;
-
-use super::{common::to_hex_str, OrderbookParseError, ROLLBACK_STATUS_SELECTOR};
+use super::{OrderbookParseError, ORDER_CANCELLED_SELECTOR};
 
 abigen!(
-  V1,
-  r#"
-  [
-    {
+    V1,
+    r#"
+    [
+      {
     "type": "enum",
     "name": "ark_common::protocol::order_types::OrderType",
     "variants": [
@@ -34,22 +29,22 @@ abigen!(
       }
     ]
   },
-    {
-  "type": "event",
-  "name": "ark_component::orderbook::orderbook::OrderbookComponent::Event",
-  "kind": "enum",
-  "variants": [
-    {
-      "name": "RollbackStatus",
-      "type": "ark_component::orderbook::orderbook::OrderbookComponent::RollbackStatus",
-      "kind": "nested"
-    }
-  ]
-},
-    {
-  "type": "event",
-  "name": "ark_component::orderbook::orderbook::OrderbookComponent::RollbackStatus",
-  "kind": "struct",
+      {
+    "type": "event",
+    "name": "ark_component::orderbook::orderbook::OrderbookComponent::Event",
+    "kind": "enum",
+    "variants": [
+      {
+        "name": "OrderCancelled",
+        "type": "ark_component::orderbook::orderbook::OrderbookComponent::OrderCancelled",
+        "kind": "nested"
+      }
+    ]
+  },
+      {
+    "type": "event",
+    "name": "ark_component::orderbook::orderbook::OrderbookComponent::OrderCancelled",
+    "kind": "struct",
     "members": [
       {
         "name": "order_hash",
@@ -72,32 +67,31 @@ abigen!(
         "kind": "data"
       }
     ]
-}
-  ]
-  "#,
+  }
+   ]"#,
   type_aliases {
     ark_component::orderbook::orderbook::OrderbookComponent::Event as EventV1;
-    ark_component::orderbook::orderbook::OrderbookComponent::RollbackStatus as RollbackStatusV1;
-    },
-    derives(Debug),
+    ark_component::orderbook::orderbook::OrderbookComponent::OrderCancelled as OrderCancelledV1;
+  },
+  derives(Debug),
 );
 
 #[derive(Debug)]
-pub(crate) enum RollbackStatus {
-    V1(RollbackStatusV1),
+pub enum OrderCancelled {
+    V1(OrderCancelledV1),
 }
 
-impl TryFrom<EmittedEvent> for RollbackStatus {
+impl TryFrom<EmittedEvent> for OrderCancelled {
     type Error = OrderbookParseError;
 
     fn try_from(ev: EmittedEvent) -> Result<Self, Self::Error> {
-        if ev.keys[0] == ROLLBACK_STATUS_SELECTOR {
-            if ev.data.len() > 2 {
+        if ev.keys[0] == ORDER_CANCELLED_SELECTOR {
+            if !ev.data.is_empty() {
                 let version = ev.data[0];
                 if version == Felt::ONE {
                     match TryInto::<EventV1>::try_into(ev) {
                         Ok(event) => match event {
-                            EventV1::RollbackStatus(ev) => return Ok(RollbackStatus::V1(ev)),
+                            EventV1::OrderCancelled(ev) => return Ok(OrderCancelled::V1(ev)),
                         },
                         Err(_) => return Err(OrderbookParseError::UnknownError),
                     }
@@ -109,19 +103,6 @@ impl TryFrom<EmittedEvent> for RollbackStatus {
             }
         } else {
             Err(OrderbookParseError::Selector)
-        }
-    }
-}
-
-impl From<RollbackStatus> for RollbackStatusData {
-    fn from(value: RollbackStatus) -> Self {
-        match value {
-            RollbackStatus::V1(value) => Self {
-                order_hash: to_hex_str(&value.order_hash),
-                order_type: format!("{:?}", value.order_type),
-                reason: parse_cairo_short_string(&value.reason)
-                    .unwrap_or(to_hex_str(&value.reason)),
-            },
         }
     }
 }

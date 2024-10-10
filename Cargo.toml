@@ -19,6 +19,7 @@ members = [
   "crates/pontos",
   "crates/diri",
   "crates/sana",
+  "crates/orderbook",
 ]
 
 [workspace.dependencies]
@@ -27,6 +28,8 @@ ark-metadata = { path = "./crates/ark-metadata" }
 pontos = { path = "./crates/pontos" }
 sana = { path = "./crates/sana" }
 diri = { path = "./crates/diri" }
+orderbook = { path = "./crates/orderbook" }
+
 async-trait = "0.1.73"
 starknet = "0.10.0"
 anyhow = "1.0"
@@ -46,25 +49,11 @@ ark-metadata.workspace = true
 pontos = { path = "./crates/pontos", features = ["sqlxdb"] }
 sana = { path = "./crates/sana", features = ["sqlxdb"] }
 diri.workspace = true
+orderbook.workspace = true
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing = "0.1"
 tracing-log = "0.1"
 sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
-alloy-primitives = { version = "0.7.1", default-features = false }
-alloy-sol-types = { version = "0.7.1", default-features = false }
-
-[patch.crates-io]
-cairo-felt = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "1031381" }
-cairo-vm = { git = "https://github.com/dojoengine/cairo-rs.git", rev = "1031381" }
-
-alloy-contract = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
-alloy-json-rpc = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
-alloy-network = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
-alloy-provider = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
-alloy-rpc-types = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
-alloy-signer = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
-alloy-signer-wallet = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
-alloy-transport = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d92a194bb2c67b1f879e84b2c6716ce" }
 
 [dev-dependencies]
 mockall = "0.12.1"

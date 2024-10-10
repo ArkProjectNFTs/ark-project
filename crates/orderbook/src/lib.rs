@@ -5,10 +5,10 @@ use events::{
 };
 use starknet::core::types::EmittedEvent;
 
-pub(crate) mod events;
+pub mod events;
 
 #[derive(Debug)]
-pub(crate) enum Event {
+pub enum Event {
     OrderPlaced(OrderPlaced),
     OrderExecuted(OrderExecuted),
     OrderCancelled(OrderCancelled),
