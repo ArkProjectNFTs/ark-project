@@ -1,0 +1,13 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "@ark-project/core-examples": "0.0.6",
+    "@ark-project/core": "2.1.2",
+    "@ark-project/deployer": "1.0.1",
+    "@ark-project/eslint-config": "0.0.0",
+    "@ark-project/react": "1.1.2",
+    "@ark-project/typescript-config": "0.0.0"
+  },
+  "changesets": []
+}
