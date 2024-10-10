@@ -11,6 +11,7 @@
     "@ark-project/test": "1.0.0"
   },
   "changesets": [
-    "flat-chefs-repair"
+    "flat-chefs-repair",
+    "hungry-bobcats-push"
   ]
 }

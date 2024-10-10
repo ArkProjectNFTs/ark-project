@@ -2,6 +2,12 @@
 
 ## 3.0.0-beta.0
 
+### Patch Changes
+
+- 6d31848: Update contract address
+
+## 3.0.0-beta.0
+
 ### Major Changes
 
 - Update SDKs

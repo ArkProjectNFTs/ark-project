@@ -2,6 +2,14 @@
 
 ## 2.0.0-beta.0
 
+### Patch Changes
+
+- 6d31848: Update contract address
+- Updated dependencies [6d31848]
+  - @ark-project/core@3.0.0-beta.0
+
+## 2.0.0-beta.0
+
 ### Major Changes
 
 - Update SDKs
