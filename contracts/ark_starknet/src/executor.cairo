@@ -15,12 +15,13 @@ struct OrderInfo {
     // The token id.
     // TODO: how to store Option<u256> ?
     token_id: u256,
+    // The quantity of the token (1 for ERC-721, variable for ERC-1155).
+    quantity: u256,
     // in wei. --> 10 | 10 | 10 |
     start_amount: u256,
     //
     offerer: ContractAddress,
 }
-
 
 //! Executor contract on Starknet
 //!
@@ -60,8 +61,9 @@ mod executor {
     use openzeppelin::introspection::interface::{ISRC5, ISRC5Dispatcher, ISRC5DispatcherTrait};
 
     use openzeppelin::token::{
-        erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait},
-        erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait}
+        erc721::interface::{IERC721, IERC721Dispatcher, IERC721DispatcherTrait, IERC721_ID},
+        erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait},
+        erc1155::interface::{IERC1155, IERC1155Dispatcher, IERC1155DispatcherTrait, IERC1155_ID},
     };
     use starknet::contract_address_to_felt252;
     use starknet::get_contract_address;
@@ -305,7 +307,8 @@ mod executor {
         assert!(caller == *(order.offerer), "Caller is not the offerer");
 
         match order.route {
-            RouteType::Erc20ToErc721 => {
+            RouteType::Erc20ToErc721 |
+            RouteType::Erc20ToErc1155 => {
                 assert!(
                     _check_erc20_amount(
                         order.currency_address, *(order.start_amount), order.offerer
@@ -324,6 +327,19 @@ mod executor {
                     Option::None => panic!("Invalid token id"),
                 }
             },
+            RouteType::Erc1155ToErc20 => {
+                match order.token_id {
+                    Option::Some(token_id) => {
+                        assert!(
+                            _check_erc1155_balance(
+                                order.token_address, token_id, order.quantity, order.offerer
+                            ),
+                            "Offerer does not own enough of the specified ERC1155 token"
+                        );
+                    },
+                    Option::None => panic!("Invalid token id"),
+                }
+            }
         }
     }
 
@@ -398,21 +414,42 @@ mod executor {
             ),
             "Fulfiller's allowance of executor is not enough"
         );
-        assert!(
-            _check_erc721_owner(
-                @order_info.token_address, order_info.token_id, @order_info.offerer
-            ),
-            "Offerer does not own the specified ERC721 token"
-        );
-        assert!(
-            _check_erc721_approval(
-                @order_info.token_address,
-                order_info.token_id,
-                @order_info.offerer,
-                @contract_address,
-            ),
-            "Executor not approved by offerer"
-        );
+
+        if _is_erc721(order_info.token_address) {
+            assert!(
+                _check_erc721_owner(
+                    @order_info.token_address, order_info.token_id, @order_info.offerer
+                ),
+                "Offerer does not own the specified ERC721 token"
+            );
+            assert!(
+                _check_erc721_approval(
+                    @order_info.token_address,
+                    order_info.token_id,
+                    @order_info.offerer,
+                    @contract_address,
+                ),
+                "Executor not approved by offerer"
+            );
+        }
+
+        if _is_erc1155(order_info.token_address) {
+            assert!(
+                _check_erc1155_balance(
+                    @order_info.token_address,
+                    @order_info.token_id,
+                    @order_info.quantity,
+                    @order_info.offerer
+                ),
+                "Offerer does not own the specified amount of ERC1155 token"
+            );
+            assert!(
+                _check_erc1155_approval(
+                    @order_info.token_address, @order_info.offerer, @contract_address,
+                ),
+                "Executor not approved by offerer"
+            );
+        }
     }
 
     fn _verify_fulfill_offer_order(
@@ -428,16 +465,32 @@ mod executor {
         };
         assert!(order_info.token_id == token_id, "Fulfiller token id is different than order");
 
-        assert!(
-            _check_erc721_owner(@order_info.token_address, token_id, @fulfiller),
-            "Fulfiller does not own the specified ERC721 token"
-        );
-        assert!(
-            _check_erc721_approval(
-                @order_info.token_address, token_id, @fulfiller, @contract_address,
-            ),
-            "Executor not approved by fulfiller"
-        );
+        if _is_erc721(order_info.token_address) {
+            assert!(
+                _check_erc721_owner(@order_info.token_address, token_id, @fulfiller),
+                "Fulfiller does not own the specified ERC721 token"
+            );
+            assert!(
+                _check_erc721_approval(
+                    @order_info.token_address, token_id, @fulfiller, @contract_address,
+                ),
+                "Executor not approved by fulfiller"
+            );
+        }
+
+        if _is_erc1155(order_info.token_address) {
+            assert!(
+                _check_erc1155_balance(
+                    @order_info.token_address, @token_id, fulfill_info.quantity, @fulfiller
+                ),
+                "Fulfiller does not own the specified amount of ERC1155 token"
+            );
+            assert!(
+                _check_erc1155_approval(@order_info.token_address, @fulfiller, @contract_address,),
+                "Executor not approved by fulfiller"
+            );
+        }
+
         assert!(
             _check_erc20_amount(
                 @order_info.currency_address, order_info.start_amount, @order_info.offerer
@@ -486,21 +539,42 @@ mod executor {
             ),
             "Buyer's allowance of executor is not enough"
         );
-        assert!(
-            _check_erc721_owner(
-                @order_info.token_address, order_info.token_id, @order_info.offerer
-            ),
-            "Offerer does not own the specified ERC721 token"
-        );
-        assert!(
-            _check_erc721_approval(
-                @order_info.token_address,
-                order_info.token_id,
-                @order_info.offerer,
-                @contract_address,
-            ),
-            "Executor not approved by offerer"
-        );
+
+        if _is_erc721(order_info.token_address) {
+            assert!(
+                _check_erc721_owner(
+                    @order_info.token_address, order_info.token_id, @order_info.offerer
+                ),
+                "Offerer does not own the specified ERC721 token"
+            );
+            assert!(
+                _check_erc721_approval(
+                    @order_info.token_address,
+                    order_info.token_id,
+                    @order_info.offerer,
+                    @contract_address,
+                ),
+                "Executor not approved by offerer"
+            );
+        }
+
+        if _is_erc1155(order_info.token_address) {
+            assert!(
+                _check_erc1155_balance(
+                    @order_info.token_address,
+                    @order_info.token_id,
+                    @order_info.quantity,
+                    @order_info.offerer
+                ),
+                "Offerer does not own the specified amount of ERC1155 token"
+            );
+            assert!(
+                _check_erc1155_approval(
+                    @order_info.token_address, @order_info.offerer, @contract_address,
+                ),
+                "Executor not approved by offerer"
+            );
+        }
     }
 
     fn _verify_fulfill_collection_offer_order(
@@ -515,16 +589,31 @@ mod executor {
             Option::Some(token_id) => token_id,
         };
 
-        assert!(
-            _check_erc721_owner(@order_info.token_address, token_id, @fulfiller),
-            "Fulfiller does not own the specified ERC721 token"
-        );
-        assert!(
-            _check_erc721_approval(
-                @order_info.token_address, token_id, @fulfiller, @contract_address,
-            ),
-            "Executor not approved by fulfiller"
-        );
+        if _is_erc721(order_info.token_address) {
+            assert!(
+                _check_erc721_owner(@order_info.token_address, token_id, @fulfiller),
+                "Fulfiller does not own the specified ERC721 token"
+            );
+            assert!(
+                _check_erc721_approval(
+                    @order_info.token_address, token_id, @fulfiller, @contract_address,
+                ),
+                "Executor not approved by fulfiller"
+            );
+        }
+
+        if _is_erc1155(order_info.token_address) {
+            assert!(
+                _check_erc1155_balance(
+                    @order_info.token_address, @token_id, fulfill_info.quantity, @fulfiller
+                ),
+                "Fulfiller does not own the specified amount of ERC1155 token"
+            );
+            assert!(
+                _check_erc1155_approval(@order_info.token_address, @fulfiller, @contract_address,),
+                "Executor not approved by fulfiller"
+            );
+        }
 
         assert!(
             _check_erc20_amount(
@@ -557,17 +646,17 @@ mod executor {
 
         let (creator_address, creator_fees_amount) = _compute_creator_fees_amount(
             @self,
-            @execution_info.nft_address,
+            @execution_info.token_address,
             execution_info.payment_amount,
-            execution_info.nft_token_id
+            execution_info.token_id
         );
         let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
             _compute_fees_amount(
             @self,
             execution_info.fulfill_broker_address,
             execution_info.listing_broker_address,
-            execution_info.nft_address,
-            execution_info.nft_token_id,
+            execution_info.token_address,
+            execution_info.token_id,
             execution_info.payment_amount
         );
         assert!(
@@ -610,7 +699,7 @@ mod executor {
                 self
                     .emit(
                         CollectionFallbackFees {
-                            collection: execution_info.nft_address,
+                            collection: execution_info.token_address,
                             amount: creator_fees_amount,
                             currency_contract: currency_contract.contract_address,
                             receiver: default_receiver_creator,
@@ -635,11 +724,27 @@ mod executor {
                 );
         }
 
-        let nft_contract = IERC721Dispatcher { contract_address: execution_info.nft_address };
-        nft_contract
-            .transfer_from(
-                execution_info.nft_from, execution_info.nft_to, execution_info.nft_token_id
-            );
+        if _is_erc721(execution_info.token_address) {
+            let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
+            nft_contract
+                .transfer_from(
+                    execution_info.token_from, execution_info.token_to, execution_info.token_id
+                );
+        }
+
+        if _is_erc1155(execution_info.token_address) {
+            let erc1155_contract = IERC1155Dispatcher {
+                contract_address: execution_info.token_address
+            };
+            erc1155_contract
+                .safe_transfer_from(
+                    execution_info.token_from,
+                    execution_info.token_to,
+                    execution_info.token_id,
+                    execution_info.token_quantity,
+                    array![].span()
+                );
+        }
 
         let tx_info = starknet::get_tx_info().unbox();
         let transaction_hash = tx_info.transaction_hash;
@@ -649,11 +754,21 @@ mod executor {
             order_hash: execution_info.order_hash,
             transaction_hash,
             starknet_block_timestamp: block_timestamp,
-            from: execution_info.nft_from,
-            to: execution_info.nft_to,
+            from: execution_info.token_from,
+            to: execution_info.token_to,
         };
 
         self.orderbook.validate_order_execution(vinfo);
+    }
+
+    fn _is_erc721(token_address: ContractAddress) -> bool {
+        let src5_dispatcher = ISRC5Dispatcher { contract_address: token_address };
+        src5_dispatcher.supports_interface(IERC721_ID)
+    }
+
+    fn _is_erc1155(token_address: ContractAddress) -> bool {
+        let src5_dispatcher = ISRC5Dispatcher { contract_address: token_address };
+        src5_dispatcher.supports_interface(IERC1155_ID)
     }
 
     fn _check_erc20_amount(
@@ -689,6 +804,20 @@ mod executor {
         let contract = IERC721Dispatcher { contract_address: *token_address };
         contract.is_approved_for_all(*owner, *operator)
             || (contract.get_approved(token_id) == *operator)
+    }
+
+    fn _check_erc1155_balance(
+        token_address: @ContractAddress, token_id: @u256, quantity: @u256, user: @ContractAddress
+    ) -> bool {
+        let contract = IERC1155Dispatcher { contract_address: *token_address };
+        *quantity <= contract.balance_of(*user, *token_id)
+    }
+
+    fn _check_erc1155_approval(
+        token_address: @ContractAddress, owner: @ContractAddress, operator: @ContractAddress
+    ) -> bool {
+        let contract = IERC1155Dispatcher { contract_address: *token_address };
+        contract.is_approved_for_all(*owner, *operator)
     }
 
     fn _compute_creator_fees_amount(
@@ -760,6 +889,7 @@ mod executor {
             currency_address: order.currency_address,
             token_address: order.token_address,
             token_id,
+            quantity: order.quantity,
             start_amount: order.start_amount,
             offerer: order.offerer,
         }

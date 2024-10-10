@@ -450,10 +450,11 @@ pub mod OrderbookComponent {
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
                     order_hash: order.compute_order_hash(),
-                    nft_address: order.token_address,
-                    nft_from: order.offerer,
-                    nft_to: related_order.offerer,
-                    nft_token_id: order.token_id.unwrap(),
+                    token_address: order.token_address,
+                    token_from: order.offerer,
+                    token_to: related_order.offerer,
+                    token_id: order.token_id.unwrap(),
+                    token_quantity: order.quantity,
                     payment_from: related_order.offerer,
                     payment_to: fulfill_info.fulfiller,
                     payment_amount: related_order.start_amount,
@@ -496,10 +497,11 @@ pub mod OrderbookComponent {
 
             let execute_info = ExecutionInfo {
                 order_hash: order.compute_order_hash(),
-                nft_address: order.token_address,
-                nft_from: fulfill_info.fulfiller,
-                nft_to: order.offerer,
-                nft_token_id: fulfill_info.token_id.unwrap(),
+                token_address: order.token_address,
+                token_from: fulfill_info.fulfiller,
+                token_to: order.offerer,
+                token_id: fulfill_info.token_id.unwrap(),
+                token_quantity: order.quantity,
                 payment_from: order.offerer,
                 payment_to: fulfill_info.fulfiller,
                 payment_amount: order.start_amount,
@@ -529,10 +531,11 @@ pub mod OrderbookComponent {
             if order.token_id.is_some() {
                 let execute_info = ExecutionInfo {
                     order_hash: order.compute_order_hash(),
-                    nft_address: order.token_address,
-                    nft_from: order.offerer,
-                    nft_to: fulfill_info.fulfiller,
-                    nft_token_id: order.token_id.unwrap(),
+                    token_address: order.token_address,
+                    token_from: order.offerer,
+                    token_to: fulfill_info.fulfiller,
+                    token_id: order.token_id.unwrap(),
+                    token_quantity: order.quantity,
                     payment_from: fulfill_info.fulfiller,
                     payment_to: order.offerer,
                     payment_amount: order.start_amount,
