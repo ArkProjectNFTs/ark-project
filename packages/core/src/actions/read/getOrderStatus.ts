@@ -1,6 +1,7 @@
 import { CairoCustomEnum, CallData, Contract } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import { NoABIError } from "../../errors/actions.js";
 
 interface GetOrderStatusParameters {
   orderHash: bigint;
@@ -15,7 +16,7 @@ const getOrderStatus = async (
     config.starknetExecutorContract
   );
   if (executorAbi === undefined) {
-    throw new Error("no abi.");
+    throw new NoABIError({ docsPath: "/sdk-core/get-order-status" });
   }
 
   const orderbookContract = new Contract(

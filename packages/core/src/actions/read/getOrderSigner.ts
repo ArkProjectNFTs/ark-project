@@ -1,6 +1,7 @@
 import { CallData, Contract } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import { NoABIError } from "../../errors/actions.js";
 
 interface GetOrderSignerParameters {
   orderHash: bigint;
@@ -15,7 +16,7 @@ const getOrderSigner = async (
     config.starknetExecutorContract
   );
   if (executorAbi === undefined) {
-    throw new Error("no abi.");
+    throw new NoABIError({ docsPath: "/sdk-core/get-order-signer" });
   }
 
   const orderbookContract = new Contract(

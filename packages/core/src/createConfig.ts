@@ -6,6 +6,7 @@ import {
   starknetExecutorContracts,
   starknetRpcUrls
 } from "./constants.js";
+import { MissingExecutorContractError } from "./errors/config.js";
 
 export type Network = "mainnet" | "sepolia" | "dev";
 
@@ -25,6 +26,8 @@ export type CreateConfigParameters = {
   starknetCurrencyContract?: string;
 };
 
+const docsPath = "/sdk-core/configuration";
+const docsSlug = "starknetExecutorContract";
 export function createConfig({
   starknetNetwork,
   starknetRpcUrl,
@@ -33,7 +36,7 @@ export function createConfig({
   starknetCurrencyContract = starknetEthContract
 }: CreateConfigParameters): Config {
   if (starknetNetwork === networks.dev && !starknetExecutorContract) {
-    throw new Error("Executor contract address is required for dev network");
+    throw new MissingExecutorContractError({ docsPath, docsSlug });
   }
 
   return {

@@ -8,6 +8,13 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import {
+  EndDateTooFarError,
+  InvalidEndAmountError,
+  InvalidEndDateError,
+  InvalidStartAmountError,
+  InvalidStartDateError
+} from "../../errors/actions.js";
 import { OrderV1, RouteType } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 
@@ -29,6 +36,7 @@ export interface CreateAuctionResult {
   transactionHash: string;
 }
 
+const docsPath = "/sdk-core/create-auction";
 /**
  * Creates an Auction on the ArkProject.
  *
@@ -65,33 +73,23 @@ export async function createAuction(
   const maxEndedAt = now + 60 * 60 * 24 * 30;
 
   if (startedAt < now) {
-    throw new Error(
-      `Invalid start date. Start date (${startDate}) cannot be in the past.`
-    );
+    throw new InvalidStartDateError(startDate, { docsPath });
   }
 
   if (endedAt < startedAt) {
-    throw new Error(
-      `Invalid end date. End date (${endDate}) must be after the start date (${startDate}).`
-    );
+    throw new InvalidEndDateError({ endDate, startDate }, { docsPath });
   }
 
   if (endedAt > maxEndedAt) {
-    throw new Error(
-      `End date too far in the future. End date (${endDate}) exceeds the maximum allowed (${maxEndedAt}).`
-    );
+    throw new EndDateTooFarError({ endDate, maxEndedAt }, { docsPath });
   }
 
   if (startAmount === BigInt(0)) {
-    throw new Error(
-      "Invalid start amount. The start amount must be greater than zero."
-    );
+    throw new InvalidStartAmountError({ docsPath });
   }
 
   if (endAmount && endAmount < startAmount) {
-    throw new Error(
-      "Invalid end amount. The end amount must be greater than the start amount."
-    );
+    throw new InvalidEndAmountError({ docsPath });
   }
 
   const chainId = await config.starknetProvider.getChainId();

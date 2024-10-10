@@ -8,7 +8,9 @@ import {
 } from "starknet";
 
 import { SOLIS_ACCOUNT_CLASS_HASH } from "../../constants.js";
+import { AccountDeployFailedError } from "../../errors/actions.js";
 
+const docsPath = "sdk-core/create-account";
 /**
  * Creates a new account on the StarkNet testnet.
  * This function generates a private key, derives the corresponding public key,
@@ -53,11 +55,11 @@ export const createAccount = async (provider: ProviderInterface) => {
       addressSalt: publicKey
     });
   } catch (e) {
-    throw new Error(`Account deploy failed for ${address}`);
+    throw new AccountDeployFailedError(address, { docsPath });
   }
 
   if (!response) {
-    throw new Error(`Account deploy failed for ${address}`);
+    throw new AccountDeployFailedError(address, { docsPath });
   }
 
   const { transaction_hash, contract_address } = response;

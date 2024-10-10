@@ -1,6 +1,7 @@
 import { Contract } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import { NoABIError } from "../../errors/actions.js";
 
 export const getAllowance = async (
   config: Config,
@@ -10,7 +11,7 @@ export const getAllowance = async (
   const { abi } =
     await config.starknetProvider.getClassAt(ERC20ContractAddress);
   if (abi === undefined) {
-    throw new Error("no abi.");
+    throw new NoABIError({ docsPath: "/sdk-core/fulfill-listing" });
   }
 
   const ERC20Contract = new Contract(
