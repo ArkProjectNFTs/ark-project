@@ -1,6 +1,6 @@
 # @ark-project/core
 
-## 3.0.0-beta.0
+## 3.0.0-beta.1
 
 ### Patch Changes
 
