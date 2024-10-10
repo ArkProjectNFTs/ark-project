@@ -30,6 +30,7 @@ casm = true
 allowed-libfuncs-list.name = "experimental"
 build-external-contracts = [
     "ark_tokens::erc20::FreeMintERC20",
+    "ark_tokens::erc20_trade::TradeERC20",
     "ark_tokens::erc721::FreeMintNFT",
     "ark_tokens::erc721_royalty::FreeMintNFTRoyalty",
 ]
