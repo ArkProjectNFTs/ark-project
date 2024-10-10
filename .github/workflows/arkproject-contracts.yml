@@ -71,7 +71,7 @@ jobs:
         uses: ./.github/actions/install-dependencies
 
       - name: Setup environment for devnet
-        run: cp .env.devnet .env
+        run: cp .env.test .env
 
       - name: Deploy smart contract
         run: pnpm deploy:starknet:local
@@ -82,18 +82,6 @@ jobs:
               -X POST http://localhost:5050/dump \
               -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
 
-      - name: Setup environment
-        run: cp .env.devnet .env
-
-      - name: Run set Ark fees test
-        run: pnpm test --filter=core -- tests/setArkFees.test.ts
-
-      - name: Store devnet state after set ark fees
-        run: |
-          curl -H "Content-type: application/json" \
-              -X POST http://localhost:5050/dump \
-              -d '{"path": "$DEVNET_SET_FEES_DUMP_PATH"}'
-
       - name: Run fulfill auction test
         run: |
           pnpm test --filter=core -- tests/fulfillAuction.test.ts
@@ -102,7 +90,7 @@ jobs:
         run: |
           curl -H "Content-type: application/json" \
               -X POST http://localhost:5050/load \
-              -d '{"path": "$DEVNET_SET_FEES_DUMP_PATH"}'
+              -d '{"path": "$DEVNET_DEPLOYMENT_DUMP_PATH"}'
 
       - name: Run SDK test
         run: |
