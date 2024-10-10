@@ -1,12 +1,20 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
-  "changelog": [
-    "@changesets/cli/changelog",
-    { "repo": "ArkProjectNFTs/ark-project" }
-  ],
+  "$schema": "https://unpkg.com/@changesets/config@2.3.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "access": "public",
+  "fixed": [],
+  "linked": [],
+  "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [
+    "@ark-project/core-examples"
+  ],
+  "packages": [
+    "@ark-project/react",
+    "@ark-project/core",
+    "@ark-project/eslint-config",
+    "@ark-project/deployer",
+    "@ark-project/test"
+  ]
 }

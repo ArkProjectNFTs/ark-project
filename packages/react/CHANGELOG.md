@@ -1,5 +1,16 @@
 # @ark-project/react
 
+## 2.0.0-beta.0
+
+### Major Changes
+
+- Update SDKs
+
+### Patch Changes
+
+- Updated dependencies
+  - @ark-project/core@3.0.0-beta.0
+
 ## 1.1.2
 
 ### Patch Changes

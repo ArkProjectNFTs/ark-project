@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 3.0.0-beta.0
+
+### Major Changes
+
+- Update SDKs
+
 ## 2.1.2
 
 ### Patch Changes
