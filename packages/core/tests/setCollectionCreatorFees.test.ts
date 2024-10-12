@@ -1,7 +1,7 @@
 import { Account } from "starknet";
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC721 } from "@ark-project/test";
+import { config, getAccounts, mintERC721 } from "@ark-project/test";
 
 import { getFeesAmount, setCollectionCreatorFees } from "../src/index.js";
 
@@ -13,7 +13,7 @@ describe("setCollectionCreatorFees", () => {
       listingBroker,
       saleBroker,
       arkSetbyAdminCollectionReceiver
-    } = accounts;
+    } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     const amount = BigInt(10000);
     const numerator = 1;
@@ -41,7 +41,7 @@ describe("setCollectionCreatorFees", () => {
   }, 50_000);
 
   it("error: invalid fees ratio", async () => {
-    const { admin, seller, arkSetbyAdminCollectionReceiver } = accounts;
+    const { admin, seller, arkSetbyAdminCollectionReceiver } = getAccounts();
     const { tokenAddress } = await mintERC721({ account: seller });
     const numerator = 100;
     const denominator = 1;

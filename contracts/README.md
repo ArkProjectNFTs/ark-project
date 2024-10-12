@@ -31,6 +31,7 @@ A shared library utilized by both `ark_orderbook` and `ark_starknet` contracts, 
   - `ERC20`: Standard ERC20 token implementation.
   - `ERC721`: Standard ERC721 token implementation.
   - `ERC721Royalty`: ERC721 token implementation with ERC2981 support (`ark_oz` component)
+  - `ERC1155`: ERC1155 token implementation with ERC1155Receiver support.
 
 ## Build Instructions
 

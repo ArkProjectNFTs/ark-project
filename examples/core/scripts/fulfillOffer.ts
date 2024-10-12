@@ -23,29 +23,20 @@ async function createAndFulfillOffer(
 ): Promise<bigint> {
   logger.info("Creating offer...");
   const { orderHash } = await createOffer(config, {
-    starknetAccount: accounts.offerer,
-    offer,
-    approveInfo: {
-      currencyAddress: config.starknetCurrencyContract,
-      amount: offer.startAmount
-    }
+    account: accounts.offerer,
+    ...offer,
+    currencyAddress: config.starknetCurrencyContract,
+    amount: offer.amount
   });
 
   logger.info("Fulfilling offer...");
-  const fulfillOfferInfo = {
+
+  const { transactionHash } = await fulfillOffer(config, {
+    account: accounts.fulfiller,
     orderHash: orderHash,
     tokenAddress: offer.tokenAddress,
     tokenId: tokenId,
-    brokerId: offer.brokerId
-  };
-
-  const { transactionHash } = await fulfillOffer(config, {
-    starknetAccount: accounts.fulfiller,
-    fulfillOfferInfo,
-    approveInfo: {
-      tokenAddress: nftContract as string,
-      tokenId: tokenId
-    }
+    brokerAddress: offer.brokerAddress
   });
 
   logger.info("Offer created and fulfilled.");
@@ -67,10 +58,10 @@ async function main(): Promise<void> {
   );
 
   const offer: OfferV1 = {
-    brokerId: accounts.broker_listing.address,
+    brokerAddress: accounts.broker_listing.address,
     tokenAddress: nftContract as string,
     tokenId: tokenId,
-    startAmount: orderAmount
+    amount: orderAmount
   };
 
   await displayBalances(

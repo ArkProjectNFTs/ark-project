@@ -20,12 +20,10 @@ async function createOfferAndCheckStatus(
 ): Promise<bigint> {
   logger.info("Creating offer...");
   const { orderHash } = await createOffer(config, {
-    starknetAccount: accounts.offerer,
-    offer,
-    approveInfo: {
-      currencyAddress: config.starknetCurrencyContract,
-      amount: offer.startAmount
-    }
+    account: accounts.offerer,
+    ...offer,
+    currencyAddress: config.starknetCurrencyContract,
+    amount: offer.amount
   });
   logger.info("Order hash:", orderHash);
   logger.info("Fetching order status...");
@@ -45,10 +43,10 @@ async function main(): Promise<void> {
     true
   );
   const offer: OfferV1 = {
-    brokerId: accounts.broker_listing.address,
+    brokerAddress: accounts.broker_listing.address,
     tokenAddress: nftContract as string,
     tokenId: tokenId,
-    startAmount: orderAmount,
+    amount: orderAmount,
     currencyAddress: config.starknetCurrencyContract
   };
 

@@ -22,29 +22,22 @@ async function createAndFulfillListing(
 ): Promise<bigint> {
   logger.info("Creating listing...");
   const { orderHash } = await createListing(config, {
-    starknetAccount: accounts.offerer,
-    order,
-    approveInfo: {
-      tokenAddress: order.tokenAddress,
-      tokenId: order.tokenId
-    }
+    account: accounts.offerer,
+    ...order,
+    tokenAddress: order.tokenAddress,
+    tokenId: order.tokenId
   });
 
   logger.info("Fulfilling listing...");
-  const fulfillListingInfo = {
+
+  const { transactionHash } = await fulfillListing(config, {
+    account: accounts.fulfiller,
     orderHash: orderHash,
     tokenAddress: order.tokenAddress,
     tokenId: order.tokenId,
-    brokerId: accounts.broker_sale.address
-  };
-
-  const { transactionHash } = await fulfillListing(config, {
-    starknetAccount: accounts.fulfiller,
-    fulfillListingInfo,
-    approveInfo: {
-      currencyAddress: config.starknetCurrencyContract,
-      amount: order.startAmount
-    }
+    brokerAddress: accounts.broker_sale.address,
+    currencyAddress: config.starknetCurrencyContract,
+    amount: order.amount
   });
 
   logger.info("Listing created and fulfilled.");
@@ -65,10 +58,10 @@ async function main(): Promise<void> {
   );
 
   const order: ListingV1 = {
-    brokerId: accounts.broker_listing.address,
+    brokerAddress: accounts.broker_listing.address,
     tokenAddress: contracts.nftContract,
     tokenId: tokenId,
-    startAmount: BigInt(orderAmount)
+    amount: BigInt(orderAmount)
   };
 
   await displayBalances(config, accounts, "before sale");

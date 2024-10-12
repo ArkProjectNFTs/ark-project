@@ -22,12 +22,10 @@ async function createListingAndCheckStatus(
 ): Promise<bigint> {
   logger.info("Creating listing...");
   const { orderHash } = await createListing(config, {
-    starknetAccount: accounts.offerer,
-    order,
-    approveInfo: {
-      tokenAddress: order.tokenAddress,
-      tokenId: order.tokenId
-    }
+    account: accounts.offerer,
+    ...order,
+    tokenAddress: order.tokenAddress,
+    tokenId: order.tokenId
   });
   logger.info("Order hash:", orderHash);
 
@@ -60,10 +58,10 @@ async function main(): Promise<void> {
   logger.info(`Owner of tokenId ${tokenId} is ${ownerHex}`);
 
   const order: ListingV1 = {
-    brokerId: accounts.broker_listing.address,
+    brokerAddress: accounts.broker_listing.address,
     tokenAddress: nftContract,
     tokenId: tokenId,
-    startAmount: BigInt(orderAmount)
+    amount: BigInt(orderAmount)
   };
 
   await createListingAndCheckStatus(config, accounts, order);

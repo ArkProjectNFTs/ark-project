@@ -10,6 +10,7 @@ import { deployERC721 } from "../src/contracts/erc721";
 import { deployERC721Royalties } from "../src/contracts/erc721royalties";
 import { deployExecutor } from "../src/contracts/executor";
 import { getFeeAddress } from "../src/providers";
+import { deployERC1155 } from "../src/contracts/erc1155";
 
 async function run() {
   if (
@@ -76,6 +77,12 @@ async function run() {
     "0x29873c310fbefde666dc32a1554fea6bb45eecc84f680f8a2b0a8fbb8cb89af"
   );
 
+  const erc1155Contract = await deployERC1155(
+    ARTIFACTS_PATH,
+    starknetAdminAccount,
+    provider
+  );
+
   const contractsFilePath = resolve(__dirname, "../../../contracts.dev.json");
   const contractsContent = JSON.stringify({
     executor: executorContract.address,
@@ -83,7 +90,11 @@ async function run() {
     nftContractFixedFees: nftContractFixedFees.address,
     nftContractRoyalties: nftContractRoyalties.address,
     eth: ethContract.address,
+<<<<<<< HEAD
     ethTrade: ethTradeContract.address
+=======
+    erc1155: erc1155Contract.address,
+>>>>>>> ArkProjectNFTs-feat/contract-v2
   });
   await fs.writeFile(contractsFilePath, contractsContent);
 }

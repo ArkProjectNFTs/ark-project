@@ -1,5 +1,24 @@
 # @ark-project/react
 
+## 2.0.0-beta.1
+
+### Patch Changes
+
+- 6d31848: Update contract address
+- Updated dependencies [6d31848]
+  - @ark-project/core@3.0.0-beta.0
+
+## 2.0.0-beta.0
+
+### Major Changes
+
+- Update SDKs
+
+### Patch Changes
+
+- Updated dependencies
+  - @ark-project/core@3.0.0-beta.0
+
 ## 1.1.2
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC721 } from "@ark-project/test";
+import { config, getAccounts, mintERC721 } from "@ark-project/test";
 
 import {
   cancelCollectionOffer,
@@ -10,7 +10,7 @@ import {
 
 describe("cancelCollectionOffer", () => {
   it("default", async () => {
-    const { buyer, listingBroker } = accounts;
+    const { buyer, listingBroker } = getAccounts();
     const { tokenAddress } = await mintERC721({ account: buyer });
 
     const { orderHash } = await createCollectionOffer(config, {

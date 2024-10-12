@@ -33,4 +33,5 @@ build-external-contracts = [
     "ark_tokens::erc20_trade::TradeERC20",
     "ark_tokens::erc721::FreeMintNFT",
     "ark_tokens::erc721_royalty::FreeMintNFTRoyalty",
+    "ark_tokens::erc1155::FreeMintERC1155",
 ]

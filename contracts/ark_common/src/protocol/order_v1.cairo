@@ -113,26 +113,30 @@ impl OrderTraitOrderV1 of OrderTrait<OrderV1> {
             // Listing order.
             if (*self.start_amount) > 0
                 && (*self.end_amount).is_zero()
-                && (*self.route) == RouteType::Erc721ToErc20 {
+                && ((*self.route) == RouteType::Erc721ToErc20
+                    || (*self.route) == RouteType::Erc1155ToErc20) {
                 return Result::Ok(OrderType::Listing);
             }
             // Offer order.
             if (*self.start_amount) > 0
                 && (*self.end_amount).is_zero()
-                && (*self.route) == RouteType::Erc20ToErc721 {
+                && ((*self.route) == RouteType::Erc20ToErc721
+                    || (*self.route) == RouteType::Erc20ToErc1155) {
                 return Result::Ok(OrderType::Offer);
             }
             // Auction order.
             if (*self.start_amount) > 0
                 && (*self.end_amount) >= (*self.start_amount)
-                && (*self.route) == RouteType::Erc721ToErc20 {
+                && ((*self.route) == RouteType::Erc721ToErc20
+                    || (*self.route) == RouteType::Erc1155ToErc20) {
                 return Result::Ok(OrderType::Auction);
             }
         } else {
             // Collection Offer order.
             if (*self.start_amount) > 0
                 && (*self.end_amount).is_zero()
-                && (*self.route) == RouteType::Erc20ToErc721 {
+                && ((*self.route) == RouteType::Erc20ToErc721
+                    || (*self.route) == RouteType::Erc20ToErc1155) {
                 return Result::Ok(OrderType::CollectionOffer);
             }
 

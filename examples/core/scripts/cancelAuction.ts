@@ -23,12 +23,10 @@ async function createAndCancelAuctionAndCheckStatus(
 ): Promise<void> {
   logger.info("Creating auction...");
   const { orderHash } = await createAuction(config, {
-    starknetAccount: accounts.fulfiller,
-    order: auction,
-    approveInfo: {
-      tokenAddress: nftContract,
-      tokenId
-    }
+    account: accounts.fulfiller,
+    ...auction,
+    tokenAddress: nftContract,
+    tokenId
   });
 
   logger.info("Cancelling auction...");
@@ -39,8 +37,8 @@ async function createAndCancelAuctionAndCheckStatus(
   };
 
   await cancelOrder(config, {
-    starknetAccount: accounts.fulfiller,
-    cancelInfo
+    account: accounts.fulfiller,
+    ...cancelInfo
   });
 
   logger.info("Fetching order status...");
@@ -68,7 +66,7 @@ async function main(): Promise<void> {
   );
 
   const auction: AuctionV1 = {
-    brokerId: accounts.broker_listing.address,
+    brokerAddress: accounts.broker_listing.address,
     tokenAddress: nftContract,
     tokenId,
     startAmount: BigInt(orderAmount),

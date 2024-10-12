@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC20, mintERC721 } from "@ark-project/test";
+import { config, getAccounts, mintERC20, mintERC721 } from "@ark-project/test";
 
 import { createOffer, getOrderStatus } from "../src/index.js";
 
 describe("createOffer", () => {
   it("default", async () => {
-    const { seller, buyer } = accounts;
+    const { seller, buyer, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     await mintERC20({ account: buyer, amount: 10000000 });
 
     const { orderHash } = await createOffer(config, {
       account: buyer,
-      brokerAddress: accounts.listingBroker.address,
+      brokerAddress: listingBroker.address,
       tokenAddress,
       tokenId,
       amount: BigInt(10)
@@ -55,14 +55,14 @@ describe("createOffer", () => {
   // }, 50_000);
 
   it("error: invalid currency address", async () => {
-    const { seller, buyer } = accounts;
+    const { seller, listingBroker, buyer } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
     await mintERC20({ account: buyer, amount: 1 });
 
     await expect(
       createOffer(config, {
         account: buyer,
-        brokerAddress: accounts.listingBroker.address,
+        brokerAddress: listingBroker.address,
         tokenAddress,
         tokenId,
         amount: BigInt(1),

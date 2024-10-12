@@ -24,39 +24,37 @@ export type OrderV1 = {
 };
 
 export type OfferV1 = {
-  brokerId: string;
+  brokerAddress: string;
   tokenAddress: string;
   tokenId?: bigint;
   currencyAddress?: string;
   currencyChainId?: constants.StarknetChainId;
-  startAmount: bigint;
+  amount: bigint;
   startDate?: number;
   endDate?: number;
 };
 
 export type CollectionOfferV1 = {
-  brokerId: string;
+  brokerAddress: string;
   tokenAddress: string;
   currencyAddress?: string;
   currencyChainId?: string;
-  startAmount: bigint;
+  amount: bigint;
   startDate?: number;
   endDate?: number;
 };
 
 export type ListingV1 = {
-  brokerId: string;
+  brokerAddress: string;
   tokenAddress: string;
   tokenId: bigint;
   currencyAddress?: string;
   currencyChainId?: constants.StarknetChainId;
-  startAmount: bigint;
-  startDate?: number;
-  endDate?: number;
+  amount: bigint;
 };
 
 export type AuctionV1 = {
-  brokerId: string;
+  brokerAddress: string;
   tokenAddress: string;
   tokenId: bigint;
   currencyAddress?: string;
@@ -100,7 +98,7 @@ export type BaseFulfillInfo = {
   orderHash: bigint;
   tokenAddress: string;
   tokenId: bigint;
-  brokerId: string;
+  brokerAddress: string;
 };
 
 export type FulfillListingInfo = BaseFulfillInfo;
