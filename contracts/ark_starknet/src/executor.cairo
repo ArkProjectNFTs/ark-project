@@ -815,18 +815,14 @@ mod executor {
         let (is_some, token_id) = execution_info.token_id.get_some();
 
         let vinfo = if is_some == 1 {
-            let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
-            nft_contract
-                .transfer_from(execution_info.token_from, execution_info.token_to, token_id);
-
             if _is_erc721(execution_info.token_address) {
-                let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
+                let nft_contract = IERC721Dispatcher {
+                    contract_address: execution_info.token_address
+                };
                 nft_contract
-                    .transfer_from(
-                        execution_info.token_from, execution_info.token_to, execution_info.token_id
-                    );
+                    .transfer_from(execution_info.token_from, execution_info.token_to, token_id);
             }
-    
+
             if _is_erc1155(execution_info.token_address) {
                 let erc1155_contract = IERC1155Dispatcher {
                     contract_address: execution_info.token_address
@@ -835,7 +831,7 @@ mod executor {
                     .safe_transfer_from(
                         execution_info.token_from,
                         execution_info.token_to,
-                        execution_info.token_id,
+                        token_id,
                         execution_info.token_quantity,
                         array![].span()
                     );
@@ -1018,7 +1014,6 @@ mod executor {
             quantity: order.quantity,
             start_amount: order.start_amount,
             offerer: order.offerer,
-            quantity: order.quantity,
             route: order.route,
         }
     }

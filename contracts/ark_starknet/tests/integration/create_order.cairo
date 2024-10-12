@@ -26,7 +26,7 @@ use starknet::{ContractAddress, contract_address_const};
 
 use super::super::common::setup::{
     setup, setup_erc20_order, setup_auction_order, setup_collection_offer_order,
-    setup_listing_order, setup_offer_order, setup_limit_sell_order, setup_limit_buy_order, 
+    setup_listing_order, setup_offer_order, setup_limit_sell_order, setup_limit_buy_order,
     setup_erc1155, setup_order_erc1155
 };
 
@@ -694,7 +694,6 @@ fn test_create_order_erc1155_to_erc20_ok() {
 fn test_create_order_offerer_not_own_enough_erc1155_token() {
     let (executor_address, erc20_address, erc1155_address) = setup_erc1155();
     let offerer = erc1155_address;
-    let other = contract_address_const::<'other'>();
     let quantity = 50_u256;
 
     let token_id = Erc1155Dispatcher { contract_address: erc1155_address }.mint(offerer, 2_u256);

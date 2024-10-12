@@ -94,15 +94,12 @@ fn setup() -> (ContractAddress, ContractAddress, ContractAddress) {
     (executor_address, erc20_address, nft_address)
 }
 
-<<<<<<< HEAD
 fn setup_erc20_order() -> (ContractAddress, ContractAddress, ContractAddress) {
     let erc20_address = deploy_erc20();
     let token_address = deploy_erc20_2();
     let executor_address = deploy_executor();
     (executor_address, erc20_address, token_address)
 }
-=======
->>>>>>> ArkProjectNFTs-feat/contract-v2
 
 fn setup_royalty() -> (ContractAddress, ContractAddress, ContractAddress) {
     let erc20_address = deploy_erc20();
@@ -371,7 +368,6 @@ fn create_collection_offer_order(
     (order.compute_order_hash(), offerer, start_amount)
 }
 
-<<<<<<< HEAD
 
 fn create_limit_buy_order(
     executor_address: ContractAddress,
@@ -387,7 +383,13 @@ fn create_limit_buy_order(
     let order = setup_limit_buy_order(
         erc20_address, token_address, offerer, start_amount, quantity
     );
-=======
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, start_amount)
+}
+
 fn setup_order_erc1155(
     erc20_address: ContractAddress, erc1155_address: ContractAddress, quantity: u256
 ) -> OrderV1 {
@@ -432,7 +434,6 @@ fn create_offer_order_erc1155(
     order.offerer = offerer;
     order.start_amount = start_amount;
     order.token_id = Option::Some(token_id);
->>>>>>> ArkProjectNFTs-feat/contract-v2
 
     cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.create_order(order);
@@ -440,7 +441,6 @@ fn create_offer_order_erc1155(
     (order.compute_order_hash(), offerer, start_amount)
 }
 
-<<<<<<< HEAD
 fn create_limit_sell_order(
     executor_address: ContractAddress,
     erc20_address: ContractAddress,
@@ -459,5 +459,3 @@ fn create_limit_sell_order(
 
     (order.compute_order_hash(), offerer, quantity)
 }
-=======
->>>>>>> ArkProjectNFTs-feat/contract-v2
