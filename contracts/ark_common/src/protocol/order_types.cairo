@@ -211,6 +211,8 @@ struct FulfillInfo {
     token_address: ContractAddress,
     // Token token id.
     token_id: Option<u256>,
+    // The quantity of the token (1 for ERC-721, variable for ERC-1155).
+    quantity: u256,
     // Broker address.
     fulfill_broker_address: ContractAddress,
 }
@@ -269,7 +271,9 @@ enum RouteType {
     Erc20ToErc721,
     Erc721ToErc20,
     Erc20ToErc20Buy,
-    Erc20ToErc20Sell
+    Erc20ToErc20Sell,
+    Erc20ToErc1155,
+    Erc1155ToErc20,
 }
 
 impl RouteIntoFelt252 of Into<RouteType, felt252> {
@@ -278,7 +282,9 @@ impl RouteIntoFelt252 of Into<RouteType, felt252> {
             RouteType::Erc20ToErc721 => 'ERC20TOERC721',
             RouteType::Erc721ToErc20 => 'ERC721TOERC20',
             RouteType::Erc20ToErc20Buy => 'ERC20TOERC20BUY',
-            RouteType::Erc20ToErc20Sell => 'ERC20TOERC20SELL'
+            RouteType::Erc20ToErc20Sell => 'ERC20TOERC20SELL',
+            RouteType::Erc20ToErc1155 => 'ERC20TOERC1155',
+            RouteType::Erc1155ToErc20 => 'ERC1155TOERC20',
         }
     }
 }
@@ -293,6 +299,10 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
             Option::Some(RouteType::Erc20ToErc20Buy)
         } else if self == 'ERC20TOERC20SELL'{
             Option::Some(RouteType::Erc20ToErc20Sell)
+        } else if self == 'ERC1155TOERC20' {
+            Option::Some(RouteType::Erc1155ToErc20)
+        } else if self == 'ERC20TOERC1155' {
+            Option::Some(RouteType::Erc20ToErc1155)
         } else {
             Option::None
         }

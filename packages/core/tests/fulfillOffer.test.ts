@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  accounts,
   config,
+  getAccounts,
   getBalance,
   mintERC20,
   mintERC721
@@ -12,7 +12,7 @@ import { createOffer, fulfillOffer, getOrderStatus } from "../src/index.js";
 
 describe("fulfillOffer", () => {
   it("default", async function () {
-    const { seller, buyer, listingBroker, saleBroker } = accounts;
+    const { seller, buyer, listingBroker, saleBroker } = getAccounts();
     const amount = BigInt(1000);
     await mintERC20({ account: buyer, amount: 100000 });
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
@@ -47,7 +47,7 @@ describe("fulfillOffer", () => {
   }, 50_000);
 
   it("default: with custom fees", async function () {
-    const { seller, buyer, listingBroker, saleBroker } = accounts;
+    const { seller, buyer, listingBroker, saleBroker } = getAccounts();
     const amount = BigInt(1000);
     await mintERC20({ account: buyer, amount: 100000 });
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });

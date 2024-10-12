@@ -32,6 +32,7 @@ fn create_fulfill_info(
         token_chain_id: 'SN_MAIN',
         token_address: token_address,
         token_id: Option::Some(token_id),
+        quantity: 1_u256,
         fulfill_broker_address: contract_address_const::<'broker'>()
     }
 }
@@ -52,10 +53,11 @@ fn create_execution_info(
 ) -> ExecutionInfo {
     ExecutionInfo {
         order_hash: order_hash,
-        nft_address: nft_address,
-        nft_from: nft_from,
-        nft_to: nft_to,
-        nft_token_id: nft_token_id,
+        token_address: nft_address,
+        token_from: nft_from,
+        token_to: nft_to,
+        token_id: nft_token_id,
+        token_quantity: 1_u256,
         payment_from: payment_from,
         payment_to: payment_to,
         payment_amount: payment_amount,

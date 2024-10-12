@@ -22,12 +22,10 @@ async function createAndCancelListing(
 ): Promise<bigint> {
   logger.info("Creating listing...");
   const { orderHash } = await createListing(config, {
-    starknetAccount: accounts.offerer,
-    order,
-    approveInfo: {
-      tokenAddress: order.tokenAddress,
-      tokenId: order.tokenId
-    }
+    account: accounts.offerer,
+    ...order,
+    tokenAddress: order.tokenAddress,
+    tokenId: order.tokenId
   });
 
   logger.info("Fetching order status after creation...");
@@ -44,8 +42,8 @@ async function createAndCancelListing(
   };
 
   await cancelOrder(config, {
-    starknetAccount: accounts.offerer,
-    cancelInfo
+    account: accounts.offerer,
+    ...cancelInfo
   });
 
   logger.info("Fetching order status after cancellation...");
@@ -74,10 +72,10 @@ async function main(): Promise<void> {
   );
 
   const order: ListingV1 = {
-    brokerId: accounts.broker_listing.address,
+    brokerAddress: accounts.broker_listing.address,
     tokenAddress: nftContract,
     tokenId: tokenId,
-    startAmount: BigInt(orderAmount)
+    amount: BigInt(orderAmount)
   };
 
   await createAndCancelListing(config, accounts, order);

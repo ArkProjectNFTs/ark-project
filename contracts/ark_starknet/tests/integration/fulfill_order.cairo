@@ -6,6 +6,8 @@ use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, IMaintenanceDispatcher,
     IMaintenanceDispatcherTrait
 };
+use ark_tokens::erc1155::IFreeMintDispatcher as Erc1155Dispatcher;
+use ark_tokens::erc1155::IFreeMintDispatcherTrait as Erc1155DispatcherTrait;
 
 use ark_tokens::erc20::{IFreeMintDispatcher, IFreeMintDispatcherTrait};
 use ark_tokens::erc721::IFreeMintDispatcher as Erc721Dispatcher;
@@ -20,7 +22,7 @@ use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::{
     create_auction_order, create_collection_offer_order, create_listing_order, create_offer_order,
     setup, setup_default_order, setup_auction_order, setup_collection_offer_order,
-    setup_listing_order, setup_offer_order
+    setup_listing_order, setup_offer_order, create_offer_order_erc1155, setup_erc1155
 };
 
 
@@ -34,6 +36,26 @@ fn create_fulfill_info(
         token_chain_id: 'SN_MAIN',
         token_address: token_address,
         token_id: Option::Some(token_id),
+        quantity: 1_u256,
+        fulfill_broker_address: contract_address_const::<'broker'>()
+    }
+}
+
+fn create_fulfill_info_erc1155(
+    order_hash: felt252,
+    fulfiller: ContractAddress,
+    token_address: ContractAddress,
+    token_id: u256,
+    quantity: u256
+) -> FulfillInfo {
+    FulfillInfo {
+        order_hash: order_hash,
+        related_order_hash: Option::None,
+        fulfiller: fulfiller,
+        token_chain_id: 'SN_MAIN',
+        token_address: token_address,
+        token_id: Option::Some(token_id),
+        quantity: quantity,
         fulfill_broker_address: contract_address_const::<'broker'>()
     }
 }
@@ -123,7 +145,7 @@ fn test_fulfill_listing_order_fulfiller_not_enough_erc20_token() {
 
 #[test]
 #[should_panic(expected: "Fulfiller does not own the specified ERC721 token")]
-fn test_fulfill_offer_order_fulfiller_not_owner() {
+fn test_fulfill_offer_order_fulfiller_not_owner_for_erc721() {
     let (executor_address, erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
     let other = contract_address_const::<'other'>();
@@ -137,6 +159,28 @@ fn test_fulfill_offer_order_fulfiller_not_owner() {
     );
 
     let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+}
+
+#[test]
+#[should_panic(expected: "Fulfiller does not own the specified amount of ERC1155 token")]
+fn test_fulfill_offer_order_fulfiller_not_owner_for_erc1155() {
+    let (executor_address, erc20_address, erc1155_address) = setup_erc1155();
+    let fulfiller = contract_address_const::<'fulfiller'>();
+    let other = erc1155_address;
+    let quantity = 50_u256;
+
+    let token_id = Erc1155Dispatcher { contract_address: erc1155_address }.mint(other, quantity);
+
+    let (order_hash, _, _) = create_offer_order_erc1155(
+        executor_address, erc20_address, erc1155_address, token_id, quantity
+    );
+
+    let fulfill_info = create_fulfill_info_erc1155(
+        order_hash, fulfiller, erc1155_address, token_id, quantity
+    );
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);

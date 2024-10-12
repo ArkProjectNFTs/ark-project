@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { accounts, config, mintERC721 } from "@ark-project/test";
+import { config, getAccounts, mintERC721 } from "@ark-project/test";
 
 import { createAuction, getOrderType } from "../src/index.js";
 import { FEE_TOKEN, getTypeFromCairoCustomEnum } from "./utils/index.js";
 
 describe("createAuction", () => {
   it("default", async () => {
-    const { seller, listingBroker } = accounts;
+    const { seller, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const { orderHash } = await createAuction(config, {
@@ -26,7 +26,7 @@ describe("createAuction", () => {
   }, 50_000);
 
   it("default: with custom currency", async () => {
-    const { seller, listingBroker } = accounts;
+    const { seller, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const { orderHash } = await createAuction(config, {
@@ -46,7 +46,7 @@ describe("createAuction", () => {
   }, 50_000);
 
   it("error: invalid start date", async () => {
-    const { seller, listingBroker } = accounts;
+    const { seller, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const invalidStartDate = Math.floor(Date.now() / 1000 - 30);
@@ -65,7 +65,7 @@ describe("createAuction", () => {
   }, 50_000);
 
   it("error: invalid end date", async () => {
-    const { seller, listingBroker } = accounts;
+    const { seller, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     const invalidEndDate = Math.floor(Date.now() / 1000) - 30;
@@ -84,7 +84,7 @@ describe("createAuction", () => {
   }, 50_000);
 
   it("error: invalid end amount", async () => {
-    const { seller, listingBroker } = accounts;
+    const { seller, listingBroker } = getAccounts();
     const { tokenId, tokenAddress } = await mintERC721({ account: seller });
 
     await expect(

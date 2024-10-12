@@ -1,7 +1,8 @@
 {
   "name": "@ark-project/test",
-  "description": "Test utils for @ark-project",
+  "version": "1.0.0",
   "private": true,
+  "description": "Test utils for @ark-project",
   "type": "module",
   "main": "./src/exports/index.ts",
   "types": "./src/exports/index.ts",
