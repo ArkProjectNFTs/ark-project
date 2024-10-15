@@ -1,21 +1,21 @@
-pub(crate) mod common;
+pub mod common;
 pub(crate) mod order_cancelled;
 pub(crate) mod order_executed;
 pub(crate) mod order_fulfilled;
 pub(crate) mod order_placed;
 pub(crate) mod rollback_status;
 
-pub(crate) use order_cancelled::OrderCancelled;
-pub(crate) use order_executed::OrderExecuted;
-pub(crate) use order_fulfilled::OrderFulfilled;
-pub(crate) use order_placed::OrderPlaced;
-pub(crate) use rollback_status::RollbackStatus;
+pub use order_cancelled::OrderCancelled;
+pub use order_executed::OrderExecuted;
+pub use order_fulfilled::OrderFulfilled;
+pub use order_placed::OrderPlaced;
+pub use rollback_status::RollbackStatus;
 
 // pub(crate) use cainome::cairo_serde::U256;
 use starknet::{core::types::Felt, macros::selector};
 
 #[derive(Debug)]
-pub(crate) enum OrderbookParseError {
+pub enum OrderbookParseError {
     Selector,
     KeyLength,
     DataLength,

@@ -1,12 +1,7 @@
 use cainome::rs::abigen;
 use starknet::core::types::{EmittedEvent, Felt};
 
-use crate::types::PlacedData;
-
-use super::{
-    common::{to_hex_str, to_hex_str_opt, u256_to_hex, u256_to_hex_opt},
-    OrderbookParseError, ORDER_PLACED_SELECTOR,
-};
+use super::{OrderbookParseError, ORDER_PLACED_SELECTOR};
 
 abigen!(
     V1,
@@ -174,7 +169,7 @@ abigen!(
 );
 
 #[derive(Debug)]
-pub(crate) enum OrderPlaced {
+pub enum OrderPlaced {
     V1(OrderPlacedV1),
 }
 
@@ -200,33 +195,6 @@ impl TryFrom<EmittedEvent> for OrderPlaced {
             }
         } else {
             Err(OrderbookParseError::Selector)
-        }
-    }
-}
-
-impl From<OrderPlaced> for PlacedData {
-    fn from(value: OrderPlaced) -> Self {
-        match value {
-            OrderPlaced::V1(value) => Self {
-                order_hash: to_hex_str(&value.order_hash),
-                order_version: to_hex_str(&value.order_version),
-                order_type: format!("{:?}", value.order_type),
-                cancelled_order_hash: to_hex_str_opt(&value.cancelled_order_hash),
-                route: format!("{:?}", value.order.route),
-                currency_address: to_hex_str(&Felt::from(value.order.currency_address)),
-                currency_chain_id: to_hex_str(&value.order.currency_chain_id),
-                salt: to_hex_str(&value.order.salt),
-                offerer: to_hex_str(&Felt::from(value.order.offerer)),
-                token_chain_id: format!("0x{:x}", value.order.token_chain_id),
-                token_address: to_hex_str(&Felt::from(value.order.token_address)),
-                token_id: u256_to_hex_opt(&value.order.token_id),
-                quantity: u256_to_hex(&value.order.quantity),
-                start_amount: u256_to_hex(&value.order.start_amount),
-                end_amount: u256_to_hex(&value.order.end_amount),
-                start_date: value.order.start_date,
-                end_date: value.order.end_date,
-                broker_id: to_hex_str(&Felt::from(value.order.broker_id)),
-            },
         }
     }
 }

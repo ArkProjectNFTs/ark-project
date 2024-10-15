@@ -27,19 +27,18 @@ log = "0.4.17"
 thiserror = "1.0.32"
 # For now, Diri can't use the ark-starknet due to the dependency
 # on ArkProjectNFTs for of starknet-rs.
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "2ddc694" }
-starknet-types-core = { git = "https://github.com/starknet-io/types-rs", rev = "f98f048" }
+starknet = "0.12.0"
+starknet-types-core = "0.1.7"
+
 tracing = "0.1"
 num-bigint = "0.4.4"
 num-traits = "0.2.19"
 
-cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.4.0", features = [
-  "abigen-rs",
-] }
-
 anyhow.workspace = true
 async-trait.workspace = true
 tokio.workspace = true
+
+orderbook = { path = "../orderbook" }
 
 [dev-dependencies]
 clap = { version = "4.3.19", features = ["derive", "env", "string"] }
