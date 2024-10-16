@@ -1,9 +1,7 @@
 use ark_common::protocol::order_types::OrderTrait;
-use ark_common::protocol::order_types::OrderType;
-
+use ark_common::protocol::order_types::{OrderType, RouteType};
 
 use starknet::ContractAddress;
-
 
 #[derive(Drop, Copy, Debug)]
 struct OrderInfo {
@@ -13,14 +11,15 @@ struct OrderInfo {
     // The token contract address.
     token_address: ContractAddress,
     // The token id.
-    // TODO: how to store Option<u256> ?
     token_id: u256,
-    // The quantity of the token (1 for ERC-721, variable for ERC-1155).
-    quantity: u256,
     // in wei. --> 10 | 10 | 10 |
-    start_amount: u256,
-    //
+    start_amount: u256, // amount to pay
+    // address making the order
     offerer: ContractAddress,
+    // number of tokens
+    quantity: u256, // 0 for ERC721,
+    // route type
+    route: RouteType
 }
 
 //! Executor contract on Starknet
@@ -35,7 +34,7 @@ struct OrderInfo {
 mod executor {
     use ark_common::protocol::order_types::{
         RouteType, ExecutionInfo, ExecutionValidationInfo, FulfillInfo, CreateOrderInfo,
-        FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType,
+        FulfillOrderInfo, CancelOrderInfo, CancelInfo, OrderType, OptionU256, OptionU256Trait
     };
     use ark_common::protocol::order_v1::{OrderV1, OrderTraitOrderV1};
 
@@ -185,9 +184,9 @@ mod executor {
         }
 
         fn get_collection_creator_fees(
-            self: @ContractState, nft_address: ContractAddress
+            self: @ContractState, token_address: ContractAddress
         ) -> (ContractAddress, FeesRatio) {
-            let (receiver, fees_ratio) = self.creator_fees.read(nft_address);
+            let (receiver, fees_ratio) = self.creator_fees.read(token_address);
             if fees_ratio.denominator.is_zero() {
                 self.get_default_creator_fees()
             } else {
@@ -197,21 +196,21 @@ mod executor {
 
         fn set_collection_creator_fees(
             ref self: ContractState,
-            nft_address: ContractAddress,
+            token_address: ContractAddress,
             receiver: ContractAddress,
             fees_ratio: FeesRatio
         ) {
             _ensure_admin(@self);
             assert(fees_ratio.is_valid(), Errors::FEES_RATIO_INVALID);
-            self.creator_fees.write(nft_address, (receiver, fees_ratio));
+            self.creator_fees.write(token_address, (receiver, fees_ratio));
         }
 
         fn get_fees_amount(
             self: @ContractState,
             fulfill_broker: ContractAddress,
             listing_broker: ContractAddress,
-            nft_address: ContractAddress,
-            nft_token_id: u256,
+            token_address: ContractAddress,
+            token_id: OptionU256,
             payment_amount: u256
         ) -> FeesAmount {
             let (
@@ -221,7 +220,7 @@ mod executor {
                 creator_fees_amount
             ) =
                 _compute_fees_amount(
-                self, fulfill_broker, listing_broker, nft_address, nft_token_id, payment_amount
+                self, fulfill_broker, listing_broker, token_address, token_id, payment_amount
             );
 
             FeesAmount {
@@ -327,6 +326,20 @@ mod executor {
                     Option::None => panic!("Invalid token id"),
                 }
             },
+            RouteType::Erc20ToErc20Buy => {
+                assert!(
+                    _check_erc20_amount(
+                        order.currency_address, *(order.start_amount), order.offerer
+                    ),
+                    "Oferrer does not own enough ERC20 tokens to buy"
+                )
+            },
+            RouteType::Erc20ToErc20Sell => {
+                assert!(
+                    _check_erc20_amount(order.token_address, *(order.quantity), order.offerer),
+                    "Oferrer does not own enough ERC20 tokens to sell"
+                )
+            },
             RouteType::Erc1155ToErc20 => {
                 match order.token_id {
                     Option::Some(token_id) => {
@@ -371,26 +384,32 @@ mod executor {
             panic!("Order not found");
         }
 
-        if order_info.order_type != OrderType::Auction {
-            assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
-        }
-
         let contract_address = get_contract_address();
         match order_info.order_type {
             OrderType::Listing => {
+                assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
                 _verify_fulfill_listing_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::Offer => {
+                assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
                 _verify_fulfill_offer_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::Auction => {
                 _verify_fulfill_auction_order(self, order_info, fulfill_info, contract_address);
             },
             OrderType::CollectionOffer => {
+                assert!(order_info.offerer != fulfiller, "Offerer and fulfiller must be different");
                 _verify_fulfill_collection_offer_order(
                     self, order_info, fulfill_info, contract_address
                 );
-            }
+            },
+            OrderType::LimitBuy => {
+                _verify_limit_order(self, order_info, fulfill_info, contract_address)
+            },
+            OrderType::LimitSell => {
+                _verify_limit_order(self, order_info, fulfill_info, contract_address)
+            },
+            _ => panic!("Order not supported")
         }
     }
 
@@ -577,6 +596,74 @@ mod executor {
         }
     }
 
+
+    fn _verify_limit_order(
+        self: @ContractState,
+        order_info: OrderInfo,
+        fulfill_info: @FulfillInfo,
+        contract_address: ContractAddress
+    ) {
+        let related_order_info = match *(fulfill_info.related_order_hash) {
+            Option::None => panic!("Fulfill limit order require a related order"),
+            Option::Some(related_order_hash) => _get_order_info(self, related_order_hash),
+        };
+        assert!(
+            @order_info.currency_address == @related_order_info.currency_address,
+            "Order and related order use different currency"
+        );
+
+        let (buyer_order, seller_order) = match order_info.route {
+            RouteType::Erc20ToErc20Sell => {
+                assert(
+                    related_order_info.route == RouteType::Erc20ToErc20Buy, 'Order route not valid'
+                );
+
+                (related_order_info, order_info)
+            },
+            RouteType::Erc20ToErc20Buy => {
+                assert(
+                    related_order_info.route == RouteType::Erc20ToErc20Sell, 'Order route not valid'
+                );
+                (order_info, related_order_info)
+            },
+            _ => panic!("route not supported")
+        };
+
+        let buyer = buyer_order.offerer;
+
+        //checks for buyer
+        assert!(
+            _check_erc20_amount(@buyer_order.currency_address, buyer_order.start_amount, @buyer),
+            "Buyer does not own enough ERC20 tokens"
+        );
+
+        assert!(
+            _check_erc20_allowance(
+                @buyer_order.currency_address,
+                buyer_order.start_amount,
+                @buyer,
+                @get_contract_address()
+            ),
+            "Buyer's allowance of executor is not enough"
+        );
+
+        let seller = seller_order.offerer;
+
+        // checks for seller
+        assert!(
+            _check_erc20_amount(@seller_order.token_address, seller_order.quantity, @seller),
+            "Seller does not own enough ERC20 tokens"
+        );
+
+        assert!(
+            _check_erc20_allowance(
+                @seller_order.token_address, seller_order.quantity, @seller, @get_contract_address()
+            ),
+            "Seller's allowance of executor is not enough"
+        );
+    }
+
+
     fn _verify_fulfill_collection_offer_order(
         self: @ContractState,
         order_info: OrderInfo,
@@ -648,7 +735,7 @@ mod executor {
             @self,
             @execution_info.token_address,
             execution_info.payment_amount,
-            execution_info.token_id
+            execution_info.token_id,
         );
         let (fulfill_broker_fees_amount, listing_broker_fees_amount, ark_fees_amount, _) =
             _compute_fees_amount(
@@ -659,6 +746,7 @@ mod executor {
             execution_info.token_id,
             execution_info.payment_amount
         );
+
         assert!(
             execution_info
                 .payment_amount > (fulfill_broker_fees_amount
@@ -724,38 +812,64 @@ mod executor {
                 );
         }
 
-        if _is_erc721(execution_info.token_address) {
-            let nft_contract = IERC721Dispatcher { contract_address: execution_info.token_address };
-            nft_contract
-                .transfer_from(
-                    execution_info.token_from, execution_info.token_to, execution_info.token_id
-                );
-        }
+        let (is_some, token_id) = execution_info.token_id.get_some();
 
-        if _is_erc1155(execution_info.token_address) {
-            let erc1155_contract = IERC1155Dispatcher {
+        let vinfo = if is_some == 1 {
+            if _is_erc721(execution_info.token_address) {
+                let nft_contract = IERC721Dispatcher {
+                    contract_address: execution_info.token_address
+                };
+                nft_contract
+                    .transfer_from(execution_info.token_from, execution_info.token_to, token_id);
+            }
+
+            if _is_erc1155(execution_info.token_address) {
+                let erc1155_contract = IERC1155Dispatcher {
+                    contract_address: execution_info.token_address
+                };
+                erc1155_contract
+                    .safe_transfer_from(
+                        execution_info.token_from,
+                        execution_info.token_to,
+                        token_id,
+                        execution_info.token_quantity,
+                        array![].span()
+                    );
+            }
+
+            let tx_info = starknet::get_tx_info().unbox();
+            let transaction_hash = tx_info.transaction_hash;
+            let block_timestamp = starknet::info::get_block_timestamp();
+
+            ExecutionValidationInfo {
+                order_hash: execution_info.order_hash,
+                transaction_hash,
+                starknet_block_timestamp: block_timestamp,
+                from: execution_info.token_from,
+                to: execution_info.token_to,
+            }
+        } else {
+            let erc20_contract = IERC20Dispatcher {
                 contract_address: execution_info.token_address
             };
-            erc1155_contract
-                .safe_transfer_from(
+            erc20_contract
+                .transfer_from(
                     execution_info.token_from,
                     execution_info.token_to,
-                    execution_info.token_id,
-                    execution_info.token_quantity,
-                    array![].span()
+                    execution_info.token_quantity
                 );
-        }
 
-        let tx_info = starknet::get_tx_info().unbox();
-        let transaction_hash = tx_info.transaction_hash;
-        let block_timestamp = starknet::info::get_block_timestamp();
+            let tx_info = starknet::get_tx_info().unbox();
+            let transaction_hash = tx_info.transaction_hash;
+            let block_timestamp = starknet::info::get_block_timestamp();
 
-        let vinfo = ExecutionValidationInfo {
-            order_hash: execution_info.order_hash,
-            transaction_hash,
-            starknet_block_timestamp: block_timestamp,
-            from: execution_info.token_from,
-            to: execution_info.token_to,
+            ExecutionValidationInfo {
+                order_hash: execution_info.order_hash,
+                transaction_hash,
+                starknet_block_timestamp: block_timestamp,
+                from: execution_info.token_from,
+                to: execution_info.token_to,
+            }
         };
 
         self.orderbook.validate_order_execution(vinfo);
@@ -821,22 +935,30 @@ mod executor {
     }
 
     fn _compute_creator_fees_amount(
-        self: @ContractState, nft_address: @ContractAddress, payment_amount: u256, token_id: u256
+        self: @ContractState,
+        token_address: @ContractAddress,
+        payment_amount: u256,
+        token_id: OptionU256
     ) -> (ContractAddress, u256) {
-        // check if nft support 2981 interface
-        let dispatcher = ISRC5Dispatcher { contract_address: *nft_address };
-        if dispatcher.supports_interface(IERC2981_ID) {
-            IERC2981Dispatcher { contract_address: *nft_address }
-                .royalty_info(token_id, payment_amount)
+        let (is_some, token_id) = token_id.get_some();
+        if is_some == 0 {
+            _fallback_compute_creator_fees_amount(self, token_address, payment_amount)
         } else {
-            _fallback_compute_creator_fees_amount(self, nft_address, payment_amount)
+            // check if nft support 2981 interface
+            let dispatcher = ISRC5Dispatcher { contract_address: *token_address };
+            if dispatcher.supports_interface(IERC2981_ID) {
+                IERC2981Dispatcher { contract_address: *token_address }
+                    .royalty_info(token_id, payment_amount)
+            } else {
+                _fallback_compute_creator_fees_amount(self, token_address, payment_amount)
+            }
         }
     }
 
     fn _fallback_compute_creator_fees_amount(
-        self: @ContractState, nft_address: @ContractAddress, payment_amount: u256
+        self: @ContractState, token_address: @ContractAddress, payment_amount: u256
     ) -> (ContractAddress, u256) {
-        let (receiver, fees_ratio) = self.get_collection_creator_fees(*nft_address);
+        let (receiver, fees_ratio) = self.get_collection_creator_fees(*token_address);
         let amount = fees_ratio.compute_amount(payment_amount);
         (receiver, amount)
     }
@@ -855,8 +977,8 @@ mod executor {
         self: @ContractState,
         fulfill_broker_address: ContractAddress,
         listing_broker_address: ContractAddress,
-        nft_address: ContractAddress,
-        nft_token_id: u256,
+        token_address: ContractAddress,
+        token_id: OptionU256,
         payment_amount: u256
     ) -> (u256, u256, u256, u256) {
         let fulfill_broker_fees = self.get_broker_fees(fulfill_broker_address);
@@ -866,7 +988,7 @@ mod executor {
         let fulfill_broker_fees_amount = fulfill_broker_fees.compute_amount(payment_amount);
         let listing_broker_fees_amount = listing_broker_fees.compute_amount(payment_amount);
         let (_, creator_fees_amount) = _compute_creator_fees_amount(
-            self, @nft_address, payment_amount, nft_token_id
+            self, @token_address, payment_amount, token_id,
         );
         let ark_fees_amount = ark_fees.compute_amount(payment_amount);
         (
@@ -892,6 +1014,7 @@ mod executor {
             quantity: order.quantity,
             start_amount: order.start_amount,
             offerer: order.offerer,
+            route: order.route,
         }
     }
 }

@@ -28,6 +28,20 @@ fn deploy_erc20() -> ContractAddress {
     erc20_address
 }
 
+fn deploy_erc20_2() -> ContractAddress {
+    let contract = declare("TradeERC20").unwrap().contract_class();
+    let initial_supply: u256 = 10_000_000_000_u256;
+    let name: ByteArray = "TradeERC20";
+    let symbol: ByteArray = "TRADE";
+
+    let mut calldata: Array<felt252> = array![];
+    initial_supply.serialize(ref calldata);
+    name.serialize(ref calldata);
+    symbol.serialize(ref calldata);
+    let (erc20_address, _) = contract.deploy(@calldata).unwrap();
+    erc20_address
+}
+
 fn deploy_nft(royalty: bool) -> ContractAddress {
     let name: ByteArray = "DummyNFT";
     let symbol: ByteArray = "DUMNFT";
@@ -80,6 +94,12 @@ fn setup() -> (ContractAddress, ContractAddress, ContractAddress) {
     (executor_address, erc20_address, nft_address)
 }
 
+fn setup_erc20_order() -> (ContractAddress, ContractAddress, ContractAddress) {
+    let erc20_address = deploy_erc20();
+    let token_address = deploy_erc20_2();
+    let executor_address = deploy_executor();
+    (executor_address, erc20_address, token_address)
+}
 
 fn setup_royalty() -> (ContractAddress, ContractAddress, ContractAddress) {
     let erc20_address = deploy_erc20();
@@ -103,6 +123,7 @@ fn setup_order(
     token_id: Option<u256>,
     start_amount: u256,
     end_amount: u256,
+    quantity: u256,
 ) -> OrderV1 {
     let chain_id = 'SN_MAIN';
     let block_timestamp = starknet::get_block_timestamp();
@@ -118,7 +139,7 @@ fn setup_order(
         token_chain_id: chain_id,
         token_address: nft_address,
         token_id,
-        quantity: 1,
+        quantity: quantity,
         start_amount,
         end_amount,
         start_date: block_timestamp,
@@ -142,7 +163,8 @@ fn setup_offer_order(
         offerer,
         Option::Some(token_id),
         start_amount,
-        0
+        0,
+        1
     )
 }
 
@@ -160,7 +182,8 @@ fn setup_listing_order(
         offerer,
         Option::Some(token_id),
         start_amount,
-        0
+        0,
+        1
     )
 }
 
@@ -179,7 +202,8 @@ fn setup_auction_order(
         offerer,
         Option::Some(token_id),
         start_amount,
-        end_amount
+        end_amount,
+        1
     )
 }
 
@@ -196,7 +220,46 @@ fn setup_collection_offer_order(
         offerer,
         Option::None,
         start_amount,
-        0
+        0,
+        1
+    )
+}
+
+fn setup_limit_buy_order(
+    currency_address: ContractAddress,
+    token_address: ContractAddress,
+    offerer: ContractAddress,
+    start_amount: u256,
+    quantity: u256
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        token_address,
+        RouteType::Erc20ToErc20Buy,
+        offerer,
+        Option::None,
+        start_amount,
+        0,
+        quantity
+    )
+}
+
+fn setup_limit_sell_order(
+    currency_address: ContractAddress,
+    token_address: ContractAddress,
+    offerer: ContractAddress,
+    end_amount: u256,
+    quantity: u256
+) -> OrderV1 {
+    setup_order(
+        currency_address,
+        token_address,
+        RouteType::Erc20ToErc20Sell,
+        offerer,
+        Option::None,
+        0,
+        end_amount,
+        quantity
     )
 }
 
@@ -305,6 +368,28 @@ fn create_collection_offer_order(
     (order.compute_order_hash(), offerer, start_amount)
 }
 
+
+fn create_limit_buy_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    token_address: ContractAddress,
+    start_amount: u256,
+    quantity: u256
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(offerer, start_amount);
+
+    let order = setup_limit_buy_order(
+        erc20_address, token_address, offerer, start_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, start_amount)
+}
+
 fn setup_order_erc1155(
     erc20_address: ContractAddress, erc1155_address: ContractAddress, quantity: u256
 ) -> OrderV1 {
@@ -356,3 +441,21 @@ fn create_offer_order_erc1155(
     (order.compute_order_hash(), offerer, start_amount)
 }
 
+fn create_limit_sell_order(
+    executor_address: ContractAddress,
+    erc20_address: ContractAddress,
+    token_address: ContractAddress,
+    end_amount: u256,
+    quantity: u256
+) -> (felt252, ContractAddress, u256) {
+    let offerer = contract_address_const::<'offerer'>();
+
+    IFreeMintDispatcher { contract_address: token_address }.mint(offerer, quantity);
+
+    let order = setup_limit_sell_order(erc20_address, token_address, offerer, end_amount, quantity);
+
+    cheat_caller_address(executor_address, offerer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(order);
+
+    (order.compute_order_hash(), offerer, quantity)
+}

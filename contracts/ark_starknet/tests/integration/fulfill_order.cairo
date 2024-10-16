@@ -1,7 +1,6 @@
 use ark_common::protocol::order_types::{FulfillInfo, OrderTrait, RouteType};
 use ark_common::protocol::order_v1::OrderV1;
 
-
 use ark_starknet::interfaces::{
     IExecutorDispatcher, IExecutorDispatcherTrait, IMaintenanceDispatcher,
     IMaintenanceDispatcherTrait
@@ -22,31 +21,18 @@ use starknet::{ContractAddress, contract_address_const};
 use super::super::common::setup::{
     create_auction_order, create_collection_offer_order, create_listing_order, create_offer_order,
     setup, setup_default_order, setup_auction_order, setup_collection_offer_order,
-    setup_listing_order, setup_offer_order, create_offer_order_erc1155, setup_erc1155
+    setup_listing_order, setup_offer_order, setup_erc20_order, create_limit_buy_order,
+    create_limit_sell_order, setup_limit_sell_order, setup_limit_buy_order,
+    create_offer_order_erc1155, setup_erc1155
 };
 
 
 fn create_fulfill_info(
-    order_hash: felt252, fulfiller: ContractAddress, token_address: ContractAddress, token_id: u256
-) -> FulfillInfo {
-    FulfillInfo {
-        order_hash: order_hash,
-        related_order_hash: Option::None,
-        fulfiller: fulfiller,
-        token_chain_id: 'SN_MAIN',
-        token_address: token_address,
-        token_id: Option::Some(token_id),
-        quantity: 1_u256,
-        fulfill_broker_address: contract_address_const::<'broker'>()
-    }
-}
-
-fn create_fulfill_info_erc1155(
     order_hash: felt252,
     fulfiller: ContractAddress,
     token_address: ContractAddress,
-    token_id: u256,
-    quantity: u256
+    token_id: Option<u256>,
+    quantity: u256,
 ) -> FulfillInfo {
     FulfillInfo {
         order_hash: order_hash,
@@ -54,11 +40,12 @@ fn create_fulfill_info_erc1155(
         fulfiller: fulfiller,
         token_chain_id: 'SN_MAIN',
         token_address: token_address,
-        token_id: Option::Some(token_id),
+        fulfill_broker_address: contract_address_const::<'broker'>(),
         quantity: quantity,
-        fulfill_broker_address: contract_address_const::<'broker'>()
+        token_id: token_id
     }
 }
+
 
 #[test]
 fn test_fulfill_offer_order_ok() {
@@ -76,7 +63,9 @@ fn test_fulfill_offer_order_ok() {
     cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
@@ -102,7 +91,9 @@ fn test_fulfill_listing_order_ok() {
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
@@ -118,7 +109,7 @@ fn test_fulfill_order_fulfiller_shall_be_caller() {
     let caller = contract_address_const::<'caller'>();
     let fulfiller = contract_address_const::<'fulfiller'>();
 
-    let fulfill_info = create_fulfill_info(0x123, fulfiller, nft_address, 1);
+    let fulfill_info = create_fulfill_info(0x123, fulfiller, nft_address, Option::Some(1), 1_u256);
 
     cheat_caller_address(executor_address, caller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
@@ -137,7 +128,9 @@ fn test_fulfill_listing_order_fulfiller_not_enough_erc20_token() {
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfiller, start_amount - 100);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
@@ -158,7 +151,9 @@ fn test_fulfill_offer_order_fulfiller_not_owner_for_erc721() {
         executor_address, erc20_address, nft_address, token_id
     );
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
@@ -178,8 +173,8 @@ fn test_fulfill_offer_order_fulfiller_not_owner_for_erc1155() {
         executor_address, erc20_address, erc1155_address, token_id, quantity
     );
 
-    let fulfill_info = create_fulfill_info_erc1155(
-        order_hash, fulfiller, erc1155_address, token_id, quantity
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, erc1155_address, Option::Some(token_id), quantity
     );
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
@@ -192,7 +187,7 @@ fn test_fulfill_order_not_found() {
     let (executor_address, _erc20_address, nft_address) = setup();
     let fulfiller = contract_address_const::<'fulfiller'>();
 
-    let fulfill_info = create_fulfill_info(0x1234, fulfiller, nft_address, 1);
+    let fulfill_info = create_fulfill_info(0x1234, fulfiller, nft_address, Option::Some(1), 1_u256);
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
@@ -216,7 +211,9 @@ fn test_fulfill_offer_order_offerer_not_enough_allowance() {
     IERC20Dispatcher { contract_address: erc20_address }
         .approve(executor_address, start_amount - 10);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
@@ -243,7 +240,9 @@ fn test_fulfill_listing_order_fulfiller_not_enough_allowance() {
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }
@@ -266,7 +265,9 @@ fn test_fulfill_listing_order_offerer_not_approved() {
 
     IFreeMintDispatcher { contract_address: erc20_address }.mint(fulfiller, start_amount);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
@@ -292,7 +293,9 @@ fn test_fulfill_offer_order_fulfiller_not_approved() {
     cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
@@ -316,7 +319,9 @@ fn test_fulfill_offer_order_fulfiller_same_as_offerer() {
     cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
@@ -343,7 +348,9 @@ fn test_fulfill_listing_order_fulfiller_same_as_offerer() {
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(erc20_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
@@ -375,7 +382,9 @@ fn test_fulfill_auction_order_ok() {
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
 
-    let mut fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let mut fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
     fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
 
     cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
@@ -384,6 +393,7 @@ fn test_fulfill_auction_order_ok() {
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
 }
+
 
 #[test]
 fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
@@ -408,7 +418,9 @@ fn test_fulfill_auction_order_fulfiller_same_as_offerer() {
     IERC721Dispatcher { contract_address: nft_address }
         .set_approval_for_all(executor_address, true);
 
-    let mut fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let mut fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
     fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
 
     cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
@@ -436,7 +448,9 @@ fn test_fulfill_order_not_enabled() {
     cheat_caller_address(erc20_address, offerer, CheatSpan::TargetCalls(1));
     IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
 
-    let fulfill_info = create_fulfill_info(order_hash, fulfiller, nft_address, token_id);
+    let fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, nft_address, Option::Some(token_id), 1_u256
+    );
 
     cheat_caller_address(nft_address, fulfiller, CheatSpan::TargetCalls(1));
     IERC721Dispatcher { contract_address: nft_address }
@@ -444,6 +458,213 @@ fn test_fulfill_order_not_enabled() {
 
     cheat_caller_address(executor_address, admin, CheatSpan::TargetCalls(1));
     IMaintenanceDispatcher { contract_address: executor_address }.set_maintenance_mode(true);
+
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+}
+
+
+#[test]
+fn test_fulfill_limit_buy_order_ok() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let start_amount = 10_000_000;
+    let quantity = 20_000;
+
+    let (order_hash, buyer, _) = create_limit_buy_order(
+        executor_address, erc20_address, token_address, start_amount, quantity
+    );
+
+    let fulfiller = buyer;
+
+    let seller = contract_address_const::<'seller'>();
+
+    IFreeMintDispatcher { contract_address: token_address }.mint(seller, quantity);
+
+    let seller_order = setup_limit_sell_order(
+        erc20_address, token_address, seller, start_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, seller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(seller_order);
+
+    // approve executor
+    cheat_caller_address(token_address, seller, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: token_address }.approve(executor_address, quantity);
+
+    // approve executor
+    cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+
+    let mut fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, token_address, Option::None, quantity
+    );
+    fulfill_info.related_order_hash = Option::Some(seller_order.compute_order_hash());
+
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+}
+
+#[test]
+fn test_fulfill_limit_sell_order_ok() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let end_amount = 50_000_000;
+    let start_amount = end_amount;
+    let quantity = 20_000_000;
+
+    let (order_hash, seller, _) = create_limit_sell_order(
+        executor_address, erc20_address, token_address, end_amount, quantity
+    );
+
+    let fulfiller = seller;
+
+    let buyer = contract_address_const::<'buyer'>();
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
+
+    let buyer_order = setup_limit_buy_order(
+        erc20_address, token_address, buyer, start_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, buyer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
+
+    // approve executor
+    cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+
+    // approve executor
+    cheat_caller_address(token_address, seller, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: token_address }.approve(executor_address, quantity);
+
+    let mut fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, token_address, Option::None, quantity
+    );
+    fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
+
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+}
+
+#[test]
+#[should_panic(expected: 'Order route not valid')]
+fn test_fulfill_limit_buy_order_with_buy_order() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let start_amount = 10_000_000;
+    let quantity = 20_000;
+
+    let (order_hash, buyer, _) = create_limit_buy_order(
+        executor_address, erc20_address, token_address, start_amount, quantity
+    );
+
+    let fulfiller = buyer;
+
+    let wrong_seller = contract_address_const::<'seller'>();
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(wrong_seller, start_amount);
+
+    let wrong_order = setup_limit_buy_order(
+        erc20_address, token_address, wrong_seller, start_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, wrong_seller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(wrong_order);
+
+    // approve executor
+    cheat_caller_address(erc20_address, wrong_seller, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+
+    // approve executor
+    cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+
+    let mut fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, token_address, Option::None, quantity
+    );
+    fulfill_info.related_order_hash = Option::Some(wrong_order.compute_order_hash());
+
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+}
+
+
+#[test]
+#[should_panic(expected: 'Order route not valid')]
+fn test_fulfill_limit_sell_order_with_sell_order_ok() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let end_amount = 50_000_000;
+    let quantity = 20_000_000;
+
+    let (order_hash, seller, _) = create_limit_sell_order(
+        executor_address, erc20_address, token_address, end_amount, quantity
+    );
+
+    let fulfiller = seller;
+
+    let wrong_buyer = contract_address_const::<'buyer'>();
+
+    IFreeMintDispatcher { contract_address: token_address }.mint(wrong_buyer, quantity);
+
+    let wrong_order = setup_limit_sell_order(
+        erc20_address, token_address, wrong_buyer, end_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, wrong_buyer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(wrong_order);
+
+    // approve executor
+    cheat_caller_address(token_address, wrong_buyer, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: token_address }.approve(executor_address, quantity);
+
+    // approve executor
+    cheat_caller_address(token_address, seller, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: token_address }.approve(executor_address, quantity);
+
+    let mut fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, token_address, Option::None, quantity
+    );
+    fulfill_info.related_order_hash = Option::Some(wrong_order.compute_order_hash());
+
+    cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);
+}
+
+#[test]
+#[should_panic(expected: 'OB: order price not match')]
+fn test_fulfill_limit_order_without_matching_price_ok() {
+    let (executor_address, erc20_address, token_address) = setup_erc20_order();
+    let end_amount = 50_000_000;
+    let start_amount = 100_000_000;
+    let quantity = 20_000_000;
+
+    let (order_hash, seller, _) = create_limit_sell_order(
+        executor_address, erc20_address, token_address, end_amount, quantity
+    );
+
+    let fulfiller = seller;
+
+    let buyer = contract_address_const::<'buyer'>();
+
+    IFreeMintDispatcher { contract_address: erc20_address }.mint(buyer, start_amount);
+
+    let buyer_order = setup_limit_buy_order(
+        erc20_address, token_address, buyer, start_amount, quantity
+    );
+
+    cheat_caller_address(executor_address, buyer, CheatSpan::TargetCalls(1));
+    IExecutorDispatcher { contract_address: executor_address }.create_order(buyer_order);
+
+    // approve executor
+    cheat_caller_address(erc20_address, buyer, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: erc20_address }.approve(executor_address, start_amount);
+
+    // approve executor
+    cheat_caller_address(token_address, seller, CheatSpan::TargetCalls(1));
+    IERC20Dispatcher { contract_address: token_address }.approve(executor_address, quantity);
+
+    let mut fulfill_info = create_fulfill_info(
+        order_hash, fulfiller, token_address, Option::None, quantity
+    );
+    fulfill_info.related_order_hash = Option::Some(buyer_order.compute_order_hash());
 
     cheat_caller_address(executor_address, fulfiller, CheatSpan::TargetCalls(1));
     IExecutorDispatcher { contract_address: executor_address }.fulfill_order(fulfill_info);

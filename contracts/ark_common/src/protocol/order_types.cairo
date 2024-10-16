@@ -11,6 +11,8 @@ enum OrderType {
     Auction,
     Offer,
     CollectionOffer,
+    LimitBuy,
+    LimitSell
 }
 
 impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
@@ -20,6 +22,8 @@ impl OrderTypeIntoFelt252 of Into<OrderType, felt252> {
             OrderType::Auction => 'AUCTION',
             OrderType::Offer => 'OFFER',
             OrderType::CollectionOffer => 'COLLECTION_OFFER',
+            OrderType::LimitBuy => 'LIMIT_BUY',
+            OrderType::LimitSell => 'LIMIT_SELL'
         }
     }
 }
@@ -34,6 +38,10 @@ impl Felt252TryIntoOrderType of TryInto<felt252, OrderType> {
             Option::Some(OrderType::Offer)
         } else if self == 'COLLECTION_OFFER' {
             Option::Some(OrderType::CollectionOffer)
+        } else if self == 'LIMIT_BUY' {
+            Option::Some(OrderType::LimitBuy)
+        } else if self == 'LIMIT_SELL' {
+            Option::Some(OrderType::LimitSell)
         } else {
             Option::None
         }
@@ -221,8 +229,8 @@ struct ExecutionInfo {
     token_address: ContractAddress,
     token_from: ContractAddress,
     token_to: ContractAddress,
-    token_id: u256,
     token_quantity: u256,
+    token_id: OptionU256,
     payment_from: ContractAddress,
     payment_to: ContractAddress,
     payment_amount: u256,
@@ -265,6 +273,8 @@ enum RouteType {
     #[default]
     Erc20ToErc721,
     Erc721ToErc20,
+    Erc20ToErc20Buy,
+    Erc20ToErc20Sell,
     Erc20ToErc1155,
     Erc1155ToErc20,
 }
@@ -274,6 +284,8 @@ impl RouteIntoFelt252 of Into<RouteType, felt252> {
         match self {
             RouteType::Erc20ToErc721 => 'ERC20TOERC721',
             RouteType::Erc721ToErc20 => 'ERC721TOERC20',
+            RouteType::Erc20ToErc20Buy => 'ERC20TOERC20BUY',
+            RouteType::Erc20ToErc20Sell => 'ERC20TOERC20SELL',
             RouteType::Erc20ToErc1155 => 'ERC20TOERC1155',
             RouteType::Erc1155ToErc20 => 'ERC1155TOERC20',
         }
@@ -286,12 +298,40 @@ impl Felt252TryIntoRoute of TryInto<felt252, RouteType> {
             Option::Some(RouteType::Erc20ToErc721)
         } else if self == 'ERC721TOERC20' {
             Option::Some(RouteType::Erc721ToErc20)
+        } else if self == 'ERC20TOERC20BUY' {
+            Option::Some(RouteType::Erc20ToErc20Buy)
+        } else if self == 'ERC20TOERC20SELL' {
+            Option::Some(RouteType::Erc20ToErc20Sell)
         } else if self == 'ERC1155TOERC20' {
             Option::Some(RouteType::Erc1155ToErc20)
         } else if self == 'ERC20TOERC1155' {
             Option::Some(RouteType::Erc20ToErc1155)
         } else {
             Option::None
+        }
+    }
+}
+
+#[derive(starknet::Store, Serde, Drop, PartialEq, Copy, Debug)]
+struct OptionU256 {
+    is_some: felt252,
+    value: u256,
+}
+
+trait OptionU256Trait<T, +Serde<T>, +Drop<T>> {
+    fn get_some(self: @T) -> (felt252, u256);
+    fn is_some(self: @T) -> bool;
+}
+
+impl OptionU256Impl of OptionU256Trait<OptionU256> {
+    fn get_some(self: @OptionU256) -> (felt252, u256) {
+        (*self.is_some, *self.value)
+    }
+    fn is_some(self: @OptionU256) -> bool {
+        if *self.is_some == 1 {
+            true
+        } else {
+            false
         }
     }
 }
