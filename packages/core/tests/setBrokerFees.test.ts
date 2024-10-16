@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { config, getAccounts, mintERC721 } from "@ark-project/test";
 
+import { NoABIError } from "../src/errors/actions.js";
 import { getFeesAmount, setBrokerFees } from "../src/index.js";
 
 describe("setBrokerFees", () => {
@@ -18,7 +19,7 @@ describe("setBrokerFees", () => {
     );
 
     if (abi === undefined) {
-      throw new Error("no abi.");
+      throw new NoABIError({ docsPath: "" });
     }
 
     await setBrokerFees(config, {

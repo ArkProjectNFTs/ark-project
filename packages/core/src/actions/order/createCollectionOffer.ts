@@ -8,6 +8,12 @@ import {
 } from "starknet";
 
 import { Config } from "../../createConfig.js";
+import {
+  EndDateTooFarError,
+  InvalidEndDateError,
+  InvalidStartAmountError,
+  InvalidStartDateError
+} from "../../errors/actions.js";
 import { OrderV1, RouteType } from "../../types/index.js";
 import { getOrderHashFromOrderV1 } from "../../utils/index.js";
 import { getAllowance } from "../read/getAllowance.js";
@@ -28,6 +34,7 @@ export interface CreateCollectionOfferResult {
   transactionHash: string;
 }
 
+const docsPath = "/sdk-core/create-collection-offer";
 /**
  * Creates a collection offer on the ArkProject.
  *
@@ -62,27 +69,19 @@ async function createCollectionOffer(
   const maxEndedAt = now + 60 * 60 * 24 * 30;
 
   if (startedAt < now) {
-    throw new Error(
-      `Invalid start date. Start date (${startDate}) cannot be in the past.`
-    );
+    throw new InvalidStartDateError(startDate, { docsPath });
   }
 
   if (endedAt < startedAt) {
-    throw new Error(
-      `Invalid end date. End date (${endDate}) must be after the start date (${startDate}).`
-    );
+    throw new InvalidEndDateError({ endDate, startDate }, { docsPath });
   }
 
   if (endedAt > maxEndedAt) {
-    throw new Error(
-      `End date too far in the future. End date (${endDate}) exceeds the maximum allowed (${maxEndedAt}).`
-    );
+    throw new EndDateTooFarError({ endDate, maxEndedAt }, { docsPath });
   }
 
   if (amount === BigInt(0)) {
-    throw new Error(
-      "Invalid start amount. The start amount must be greater than zero."
-    );
+    throw new InvalidStartAmountError({ docsPath });
   }
 
   const chainId = await config.starknetProvider.getChainId();
