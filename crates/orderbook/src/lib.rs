@@ -43,3 +43,17 @@ impl From<EmittedEvent> for Event {
         }
     }
 }
+
+pub enum RouteType {
+    Erc20ToErc721,
+    Erc721ToErc20,
+    Erc20ToErc1155,
+    Erc1155ToErc20,
+}
+
+pub enum OrderType {
+    Listing,
+    Auction,
+    Offer,
+    CollectionOffer,
+}
