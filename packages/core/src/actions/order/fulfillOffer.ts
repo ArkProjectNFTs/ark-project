@@ -16,6 +16,7 @@ export interface FulfillOfferParameters {
   orderHash: bigint;
   tokenAddress: string;
   tokenId: bigint;
+  quantity: bigint;
   waitForTransaction?: boolean;
 }
 
@@ -41,6 +42,7 @@ export async function fulfillOffer(
     orderHash,
     tokenAddress,
     tokenId,
+    quantity,
     waitForTransaction = true
   } = parameters;
   const chainId = await config.starknetProvider.getChainId();
@@ -55,6 +57,7 @@ export async function fulfillOffer(
       CairoOptionVariant.Some,
       cairo.uint256(tokenId)
     ),
+    quantity: cairo.uint256(quantity),
     fulfillBrokerAddress: brokerAddress
   };
 

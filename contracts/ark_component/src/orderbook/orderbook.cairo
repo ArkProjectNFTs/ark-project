@@ -666,6 +666,18 @@ pub mod OrderbookComponent {
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
             order_write(order_hash, order_type, order);
             self.token_listings.write(token_hash, order_hash);
+            if (cancelled_order_hash.is_some()) {
+                let cancelled_order_hash = cancelled_order_hash.unwrap();
+                self
+                    .emit(
+                        OrderCancelled {
+                            order_hash: cancelled_order_hash,
+                            reason: OrderStatus::CancelledByNewOrder.into(),
+                            order_type,
+                            version: ORDER_CANCELLED_EVENT_VERSION,
+                        }
+                    )
+            }
             self
                 .emit(
                     OrderPlaced {
@@ -710,6 +722,18 @@ pub mod OrderbookComponent {
             let cancelled_order_hash = self._process_previous_order(token_hash, order.offerer);
             order_write(order_hash, order_type, order);
             self.auctions.write(token_hash, (order_hash, order.end_date, 0));
+            if (cancelled_order_hash.is_some()) {
+                let cancelled_order_hash = cancelled_order_hash.unwrap();
+                self
+                    .emit(
+                        OrderCancelled {
+                            order_hash: cancelled_order_hash,
+                            reason: OrderStatus::CancelledByNewOrder.into(),
+                            order_type,
+                            version: ORDER_CANCELLED_EVENT_VERSION,
+                        }
+                    )
+            }
             self
                 .emit(
                     OrderPlaced {

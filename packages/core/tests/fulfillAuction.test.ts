@@ -42,7 +42,8 @@ describe("fulfillAuction", () => {
       orderHash,
       relatedOrderHash: offerOrderHash,
       tokenAddress,
-      tokenId
+      tokenId,
+      quantity: BigInt(1),
     });
 
     const { orderStatus } = await getOrderStatus(config, {

@@ -48,7 +48,7 @@ export async function deployERC721Royalties(
     constructorCalldata: contractConstructor
   });
 
-  setDefaultFees(
+  await setDefaultFees(
     provider,
     deployerAccount,
     deployR.deploy.contract_address,

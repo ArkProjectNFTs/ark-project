@@ -31,7 +31,8 @@ describe("fulfillOffer", () => {
       brokerAddress: saleBroker.address,
       orderHash,
       tokenAddress,
-      tokenId
+      tokenId,
+      quantity: BigInt(1),
     });
 
     const { orderStatus: orderStatusFulfilled } = await getOrderStatus(config, {
@@ -66,6 +67,7 @@ describe("fulfillOffer", () => {
       orderHash,
       tokenAddress,
       tokenId,
+      quantity: BigInt(1),
       brokerAddress: saleBroker.address
     });
 

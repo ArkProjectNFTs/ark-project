@@ -25,6 +25,7 @@ describe("fulfillOffer", () => {
       orderHash,
       tokenAddress,
       tokenId,
+      quantity: BigInt(1),
       amount: startAmount
     });
 
