@@ -91,6 +91,7 @@ export type FulfillInfo = {
   tokenChainId: constants.StarknetChainId;
   tokenAddress: string;
   tokenId: CairoOption<Uint256>;
+  quantity: Uint256;
   fulfillBrokerAddress: string;
 };
 

@@ -18,6 +18,7 @@ export interface FulfillListingParameters {
   orderHash: bigint;
   tokenAddress: string;
   tokenId: bigint;
+  quantity: bigint;
   amount: bigint;
   waitForTransaction?: boolean;
 }
@@ -45,6 +46,7 @@ export async function fulfillListing(
     orderHash,
     tokenAddress,
     tokenId,
+    quantity,
     amount,
     waitForTransaction = true
   } = parameters;
@@ -66,6 +68,7 @@ export async function fulfillListing(
       CairoOptionVariant.Some,
       cairo.uint256(tokenId)
     ),
+    quantity: cairo.uint256(quantity),
     fulfillBrokerAddress: brokerAddress
   };
 
