@@ -9,7 +9,7 @@ The indexation process is made by the code inside `lib.rs`, with two principal f
 1. `index_pending` to index the pending block and the latest once the pending block is validated.
 2. `index_block_range` to index a range of given block.
 
-During the indexation process, Pontos relies on two mecanisms that can be fully customized, by implementing those two traits:
+During the indexation process, Pontos relies on two mechanisms that can be fully customized, by implementing those two traits:
 
 1. First, a `Storage` trait that you can derive to decide how to store the data that will be gathered by Pontos on chain. You can find an example using with `sqlx` (Sqlite, Postgres, MySql compatible) in the `storage/sqlx` module.
 2. Second, you can initialize a new Pontos instance with an `EventHandler`, which are events that Pontos will emit without directly being associated with a `Storage`.
