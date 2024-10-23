@@ -34,7 +34,7 @@ starknet = "0.10.0"
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 log = "0.4.17"
-thiserror = "1.0.40"
+thiserror = "1.0.65"
 
 # Dependencies used by the examples + the lib.rs.
 [dependencies]
