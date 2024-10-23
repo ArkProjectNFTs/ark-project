@@ -34,7 +34,7 @@
 
 ### Major Changes
 
-- 7c82ab2: Introduce multicall approve & execute order listing/fullfillment, this is a breaking change
+- 7c82ab2: Introduce multicall approve & execute order listing/fulfillment, this is a breaking change
 
 ### Patch Changes
 

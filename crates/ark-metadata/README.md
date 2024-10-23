@@ -24,7 +24,7 @@ To instantiate a new `MetadataManager`, you'll need some implementations:
 
 ## Dependencies
 
-- `ReqwestClient`: Used for making HTTP requests, crucial for fetching metadata from URIs.
+- `RequestClient`: Used for making HTTP requests, crucial for fetching metadata from URIs.
 
 ## Testing
 
