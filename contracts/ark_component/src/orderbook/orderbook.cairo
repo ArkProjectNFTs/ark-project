@@ -5,7 +5,7 @@ pub mod OrderbookComponent {
     };
     use ark_common::protocol::order_types::{
         OrderStatus, OrderTrait, OrderType, CancelInfo, FulfillInfo, ExecutionValidationInfo,
-        ExecutionInfo, RouteType
+        ExecutionInfo, RouteType, OptionU256
     };
     use ark_common::protocol::order_v1::OrderV1;
     use core::debug::PrintTrait;
@@ -17,6 +17,7 @@ pub mod OrderbookComponent {
     use core::zeroable::Zeroable;
     use starknet::ContractAddress;
     use starknet::storage::Map;
+
     use super::super::interface::{IOrderbook, IOrderbookAction, orderbook_errors};
 
     const EXTENSION_TIME_IN_SECONDS: u64 = 600;
@@ -33,6 +34,10 @@ pub mod OrderbookComponent {
         auctions: Map<felt252, (felt252, u64, u256)>,
         /// Mapping of auction offer order_hash to auction listing order_hash.
         auction_offers: Map<felt252, felt252>,
+        /// Mapping of erc20s buy orderhash to the order (price, quantity)
+        buy_orders: Map<felt252, (u256, u256)>,
+        /// Mapping of erc20s sell orderhash to the order (price, quantity)
+        sell_orders: Map<felt252, (u256, u256)>
     }
 
     // *************************************************************************
@@ -49,6 +54,9 @@ pub mod OrderbookComponent {
         RollbackStatus: RollbackStatus,
         OrderFulfilled: OrderFulfilled,
     }
+
+    // precision for erc20 price division
+    const PRECISION: u256 = 1000000000000000000;
 
     // must be increased when `OrderPlaced` content change
     pub const ORDER_PLACED_EVENT_VERSION: u8 = 1;
@@ -275,6 +283,8 @@ pub mod OrderbookComponent {
                 OrderType::CollectionOffer => {
                     self._create_collection_offer(order, order_type, order_hash);
                 },
+                OrderType::LimitBuy => { self._create_limit_order(order, order_type, order_hash); },
+                OrderType::LimitSell => { self._create_limit_order(order, order_type, order_hash); }
             };
 
             HooksCreateOrder::after_create_order(ref self, order);
@@ -282,14 +292,15 @@ pub mod OrderbookComponent {
 
         fn cancel_order(ref self: ComponentState<TContractState>, cancel_info: CancelInfo) {
             HooksCancelOrder::before_cancel_order(ref self, cancel_info);
-
             let order_hash = cancel_info.order_hash;
             let order_option = order_read::<OrderV1>(order_hash);
             assert(order_option.is_some(), orderbook_errors::ORDER_NOT_FOUND);
             let order = order_option.unwrap();
             assert(order.offerer == cancel_info.canceller, 'not the same offerrer');
             match order_status_read(order_hash) {
-                Option::Some(s) => s,
+                Option::Some(s) => assert(
+                    s == OrderStatus::Open, orderbook_errors::ORDER_FULFILLED
+                ),
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
             let block_ts = starknet::get_block_timestamp();
@@ -302,15 +313,21 @@ pub mod OrderbookComponent {
                             block_ts <= auction_end_date, orderbook_errors::ORDER_AUCTION_IS_EXPIRED
                         );
                         self.auctions.write(auction_token_hash, (0, 0, 0));
+                    } else if order_type == OrderType::LimitBuy {
+                        self.buy_orders.write(order_hash, (0, 0));
+                    } else if order_type == OrderType::LimitSell {
+                        self.sell_orders.write(order_hash, (0, 0));
                     } else {
                         assert(block_ts < order.end_date, orderbook_errors::ORDER_IS_EXPIRED);
                         if order_type == OrderType::Listing {
-                            self.token_listings.write(order.compute_token_hash(), 0);
+                            let order_hash = order.compute_token_hash();
+                            self.token_listings.write(order_hash, 0);
                         }
-                    }
+                    };
+
                     order_type
                 },
-                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND)
             };
 
             // Cancel order
@@ -352,6 +369,8 @@ pub mod OrderbookComponent {
                 OrderType::Auction => self._fulfill_auction_order(fulfill_info, order),
                 OrderType::Offer => self._fulfill_offer(fulfill_info, order),
                 OrderType::CollectionOffer => self._fulfill_offer(fulfill_info, order),
+                OrderType::LimitBuy => self._fulfill_limit_order(fulfill_info, order),
+                OrderType::LimitSell => self._fulfill_limit_order(fulfill_info, order),
             };
 
             self
@@ -453,7 +472,7 @@ pub mod OrderbookComponent {
                     token_address: order.token_address,
                     token_from: order.offerer,
                     token_to: related_order.offerer,
-                    token_id: order.token_id.unwrap(),
+                    token_id: OptionU256 { is_some: 1, value: order.token_id.unwrap() },
                     token_quantity: order.quantity,
                     payment_from: related_order.offerer,
                     payment_to: fulfill_info.fulfiller,
@@ -500,7 +519,7 @@ pub mod OrderbookComponent {
                 token_address: order.token_address,
                 token_from: fulfill_info.fulfiller,
                 token_to: order.offerer,
-                token_id: fulfill_info.token_id.unwrap(),
+                token_id: OptionU256 { is_some: 1, value: fulfill_info.token_id.unwrap() },
                 token_quantity: order.quantity,
                 payment_from: order.offerer,
                 payment_to: fulfill_info.fulfiller,
@@ -534,7 +553,7 @@ pub mod OrderbookComponent {
                     token_address: order.token_address,
                     token_from: order.offerer,
                     token_to: fulfill_info.fulfiller,
-                    token_id: order.token_id.unwrap(),
+                    token_id: OptionU256 { is_some: 1, value: order.token_id.unwrap() },
                     token_quantity: order.quantity,
                     payment_from: fulfill_info.fulfiller,
                     payment_to: order.offerer,
@@ -830,6 +849,213 @@ pub mod OrderbookComponent {
                         order: order,
                     }
                 );
+        }
+
+        /// Creates a limit buy order
+        fn _create_limit_order(
+            ref self: ComponentState<TContractState>,
+            order: OrderV1,
+            order_type: OrderType,
+            order_hash: felt252
+        ) {
+            // revert if order is fulfilled or Open
+            let (price, _) = self.buy_orders.read(order_hash);
+            if (price.is_non_zero()) {
+                assert(
+                    order_status_read(order_hash) != Option::Some(OrderStatus::Fulfilled),
+                    panic_with_felt252(orderbook_errors::ORDER_FULFILLED)
+                );
+            }
+            let cancelled_order_hash = self._process_previous_order(order_hash, order.offerer);
+
+            order_write(order_hash, order_type, order);
+
+            match order_type {
+                OrderType::LimitBuy => {
+                    let price = order.start_amount / order.quantity * PRECISION;
+                    self.buy_orders.write(order_hash, (price, order.quantity));
+                },
+                OrderType::LimitSell => {
+                    let price = order.end_amount / order.quantity * PRECISION;
+                    self.sell_orders.write(order_hash, (price, order.quantity));
+                },
+                _ => ()
+            }
+
+            self
+                .emit(
+                    OrderPlaced {
+                        order_hash: order_hash,
+                        order_version: order.get_version(),
+                        order_type: order_type,
+                        version: ORDER_PLACED_EVENT_VERSION,
+                        cancelled_order_hash,
+                        order: order
+                    }
+                );
+        }
+
+        fn _create_listing_execution_info(
+            ref self: ComponentState<TContractState>,
+            order_hash: felt252,
+            buy_order: OrderV1,
+            sell_order: OrderV1,
+            fulfill_info: FulfillInfo,
+            token_quantity: u256,
+            listing_broker_address: ContractAddress,
+            price: u256
+        ) -> ExecutionInfo {
+            ExecutionInfo {
+                order_hash,
+                token_address: buy_order.token_address,
+                token_from: sell_order.offerer,
+                token_to: buy_order.offerer,
+                token_id: OptionU256 { is_some: 0, value: 0 },
+                token_quantity,
+                payment_from: buy_order.offerer,
+                payment_to: sell_order.offerer,
+                payment_amount: price * token_quantity / PRECISION,
+                payment_currency_address: buy_order.currency_address,
+                payment_currency_chain_id: buy_order.currency_chain_id,
+                listing_broker_address: listing_broker_address,
+                fulfill_broker_address: fulfill_info.fulfill_broker_address,
+            }
+        }
+
+        /// Fulfill limit order
+        fn _fulfill_limit_order(
+            ref self: ComponentState<TContractState>, fulfill_info: FulfillInfo, order: OrderV1
+        ) -> (Option<ExecutionInfo>, Option<felt252>) {
+            let order_hash = order.compute_order_hash();
+
+            assert(
+                order_hash == fulfill_info.order_hash, orderbook_errors::ORDER_HASH_DOES_NOT_MATCH
+            );
+
+            let related_order_hash = fulfill_info
+                .related_order_hash
+                .expect(orderbook_errors::ORDER_MISSING_RELATED_ORDER);
+
+            match order_type_read(related_order_hash) {
+                Option::Some(order_type) => {
+                    assert(
+                        order_type == OrderType::LimitBuy || order_type == OrderType::LimitSell,
+                        orderbook_errors::ORDER_NOT_AN_ERC20_ORDER
+                    );
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            }
+
+            match order_status_read(related_order_hash) {
+                Option::Some(s) => {
+                    assert(s == OrderStatus::Open, orderbook_errors::ORDER_NOT_OPEN);
+                    s
+                },
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+
+            let related_order = match order_read::<OrderV1>(related_order_hash) {
+                Option::Some(o) => o,
+                Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
+            };
+
+            let related_order_token_hash = related_order.compute_token_hash();
+
+            // check that they are both the same token
+            assert(
+                related_order_token_hash == order.compute_token_hash(),
+                orderbook_errors::ORDER_TOKEN_HASH_DOES_NOT_MATCH
+            );
+
+            let (buy_order, sell_order) = match order.route {
+                RouteType::Erc20ToErc20Sell => {
+                    assert(
+                        related_order.route == RouteType::Erc20ToErc20Buy,
+                        orderbook_errors::ORDER_ROUTE_NOT_VALID
+                    );
+                    (related_order, order)
+                },
+                RouteType::Erc20ToErc20Buy => {
+                    assert(
+                        related_order.route == RouteType::Erc20ToErc20Sell,
+                        orderbook_errors::ORDER_ROUTE_NOT_VALID
+                    );
+                    (order, related_order)
+                },
+                _ => panic!("route not supported")
+            };
+
+            // add 1e18 to the multiplication;
+
+            // check that the price is the same
+            let buy_price = buy_order.start_amount / buy_order.quantity * PRECISION;
+            let sell_price = sell_order.end_amount / sell_order.quantity * PRECISION;
+
+            let buy_order_hash = buy_order.compute_order_hash();
+            let sell_order_hash = sell_order.compute_order_hash();
+
+            assert(buy_price == sell_price, orderbook_errors::ORDER_PRICE_NOT_MATCH);
+
+            let (_, buy_order_quantity) = self.buy_orders.read(buy_order_hash);
+            let (_, sell_order_quantity) = self.sell_orders.read(sell_order_hash);
+
+            if buy_order_quantity > sell_order_quantity {
+                // reduce buy quantity order and execute sell order
+                self
+                    .buy_orders
+                    .write(buy_order_hash, (buy_price, buy_order_quantity - sell_order_quantity));
+                // set buy order as fufilled
+                order_status_write(sell_order_hash, OrderStatus::Fulfilled);
+                // set execute info
+                let execute_info = self
+                    ._create_listing_execution_info(
+                        sell_order_hash,
+                        buy_order,
+                        sell_order,
+                        fulfill_info,
+                        sell_order_quantity,
+                        related_order.broker_id,
+                        buy_price
+                    );
+                (Option::Some(execute_info), Option::Some(related_order_hash))
+            } else if sell_order_quantity > buy_order_quantity {
+                // reduce sell quantity, and execute buy order
+                self
+                    .sell_orders
+                    .write(sell_order_hash, (sell_price, sell_order_quantity - buy_order_quantity));
+                // set sell order as fulfilled
+                order_status_write(buy_order_hash, OrderStatus::Fulfilled);
+                // generate execution info
+                let execute_info = self
+                    ._create_listing_execution_info(
+                        buy_order_hash,
+                        buy_order,
+                        sell_order,
+                        fulfill_info,
+                        buy_order_quantity,
+                        order.broker_id,
+                        buy_price
+                    );
+                (Option::Some(execute_info), Option::Some(related_order_hash))
+            } else {
+                // execute both orders
+                order_status_write(buy_order_hash, OrderStatus::Fulfilled);
+                order_status_write(sell_order_hash, OrderStatus::Fulfilled);
+                // passing any of them as the order hash will fulfill both orders,
+                // so just one executioninfo will be sent.
+                let execute_info = self
+                    ._create_listing_execution_info(
+                        buy_order_hash,
+                        buy_order,
+                        sell_order,
+                        fulfill_info,
+                        buy_order_quantity,
+                        order.broker_id,
+                        buy_price
+                    );
+                // return
+                (Option::Some(execute_info), Option::Some(related_order_hash))
+            }
         }
     }
 }
