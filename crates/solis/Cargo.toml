@@ -14,7 +14,7 @@ cainome = { git = "https://github.com/cartridge-gg/cainome", tag = "v0.2.6", fea
     "abigen-rs",
 ] }
 cfg-if = "1.0.0"
-clap = { version = "4.5.4", features = ["derive"] }
+clap = { version = "4.5.13", features = ["derive"] }
 clap_complete = "4.3"
 console = "0.15.7"
 common = { git = "https://github.com/ArkProjectNFTs/dojo", tag = "v0.7.0.6-solis", package = "common" }
