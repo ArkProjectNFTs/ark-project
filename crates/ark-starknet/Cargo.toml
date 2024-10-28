@@ -12,7 +12,7 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
     "fmt",
 ] }
-url = "2.3.1"
+url = "2.5.2"
 regex = "1.9.1"
 mockall = "0.12.1"
 num-bigint = "0.4.4"
