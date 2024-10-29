@@ -261,40 +261,40 @@ export const navigation: Array<NavGroup> = [
       // { title: 'Smart contracts', href: '/smartcontracts' },
     ],
   },
+  // {
+  //   title: 'API Guides',
+  //   links: [
+  //     { title: 'Quickstart', href: '/quickstart' },
+  //     { title: 'Authentication', href: '/authentication' },
+  //     { title: 'Pagination', href: '/pagination' },
+  //     { title: 'Errors', href: '/errors' },
+  //   ],
+  // },
+  // {
+  //   title: 'NFT API',
+  //   links: [
+  //     { title: 'Introduction', href: '/nft-api-introduction' },
+  //     { title: 'NFT Contracts', href: '/nft-contracts' },
+  //     { title: 'Tokens', href: '/tokens' },
+  //     { title: 'Events', href: '/events' },
+  //     { title: 'NFT Portfolio', href: '/portfolio' },
+  //   ],
+  // },
+  // {
+  //   title: 'Orderbook API',
+  //   links: [
+  //     { title: 'Introduction', href: '/orderbook-api-introduction' },
+  //     { title: 'Tokens', href: '/orderbook-api/tokens' },
+  //     { title: 'Events', href: '/orderbook-api/events' },
+  //     { title: 'Offers', href: '/orderbook-api/offers' },
+  //   ],
+  // },
   {
-    title: 'API Guides',
+    title: 'API Guide',
     links: [
-      { title: 'Quickstart', href: '/quickstart' },
-      { title: 'Authentication', href: '/authentication' },
-      { title: 'Pagination', href: '/pagination' },
-      { title: 'Errors', href: '/errors' },
-    ],
-  },
-  {
-    title: 'NFT API',
-    links: [
-      { title: 'Introduction', href: '/nft-api-introduction' },
-      { title: 'NFT Contracts', href: '/nft-contracts' },
-      { title: 'Tokens', href: '/tokens' },
-      { title: 'Events', href: '/events' },
-      { title: 'NFT Portfolio', href: '/portfolio' },
-    ],
-  },
-  {
-    title: 'Orderbook API',
-    links: [
-      { title: 'Introduction', href: '/orderbook-api-introduction' },
-      { title: 'Tokens', href: '/orderbook-api/tokens' },
-      { title: 'Events', href: '/orderbook-api/events' },
-      { title: 'Offers', href: '/orderbook-api/offers' },
-    ],
-  },
-  {
-    title: 'Marketplace API',
-    links: [
-      { title: 'Introduction', href: '/marketplace-api-introduction' },
-      { title: 'Collections', href: '/marketplace-api/collections' },
-      { title: 'Tokens', href: '/marketplace-api/tokens' },
+      { title: 'Quickstart', href: '/api-quickstart' },
+      // { title: 'Collections', href: '/marketplace-api/collections' },
+      // { title: 'Tokens', href: '/marketplace-api/tokens' },
     ],
   },
   {
