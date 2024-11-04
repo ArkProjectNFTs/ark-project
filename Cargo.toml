@@ -74,5 +74,5 @@ alloy-transport = { git = "https://github.com/alloy-rs/alloy", rev = "5a5f29eb7d
 
 [dev-dependencies]
 mockall = "0.12.1"
-url = "2.3.1"
+url = "2.5.3"
 starknet = "0.7.0"
