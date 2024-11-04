@@ -53,7 +53,7 @@
   "devDependencies": {
     "@ark-project/typescript-config": "workspace:*",
     "@types/mixpanel-browser": "^2.47.4",
-    "eslint": "^8.48.0",
+    "eslint": "^9.14.0",
     "eslint-config-next": "^14.2.11",
     "prettier": "^3.0.1",
     "prettier-plugin-tailwindcss": "^0.5.2",
