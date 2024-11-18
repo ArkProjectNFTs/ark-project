@@ -1,5 +1,11 @@
 # @ark-project/react
 
+## 2.0.0-beta.3
+
+### Patch Changes
+
+- Export query provider
+
 ## 2.0.0-beta.2
 
 ### Minor Changes
