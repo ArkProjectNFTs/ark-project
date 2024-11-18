@@ -26,7 +26,6 @@ async function deployStarknetContracts(starknetNetwork: ProviderNetwork) {
   const { provider: starknetProvider } = getStarknetProvider(starknetNetwork);
   const { starknetAdminAccount } = getStarknetAccounts(starknetNetwork);
   const existingContracts = await getExistingContracts();
-
   console.log("\nSTARKNET ACCOUNTS");
   console.log("=================\n");
   console.log(`| Admin account |  ${starknetAdminAccount.address}`);

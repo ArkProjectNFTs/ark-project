@@ -7,7 +7,9 @@ export function getContractsFilePath() {
 
 export async function getExistingContracts() {
   try {
+    console.log(getContractsFilePath());
     const fileContent = await fs.readFile(getContractsFilePath(), "utf8");
+    console.log("fileContent", fileContent);
     const jsonContent = JSON.parse(fileContent);
     return jsonContent;
   } catch (error) {

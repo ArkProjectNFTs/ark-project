@@ -11,17 +11,14 @@ export function getStarknetAccounts(starknetNetwork: ProviderNetwork) {
     {
       address: process.env.STARKNET_ADMIN_ADDRESS_DEV || "",
       privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_DEV || "",
-      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_DEV || ""
     },
     {
       address: process.env.STARKNET_ADMIN_ADDRESS_SEPOLIA || "",
       privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_SEPOLIA || "",
-      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_SEPOLIA || ""
     },
     {
       address: process.env.STARKNET_ADMIN_ADDRESS_MAINNET || "",
       privateKey: process.env.STARKNET_ADMIN_PRIVATE_KEY_MAINNET || "",
-      publicKey: process.env.STARKNET_ADMIN_PUBLIC_KEY_MAINNET || ""
     }
   ];
 
