@@ -1,5 +1,11 @@
 # @ark-project/core
 
+## 3.0.0-beta.2
+
+### Minor Changes
+
+- Update contract
+
 ## 3.0.0-beta.1
 
 ### Patch Changes
