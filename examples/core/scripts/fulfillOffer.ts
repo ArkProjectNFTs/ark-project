@@ -36,7 +36,8 @@ async function createAndFulfillOffer(
     orderHash: orderHash,
     tokenAddress: offer.tokenAddress,
     tokenId: tokenId,
-    brokerAddress: offer.brokerAddress
+    brokerAddress: offer.brokerAddress,
+    quantity: 1n
   });
 
   logger.info("Offer created and fulfilled.");

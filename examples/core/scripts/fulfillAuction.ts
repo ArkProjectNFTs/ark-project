@@ -65,13 +65,14 @@ async function createAndFulfillAuction(
     relatedOrderHash: offerOrderHash,
     tokenAddress: auction.tokenAddress,
     tokenId,
-    brokerAddress: brokerAddressSale
+    brokerAddress: brokerAddressSale,
   };
 
   logger.info("Fulfilling auction...");
   const { transactionHash } = await fulfillAuction(config, {
     account: accounts.fulfiller,
-    ...fulfillAuctionInfo
+    ...fulfillAuctionInfo,
+    quantity: 1n
   });
 
   logger.info("Auction fulfilled.");

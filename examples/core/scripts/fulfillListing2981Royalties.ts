@@ -39,7 +39,8 @@ async function createAndFulfillListing(
     tokenId: order.tokenId,
     brokerAddress: accounts.broker_sale.address,
     currencyAddress: config.starknetCurrencyContract,
-    amount: order.amount
+    amount: order.amount,
+    quantity: 1n
   });
 
   logger.info("Listing created and fulfilled.");
