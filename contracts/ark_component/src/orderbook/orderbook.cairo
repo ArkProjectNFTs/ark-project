@@ -47,7 +47,6 @@ pub mod OrderbookComponent {
         OrderExecuted: OrderExecuted,
         OrderCancelled: OrderCancelled,
         RollbackStatus: RollbackStatus,
-        OrderFulfilled: OrderFulfilled,
     }
 
     // must be increased when `OrderPlaced` content change
@@ -110,23 +109,6 @@ pub mod OrderbookComponent {
         order_hash: felt252,
         #[key]
         reason: felt252,
-        #[key]
-        order_type: OrderType,
-        ///
-        version: u8,
-    }
-
-    // must be increased when `OrderFulfilled` content change
-    pub const ORDER_FULFILLED_EVENT_VERSION: u8 = 1;
-    /// Event for when an order is fulfilled.
-    #[derive(Drop, starknet::Event)]
-    pub struct OrderFulfilled {
-        #[key]
-        order_hash: felt252,
-        #[key]
-        fulfiller: ContractAddress,
-        #[key]
-        related_order_hash: Option<felt252>,
         #[key]
         order_type: OrderType,
         ///
@@ -347,24 +329,12 @@ pub mod OrderbookComponent {
                 Option::Some(s) => s,
                 Option::None => panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND),
             };
-            let (execution_info, related_order_hash) = match order_type {
+            let (execution_info, _related_order_hash) = match order_type {
                 OrderType::Listing => self._fulfill_listing_order(fulfill_info, order),
                 OrderType::Auction => self._fulfill_auction_order(fulfill_info, order),
                 OrderType::Offer => self._fulfill_offer(fulfill_info, order),
                 OrderType::CollectionOffer => self._fulfill_offer(fulfill_info, order),
             };
-
-            self
-                .emit(
-                    OrderFulfilled {
-                        order_hash: fulfill_info.order_hash,
-                        fulfiller: fulfill_info.fulfiller,
-                        related_order_hash,
-                        order_type,
-                        version: ORDER_FULFILLED_EVENT_VERSION,
-                    }
-                );
-
             HooksFulfillOrder::after_fulfill_order(ref self, fulfill_info);
             execution_info
         }
