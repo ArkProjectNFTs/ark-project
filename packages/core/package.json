@@ -25,7 +25,7 @@
     }
   },
   "dependencies": {
-    "@scure/starknet": "^0.3.0",
+    "@scure/starknet": "^1.1.0",
     "starknet": "^6.9.0"
   },
   "devDependencies": {
