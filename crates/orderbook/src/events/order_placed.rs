@@ -40,6 +40,14 @@ abigen!(
       {
         "name": "Erc721ToErc20",
         "type": "()"
+      },
+      {
+        "name": "Erc20ToErc1155",
+        "type": "()"
+      },
+      {
+        "name": "Erc1155ToErc20",
+        "type": "()"
       }
     ]
   },
@@ -204,6 +212,8 @@ impl From<&RouteType> for crate::RouteType {
         match value {
             RouteType::Erc20ToErc721 => crate::RouteType::Erc20ToErc721,
             RouteType::Erc721ToErc20 => crate::RouteType::Erc721ToErc20,
+            RouteType::Erc20ToErc1155 => crate::RouteType::Erc20ToErc1155,
+            RouteType::Erc1155ToErc20 => crate::RouteType::Erc1155ToErc20,
         }
     }
 }
