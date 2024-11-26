@@ -40,6 +40,14 @@ abigen!(
       {
         "name": "Erc721ToErc20",
         "type": "()"
+      },
+      {
+        "name": "Erc20ToErc1155",
+        "type": "()"
+      },
+      {
+        "name": "Erc1155ToErc20",
+        "type": "()"
       }
     ]
   },
@@ -195,6 +203,28 @@ impl TryFrom<EmittedEvent> for OrderPlaced {
             }
         } else {
             Err(OrderbookParseError::Selector)
+        }
+    }
+}
+
+impl From<&RouteType> for crate::RouteType {
+    fn from(value: &RouteType) -> Self {
+        match value {
+            RouteType::Erc20ToErc721 => crate::RouteType::Erc20ToErc721,
+            RouteType::Erc721ToErc20 => crate::RouteType::Erc721ToErc20,
+            RouteType::Erc20ToErc1155 => crate::RouteType::Erc20ToErc1155,
+            RouteType::Erc1155ToErc20 => crate::RouteType::Erc1155ToErc20,
+        }
+    }
+}
+
+impl From<&OrderType> for crate::OrderType {
+    fn from(value: &OrderType) -> Self {
+        match value {
+            OrderType::Listing => crate::OrderType::Listing,
+            OrderType::Auction => crate::OrderType::Auction,
+            OrderType::Offer => crate::OrderType::Offer,
+            OrderType::CollectionOffer => crate::OrderType::CollectionOffer,
         }
     }
 }
