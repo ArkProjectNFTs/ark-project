@@ -53,7 +53,7 @@ orderbook.workspace = true
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing = "0.1"
 tracing-log = "0.1"
-sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
+sqlx = { version = "0.8.2", features = ["sqlite", "runtime-tokio"] }
 
 [dev-dependencies]
 mockall = "0.12.1"
