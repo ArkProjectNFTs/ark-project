@@ -10,8 +10,8 @@ use ark_common::protocol::order_database::{
     order_read, order_status_read, order_status_write, order_type_read
 };
 use snforge_std::{
-    start_warp, declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions,
-    Event, SpyOn, test_address
+    start_prank, stop_prank, start_warp, declare, ContractClassTrait, spy_events, EventSpy,
+    EventFetcher, EventAssertions, Event, SpyOn, test_address
 };
 use array::ArrayTrait;
 
@@ -443,4 +443,40 @@ fn test_fulfill_expired_offer() {
     };
 
     orderbook::InternalFunctions::_fulfill_offer(ref state, fulfill_info, order_listing);
+}
+
+#[test]
+fn test_create_listing_order_fulfill_and_reset_the_order() {
+    let (mut order_listing_1, order_hash_1, _) = setup_listing_order(600000000000000000);
+    let mut state = orderbook::contract_state_for_testing();
+    let _ = orderbook::InternalFunctions::_create_listing_order(
+        ref state, order_listing_1, OrderType::Listing, order_hash_1
+    );
+
+    let fulfill_info = FulfillInfo {
+        order_hash: order_hash_1,
+        related_order_hash: Option::None,
+        fulfiller: 0x2584a6517b487be8114013f277f9e2010ac001a24a93e3c48cdf5f8f345a81b
+            .try_into()
+            .unwrap(),
+        token_chain_id: order_listing_1.token_chain_id,
+        token_address: order_listing_1.token_address,
+        token_id: order_listing_1.token_id,
+        fulfill_broker_address: test_address()
+    };
+
+    // Try to fulfill the order
+    orderbook::InternalFunctions::_fulfill_listing_order(ref state, fulfill_info, order_listing_1,);
+
+    // assert order1 is fulfilled
+    let order_option = order_read::<OrderV1>(order_hash_1);
+    let order_status = order_status_read(order_hash_1);
+    assert(order_option.is_some(), 'storage order');
+    assert(order_status.is_some(), 'storage order');
+    assert(order_status.unwrap() == OrderStatus::Fulfilled, 'order status');
+
+    // Reset the order
+    orderbook::ImplOrderbook::reset_order_status(ref state, order_hash_1);
+    let order_status = order_status_read(order_hash_1);
+    assert(order_status.unwrap() == OrderStatus::Open, 'order status');
 }
