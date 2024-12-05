@@ -528,9 +528,11 @@ impl<P: Provider + Sync + Send + 'static + std::fmt::Debug, EF: ExecutorFactory>
         };
 
         // rollback the status
+        // TODO: add CancelledByAdmin ?
+        let status = CancelStatus::CancelledUser;
         self.add_l1_handler_transaction_for_orderbook(
             selector!("rollback_status_order"),
-            &[execution_info.order_hash],
+            &[execution_info.order_hash, status.to_u32().into()],
         );
     }
 }

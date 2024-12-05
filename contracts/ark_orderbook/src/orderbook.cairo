@@ -50,6 +50,8 @@ trait Orderbook<T> {
     fn upgrade(ref self: T, class_hash: starknet::ClassHash);
 
     fn update_starknet_executor_address(ref self: T, value: starknet::ContractAddress);
+
+    fn reset_order_status(ref self: T, order_hash: felt252);
 }
 
 // *************************************************************************
@@ -300,6 +302,16 @@ mod orderbook {
         fn update_starknet_executor_address(ref self: ContractState, value: ContractAddress) {
             assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized update');
             self.starknet_executor_address.write(value);
+        }
+
+        fn reset_order_status(ref self: ContractState, order_hash: felt252) {
+            assert(starknet::get_caller_address() == self.admin.read(), 'Unauthorized access');
+            let order_type_option = order_type_read(order_hash);
+            if order_type_option.is_none() {
+                panic_with_felt252(orderbook_errors::ORDER_NOT_FOUND);
+            }
+            order_status_write(order_hash, OrderStatus::Open);
+            self.emit(RollbackStatus { order_hash, reason: 1 }); // FIXME: add new status ?
         }
 
         /// Retrieves the type of an order using its hash.
