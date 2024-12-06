@@ -1,5 +1,11 @@
 # @ark-project/react
 
+## 1.1.3
+
+### Patch Changes
+
+- 9683b20: use starknet-react v3
+
 ## 1.1.2
 
 ### Patch Changes
