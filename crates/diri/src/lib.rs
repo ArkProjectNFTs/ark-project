@@ -95,33 +95,58 @@ impl<S: Storage, E: EventHandler> Diri<S, E> {
                 match orderbook_event {
                     Event::OrderPlaced(ev) => {
                         trace!("OrderPlaced found: {:?}", ev);
-                        self.storage
+                        match self
+                            .storage
                             .register_placed(*block_number, block_timestamp, &ev.into())
-                            .await?;
+                            .await
+                        {
+                            Ok(_) => (),
+                            Err(e) => error!("OrderPlaced event handler failed: {e}"),
+                        }
                     }
                     Event::OrderCancelled(ev) => {
                         trace!("OrderCancelled found: {:?}", ev);
-                        self.storage
+                        match self
+                            .storage
                             .register_cancelled(*block_number, block_timestamp, &ev.into())
-                            .await?;
+                            .await
+                        {
+                            Ok(_) => (),
+                            Err(e) => error!("OrderCancelled event handler failed: {e}"),
+                        }
                     }
                     Event::OrderFulfilled(ev) => {
                         trace!("OrderFulfilled found: {:?}", ev);
-                        self.storage
+                        match self
+                            .storage
                             .register_fulfilled(*block_number, block_timestamp, &ev.into())
-                            .await?;
+                            .await
+                        {
+                            Ok(_) => (),
+                            Err(e) => error!("OrderFulfilled event handler failed: {e}"),
+                        }
                     }
                     Event::OrderExecuted(ev) => {
                         trace!("OrderExecuted found: {:?}", ev);
-                        self.storage
+                        match self
+                            .storage
                             .register_executed(*block_number, block_timestamp, &ev.into())
-                            .await?;
+                            .await
+                        {
+                            Ok(_) => (),
+                            Err(e) => error!("OrderExecuted event handler failed: {e}"),
+                        }
                     }
                     Event::RollbackStatus(ev) => {
                         trace!("RollbackStatus found: {:?}", ev);
-                        self.storage
+                        match self
+                            .storage
                             .status_back_to_open(*block_number, block_timestamp, &ev.into())
-                            .await?;
+                            .await
+                        {
+                            Ok(_) => (),
+                            Err(e) => error!("RollbackStatus event handler failed: {e}"),
+                        }
                     }
                     _ => warn!("Orderbook event not handled: {:?}", orderbook_event),
                 };
