@@ -32,7 +32,7 @@ impl<S: Storage> BlockManager<S> {
         &self,
         block_number: u64,
         block_timestamp: u64,
-        indexer_version: String,
+        _indexer_version: String,
         do_force: bool,
     ) -> Result<bool, StorageError> {
         if do_force {

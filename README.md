@@ -100,7 +100,7 @@ Check out our demo app showcasing a mini marketplace: [ArkProject SDK Demo](http
 
 ### Crates for NFT Indexation
 
-- [Pontos (NFT Indexer Library)](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/pontos)
+- [Sana (NFT Indexer Library)](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/sana)
 - [Metadata](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/ark-metadata)
 - [Starknet Utilities](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/ark-starknet)
 - [Diri (Indexer Library for Solis and Arkchain)](https://github.com/ArkProjectNFTs/ark-project/tree/main/crates/diri)

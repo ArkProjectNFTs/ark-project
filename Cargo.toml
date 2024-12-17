@@ -16,7 +16,6 @@ ArkProject libraries written in Rust
 members = [
   "crates/ark-metadata",
   "crates/ark-starknet",
-  "crates/pontos",
   "crates/diri",
   "crates/sana",
   "crates/orderbook",
@@ -25,7 +24,6 @@ members = [
 [workspace.dependencies]
 ark-starknet = { path = "./crates/ark-starknet" }
 ark-metadata = { path = "./crates/ark-metadata" }
-pontos = { path = "./crates/pontos" }
 sana = { path = "./crates/sana" }
 diri = { path = "./crates/diri" }
 orderbook = { path = "./crates/orderbook" }
@@ -46,7 +44,6 @@ anyhow.workspace = true
 tokio.workspace = true
 ark-starknet.workspace = true
 ark-metadata.workspace = true
-pontos = { path = "./crates/pontos", features = ["sqlxdb"] }
 sana = { path = "./crates/sana", features = ["sqlxdb"] }
 diri.workspace = true
 orderbook.workspace = true
