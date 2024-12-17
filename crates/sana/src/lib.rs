@@ -79,7 +79,6 @@ pub struct Sana<S: Storage, C: StarknetClient, E: EventHandler> {
 }
 
 impl<S: Storage, C: StarknetClient, E: EventHandler + Send + Sync> Sana<S, C, E> {
-    ///
     pub fn new(client: Arc<C>, storage: Arc<S>, event_handler: Arc<E>, config: SanaConfig) -> Self {
         Sana {
             config,
