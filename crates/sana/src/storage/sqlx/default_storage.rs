@@ -312,6 +312,26 @@ impl Storage for PostgresStorage {
                 "Updated existing transfer event: {:?}",
                 event.token_event_id
             );
+
+            let update_query = "UPDATE token t
+            SET current_owner = (
+              SELECT te.to_address
+              FROM token_event te
+              WHERE te.contract_address = t.contract_address
+                AND te.token_id = t.token_id
+                AND te.chain_id = t.chain_id
+                AND te.event_type IN ('Transfer', 'Burn', 'Mint')
+              ORDER BY te.block_timestamp DESC
+              LIMIT 1
+            ), updated_timestamp = EXTRACT(epoch FROM now())::bigint
+            WHERE t.contract_address = $1 AND t.token_id = $2 AND t.chain_id = $3";
+
+            let _current_owner = sqlx::query(update_query)
+                .bind(event.contract_address.clone())
+                .bind(event.token_id.clone())
+                .bind(event.chain_id.clone())
+                .execute(&self.pool)
+                .await?;
         } else {
             let insert_query = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
