@@ -131,15 +131,39 @@ impl<S: Storage> EventManager<S> {
             return Err(anyhow!("Can't find event data into this event"));
         }
 
-        let maker_address = event
+        let order_type = event
             .keys
-            .get(3)
-            .ok_or_else(|| anyhow!("Maker address not found"))?;
+            .get(2)
+            .ok_or_else(|| anyhow!("Order type not found"))?;
 
-        let taker_address = event
-            .data
-            .first()
-            .ok_or_else(|| anyhow!("Taker address not found"))?;
+        let type_1 = FieldElement::from_hex_be("0x1")?;
+        let type_3 = FieldElement::from_hex_be("0x3")?;
+        let is_basic_order = order_type == &type_1 || order_type == &type_3;
+
+        let (from_address, to_address) = if is_basic_order {
+            (
+                event
+                    .keys
+                    .get(3)
+                    .ok_or_else(|| anyhow!("From address not found"))?,
+                event
+                    .data
+                    .first()
+                    .ok_or_else(|| anyhow!("To address not found"))?,
+            )
+        } else {
+            (
+                event
+                    .data
+                    .first()
+                    .ok_or_else(|| anyhow!("Taker address not found"))?,
+                event
+                    .keys
+                    .get(3)
+                    .ok_or_else(|| anyhow!("Maker address not found"))?,
+            )
+        };
+
         let currency_address = event
             .data
             .get(1)
@@ -202,21 +226,16 @@ impl<S: Storage> EventManager<S> {
                 .map_err(|_| anyhow!("Failed to parse token id high"))?,
         };
 
-        let event_id = Self::get_event_id(
-            &token_id,
-            maker_address,
-            taker_address,
-            block_timestamp,
-            event,
-        );
+        let event_id =
+            Self::get_event_id(&token_id, from_address, to_address, block_timestamp, event);
 
         Ok(TokenSaleEvent {
             token_event_id: to_hex_str(&event_id),
             event_type: EventType::Sale,
             block_number: event.block_number,
             block_timestamp,
-            from_address: to_hex_str(maker_address),
-            to_address: to_hex_str(taker_address),
+            from_address: to_hex_str(from_address),
+            to_address: to_hex_str(to_address),
             nft_contract_address: to_hex_str(nft_contract_address),
             nft_type: None,
             transaction_hash: to_hex_str(&event.transaction_hash),
