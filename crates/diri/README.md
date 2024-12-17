@@ -1,7 +1,7 @@
 # Diri: arckchain indexer
 
 Diri is the Arkchain index library.
-By implementing the same logic as `pontos`, by having a `Storage`
+By implementing the same logic as `sana`, by having a `Storage`
 trait that defines all operations on the database, Diri collects
 the events from the Arkchain.
 

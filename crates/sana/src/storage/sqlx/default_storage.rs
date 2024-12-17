@@ -314,10 +314,10 @@ impl Storage for PostgresStorage {
             let insert_query = "INSERT INTO token_event (token_event_id, contract_address, chain_id, token_id, token_id_hex, event_type, block_timestamp, transaction_hash, to_address, from_address)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (token_event_id) DO NOTHING";
 
-            let event_type = event.event_type.as_ref().map(|e| {
-                let res = self.to_title_case(&e.to_string().to_lowercase());
-                res
-            });
+            let event_type = event
+                .event_type
+                .as_ref()
+                .map(|e| self.to_title_case(&e.to_string().to_lowercase()));
 
             info!("Inserting transfer event... {:?}", event_type);
 

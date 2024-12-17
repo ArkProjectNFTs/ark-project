@@ -40,7 +40,6 @@ pub struct Diri<S: Storage, E: EventHandler> {
 }
 
 impl<S: Storage, E: EventHandler> Diri<S, E> {
-    ///
     pub fn new(provider: Arc<AnyProvider>, storage: Arc<S>, event_handler: Arc<E>) -> Self {
         Diri {
             provider: Arc::clone(&provider),

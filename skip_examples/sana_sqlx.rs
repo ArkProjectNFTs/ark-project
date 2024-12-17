@@ -1,12 +1,11 @@
 //! How to start a NFT indexer.
 //!
-//! Can be run with `cargo run --example pontos`.
+//! Can be run with `cargo run --example sana_sqlx`.
 //!
 use anyhow::Result;
 use ark_starknet::client::{StarknetClient, StarknetClientHttp};
-use arkproject::pontos::{
-    event_handler::EventHandler, storage::types::*, storage::DefaultSqlxStorage, Pontos,
-    PontosConfig,
+use arkproject::sana::{
+    event_handler::EventHandler, storage::types::*, storage::DefaultSqlxStorage, Sana, SanaConfig,
 };
 use async_trait::async_trait;
 use starknet::core::types::BlockId;
@@ -37,18 +36,18 @@ async fn main() -> Result<()> {
     );
 
     // Typically loaded from env.
-    let config = PontosConfig {
+    let config = SanaConfig {
         indexer_version: Some(String::from("0.0.1")),
         indexer_identifier: "task_1234".to_string(),
     };
 
     let storage = Arc::new(DefaultSqlxStorage::new_any("sqlite::memory:").await?);
 
-    sqlx::migrate!("./crates/pontos/src/storage/sqlx/migrations")
+    sqlx::migrate!("./crates/sana/src/storage/sqlx/migrations")
         .run(storage.get_pool_ref())
         .await?;
 
-    let pontos = Arc::new(Pontos::new(
+    let sana = Arc::new(Sana::new(
         Arc::clone(&client),
         Arc::clone(&storage),
         Arc::new(DefaultEventHandler::new()),
@@ -60,12 +59,12 @@ async fn main() -> Result<()> {
     let do_force = false;
     println!("Indexer [{:?} - {:?}] started!", from, to);
 
-    match pontos.index_block_range(from, to, do_force).await {
+    match sana.index_block_range(from, to, do_force).await {
         Ok(_) => {
             storage.dump_tables().await.unwrap();
-            println!("Pontos task completed!");
+            println!("Sana task completed!");
         }
-        Err(e) => println!("Pontos task failed! [{:?}]", e),
+        Err(e) => println!("Sana task failed! [{:?}]", e),
     }
 
     Ok(())
@@ -84,7 +83,7 @@ impl DefaultEventHandler {
 impl EventHandler for DefaultEventHandler {
     async fn on_block_processed(&self, block_number: u64, indexation_progress: f64) {
         println!(
-            "pontos: block processed: block_number={}, indexation_progress={}",
+            "sana: block processed: block_number={}, indexation_progress={}",
             block_number, indexation_progress
         );
     }
@@ -93,24 +92,24 @@ impl EventHandler for DefaultEventHandler {
         // TODO: here we want to call some storage if needed from an other object.
         // But it's totally unrelated to the core process, so we can do whatever we want here.
         println!(
-            "pontos: processing block: block_timestamp={}, block_number={:?}",
+            "sana: processing block: block_timestamp={}, block_number={:?}",
             block_timestamp, block_number
         );
     }
 
     async fn on_indexation_range_completed(&self) {
-        println!("pontos: indexation range completed");
+        println!("sana: indexation range completed");
     }
 
     async fn on_token_registered(&self, token: TokenInfo) {
-        println!("pontos: token registered {:?}", token);
+        println!("sana: token registered {:?}", token);
     }
 
     async fn on_event_registered(&self, event: TokenEvent) {
-        println!("pontos: event registered {:?}", event);
+        println!("sana: event registered {:?}", event);
     }
 
     async fn on_new_latest_block(&self, block_number: u64) {
-        println!("pontos: new latest block {:?}", block_number);
+        println!("sana: new latest block {:?}", block_number);
     }
 }
