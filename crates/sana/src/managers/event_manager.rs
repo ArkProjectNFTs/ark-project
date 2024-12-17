@@ -156,11 +156,11 @@ impl<S: Storage> EventManager<S> {
                 event
                     .data
                     .first()
-                    .ok_or_else(|| anyhow!("Taker address not found"))?,
+                    .ok_or_else(|| anyhow!("From address not found"))?,
                 event
                     .keys
                     .get(3)
-                    .ok_or_else(|| anyhow!("Maker address not found"))?,
+                    .ok_or_else(|| anyhow!("To address not found"))?,
             )
         };
 
