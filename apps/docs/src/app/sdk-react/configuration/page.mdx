@@ -27,7 +27,7 @@ Create and export a new ArkProject config using createConfig.
 import { createConfig, Network } from '@arkproject/core'
 import { ProviderInterface, RpcProvider } from 'starknet'
 
-// Initialize a RPC provider with your Starknet node URL using starknet.js
+// Initialize an RPC provider with your Starknet node URL using starknet.js
 const starknetProvider = new RpcProvider({
   nodeUrl: process.env.STARKNET_RPC_URL ?? 'localhost:5050',
 }) as ProviderInterface
