@@ -17,7 +17,7 @@ the contract.json file is a reference of the deployed contracts, when working lo
 - appchain_messaging - appchain messaging contract to receive & send messages from starknet
 - executor - executor contract to execute the messages from the appchain (swap assets)
 - nft - nft contract to mint & transfer nft from starknet used as a test contract
-- erc20 - erc20 contract to mint & transfer erc20 from starknet used as a test contract only on katana becase base one doesn't support erc20
+- erc20 - erc20 contract to mint & transfer erc20 from starknet used as a test contract only on katana because base one doesn't support erc20
 
 ### Solis
 

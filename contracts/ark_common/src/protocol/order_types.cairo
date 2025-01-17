@@ -197,7 +197,7 @@ struct CancelInfo {
 struct FulfillInfo {
     // The hash of the order to fulfill.
     order_hash: felt252,
-    // Related order hash in case of an auction for exemple.
+    // Related order hash in case of an auction for example.
     related_order_hash: Option<felt252>,
     // Address of the fulfiller of the order.
     fulfiller: ContractAddress,

@@ -2,7 +2,7 @@
 
 This is mainly the orderbook contract with related order data.
 
-`asdf` version manangement is used, so you should have `scarb 0.7.0` installed.
+`asdf` version management is used, so you should have `scarb 0.7.0` installed.
 
 # Build
 
