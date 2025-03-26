@@ -5,11 +5,12 @@ import { Account, RpcProvider } from "starknet";
 
 import { ARTIFACTS_PATH } from "../src/constants";
 import { deployERC20 } from "../src/contracts/erc20";
+import { deployERC20Trade } from "../src/contracts/erc20trade";
 import { deployERC721 } from "../src/contracts/erc721";
 import { deployERC721Royalties } from "../src/contracts/erc721royalties";
+import { deployERC1155 } from "../src/contracts/erc1155";
 import { deployExecutor } from "../src/contracts/executor";
 import { getFeeAddress } from "../src/providers";
-import { deployERC1155 } from "../src/contracts/erc1155";
 
 async function run() {
   if (
@@ -38,6 +39,14 @@ async function run() {
   );
 
   const ethContract = await deployERC20(
+    ARTIFACTS_PATH,
+    starknetAdminAccount,
+    provider,
+    "ETH",
+    "ETH"
+  );
+
+  const ethTradeContract = await deployERC20Trade(
     ARTIFACTS_PATH,
     starknetAdminAccount,
     provider,
@@ -81,7 +90,8 @@ async function run() {
     nftContractFixedFees: nftContractFixedFees.address,
     nftContractRoyalties: nftContractRoyalties.address,
     eth: ethContract.address,
-    erc1155: erc1155Contract.address,
+    ethTrade: ethTradeContract.address,
+    erc1155: erc1155Contract.address
   });
   await fs.writeFile(contractsFilePath, contractsContent);
 }
